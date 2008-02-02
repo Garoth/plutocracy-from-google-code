@@ -11,5 +11,7 @@
 \******************************************************************************/
 
 /* r_window.c */
-int R_CreateWindow(void);
+int R_create_window(void);
 
+/* r_render.c */
+void R_render(void);
