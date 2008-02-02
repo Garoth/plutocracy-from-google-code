@@ -10,6 +10,11 @@
  FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
 \******************************************************************************/
 
+/* This file contains the common configurable variables and the framework
+   for handling configurable variables system-wide.
+
+   TODO: Implement as a trie */
+
 #include "c_shared.h"
 #include <stdlib.h>
 #include <ctype.h>
@@ -18,7 +23,20 @@
 #include <strings.h>
 #endif
 
+/* Message logging */
+c_var_t c_log_level, c_log_file;
+
 static c_var_t *root;
+
+/******************************************************************************\
+ Registers the common configurable variables.
+\******************************************************************************/
+void C_register_variables(void)
+{
+        /* Message logging */
+        C_register_integer(&c_log_level, "c_log_level", 1);
+        C_register_string(&c_log_file, "c_log_file", "");
+}
 
 /******************************************************************************\
  This function will register a static configurable variable. The data is stored
@@ -81,20 +99,49 @@ void C_set_variable(c_var_t *var, const char *value)
 }
 
 /******************************************************************************\
+ Skips any space characters and comment lines in the string.
+\******************************************************************************/
+static char *skip_unparseable(const char *string)
+{
+        char ch;
+
+        for (ch = *string; ch; ch = *(++string)) {
+
+                /* Skip comment lines */
+                if (ch == '/') {
+                        if (string[1] == '/') {
+                                while (ch && ch != '\n')
+                                        ch = *(++string);
+                                continue;
+                        }
+                        if (string[1] == '*') {
+                                while (ch && (ch != '/' || string[-1] != '*'))
+                                        ch = *(++string);
+                                continue;
+                        }
+                }
+
+                /* Skip spaces */
+                if (ch > ' ')
+                        break;
+        }
+        return (char *)string;
+}
+
+/******************************************************************************\
  Reads a string in Quake configuration format:
 
-   // C++ comments allowed
+   // C and C++ comments allowed
    c_my_var_has_no_spaces "values always in quotes"
-   c_numbers_not_in_quotes 123
+                          "can be concatenated"
+   c_numbers_not_in_quotes -123.5
 
  Ignores newlines and spaces. Returns FALSE if there was an error (but not a
  warning) while parsing the configuration string.
-
- TODO: "Concatenate" "strings"
 \******************************************************************************/
 int C_parse_config(const char *string)
 {
-        int parsing_name, parsing_string, skipped_comment;
+        int parsing_name, parsing_string;
         char name[256], value[4096], *pos;
 
         /* Start parsing name */
@@ -103,27 +150,22 @@ int C_parse_config(const char *string)
         pos = name;
         parsing_name = TRUE;
 
-        for (; *string; string++) {
+        for (;; string++) {
                 const char *old_string;
 
                 old_string = string;
-                string = C_skip_spaces(string);
-
-                /* Skip comment lines */
-                if (!parsing_string && *string == '/' && *(string + 1) == '/') {
-                        do {
-                                string++;
-                        } while (*string && *string != '\n');
-                        skipped_comment = TRUE;
-                        continue;
-                }
-
+                if (!parsing_string)
+                        string = skip_unparseable(string);
                 if (parsing_name) {
-                        parsing_string = string[0] == '"';
+                        parsing_string = *string == '"';
+
+                        /* End of string */
+                        if (!*string)
+                                break;
 
                         /* Did we switch to parsing a value? */
-                        if (((skipped_comment || old_string != string) &&
-                             isdigit(string[0])) || parsing_string) {
+                        if ((old_string != string && C_is_digit(string[0])) ||
+                            parsing_string) {
                                 if (!name[0]) {
                                         C_warning("Parsing variable value "
                                                   "without a name");
@@ -144,26 +186,34 @@ int C_parse_config(const char *string)
                         }
                 } else {
 
-                        /* Did we switch to parsing a name? */
+                        /* Did we finish parsing the value? */
                         if (!*string ||
-                            (!parsing_string &&
-                             (*string <= ' ' || !isdigit(*string))) ||
+                            (!parsing_string && !C_is_digit(*string)) ||
                             (parsing_string && *string == '"' &&
-                             *(string - 1) != '\\')) {
+                             string[-1] != '\\')) {
                                 c_var_t *var;
 
-                                if (!parsing_string)
-                                        string--;
+                                /* Check for concatenation */
+                                if (parsing_string) {
+                                        string = skip_unparseable(string + 1);
+                                        if (*string == '"')
+                                                continue;
+                                }
+
+                                /* Switch to parsing the name */
+                                string--;
                                 *pos = NUL;
                                 pos = name;
                                 parsing_name = TRUE;
+
+                                /* Set the variable */
                                 var = C_resolve_variable(name);
-                                if (!var) {
+                                if (var)
+                                        C_set_variable(var, value);
+                                else
                                         C_warning("variable '%s' not found",
                                                   name);
-                                        continue;
-                                }
-                                C_set_variable(var, value);
+
                                 continue;
                         }
 
@@ -173,8 +223,14 @@ int C_parse_config(const char *string)
                                 return FALSE;
                         }
                 }
+
+                /* Ignore escaped new-lines */
+                if (string[0] == '\\' && string[1] == '\n') {
+                        string++;
+                        continue;
+                }
+
                 *(pos++) = *string;
-                skipped_comment = FALSE;
         }
         return TRUE;
 }

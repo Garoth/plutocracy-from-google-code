@@ -1,4 +1,4 @@
-INCLUDES =
+INCLUDES = -I.
 LDADD = -lm
 AM_CFLAGS =
 

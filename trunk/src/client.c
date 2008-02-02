@@ -53,10 +53,13 @@ int main(int argc, char *argv[])
         SDL_Event ev;
         int running;
 
-        C_debug(PACKAGE_STRING " client startup");
-
         /* Register configurable variables */
+        C_register_variables();
         R_register_variables();
+
+        /* Start logging */
+        C_open_log_file();
+        C_debug(PACKAGE_STRING " client startup");
 
         parse_config_args(argc, argv);
 
