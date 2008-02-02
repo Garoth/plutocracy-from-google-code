@@ -21,9 +21,15 @@
 #define FALSE 0
 #endif
 
-/* common.c */
-#define Debug(fmt, ...) DebugFull(__FILE__, __LINE__, __func__, \
-                                  fmt ## __VA_ARGS__)
-void DebugFull(const char *file, int line, const char *function,
-               const char *fmt, ...);
+/* c_log.c */
+#define C_debug(fmt, ...) C_debug_full(__FILE__, __LINE__, __func__, \
+                                       fmt ## __VA_ARGS__)
+void C_debug_full(const char *file, int line, const char *function,
+                 const char *fmt, ...);
+
+/* c_variables.c */
+int C_parse_config(const char *string);
+void C_register_double(double *var, const char *path);
+void C_register_integer(int *var, const char *path);
+void C_register_string(char *var, const char *path);
 
