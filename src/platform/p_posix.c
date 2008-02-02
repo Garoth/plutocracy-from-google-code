@@ -10,23 +10,5 @@
  FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
 \******************************************************************************/
 
-#include "common.h"
-#include <stdio.h>
-#include <stdarg.h>
-
-/******************************************************************************\
- Prints a string to the debug log file or to standard output.
-\******************************************************************************/
-void DebugFull(const char *file, int line, const char *function,
-               const char *fmt, ...)
-{
-        char fmt2[128];
-        va_list va;
-
-        va_start(va, fmt);
-        snprintf(fmt2, sizeof(fmt2), "*** %s:%d, %s() -- %s\n",
-                 file, line, function, fmt);
-        vfprintf(stderr, fmt2, va);
-        va_end(va);
-}
+#include "p_shared.h"
 
