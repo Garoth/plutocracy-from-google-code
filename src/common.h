@@ -1,5 +1,5 @@
 /******************************************************************************\
- Merchant Isles - Copyright (C) 2008 - Michael Levin
+ Plutocracy - Copyright (C) 2008 - Michael Levin
 
  This program is free software; you can redistribute it and/or modify it under
  the terms of the GNU General Public License as published by the Free Software
@@ -20,4 +20,10 @@
 #ifndef FALSE
 #define FALSE 0
 #endif
+
+/* common.c */
+#define Debug(fmt, ...) DebugFull(__FILE__, __LINE__, __func__, \
+                                  fmt ## __VA_ARGS__)
+void DebugFull(const char *file, int line, const char *function,
+               const char *fmt, ...);
 

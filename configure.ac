@@ -2,7 +2,7 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.61)
-AC_INIT([MerchantIsles], [0.0.0], [risujin@risujin.org])
+AC_INIT([Plutocracy], [0.0.0], [risujin@risujin.org])
 AM_INIT_AUTOMAKE
 AC_CONFIG_SRCDIR([src/client.c])
 AC_CONFIG_HEADER([config.h])
@@ -14,10 +14,7 @@ AC_PROG_AWK
 AC_PROG_CPP
 AC_PROG_MKDIR_P
 
-# Math library
-AC_CHECK_LIB(m, atan2, [], [AC_ERROR(Math library not installed or invalid!)])
-
-# Checks for header files
+# Checks for standard C header files
 AC_HEADER_STDC
 
 # Checks for typedefs, structures, and compiler characteristics
