@@ -1,0 +1,13 @@
+#General Information for the game (with links to other pages)
+
+= Introduction =
+
+Plutocracy is blah blah blah
+
+
+= Game Ideas/Features =
+
+  * Trade
+  * Naval battles
+  * Land control
+  * Pirates (= win)
