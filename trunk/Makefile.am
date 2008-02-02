@@ -1,10 +1,15 @@
 INCLUDES =
-LDADD =
+LDADD = -lm
 AM_CFLAGS =
 
 bin_PROGRAMS = plutocracy plutoserv
 plutocracy_SOURCES = \
 	src/client.c \
+	src/common.h \
+	src/common.c \
+	src/platform/p_shared.h \
+	src/platform/p_posix.c \
+	src/platform/p_win32.c \
 	src/network/n_shared.h \
 	src/network/n_common.h \
 	src/network/n_client.c \
@@ -18,6 +23,11 @@ plutocracy_SOURCES = \
 
 plutoserv_SOURCES = \
 	src/server.c \
+	src/common.h \
+	src/common.c \
+	src/platform/p_shared.h \
+	src/platform/p_posix.c \
+	src/platform/p_win32.c \
 	src/network/n_shared.h \
 	src/network/n_common.h \
 	src/network/n_server.c \
