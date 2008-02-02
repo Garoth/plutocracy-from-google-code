@@ -15,6 +15,7 @@
 
 #include "common/c_shared.h"
 #include "render/r_shared.h"
+#include "SDL.h"
 
 /******************************************************************************\
  Start up the client program from here.
@@ -22,7 +23,31 @@
 int main(int argc, char *argv[])
 {
         C_debug("Hello World!");
-        R_create_window();
+        if(!R_create_window()) {
+                C_debug("Window creation failed\n");
+                return 1;
+        }
+
+        /* Main loop */
+        SDL_Event ev;
+        int running = TRUE;
+
+        while(running) {
+                while(SDL_PollEvent(&ev)) {
+                        switch(ev.type) {
+                        case SDL_QUIT:
+                                running = FALSE;
+                                break;
+
+                        default:
+                                /* Ignore pretty much all events */
+                                break;
+                        }
+                }
+
+                R_render();
+        }
+
         return 0;
 }
 

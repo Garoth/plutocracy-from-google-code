@@ -11,6 +11,8 @@
 \******************************************************************************/
 
 #include "r_common.h"
+#include <GL/gl.h>
+#include <GL/glu.h>
 #include "SDL.h"
 #include <stdlib.h>
 
@@ -20,6 +22,34 @@
 static void R_close_window(void)
 {
         C_debug("");
+        SDL_Quit();
+}
+
+/******************************************************************************\
+ Initializes some OpenGL stuff
+\******************************************************************************/
+static void R_init_gl_state(void)
+{
+        glViewport(0, 0, 800, 600);
+
+        /* Make sure our matrices start sane. */
+
+        /* The range of z values here is arbitrary and shoud be
+           modified to fit ranges that we typically have. */
+        glMatrixMode(GL_PROJECTION);
+        glLoadIdentity();
+        gluPerspective(90.0, 800.0 / 600.0, 1.0, 10000.0);
+
+        glMatrixMode(GL_MODELVIEW);
+        glLoadIdentity();
+
+        /* Backface culling. Only rasterize polygons that are facing you. */
+        glEnable(GL_CULL_FACE);
+        glCullFace(GL_BACK);
+        glFrontFace(GL_CCW);
+
+        /* Clear to black. */
+        glClearColor(0.0, 0.0, 0.0, 1.0);
 }
 
 /******************************************************************************\
@@ -60,6 +90,8 @@ int R_create_window(void)
 
         /* Make sure it's cleaned up. */
         atexit(R_close_window);
+
+        R_init_gl_state();
 
         return TRUE;
 }
