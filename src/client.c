@@ -18,33 +18,66 @@
 #include "SDL.h"
 
 /******************************************************************************\
+ Concatenates an argument array and runs it through the config parser.
+\******************************************************************************/
+static void parse_config_args(int argc, char *argv[])
+{
+        int i;
+        char buffer[4096], *pos;
+
+        if (argc < 2)
+                return;
+        buffer[0] = NUL;
+        pos = buffer;
+        for (i = 1; i < argc; i++) {
+                size_t len;
+
+                len = strlen(argv[i]);
+                if (pos + len >= buffer + sizeof (buffer)) {
+                        C_warning("Command-line config overflowed");
+                        return;
+                }
+                memcpy(pos, argv[i], len);
+                pos += len;
+                *(pos++) = ' ';
+        }
+        *pos = NUL;
+        C_parse_config(buffer);
+}
+
+/******************************************************************************\
  Start up the client program from here.
 \******************************************************************************/
 int main(int argc, char *argv[])
 {
-        C_debug("Hello World!");
+        SDL_Event ev;
+        int running;
+
+        C_debug(PACKAGE_STRING " client startup");
+
+        /* Register configurable variables */
+        R_register_variables();
+
+        parse_config_args(argc, argv);
+
+        /* Initialize */
         if(!R_create_window()) {
-                C_debug("Window creation failed\n");
+                C_debug("Window creation failed");
                 return 1;
         }
 
         /* Main loop */
-        SDL_Event ev;
-        int running = TRUE;
-
+        running = TRUE;
         while(running) {
                 while(SDL_PollEvent(&ev)) {
                         switch(ev.type) {
                         case SDL_QUIT:
                                 running = FALSE;
                                 break;
-
                         default:
-                                /* Ignore pretty much all events */
                                 break;
                         }
                 }
-
                 R_render();
         }
 

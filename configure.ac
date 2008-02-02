@@ -32,8 +32,11 @@ CFLAGS="$CFLAGS $SDL_CFLAGS"
 LIBS="$LIBS $SDL_LIBS"
 
 # Check for GL and GLU
-AC_CHECK_LIB(GL, glEnable, [], [AC_MSG_ERROR([-lGL not found!])])
-AC_CHECK_LIB(GLU, gluPerspective, [], [AC_MSG_ERROR([-lGLU not found!])])
+AC_CHECK_LIB(GL, glEnable, [], [AC_MSG_ERROR([*** -lGL not found!])])
+AC_CHECK_LIB(GLU, gluPerspective, [], [AC_MSG_ERROR([*** -lGLU not found!])])
+
+# Check for various headers
+AC_CHECK_HEADERS([strings.h])
 
 # Checks for library functions
 AC_TYPE_SIGNAL
