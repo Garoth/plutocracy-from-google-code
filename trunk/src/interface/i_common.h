@@ -10,6 +10,6 @@
  FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
 \******************************************************************************/
 
-#include "../common.h"
+#include "../common/c_shared.h"
 #include "i_shared.h"
 

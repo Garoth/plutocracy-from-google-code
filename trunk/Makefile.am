@@ -5,8 +5,9 @@ AM_CFLAGS =
 bin_PROGRAMS = plutocracy plutoserv
 plutocracy_SOURCES = \
 	src/client.c \
-	src/common.h \
-	src/common.c \
+	src/common/c_shared.h \
+	src/common/c_log.c \
+	src/common/c_variables.c \
 	src/platform/p_shared.h \
 	src/platform/p_posix.c \
 	src/platform/p_win32.c \
@@ -23,8 +24,9 @@ plutocracy_SOURCES = \
 
 plutoserv_SOURCES = \
 	src/server.c \
-	src/common.h \
-	src/common.c \
+	src/common/c_shared.h \
+	src/common/c_log.c \
+	src/common/c_variables.c \
 	src/platform/p_shared.h \
 	src/platform/p_posix.c \
 	src/platform/p_win32.c \
