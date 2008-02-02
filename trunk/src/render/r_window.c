@@ -16,6 +16,8 @@
 #include "SDL.h"
 #include <stdlib.h>
 
+extern c_var_t r_width, r_height, r_depth, r_windowed;
+
 /******************************************************************************\
  Cleans up the SDL window resources.
 \******************************************************************************/

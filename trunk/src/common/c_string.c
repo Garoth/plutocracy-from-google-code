@@ -10,15 +10,18 @@
  FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
 \******************************************************************************/
 
-#ifdef WINDOWS
+#include "c_shared.h"
 
-#define WIN32_LEAN_AND_MEAN
-#include <windows.h>
+/******************************************************************************\
+ Skips any space characters in the string.
+\******************************************************************************/
+char *C_skip_spaces(const char *str)
+{
+        char ch;
 
-/* Function equivalents */
-#define strcasecmp stricmp
+        ch = *str;
+        while (ch && ch <= ' ')
+                ch = *(++str);
+        return (char *)str;
+}
 
-/* Assume POSIX-compliant if above does not apply */
-#else
-
-#endif

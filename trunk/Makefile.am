@@ -8,6 +8,7 @@ plutocracy_SOURCES = \
 	src/common/c_shared.h \
 	src/common/c_log.c \
 	src/common/c_variables.c \
+	src/common/c_string.c \
 	src/platform/p_shared.h \
 	src/platform/p_posix.c \
 	src/platform/p_win32.c \
@@ -20,6 +21,7 @@ plutocracy_SOURCES = \
 	src/render/r_common.h \
 	src/render/r_window.c \
 	src/render/r_render.c \
+	src/render/r_variables.c \
 	src/interface/i_shared.h \
 	src/interface/i_common.h
 
@@ -28,6 +30,7 @@ plutoserv_SOURCES = \
 	src/common/c_shared.h \
 	src/common/c_log.c \
 	src/common/c_variables.c \
+	src/common/c_string.c \
 	src/platform/p_shared.h \
 	src/platform/p_posix.c \
 	src/platform/p_win32.c \

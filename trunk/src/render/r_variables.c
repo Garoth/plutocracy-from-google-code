@@ -10,15 +10,20 @@
  FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
 \******************************************************************************/
 
-#ifdef WINDOWS
+#include "r_common.h"
 
-#define WIN32_LEAN_AND_MEAN
-#include <windows.h>
+/* Window parameters */
+c_var_t r_width, r_height, r_depth, r_windowed;
 
-/* Function equivalents */
-#define strcasecmp stricmp
+/******************************************************************************\
+ Registers the render variables.
+\******************************************************************************/
+void R_register_variables(void)
+{
+        /* Window parameters */
+        C_register_integer(&r_width, "r_width", 800);
+        C_register_integer(&r_height, "r_height", 600);
+        C_register_integer(&r_depth, "r_depth", 16);
+        C_register_integer(&r_windowed, "r_windowed", 1);
+}
 
-/* Assume POSIX-compliant if above does not apply */
-#else
-
-#endif

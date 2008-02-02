@@ -15,3 +15,7 @@ int R_create_window(void);
 
 /* r_render.c */
 void R_render(void);
+
+/* r_variables.c */
+void R_register_variables(void);
+
