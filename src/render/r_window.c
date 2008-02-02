@@ -1,5 +1,5 @@
 /******************************************************************************\
- Merchant Isles - Copyright (C) 2008 - Michael Levin, Devin Papineau
+ Plutocracy - Copyright (C) 2008 - Michael Levin, Devin Papineau
 
  This program is free software; you can redistribute it and/or modify it under
  the terms of the GNU General Public License as published by the Free Software
@@ -15,13 +15,21 @@
 #include <stdlib.h>
 
 /******************************************************************************\
+ Cleans up the SDL window resources.
+\******************************************************************************/
+static void R_close_window(void)
+{
+        C_debug("");
+}
+
+/******************************************************************************\
  Creates the client window. Returns TRUE on success.
 \******************************************************************************/
-int R_CreateWindow(void)
+int R_create_window(void)
 {
         SDL_Surface *screen;
 
-        Debug("Hello World 2!");
+        C_debug("Hello World 2!");
 
         /* Just video for now. */
         if(SDL_Init(SDL_INIT_VIDEO) < 0) {
@@ -51,7 +59,8 @@ int R_CreateWindow(void)
         }
 
         /* Make sure it's cleaned up. */
-        atexit(R_CloseWindow);
+        atexit(R_close_window);
 
         return TRUE;
 }
+

@@ -13,7 +13,7 @@
 /* This file forms the starting point for the client program. The client may
    also function as a server. */
 
-#include "common.h"
+#include "common/c_shared.h"
 #include "render/r_shared.h"
 
 /******************************************************************************\
@@ -21,8 +21,8 @@
 \******************************************************************************/
 int main(int argc, char *argv[])
 {
-        Debug("Hello World!");
-        R_CreateWindow();
+        C_debug("Hello World!");
+        R_create_window();
         return 0;
 }
 
