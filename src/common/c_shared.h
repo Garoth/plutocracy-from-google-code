@@ -32,7 +32,6 @@ typedef union  {
         int n;
         double f;
         char *s;
-        const char *cs;
 } c_var_value_t;
 
 /* Variable value types */
@@ -54,14 +53,17 @@ typedef struct c_var {
 } c_var_t;
 
 /* c_log.c */
+void C_close_log_file(void);
 #define C_debug(fmt, ...) C_debug_full(__FILE__, __LINE__, __func__, \
                                        fmt, ## __VA_ARGS__)
 void C_debug_full(const char *file, int line, const char *function,
                  const char *fmt, ...);
 #define C_error C_debug
+void C_open_log_file(void);
 #define C_warning C_debug
 
 /* c_string.c */
+#define C_is_digit(c) (((c) >= '0' && (c) <= '9') || c == '.' || c == '-')
 char *C_skip_spaces(const char *str);
 
 /* c_variables.c */
@@ -77,5 +79,6 @@ int C_parse_config(const char *string);
                             (c_var_value_t)(value))
 void C_register_variable(c_var_t *var, const char *name, c_var_type_t type,
                          c_var_value_t value);
+void C_register_variables(void);
 void C_set_variable(c_var_t *var, const char *value);
 
