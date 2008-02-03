@@ -1,6 +1,6 @@
 ﻿# An explanation of how expansion works
 
-1) After you have a dock and town centre established, you can start expanding to adjacent spaces. (See [Tut-Settling].) You will be given a selection of nearby tiles to spread to. Note: shoreline tiles are special.
+1) After you have a dock and town centre established, you can start expanding to adjacent spaces. (See TutSettling.) You will be given a selection of nearby tiles to spread to. Note: shoreline tiles are special.
 http://plutocracy.googlecode.com/svn/wiki/tut_spread/tut_spread-1.png
 
 2) Select one of the spaces to start renting it. Note: you never "own" a space, you rent it from the Island's government and repeatedly pay a fee.

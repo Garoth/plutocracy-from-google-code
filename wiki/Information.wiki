@@ -2,8 +2,8 @@
 
 = Tutorial & Explanation List=
 
-  * [Tut-Settling]
-  * [Tut-Spreading]
+  * TutSettling -- about settling new islands.
+  * TutSpreading -- about spreading within an island.
 
 = General Game Ideas/Features =
 
