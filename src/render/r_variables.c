@@ -23,7 +23,7 @@ void R_register_variables(void)
         /* Window parameters */
         C_register_integer(&r_width, "r_width", 800);
         C_register_integer(&r_height, "r_height", 600);
-        C_register_integer(&r_depth, "r_colordepth", 24);
+        C_register_integer(&r_colordepth, "r_colordepth", 24);
         C_register_integer(&r_depth, "r_depth", 16);
         C_register_integer(&r_windowed, "r_windowed", 1);
         C_register_string(&r_mesh, "r_mesh", "");

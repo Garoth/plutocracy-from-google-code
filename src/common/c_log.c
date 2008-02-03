@@ -10,6 +10,8 @@
  FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
 \******************************************************************************/
 
+/* This file implements the logging system */
+
 #include "c_shared.h"
 #include <stdlib.h>
 #include <stdio.h>

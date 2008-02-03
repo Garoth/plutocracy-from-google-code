@@ -50,6 +50,9 @@ void C_register_variables(void)
 void C_register_variable(c_var_t *var, const char *name, c_var_type_t type,
                          c_var_value_t value)
 {
+        if (var->type)
+                C_error("Attempted to re-register '%s' with '%s'",
+                        var->name, name);
         var->next = root;
         var->type = type;
         var->name = name;
