@@ -12,8 +12,7 @@
 
 /* This file contains the common configurable variables and the framework
    for handling configurable variables system-wide.
-
-   TODO: Implement as a trie */
+     TODO: Implement as a trie */
 
 #include "c_shared.h"
 #include <stdlib.h>
@@ -34,7 +33,7 @@ static c_var_t *root;
 void C_register_variables(void)
 {
         /* Message logging */
-        C_register_integer(&c_log_level, "c_log_level", 1);
+        C_register_integer(&c_log_level, "c_log_level", C_LOG_WARNING);
         C_register_string(&c_log_file, "c_log_file", "");
 }
 
@@ -82,17 +81,25 @@ c_var_t *C_resolve_variable(const char *name)
 \******************************************************************************/
 void C_set_variable(c_var_t *var, const char *value)
 {
-        if (var->type == C_VAR_INTEGER)
+        if (var->type == C_VAR_INTEGER) {
                 var->value.n = atoi(value);
-        else if (var->type == C_VAR_FLOAT)
+                C_debug("Integer '%s' set to %d ('%s')", var->name,
+                        var->value.n, value);
+        } else if (var->type == C_VAR_FLOAT) {
                 var->value.f = atof(value);
-        else if (var->type == C_VAR_STRING) {
+                C_debug("Float '%s' set to %g ('%s')", var->name,
+                        var->value.f, value);
+        } else if (var->type == C_VAR_STRING) {
                 var->value.s = strdup(value);
                 var->type = C_VAR_STRING_DYNAMIC;
+                C_debug("Static string '%s' set to '%s'", var->name,
+                        var->value.s, value);
         } else if (var->type == C_VAR_STRING_DYNAMIC) {
                 free(var->value.s);
                 var->value.s = strdup(value);
                 var->type = C_VAR_STRING_DYNAMIC;
+                C_debug("Dynamic string '%s' set to '%s'", var->name,
+                        var->value.s, value);
         } else
                 C_warning("Variable '%s' has invalid type %d",
                           var->name, (int)var->type);
@@ -141,7 +148,7 @@ static char *skip_unparseable(const char *string)
 \******************************************************************************/
 int C_parse_config(const char *string)
 {
-        int parsing_name, parsing_string;
+        int parsed, parsing_name, parsing_string;
         char name[256], value[4096], *pos;
 
         /* Start parsing name */
@@ -149,6 +156,7 @@ int C_parse_config(const char *string)
         value[0] = NUL;
         pos = name;
         parsing_name = TRUE;
+        parsed = 0;
 
         for (;; string++) {
                 const char *old_string;
@@ -213,6 +221,7 @@ int C_parse_config(const char *string)
                                 else
                                         C_warning("variable '%s' not found",
                                                   name);
+                                parsed++;
 
                                 continue;
                         }
@@ -224,14 +233,45 @@ int C_parse_config(const char *string)
                         }
                 }
 
-                /* Ignore escaped new-lines */
-                if (string[0] == '\\' && string[1] == '\n') {
-                        string++;
-                        continue;
+                /* Escape characters in strings */
+                if (parsing_string && string[0] == '\\') {
+                        if (string[1] == '\n') {
+                                string++;
+                                continue;
+                        } else if (string[1] == 'n') {
+                                *(pos++) = '\n';
+                                string++;
+                                continue;
+                        } else if (string[1] == 't') {
+                                *(pos++) = '\t';
+                                string++;
+                                continue;
+                        } else if (string[1] == '\\') {
+                                *(pos++) = '\\';
+                                string++;
+                                continue;
+                        }
                 }
 
                 *(pos++) = *string;
         }
+        C_debug("Parsed %d variables", parsed);
         return TRUE;
+}
+
+/******************************************************************************\
+ Parses a configuration file (see above).
+   TODO: Remove the file size limit
+   TODO: Multiple file search paths
+\******************************************************************************/
+int C_parse_config_file(const char *filename)
+{
+        char buffer[32000];
+
+        if (C_read_file(filename, buffer, sizeof (buffer)) < 0) {
+                C_warning("Error reading config '%s'", filename);
+                return FALSE;
+        }
+        return C_parse_config(buffer);
 }
 

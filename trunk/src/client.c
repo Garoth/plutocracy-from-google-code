@@ -27,6 +27,7 @@ static void parse_config_args(int argc, char *argv[])
 
         if (argc < 2)
                 return;
+        C_status("Parsing command line");
         buffer[0] = NUL;
         pos = buffer;
         for (i = 1; i < argc; i++) {
@@ -46,32 +47,56 @@ static void parse_config_args(int argc, char *argv[])
 }
 
 /******************************************************************************\
+ Called when the program quits normally or is killed by a signal and should
+ perform an orderly cleanup.
+\******************************************************************************/
+static void cleanup(void)
+{
+        static int ran_once;
+
+        /* Don't cleanup twice */
+        if (ran_once) {
+                C_warning("Cleanup already called");
+                return;
+        }
+        ran_once = TRUE;
+
+        C_status("Cleaning up");
+        R_close_window();
+        C_debug("Done");
+}
+
+/******************************************************************************\
  Start up the client program from here.
 \******************************************************************************/
 int main(int argc, char *argv[])
 {
-        SDL_Event ev;
         int running;
+
+        /* Use the cleanup function instead of lots of atexit() calls to
+           control the order of cleanup */
+        atexit(cleanup);
 
         /* Register configurable variables */
         C_register_variables();
         R_register_variables();
 
-        /* Start logging */
-        C_open_log_file();
-        C_debug(PACKAGE_STRING " client startup");
-
-        parse_config_args(argc, argv);
-
         /* Initialize */
+        C_open_log_file();
+        C_parse_config_file("config/client.cfg");
+        parse_config_args(argc, argv);
+        C_status("Initializing " PACKAGE_STRING " client");
         if(!R_create_window()) {
                 C_debug("Window creation failed");
                 return 1;
         }
 
-        /* Main loop */
+        /* Run the main loop */
+        C_status("Main loop");
         running = TRUE;
         while(running) {
+                SDL_Event ev;
+
                 while(SDL_PollEvent(&ev)) {
                         switch(ev.type) {
                         case SDL_QUIT:
@@ -83,6 +108,7 @@ int main(int argc, char *argv[])
                 }
                 R_render();
         }
+        C_debug("Exited main loop");
 
         return 0;
 }

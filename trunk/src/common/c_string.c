@@ -11,6 +11,7 @@
 \******************************************************************************/
 
 #include "c_shared.h"
+#include <stdio.h>
 
 /******************************************************************************\
  Skips any space characters in the string.
@@ -23,5 +24,28 @@ char *C_skip_spaces(const char *str)
         while (ch && ch <= ' ')
                 ch = *(++str);
         return (char *)str;
+}
+
+/******************************************************************************\
+ Read an entire file into memory. Returns number of bytes read or -1 if an
+ error occurs.
+\******************************************************************************/
+int C_read_file(const char *filename, char *buffer, int size)
+{
+        FILE *file;
+        size_t bytes_read;
+
+        file = fopen(filename, "r");
+        if (!file) {
+                C_warning("Failed to open '%s'", filename);
+                return -1;
+        }
+        bytes_read = fread(buffer, sizeof (*buffer), size, file);
+        if (bytes_read > size - 1)
+                bytes_read = size - 1;
+        buffer[bytes_read] = NUL;
+        fclose(file);
+        C_debug("Read '%s' (%d bytes)", filename, bytes_read);
+        return bytes_read;
 }
 
