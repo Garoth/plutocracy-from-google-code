@@ -45,16 +45,16 @@ static inline c_vec3_t C_vec3(float x, float y, float z)
  Binary operators with another vector.
 \******************************************************************************/
 
-#define VEC2_OPFUNC(name, op)                                    \
-    static inline c_vec2_t C_vec2_##name(c_vec2_t a, c_vec2_t b)    \
-    {                                                           \
-        return C_vec2(a.x op b.x, a.y op b.y);                   \
+#define VEC2_OPFUNC(name, op) \
+    static inline c_vec2_t C_vec2_##name(c_vec2_t a, c_vec2_t b) \
+    { \
+        return C_vec2(a.x op b.x, a.y op b.y); \
     }
 
-#define VEC3_OPFUNC(name, op)                                    \
-    static inline c_vec3_t C_vec3_##name(c_vec3_t a, c_vec3_t b)    \
-    {                                                           \
-        return C_vec3(a.x op b.x, a.y op b.y, a.z op b.z);       \
+#define VEC3_OPFUNC(name, op) \
+    static inline c_vec3_t C_vec3_##name(c_vec3_t a, c_vec3_t b) \
+    { \
+        return C_vec3(a.x op b.x, a.y op b.y, a.z op b.z); \
     }
 
 VEC2_OPFUNC(add, +);
@@ -73,16 +73,16 @@ VEC3_OPFUNC(invscale, /);
  Binary operators with a scalar.
 \******************************************************************************/
 
-#define VEC2_OPFUNCF(name, op)                                 \
-    static inline c_vec2_t C_vec2_##name(c_vec2_t a, float f)    \
-    {                                                         \
-        return C_vec2(a.x op f, a.y op f);                     \
+#define VEC2_OPFUNCF(name, op) \
+    static inline c_vec2_t C_vec2_##name(c_vec2_t a, float f) \
+    { \
+        return C_vec2(a.x op f, a.y op f); \
     }
 
-#define VEC3_OPFUNCF(name, op)                                 \
-    static inline c_vec3_t C_vec3_##name(c_vec3_t a, float f)    \
-    {                                                         \
-        return C_vec3(a.x op f, a.y op f, a.z op f);           \
+#define VEC3_OPFUNCF(name, op) \
+    static inline c_vec3_t C_vec3_##name(c_vec3_t a, float f) \
+    { \
+        return C_vec3(a.x op f, a.y op f, a.z op f); \
     }
 
 VEC2_OPFUNCF(addf, +);
