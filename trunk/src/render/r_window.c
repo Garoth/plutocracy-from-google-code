@@ -28,7 +28,7 @@ r_static_mesh_t* r_mesh_data = NULL;
 \******************************************************************************/
 void R_close_window(void)
 {
-        C_free(r_mesh_data);
+        R_static_mesh_free(r_mesh_data);
         SDL_Quit();
 }
 
@@ -132,7 +132,7 @@ int R_create_window(void)
 
         if(*r_mesh.value.s) {
                 /* Not empty, load the mesh. */
-                r_mesh_data = R_load_static_mesh(r_mesh.value.s);
+                r_mesh_data = R_static_mesh_load(r_mesh.value.s);
         }
 
         return TRUE;

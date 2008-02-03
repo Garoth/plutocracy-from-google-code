@@ -53,10 +53,21 @@ void C_array_append(c_array_t *ary, void* item)
 }
 
 /******************************************************************************\
+ Realloc so the array isn't overallocated, and return the pointer to the
+ dynamic memory, otherwise cleaning up.
+\******************************************************************************/
+void* C_array_steal(c_array_t *ary)
+{
+        void* result = C_realloc(ary->elems, ary->len * ary->item_size);
+        memset(ary, '\0', sizeof(*ary));
+        return result;
+}
+
+/****************************************************************************** \
  Clean up after the array.
 \******************************************************************************/
-void C_array_deinit(c_array_t *ary)
+void C_array_cleanup(c_array_t *ary)
 {
-        free(ary->elems);
+        C_free(ary->elems);
         memset(ary, '\0', sizeof(*ary));
 }

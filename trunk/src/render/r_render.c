@@ -50,12 +50,12 @@ void R_render(void)
 
         /* Vertex arrays! */
         if(r_mesh_data) {
-                R_render_static_mesh(r_mesh_data);
+                R_static_mesh_render(r_mesh_data);
         }
 
         glPopMatrix();
-        x_rot += 0.03;
-        y_rot += 0.1;
+        x_rot += 0.08;
+        y_rot += 0.2;
 
         SDL_GL_SwapBuffers();
 }

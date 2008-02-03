@@ -23,6 +23,6 @@ typedef struct r_static_mesh {
 } r_static_mesh_t;
 
 /* r_static_mesh.c */
-r_static_mesh_t* R_load_static_mesh(const char* filename);
-void R_render_static_mesh(r_static_mesh_t*);
-void R_free_static_mesh(r_static_mesh_t*);
+r_static_mesh_t* R_static_mesh_load(const char* filename);
+void R_static_mesh_render(r_static_mesh_t*);
+void R_static_mesh_free(r_static_mesh_t*);

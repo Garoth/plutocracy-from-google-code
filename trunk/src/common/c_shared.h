@@ -85,7 +85,8 @@ typedef struct r_ary {
 void C_array_init_real(c_array_t *ary, size_t item_size, size_t cap);
 void C_array_reserve(c_array_t *ary, size_t n);
 void C_array_append(c_array_t *ary, void* item);
-void C_array_deinit(c_array_t* ary);
+void* C_array_steal(c_array_t* ary);
+void C_array_cleanup(c_array_t* ary);
 
 /* c_log.c */
 void C_close_log_file(void);
@@ -129,4 +130,3 @@ void C_register_variable(c_var_t *var, const char *name, c_var_type_t type,
                          c_var_value_t value);
 void C_register_variables(void);
 void C_set_variable(c_var_t *var, const char *value);
-
