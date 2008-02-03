@@ -1,5 +1,8 @@
 #summary Obey on pain of death
 
+This style is based on the Linux kernel with some deviations:
+http://pantransit.reptiles.org/prog/CodingStyle.html
+
 = License =
 
 All files need the license header and must include their namespace common header:
@@ -40,10 +43,55 @@ if (my_size > sizeof (c_my_type_t)) {
         C_error("Oh snap (%d)!", my_second_int);
 }
 }}}
+Put one space after pointer types for consistency:
+{{{
+char *a_char_ptr, a_char, *another_char_ptr;
+
+char *C_return_char_ptr(char *char_ptr)
+{
+        return char_ptr;
+}
+}}}
+Do _not_ write one line blocks or have more than one statement per line:
+{{{
+/* Every time you write this sort of thing, Linus kills a kitten: */
+if (condition) { short_function(); }
+}}}
+Instead, write it out and stay consistent:
+{{{
+if (condition)
+        short_function();
+}}}
 
 = Comments =
 
-Comment frequently.
+At the top of every file, under the license, should be a brief explanation of what the file does. Use a block comment like this:
+{{{
+/* Block comments that spread over multiple lines
+   should look kind of like this. Use full sentences,
+   capitalize, and don't forget periods! */
+
+/* No period for one sentence/short comments */
+}}}
+At the top of every function definition (for inline functions in headers too!), use a large fancy header:
+{{{
+/******************************************************************************\
+ This is a large fancy header. It should describe in plain English what the
+ function immediately below it does, how it is implemented, and any other
+ considerations that are not immediately obvious. When referring to an [arg]
+ use brackets. Don't forget to mention the return value. Generally, you want 
+ more comments in here than in the code itself.
+\******************************************************************************/
+static int my_function(int arg)
+{
+       /* Comment in the code for clarification only */
+       if (C_is_unclear(arg))
+              return TRUE;
+
+       return FALSE;
+}
+}}}
+Do not use end-of-line or C++ style ({{{//}}}) comments.
 
 = Namespaces =
 
@@ -55,12 +103,23 @@ void C_my_common_function();
 
 We have the following namespaces:
 {{{
-C_common()    // shared among all code
-G_game()      // server's game mechanics
-I_interface() // client interface
-R_render()    // client rendering (OpenGL here only)
-N_network()   // client and server network calls
-P_platform()  // platform compatibility code
+/* Shared among all code */
+void C_common();
+
+/* Server's game mechanics */
+void G_game();
+
+/* Client interface */
+void I_interface();
+
+/* Client rendering (OpenGL here only) */
+void R_render();
+
+/* Client and server network calls */
+void N_network();
+
+/* Platform compatibility code */
+void P_platform();
 }}}
 
 = Common and Shared Headers =
@@ -92,7 +151,7 @@ void C_blah_blah_blah();
 
 = Class and Function Names =
 
-Type names are prefixed and end with {{{_t:}}}
+Type names are prefixed and end with {{{_t}}}, try not to abbreviate names:
 {{{
 c_my_type_t
 }}}
@@ -108,17 +167,17 @@ void C_my_type_mogrify(c_my_type_t *type, other, args);
 }}}
 Functions that allocate and return memory that must be {{{free}}}'d should have {{{_alloc}}} in the name and have an appropriate {{{_free}}} function if they need special treatment to free:
 {{{
-c_my_type_t* C_my_type_alloc();
-void C_my_type_free(c_my_type_t*);
+c_my_type_t *C_my_type_alloc();
+void C_my_type_free(c_my_type_t *);
 }}}
 If your type is allocated on the stack and require initialization/cleanup and the actual pointer is not dynamically allocated or {{{free}}}'d:
 {{{
-void C_my_type_init(c_my_type_t*);
-void C_my_type_cleanup(c_my_type_t*);
+void C_my_type_init(c_my_type_t *);
+void C_my_type_cleanup(c_my_type_t *);
 }}}
-If the function allocates memory and may involve file I/O, use load instead of {{{alloc}}}:
+If the function allocates memory and may involve file I/O, use {{{load}}} instead of {{{alloc}}}:
 {{{
-c_my_type_t* C_my_type_load();
+c_my_type_t *C_my_type_load();
 }}}
 If you return a pointer that should not be {{{free}}}'d, put {{{get}}} somewhere in the name:
 {{{
