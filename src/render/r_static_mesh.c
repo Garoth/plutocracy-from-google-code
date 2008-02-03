@@ -85,7 +85,7 @@ static char* parse_face(char* s,
 /****************************************************************************** \
  Loads a static mesh from a .OBJ text file.
 \******************************************************************************/
-r_static_mesh_t* R_load_static_mesh(const char* filename)
+r_static_mesh_t* R_static_mesh_load(const char* filename)
 {
         r_static_mesh_t* result = NULL;
 
@@ -198,33 +198,15 @@ r_static_mesh_t* R_load_static_mesh(const char* filename)
 
         /* Shrink arrays and keep them in result structure. */
 
-        /* vertices */
-        result->verts = C_realloc(real_verts.elems,
-                                  real_verts.len * sizeof(c_vec3_t));
-        real_verts.elems = NULL;
+        result->verts = C_array_steal(&real_verts);
+        result->norms = C_array_steal(&real_norms);
+        result->sts = C_array_steal(&real_sts);
+        result->inds = C_array_steal(&inds);
 
-        /* normals */
-        result->norms = C_realloc(real_norms.elems,
-                                  real_verts.len * sizeof(c_vec3_t));
-        real_norms.elems = NULL;
-
-        /* texcoords */
-        result->sts = C_realloc(real_sts.elems,
-                                real_verts.len * sizeof(c_vec2_t));
-        real_sts.elems = NULL;
-
-        /* indices */
-        result->inds = C_realloc(inds.elems,
-                                 inds.len * sizeof(unsigned short));
-        inds.elems = NULL;
-
-        C_array_deinit(&inds);
-        C_array_deinit(&real_sts);
-        C_array_deinit(&real_norms);
-        C_array_deinit(&real_verts);
-        C_array_deinit(&sts);
-        C_array_deinit(&norms);
-        C_array_deinit(&verts);
+        /* Cleanup temporary arrays. */
+        C_array_cleanup(&sts);
+        C_array_cleanup(&norms);
+        C_array_cleanup(&verts);
         fclose(fp);
 
         return result;
@@ -233,7 +215,7 @@ r_static_mesh_t* R_load_static_mesh(const char* filename)
 /****************************************************************************** \
  Render a mesh.
 \******************************************************************************/
-void R_render_static_mesh(r_static_mesh_t* mesh)
+void R_static_mesh_render(r_static_mesh_t* mesh)
 {
         glEnableClientState(GL_VERTEX_ARRAY);
         glEnableClientState(GL_NORMAL_ARRAY);
@@ -256,7 +238,7 @@ void R_render_static_mesh(r_static_mesh_t* mesh)
 /****************************************************************************** \
  Release the resources for a mesh.
 \******************************************************************************/
-void R_free_static_mesh(r_static_mesh_t* mesh)
+void R_static_mesh_free(r_static_mesh_t* mesh)
 {
         C_free(mesh->verts);
         C_free(mesh->norms);
