@@ -48,6 +48,7 @@ typedef union {
 
 /* Variable value types */
 typedef enum {
+        C_VAR_UNREGISTERED,
         C_VAR_INTEGER,
         C_VAR_FLOAT,
 
