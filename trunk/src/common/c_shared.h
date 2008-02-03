@@ -13,6 +13,9 @@
 /* Project configuration header */
 #include "config.h"
 
+/* size_t */
+#include <stddef.h>
+
 /* c_pt2_t, c_pt3_t and associated stuff */
 #include "c_pts.h"
 
@@ -65,8 +68,17 @@ typedef struct c_var {
         struct c_var *next;
 } c_var_t;
 
+/* Resizing arrays for fun and profit. This is OH GOD SO UNTYPESAFE. */
+typedef struct r_ary {
+        size_t capacity;
+        size_t len;
+        size_t item_size;
+        void *elems;
+} c_array_t;
+
 /* c_malloc.c */
 void* C_malloc(size_t);
+void* C_realloc(void*, size_t);
 
 /* c_log.c */
 void C_close_log_file(void);
@@ -105,3 +117,12 @@ void C_register_variable(c_var_t *var, const char *name, c_var_type_t type,
 void C_register_variables(void);
 void C_set_variable(c_var_t *var, const char *value);
 
+/* c_array.c */
+#define C_array_elem(pary, type, i) (((type*)(pary)->elems)[i])
+#define C_array_init(ary, type, cap) \
+        C_array_init_real(ary, sizeof(type), cap)
+
+void C_array_init_real(c_array_t *ary, size_t item_size, size_t cap);
+void C_array_reserve(c_array_t *ary, size_t n);
+void C_array_append(c_array_t *ary, void* item);
+void C_array_deinit(c_array_t* ary);
