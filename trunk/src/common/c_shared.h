@@ -80,6 +80,7 @@ typedef struct r_ary {
 /* c_malloc.c */
 void* C_malloc(size_t);
 void* C_realloc(void*, size_t);
+void C_free(void*);
 
 /* c_log.c */
 void C_close_log_file(void);

@@ -50,22 +50,7 @@ void R_render(void)
 
         /* Vertex arrays! */
         if(r_mesh_data) {
-                glEnableClientState(GL_VERTEX_ARRAY);
-                glEnableClientState(GL_NORMAL_ARRAY);
-                glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-
-                glVertexPointer(3, GL_FLOAT, 0, r_mesh_data->verts);
-                glNormalPointer(GL_FLOAT, 0, r_mesh_data->norms);
-                glTexCoordPointer(2, GL_FLOAT, 0, r_mesh_data->sts);
-
-                glDrawElements(GL_TRIANGLES,
-                               r_mesh_data->ninds,
-                               GL_UNSIGNED_SHORT,
-                               r_mesh_data->inds);
-
-                glDisableClientState(GL_TEXTURE_COORD_ARRAY);
-                glDisableClientState(GL_NORMAL_ARRAY);
-                glDisableClientState(GL_VERTEX_ARRAY);
+                R_render_static_mesh(r_mesh_data);
         }
 
         glPopMatrix();

@@ -40,7 +40,6 @@ static unsigned short find_vert(c_array_t *vs,
         }
 
         /* not found */
-
         C_array_append(vs, &v);
         C_array_append(ns, &n);
         C_array_append(sts, &st);
@@ -97,15 +96,15 @@ r_static_mesh_t* R_load_static_mesh(const char* filename)
         }
 
         c_array_t verts, norms, sts;
-        C_array_init(&verts, c_vec3_t, 1);
-        C_array_init(&norms, c_vec3_t, 1);
-        C_array_init(&sts, c_vec2_t, 1);
+        C_array_init(&verts, c_vec3_t, 512);
+        C_array_init(&norms, c_vec3_t, 512);
+        C_array_init(&sts, c_vec2_t, 512);
 
         c_array_t real_verts, real_norms, real_sts, inds;
-        C_array_init(&real_verts, c_vec3_t, 1);
-        C_array_init(&real_norms, c_vec3_t, 1);
-        C_array_init(&real_sts, c_vec2_t, 1);
-        C_array_init(&inds, unsigned short, 1);
+        C_array_init(&real_verts, c_vec3_t, 512);
+        C_array_init(&real_norms, c_vec3_t, 512);
+        C_array_init(&real_sts, c_vec2_t, 512);
+        C_array_init(&inds, unsigned short, 512);
 
         int flag = TRUE;
 
@@ -229,4 +228,39 @@ r_static_mesh_t* R_load_static_mesh(const char* filename)
         fclose(fp);
 
         return result;
+}
+
+/****************************************************************************** \
+ Render a mesh.
+\******************************************************************************/
+void R_render_static_mesh(r_static_mesh_t* mesh)
+{
+        glEnableClientState(GL_VERTEX_ARRAY);
+        glEnableClientState(GL_NORMAL_ARRAY);
+        glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+
+        glVertexPointer(3, GL_FLOAT, 0, mesh->verts);
+        glNormalPointer(GL_FLOAT, 0, mesh->norms);
+        glTexCoordPointer(2, GL_FLOAT, 0, mesh->sts);
+
+        glDrawElements(GL_TRIANGLES,
+                       mesh->ninds,
+                       GL_UNSIGNED_SHORT,
+                       mesh->inds);
+
+        glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+        glDisableClientState(GL_NORMAL_ARRAY);
+        glDisableClientState(GL_VERTEX_ARRAY);
+}
+
+/****************************************************************************** \
+ Release the resources for a mesh.
+\******************************************************************************/
+void R_free_static_mesh(r_static_mesh_t* mesh)
+{
+        C_free(mesh->verts);
+        C_free(mesh->norms);
+        C_free(mesh->sts);
+        C_free(mesh->inds);
+        C_free(mesh);
 }
