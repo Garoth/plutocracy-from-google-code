@@ -14,8 +14,8 @@
 #include <stdlib.h>
 #include <string.h>
 
-/****************************************************************************** \
- Initialize an array. Returns TRUE on success.
+/******************************************************************************\
+ Initialize an array.
 \******************************************************************************/
 void C_array_init_real(c_array_t *ary, size_t item_size, size_t cap)
 {

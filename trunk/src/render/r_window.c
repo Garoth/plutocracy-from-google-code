@@ -16,7 +16,11 @@
 #include "SDL.h"
 #include <stdlib.h>
 
-extern c_var_t r_width, r_height, r_colordepth, r_depth, r_windowed, r_mesh;
+/* Video parameters */
+extern c_var_t r_width, r_height, r_colordepth, r_depth, r_windowed, r_vsync;
+
+/* Model testing */
+extern c_var_t r_mesh;
 r_static_mesh_t* r_mesh_data = NULL;
 
 /******************************************************************************\
@@ -24,7 +28,6 @@ r_static_mesh_t* r_mesh_data = NULL;
 \******************************************************************************/
 void R_close_window(void)
 {
-        C_debug("");
         SDL_Quit();
 }
 
@@ -78,6 +81,7 @@ int R_create_window(void)
         SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
         SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 8);
         SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, r_depth.value.n);
+        SDL_GL_SetAttribute(SDL_GL_SWAP_CONTROL, r_vsync.value.n);
 
         int cdepth = r_colordepth.value.n;
         if(cdepth <= 16) {
