@@ -104,10 +104,12 @@ void C_open_log_file(void);
                                          __func__, fmt, ## __VA_ARGS__)
 
 /* c_malloc.c */
-void* C_malloc(size_t);
-void* C_realloc(void*, size_t);
-void C_free_void(void*);
-#define C_free(p) do { C_free_void(p); (p) = NULL; } while(FALSE)
+#define C_free(p) do { C_free_ptr(p); (p) = NULL; } while(FALSE)
+void C_free_ptr(void *);
+#define C_malloc(s) C_realloc(NULL, s)
+#define C_realloc(p, s) C_realloc_full(__FILE__, __LINE__, __func__, p, s)
+void *C_realloc_full(const char *file, int line, const char *function,
+                     void *ptr, size_t size);
 
 /* c_string.c */
 #define C_is_digit(c) (((c) >= '0' && (c) <= '9') || c == '.' || c == '-')

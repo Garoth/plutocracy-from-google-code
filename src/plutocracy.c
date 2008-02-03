@@ -83,7 +83,7 @@ int main(int argc, char *argv[])
 
         /* Initialize */
         C_open_log_file();
-        C_parse_config_file("config/client.cfg");
+        C_parse_config_file("config/default.cfg");
         parse_config_args(argc, argv);
         C_status("Initializing " PACKAGE_STRING " client");
         if(!R_create_window()) {
