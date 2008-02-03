@@ -62,6 +62,14 @@ Instead, write it out and stay consistent:
 if (condition)
         short_function();
 }}}
+When writing multi-line macros, do not put the backslash at the very end of the line,
+it is impossible to maintain proper spacing. Instead, add a space and write the
+backslash as if it was an operator:
+{{{
+#define A_VERY_LONG_MACRO if (you_like_macros) { \
+                                  you.lazy = TRUE; \
+                          }
+}}}
 
 = Comments =
 
