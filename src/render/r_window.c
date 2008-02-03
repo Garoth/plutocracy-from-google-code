@@ -28,6 +28,7 @@ r_static_mesh_t* r_mesh_data = NULL;
 \******************************************************************************/
 void R_close_window(void)
 {
+        C_free(r_mesh_data);
         SDL_Quit();
 }
 
