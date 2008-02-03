@@ -18,125 +18,43 @@
 #include <string.h>
 #include <ctype.h>
 
-/******************************************************************************\
- Resizing arrays for fun and profit. This is OH GOD SO UNTYPESAFE.
-\******************************************************************************/
-typedef struct r_ary {
-        size_t capacity;
-        size_t len;
-        size_t item_size;
-        void *elems;
-} r_ary_t;
-
-#define R_ary_elems(pary, type) ((type*)(pary)->elems)
-
-/******************************************************************************\
- Initialize an array. Returns TRUE on success.
-\******************************************************************************/
-#define R_ary_init(ary, type, cap) \
-        R_ary_init_real(ary, sizeof(type), cap)
-
-static int R_ary_init_real(r_ary_t *ary, size_t item_size, size_t cap)
-{
-        ary->item_size = item_size;
-        ary->len = 0;
-        ary->capacity = cap;
-        ary->elems = malloc(cap * item_size);
-        if(!ary->elems) {
-                return FALSE;
-        }
-
-        return TRUE;
-}
-
-/******************************************************************************\
- Ensure that enough space is allocated for n elems, but not necessarily more.
- Returns TRUE on success.
-\******************************************************************************/
-static int R_ary_reserve(r_ary_t *ary, size_t n)
-{
-        void* new_elems = realloc(ary->elems, ary->item_size * n);
-        if(!new_elems) {
-                return FALSE;
-        }
-
-        ary->elems = new_elems;
-        ary->capacity = n;
-        return TRUE;
-}
-
-/******************************************************************************\
- Append something to an array. item points to something of size item_size.
- Returns TRUE on success.
-\******************************************************************************/
-static int R_ary_append(r_ary_t *ary, void* item)
-{
-        if(ary->len >= ary->capacity &&
-           !R_ary_reserve(ary, ary->capacity * 2)) {
-                return FALSE;
-        }
-
-        memcpy((char*)ary->elems + ary->len * ary->item_size,
-               item,
-               ary->item_size);
-
-        ary->len++;
-
-        return TRUE;
-}
-
-/******************************************************************************\
- Clean up after the array.
-\******************************************************************************/
-static void R_ary_deinit(r_ary_t *ary)
-{
-        free(ary->elems);
-        memset(ary, '\0', sizeof(*ary));
-}
-
 /****************************************************************************** \
  Find or insert the given (vert,norm,st) triplet into the parallel arrays
  given. Returns TRUE on success.
 \******************************************************************************/
-static int R_find_vert(r_ary_t *vs,
-                       r_ary_t *ns,
-                       r_ary_t *sts,
-                       c_pt3_t v,
-                       c_pt3_t n,
-                       c_pt2_t st,
-                       unsigned short* i)
+static unsigned short find_vert(c_array_t *vs,
+                                c_array_t *ns,
+                                c_array_t *sts,
+                                c_pt3_t v,
+                                c_pt3_t n,
+                                c_pt2_t st)
 {
-        for(*i = 0; *i < vs->len; (*i)++) {
-                if(C_pt3_eq(v, R_ary_elems(vs, c_pt3_t)[*i]) &&
-                   C_pt3_eq(n, R_ary_elems(ns, c_pt3_t)[*i]) &&
-                   C_pt2_eq(st, R_ary_elems(sts, c_pt2_t)[*i])) {
-                        return TRUE;
+        unsigned short i;
+
+        for(i = 0; i < vs->len; i++) {
+                if(C_pt3_eq(v, C_array_elem(vs, c_pt3_t, i)) &&
+                   C_pt3_eq(n, C_array_elem(ns, c_pt3_t, i)) &&
+                   C_pt2_eq(st, C_array_elem(sts, c_pt2_t, i))) {
+                        return i;
                 }
         }
 
         /* not found */
 
-        if(!R_ary_append(vs, &v)) { return FALSE; }
-        if(!R_ary_append(ns, &n)) {
-                vs->len--;
-                return FALSE;
-        }
-        if(!R_ary_append(sts, &st)) {
-                vs->len--;
-                ns->len--;
-                return FALSE;
-        }
+        C_array_append(vs, &v);
+        C_array_append(ns, &n);
+        C_array_append(sts, &st);
 
-        return TRUE;
+        return i;
 }
 
 /****************************************************************************** \
  Parse a v/vt/vn triplet as you would find in a face line in .OBJ format.
 \******************************************************************************/
-static char* R_parse_face(char* s,
-                          unsigned short* ivert,
-                          unsigned short* ist,
-                          unsigned short* inorm)
+static char* parse_face(char* s,
+                        unsigned short* ivert,
+                        unsigned short* ist,
+                        unsigned short* inorm)
 {
         s = C_skip_spaces(s);
         if(!*s) { return NULL; }
@@ -175,20 +93,19 @@ r_static_mesh_t* R_load_static_mesh(const char* filename)
         FILE* fp = fopen(filename, "r");
         if(!fp) {
                 C_debug("can't open file %s", filename);
-                goto errfp;
+                return NULL;
         }
 
-        r_ary_t verts, norms, sts;
+        c_array_t verts, norms, sts;
+        C_array_init(&verts, c_pt3_t, 1);
+        C_array_init(&norms, c_pt3_t, 1);
+        C_array_init(&sts, c_pt2_t, 1);
 
-        if(!R_ary_init(&verts, c_pt3_t, 1)) { goto errvs; }
-        if(!R_ary_init(&norms, c_pt3_t, 1)) { goto errns; }
-        if(!R_ary_init(&sts, c_pt2_t, 1)) { goto errsts; }
-
-        r_ary_t real_verts, real_norms, real_sts, inds;
-        if(!R_ary_init(&real_verts, c_pt3_t, 1)) { goto errrv; }
-        if(!R_ary_init(&real_norms, c_pt3_t, 1)) { goto errrn; }
-        if(!R_ary_init(&real_sts, c_pt2_t, 1)) { goto errrst; }
-        if(!R_ary_init(&inds, unsigned short, 1)) { goto errind; }
+        c_array_t real_verts, real_norms, real_sts, inds;
+        C_array_init(&real_verts, c_pt3_t, 1);
+        C_array_init(&real_norms, c_pt3_t, 1);
+        C_array_init(&real_sts, c_pt2_t, 1);
+        C_array_init(&inds, unsigned short, 1);
 
         int flag = TRUE;
 
@@ -211,7 +128,7 @@ r_static_mesh_t* R_load_static_mesh(const char* filename)
 
                 if(strcmp(keyword, "v") == 0 || strcmp(keyword, "vn") == 0) {
                         /* vertex or normal */
-                        r_ary_t* ary = (keyword[1] == 'n' ? &norms : &verts);
+                        c_array_t* ary = (keyword[1] == 'n' ? &norms : &verts);
                         c_pt3_t v;
                         int i;
 
@@ -225,7 +142,7 @@ r_static_mesh_t* R_load_static_mesh(const char* filename)
                                 v = C_pt3_normalize(v);
                         }
 
-                        R_ary_append(ary, &v);
+                        C_array_append(ary, &v);
                 } else if(strcmp(keyword, "vt") == 0) {
                         /* texture coordinate */
                         c_pt2_t st;
@@ -236,35 +153,30 @@ r_static_mesh_t* R_load_static_mesh(const char* filename)
                                 ((float*)&st)[i] = atof(args);
                         }
 
-                        R_ary_append(&sts, &st);
+                        C_array_append(&sts, &st);
                 } else if(strcmp(keyword, "f") == 0) {
                         /* face */
                         char *s = args;
                         unsigned short first_ind, have_first = FALSE;
                         unsigned short last_ind, have_last = FALSE;
                         unsigned short ivert, inorm, ist;
-                        while((s = R_parse_face(s, &ivert, &ist, &inorm))) {
+                        while((s = parse_face(s, &ivert, &ist, &inorm))) {
                                 unsigned short ind;
-                                int find_res = R_find_vert(
+                                ind = find_vert(
                                         &real_verts,
                                         &real_norms,
                                         &real_sts,
-                                        R_ary_elems(&verts, c_pt3_t)[ivert],
-                                        R_ary_elems(&norms, c_pt3_t)[inorm],
-                                        R_ary_elems(&sts, c_pt2_t)[ist],
-                                        &ind);
-
-                                if(!find_res) {
-                                        goto errres; /* cleanup, it's over */
-                                }
+                                        C_array_elem(&verts, c_pt3_t, ivert),
+                                        C_array_elem(&norms, c_pt3_t, inorm),
+                                        C_array_elem(&sts, c_pt2_t, ist));
 
                                 if(!have_first) {
                                         first_ind = ind;
                                         have_first = TRUE;
                                 } else if(have_last) {
-                                        R_ary_append(&inds, &first_ind);
-                                        R_ary_append(&inds, &last_ind);
-                                        R_ary_append(&inds, &ind);
+                                        C_array_append(&inds, &first_ind);
+                                        C_array_append(&inds, &last_ind);
+                                        C_array_append(&inds, &ind);
                                 } else {
                                         have_last = TRUE;
                                 }
@@ -280,8 +192,7 @@ r_static_mesh_t* R_load_static_mesh(const char* filename)
                 real_verts.len,
                 inds.len);
 
-        result = malloc(sizeof(r_static_mesh_t));
-        if(!result) { goto errres; }
+        result = C_malloc(sizeof(r_static_mesh_t));
 
         result->nverts = verts.len;
         result->ninds = inds.len;
@@ -289,31 +200,33 @@ r_static_mesh_t* R_load_static_mesh(const char* filename)
         /* Shrink arrays and keep them in result structure. */
 
         /* vertices */
-        result->verts = realloc(real_verts.elems,
-                                real_verts.len * sizeof(c_pt3_t));
+        result->verts = C_realloc(real_verts.elems,
+                                  real_verts.len * sizeof(c_pt3_t));
         real_verts.elems = NULL;
 
         /* normals */
-        result->norms = realloc(real_norms.elems,
-                                real_verts.len * sizeof(c_pt3_t));
+        result->norms = C_realloc(real_norms.elems,
+                                  real_verts.len * sizeof(c_pt3_t));
         real_norms.elems = NULL;
 
         /* texcoords */
-        result->sts = realloc(real_sts.elems,
-                              real_verts.len * sizeof(c_pt2_t));
+        result->sts = C_realloc(real_sts.elems,
+                                real_verts.len * sizeof(c_pt2_t));
         real_sts.elems = NULL;
 
         /* indices */
-        result->inds = realloc(inds.elems, inds.len * sizeof(unsigned short));
+        result->inds = C_realloc(inds.elems,
+                                 inds.len * sizeof(unsigned short));
         inds.elems = NULL;
 
-errres: R_ary_deinit(&inds);
-errind: R_ary_deinit(&real_sts);
-errrst: R_ary_deinit(&real_norms);
-errrn:  R_ary_deinit(&real_verts);
-errrv:  R_ary_deinit(&sts);
-errsts: R_ary_deinit(&norms);
-errns:  R_ary_deinit(&verts);
-errvs:  fclose(fp);
-errfp:  return result;
+        C_array_deinit(&inds);
+        C_array_deinit(&real_sts);
+        C_array_deinit(&real_norms);
+        C_array_deinit(&real_verts);
+        C_array_deinit(&sts);
+        C_array_deinit(&norms);
+        C_array_deinit(&verts);
+        fclose(fp);
+
+        return result;
 }

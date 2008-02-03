@@ -10,7 +10,7 @@
  FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
 \******************************************************************************/
 
-#include "c_common.h"
+#include "c_shared.h"
 #include <stdlib.h>
 
 /******************************************************************************\
@@ -19,6 +19,19 @@
 void* C_malloc(size_t size)
 {
         void* result = malloc(size);
+        if(!result) {
+                C_error("out of memory");
+        }
+
+        return result;
+}
+
+/******************************************************************************\
+ Reallocate ptr to size bytes large. Abort on error.
+\******************************************************************************/
+void* C_realloc(void* ptr, size_t size)
+{
+        void* result = realloc(ptr, size);
         if(!result) {
                 C_error("out of memory");
         }

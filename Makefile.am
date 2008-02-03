@@ -10,6 +10,7 @@ plutocracy_SOURCES = \
 	src/common/c_log.c \
 	src/common/c_variables.c \
 	src/common/c_string.c \
+	src/common/c_array.c \
 	src/platform/p_shared.h \
 	src/platform/p_posix.c \
 	src/platform/p_win32.c \
