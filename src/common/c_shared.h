@@ -27,8 +27,17 @@
 #define NUL '\0'
 #endif
 
+/* Debug log levels, errors are fatal and will always abort */
+typedef enum {
+        C_LOG_ERROR,
+        C_LOG_WARNING,
+        C_LOG_STATUS,
+        C_LOG_DEBUG,
+        C_LOG_TRACE,
+} c_log_level_t;
+
 /* Holds all possible variable types */
-typedef union  {
+typedef union {
         int n;
         double f;
         char *s;
@@ -54,20 +63,27 @@ typedef struct c_var {
 
 /* c_log.c */
 void C_close_log_file(void);
-#define C_debug(fmt, ...) C_debug_full(__FILE__, __LINE__, __func__, \
-                                       fmt, ## __VA_ARGS__)
-void C_debug_full(const char *file, int line, const char *function,
-                 const char *fmt, ...);
-#define C_error C_debug
+#define C_debug(fmt, ...) C_debug_full(C_LOG_DEBUG, __FILE__, __LINE__, \
+                                       __func__, fmt, ## __VA_ARGS__)
+void C_debug_full(c_log_level_t, const char *file, int line,
+                  const char *function, const char *fmt, ...);
+#define C_error(fmt, ...) C_debug_full(C_LOG_ERROR, __FILE__, __LINE__, \
+                                       __func__, fmt, ## __VA_ARGS__)
 void C_open_log_file(void);
-#define C_warning C_debug
+#define C_status(fmt, ...) C_debug_full(C_LOG_STATUS, __FILE__, __LINE__, \
+                                        __func__, fmt, ## __VA_ARGS__)
+#define C_trace() C_debug_full(C_LOG_TRACE, __FILE__, __LINE__, __func__, NULL)
+#define C_warning(fmt, ...) C_debug_full(C_LOG_WARNING, __FILE__, __LINE__, \
+                                         __func__, fmt, ## __VA_ARGS__)
 
 /* c_string.c */
 #define C_is_digit(c) (((c) >= '0' && (c) <= '9') || c == '.' || c == '-')
+int C_read_file(const char *filename, char *buffer, int size);
 char *C_skip_spaces(const char *str);
 
 /* c_variables.c */
 int C_parse_config(const char *string);
+int C_parse_config_file(const char *filename);
 #define C_register_float(var, name, value) \
         C_register_variable(var, name, C_VAR_FLOAT, (c_var_value_t)(value))
 #define C_register_integer(var, name, value) \

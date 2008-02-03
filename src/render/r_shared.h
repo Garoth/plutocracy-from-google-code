@@ -10,12 +10,13 @@
  FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
 \******************************************************************************/
 
-/* r_window.c */
-int R_create_window(void);
-
 /* r_render.c */
 void R_render(void);
 
 /* r_variables.c */
 void R_register_variables(void);
+
+/* r_window.c */
+void R_close_window(void);
+int R_create_window(void);
 

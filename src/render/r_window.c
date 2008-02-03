@@ -21,14 +21,14 @@ extern c_var_t r_width, r_height, r_depth, r_windowed;
 /******************************************************************************\
  Cleans up the SDL window resources.
 \******************************************************************************/
-static void R_close_window(void)
+void R_close_window(void)
 {
         C_debug("");
         SDL_Quit();
 }
 
 /******************************************************************************\
- Initializes some OpenGL stuff
+ Initializes some OpenGL stuff.
 \******************************************************************************/
 static void R_init_gl_state(void)
 {
@@ -89,9 +89,6 @@ int R_create_window(void)
                 SDL_Quit();
                 return FALSE;
         }
-
-        /* Make sure it's cleaned up. */
-        atexit(R_close_window);
 
         R_init_gl_state();
 

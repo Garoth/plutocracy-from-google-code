@@ -11,6 +11,7 @@
 \******************************************************************************/
 
 #include "c_shared.h"
+#include <stdlib.h>
 #include <stdio.h>
 #include <stdarg.h>
 
@@ -34,33 +35,72 @@ void C_close_log_file(void)
 \******************************************************************************/
 void C_open_log_file(void)
 {
-        if (c_log_file.value.s[0]) {
-                log_file = fopen(c_log_file.value.s, "r");
-                if (log_file)
-                        C_debug("Opened log-file '%s'", c_log_file.value.s);
-                else
-                        C_warning("Failed to open log-file '%s'",
-                                  c_log_file.value.s);
-        }
-        if (!log_file)
-                log_file = stderr;
+        if (!c_log_file.value.s[0])
+                return;
+        log_file = fopen(c_log_file.value.s, "r");
+        if (log_file)
+                C_debug("Opened log-file '%s'", c_log_file.value.s);
+        else
+                C_warning("Failed to open log-file '%s'",
+                          c_log_file.value.s);
 }
 
 /******************************************************************************\
- Prints a string to the debug log file or to standard output.
+ Prints a string to the debug log file or to standard output. The output detail
+ can be controlled using [c_log_level]. Debug calls without any text are
+ considered traces.
 \******************************************************************************/
-void C_debug_full(const char *file, int line, const char *function,
-                  const char *fmt, ...)
+void C_debug_full(c_log_level_t level, const char *file, int line,
+                  const char *function, const char *fmt, ...)
 {
         char fmt2[128];
         va_list va;
 
-        if (!log_file)
+        if (level >= C_LOG_DEBUG && (!fmt || !fmt[0]))
+                level = C_LOG_TRACE;
+        if (level > C_LOG_ERROR && level > c_log_level.value.n)
                 return;
         va_start(va, fmt);
-        snprintf(fmt2, sizeof(fmt2), "*** %s:%d, %s() -- %s\n",
-                 file, line, function, fmt);
-        vfprintf(log_file, fmt2, va);
+        if (c_log_level.value.n <= C_LOG_STATUS) {
+                if (level >= C_LOG_STATUS)
+                        snprintf(fmt2, sizeof(fmt2), "%s\n", fmt);
+                else if (level == C_LOG_WARNING)
+                        snprintf(fmt2, sizeof(fmt2), "* %s\n", fmt);
+                else
+                        snprintf(fmt2, sizeof(fmt2), "*** %s\n", fmt);
+        } else if (c_log_level.value.n == C_LOG_DEBUG) {
+                if (level >= C_LOG_DEBUG)
+                        snprintf(fmt2, sizeof(fmt2), "| %s(): %s\n",
+                                 function, fmt);
+                else if (level == C_LOG_STATUS)
+                        snprintf(fmt2, sizeof(fmt2), "\n%s(): %s --\n",
+                                 function, fmt);
+                else if (level == C_LOG_WARNING)
+                        snprintf(fmt2, sizeof(fmt2), "* %s(): %s\n",
+                                 function, fmt);
+                else
+                        snprintf(fmt2, sizeof(fmt2), "*** %s(): %s\n",
+                                 function, fmt);
+        } else if (c_log_level.value.n >= C_LOG_TRACE) {
+                if (level >= C_LOG_TRACE)
+                        snprintf(fmt2, sizeof(fmt2), ": %s:%d, %s()\n",
+                                 file, line, function);
+                else if (level == C_LOG_DEBUG)
+                        snprintf(fmt2, sizeof(fmt2), "| %s:%d, %s(): %s\n",
+                                 file, line, function, fmt);
+                else if (level == C_LOG_STATUS)
+                        snprintf(fmt2, sizeof(fmt2), "\n%s:%d, %s(): %s --\n",
+                                 file, line, function, fmt);
+                else if (level == C_LOG_WARNING)
+                        snprintf(fmt2, sizeof(fmt2), "* %s:%d, %s(): %s\n",
+                                 file, line, function, fmt);
+                else
+                        snprintf(fmt2, sizeof(fmt2), "*** %s:%d, %s(): %s\n",
+                                 file, line, function, fmt);
+        }
+        vfprintf(log_file ? log_file : stderr, fmt2, va);
         va_end(va);
+        if (level == C_LOG_ERROR)
+                abort();
 }
 
