@@ -1,0 +1,126 @@
+#summary Obey on pain of death
+
+= License =
+
+All files need the license header and must include their namespace common header:
+{{{
+/******************************************************************************\
+ Plutocracy - Copyright (C) 2008 - Michael Levin, Devin Papineau
+
+ This program is free software; you can redistribute it and/or modify it under
+ the terms of the GNU General Public License as published by the Free Software
+ Foundation; either version 2, or (at your option) any later version.
+
+ This program is distributed in the hope that it will be useful, but WITHOUT
+ ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+ FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+\******************************************************************************/
+
+#include "r_common.h"
+}}}
+The copyright name should only include authors that actually worked on a significant portion of the file.
+
+= Spacing =
+
+Use 8-space tabs limited to 80-char width. If you run out of room, make a new function or:
+{{{
+C_my_obscenely_long_function(wrap, really_long_arguments,
+                             like_this, please);
+}}}
+Put a space after every keyword ({{{if}}}, {{{while}}}, {{{do}}}, {{{goto}}}, {{{sizeof}}}, etc) and operator and use K&R braces. Do not put braces for one-line blocks.  Put type definitions at the top of every block and separate them with one blank line. Initialize them below, not in-line.
+{{{
+int my_first_int;
+
+my_first_int = 1;
+if (my_size > sizeof (c_my_type_t)) {
+        int my_second_int;
+
+        my_second_int = 2;
+        static_function(my_first_int);
+        C_error("Oh snap (%d)!", my_second_int);
+}
+}}}
+
+= Comments =
+
+Comment frequently.
+
+= Namespaces =
+
+Non-static functions and variables have prefixes:
+{{{
+c_var_t c_my_common_var;
+void C_my_common_function();
+}}}
+
+We have the following namespaces:
+{{{
+C_common()    // shared among all code
+G_game()      // server's game mechanics
+I_interface() // client interface
+R_render()    // client rendering (OpenGL here only)
+N_network()   // client and server network calls
+P_platform()  // platform compatibility code
+}}}
+
+= Common and Shared Headers =
+
+Global variables and functions should be included either in the namespace common or shared header. The common header is only shared within the namespace. The shared header may be included by other namespaces. Globals need a prefix regardless of which header they fall under. Alphabetize headers by file (include comment header naming the file each function/variable came from) then by type and name:
+{{{
+/* Includes first */
+#include "config.h"
+
+/* Then definitions */
+#define TRUE 1
+
+/* Then type definitions */
+typedef enum {
+        C_TYPE,
+} c_type_t;
+
+/* c_afile.c */
+void C_afunction();
+#define C_function(p) C_function_full(__FILE__, p)
+void C_function_full(const char *file, int arg);
+void C_zfunction();
+
+extern int avar, bvar, cvar;
+
+/* c_zfile.c */
+void C_blah_blah_blah();
+}}}
+
+= Class and Function Names =
+
+Type names are prefixed and end with {{{_t:}}}
+{{{
+c_my_type_t
+}}}
+
+Class constructors that return the type, not a pointer take the name of the class:
+{{{
+c_my_type_t C_my_type();
+}}}
+
+Class functions contain the full name of the class first, then the action verb(s):
+{{{
+void C_my_type_mogrify(c_my_type_t *type, other, args);
+}}}
+Functions that allocate and return memory that must be {{{free}}}'d should have {{{_alloc}}} in the name and have an appropriate {{{_free}}} function if they need special treatment to free:
+{{{
+c_my_type_t* C_my_type_alloc();
+void C_my_type_free(c_my_type_t*);
+}}}
+If your type is allocated on the stack and require initialization/cleanup and the actual pointer is not dynamically allocated or {{{free}}}'d:
+{{{
+void C_my_type_init(c_my_type_t*);
+void C_my_type_cleanup(c_my_type_t*);
+}}}
+If the function allocates memory and may involve file I/O, use load instead of {{{alloc}}}:
+{{{
+c_my_type_t* C_my_type_load();
+}}}
+If you return a pointer that should not be {{{free}}}'d, put {{{get}}} somewhere in the name:
+{{{
+void *C_get_static_pointer();
+}}}
