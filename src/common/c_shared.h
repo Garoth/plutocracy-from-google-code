@@ -64,6 +64,9 @@ typedef struct c_var {
         struct c_var *next;
 } c_var_t;
 
+/* c_malloc.c */
+void* C_malloc(size_t);
+
 /* c_log.c */
 void C_close_log_file(void);
 #define C_debug(fmt, ...) C_debug_full(C_LOG_DEBUG, __FILE__, __LINE__, \

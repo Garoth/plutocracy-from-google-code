@@ -6,6 +6,7 @@ bin_PROGRAMS = plutocracy plutoserv
 plutocracy_SOURCES = \
 	src/client.c \
 	src/common/c_shared.h \
+	src/common/c_malloc.c \
 	src/common/c_log.c \
 	src/common/c_variables.c \
 	src/common/c_string.c \
