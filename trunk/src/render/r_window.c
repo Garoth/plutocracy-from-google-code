@@ -17,7 +17,7 @@
 #include <stdlib.h>
 
 extern c_var_t r_width, r_height, r_colordepth, r_depth, r_windowed, r_mesh;
-extern r_static_mesh_t* r_mesh_data;
+r_static_mesh_t* r_mesh_data = NULL;
 
 /******************************************************************************\
  Cleans up the SDL window resources.

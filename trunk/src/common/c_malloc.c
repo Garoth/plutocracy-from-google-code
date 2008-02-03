@@ -1,5 +1,5 @@
 /******************************************************************************\
- Plutocracy - Copyright (C) 2008 - Michael Levin
+ Plutocracy - Copyright (C) 2008 - Devin Papineau
 
  This program is free software; you can redistribute it and/or modify it under
  the terms of the GNU General Public License as published by the Free Software
@@ -10,22 +10,18 @@
  FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
 \******************************************************************************/
 
-#include "r_common.h"
-
-/* Window parameters */
-c_var_t r_width, r_height, r_colordepth, r_depth, r_windowed, r_mesh;
+#include "c_common.h"
+#include <stdlib.h>
 
 /******************************************************************************\
- Registers the render variables.
+ Allocate size bytes. Abort on error.
 \******************************************************************************/
-void R_register_variables(void)
+void* C_malloc(size_t size)
 {
-        /* Window parameters */
-        C_register_integer(&r_width, "r_width", 800);
-        C_register_integer(&r_height, "r_height", 600);
-        C_register_integer(&r_depth, "r_colordepth", 24);
-        C_register_integer(&r_depth, "r_depth", 16);
-        C_register_integer(&r_windowed, "r_windowed", 1);
-        C_register_string(&r_mesh, "r_mesh", "");
-}
+        void* result = malloc(size);
+        if(!result) {
+                C_error("out of memory");
+        }
 
+        return result;
+}
