@@ -3,3 +3,5 @@
 = Relevant Links =
 
   * Generate a sphere from any polygon: http://www.neubert.net/PLASpher.html
+  * FreeCiv considers buckeyballs: http://freeciv.wikia.com/wiki/Sphere
+  * Sphere tessellation methods: http://student.ulb.ac.be/~claugero/sphere/index.html
