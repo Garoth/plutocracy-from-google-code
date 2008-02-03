@@ -15,7 +15,7 @@
 
 /* Standard library */
 #include <stddef.h> /* size_t */
-#include <math.h>   /* sqrt() */
+#include <math.h> /* sqrt() */
 
 /* Vectors */
 #include "c_vectors.h"
@@ -77,10 +77,15 @@ typedef struct r_ary {
         void *elems;
 } c_array_t;
 
-/* c_malloc.c */
-void* C_malloc(size_t);
-void* C_realloc(void*, size_t);
-void C_free(void*);
+/* c_array.c */
+#define C_array_elem(pary, type, i) (((type*)(pary)->elems)[i])
+#define C_array_init(ary, type, cap) \
+        C_array_init_real(ary, sizeof(type), cap)
+
+void C_array_init_real(c_array_t *ary, size_t item_size, size_t cap);
+void C_array_reserve(c_array_t *ary, size_t n);
+void C_array_append(c_array_t *ary, void* item);
+void C_array_deinit(c_array_t* ary);
 
 /* c_log.c */
 void C_close_log_file(void);
@@ -96,6 +101,12 @@ void C_open_log_file(void);
 #define C_trace() C_debug_full(C_LOG_TRACE, __FILE__, __LINE__, __func__, NULL)
 #define C_warning(fmt, ...) C_debug_full(C_LOG_WARNING, __FILE__, __LINE__, \
                                          __func__, fmt, ## __VA_ARGS__)
+
+/* c_malloc.c */
+void* C_malloc(size_t);
+void* C_realloc(void*, size_t);
+void C_free_void(void*);
+#define C_free(p) do { C_free_void(p); (p) = NULL; } while(FALSE)
 
 /* c_string.c */
 #define C_is_digit(c) (((c) >= '0' && (c) <= '9') || c == '.' || c == '-')
@@ -119,12 +130,3 @@ void C_register_variable(c_var_t *var, const char *name, c_var_type_t type,
 void C_register_variables(void);
 void C_set_variable(c_var_t *var, const char *value);
 
-/* c_array.c */
-#define C_array_elem(pary, type, i) (((type*)(pary)->elems)[i])
-#define C_array_init(ary, type, cap) \
-        C_array_init_real(ary, sizeof(type), cap)
-
-void C_array_init_real(c_array_t *ary, size_t item_size, size_t cap);
-void C_array_reserve(c_array_t *ary, size_t n);
-void C_array_append(c_array_t *ary, void* item);
-void C_array_deinit(c_array_t* ary);

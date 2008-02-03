@@ -40,9 +40,10 @@ void* C_realloc(void* ptr, size_t size)
 }
 
 /******************************************************************************\
- Free memory pointed to by ptr.
+ Free memory pointed to by [ptr].
 \******************************************************************************/
-void C_free(void* ptr)
+void C_free_void(void *ptr)
 {
         free(ptr);
 }
+
