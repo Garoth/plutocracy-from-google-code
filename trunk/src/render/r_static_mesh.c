@@ -32,9 +32,9 @@ static unsigned short find_vert(c_array_t *vs,
         unsigned short i;
 
         for(i = 0; i < vs->len; i++) {
-                if(c_vec3_eq(v, C_array_elem(vs, c_vec3_t, i)) &&
-                   c_vec3_eq(n, C_array_elem(ns, c_vec3_t, i)) &&
-                   c_vec2_eq(st, C_array_elem(sts, c_vec2_t, i))) {
+                if(C_vec3_eq(v, C_array_elem(vs, c_vec3_t, i)) &&
+                   C_vec3_eq(n, C_array_elem(ns, c_vec3_t, i)) &&
+                   C_vec2_eq(st, C_array_elem(sts, c_vec2_t, i))) {
                         return i;
                 }
         }
@@ -139,7 +139,7 @@ r_static_mesh_t* R_load_static_mesh(const char* filename)
                         }
 
                         if(ary == &norms) {
-                                v = c_vec3_normalize(v);
+                                v = C_vec3_norm(v);
                         }
 
                         C_array_append(ary, &v);

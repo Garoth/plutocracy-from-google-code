@@ -13,11 +13,12 @@
 /* Project configuration header */
 #include "config.h"
 
-/* size_t */
-#include <stddef.h>
+/* Standard library */
+#include <stddef.h> /* size_t */
+#include <math.h>   /* sqrt() */
 
-/* c_pt2_t, c_pt3_t and associated stuff */
-#include "c_pts.h"
+/* Vectors */
+#include "c_vectors.h"
 
 /* Common definitions */
 #ifndef TRUE
