@@ -25,16 +25,16 @@
 static unsigned short find_vert(c_array_t *vs,
                                 c_array_t *ns,
                                 c_array_t *sts,
-                                c_pt3_t v,
-                                c_pt3_t n,
-                                c_pt2_t st)
+                                c_vec3_t v,
+                                c_vec3_t n,
+                                c_vec2_t st)
 {
         unsigned short i;
 
         for(i = 0; i < vs->len; i++) {
-                if(C_pt3_eq(v, C_array_elem(vs, c_pt3_t, i)) &&
-                   C_pt3_eq(n, C_array_elem(ns, c_pt3_t, i)) &&
-                   C_pt2_eq(st, C_array_elem(sts, c_pt2_t, i))) {
+                if(c_vec3_eq(v, C_array_elem(vs, c_vec3_t, i)) &&
+                   c_vec3_eq(n, C_array_elem(ns, c_vec3_t, i)) &&
+                   c_vec2_eq(st, C_array_elem(sts, c_vec2_t, i))) {
                         return i;
                 }
         }
@@ -97,14 +97,14 @@ r_static_mesh_t* R_load_static_mesh(const char* filename)
         }
 
         c_array_t verts, norms, sts;
-        C_array_init(&verts, c_pt3_t, 1);
-        C_array_init(&norms, c_pt3_t, 1);
-        C_array_init(&sts, c_pt2_t, 1);
+        C_array_init(&verts, c_vec3_t, 1);
+        C_array_init(&norms, c_vec3_t, 1);
+        C_array_init(&sts, c_vec2_t, 1);
 
         c_array_t real_verts, real_norms, real_sts, inds;
-        C_array_init(&real_verts, c_pt3_t, 1);
-        C_array_init(&real_norms, c_pt3_t, 1);
-        C_array_init(&real_sts, c_pt2_t, 1);
+        C_array_init(&real_verts, c_vec3_t, 1);
+        C_array_init(&real_norms, c_vec3_t, 1);
+        C_array_init(&real_sts, c_vec2_t, 1);
         C_array_init(&inds, unsigned short, 1);
 
         int flag = TRUE;
@@ -129,7 +129,7 @@ r_static_mesh_t* R_load_static_mesh(const char* filename)
                 if(strcmp(keyword, "v") == 0 || strcmp(keyword, "vn") == 0) {
                         /* vertex or normal */
                         c_array_t* ary = (keyword[1] == 'n' ? &norms : &verts);
-                        c_pt3_t v;
+                        c_vec3_t v;
                         int i;
 
                         for(i = 0; i < 3; i++) {
@@ -139,13 +139,13 @@ r_static_mesh_t* R_load_static_mesh(const char* filename)
                         }
 
                         if(ary == &norms) {
-                                v = C_pt3_normalize(v);
+                                v = c_vec3_normalize(v);
                         }
 
                         C_array_append(ary, &v);
                 } else if(strcmp(keyword, "vt") == 0) {
                         /* texture coordinate */
-                        c_pt2_t st;
+                        c_vec2_t st;
                         int i;
 
                         for(i = 0; i < 2; i++) {
@@ -166,9 +166,9 @@ r_static_mesh_t* R_load_static_mesh(const char* filename)
                                         &real_verts,
                                         &real_norms,
                                         &real_sts,
-                                        C_array_elem(&verts, c_pt3_t, ivert),
-                                        C_array_elem(&norms, c_pt3_t, inorm),
-                                        C_array_elem(&sts, c_pt2_t, ist));
+                                        C_array_elem(&verts, c_vec3_t, ivert),
+                                        C_array_elem(&norms, c_vec3_t, inorm),
+                                        C_array_elem(&sts, c_vec2_t, ist));
 
                                 if(!have_first) {
                                         first_ind = ind;
@@ -201,17 +201,17 @@ r_static_mesh_t* R_load_static_mesh(const char* filename)
 
         /* vertices */
         result->verts = C_realloc(real_verts.elems,
-                                  real_verts.len * sizeof(c_pt3_t));
+                                  real_verts.len * sizeof(c_vec3_t));
         real_verts.elems = NULL;
 
         /* normals */
         result->norms = C_realloc(real_norms.elems,
-                                  real_verts.len * sizeof(c_pt3_t));
+                                  real_verts.len * sizeof(c_vec3_t));
         real_norms.elems = NULL;
 
         /* texcoords */
         result->sts = C_realloc(real_sts.elems,
-                                real_verts.len * sizeof(c_pt2_t));
+                                real_verts.len * sizeof(c_vec2_t));
         real_sts.elems = NULL;
 
         /* indices */
