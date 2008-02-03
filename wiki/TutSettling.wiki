@@ -1,4 +1,4 @@
-﻿# An explanation of how settling a new island works
+﻿#summary An explanation of how settling a new island works
 
 1) Bring your settler ship over to an island.
 

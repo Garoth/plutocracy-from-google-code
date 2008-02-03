@@ -1,4 +1,4 @@
-﻿#General Information for the game (with links to other pages)
+﻿#summary General Information for the game (with links to other pages)
 
 = Tutorial & Explanation List=
 

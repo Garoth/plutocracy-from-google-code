@@ -1,4 +1,4 @@
-﻿# An explanation of how expansion works
+﻿#summary An explanation of how expansion works
 
 1) After you have a dock and town centre established, you can start expanding to adjacent spaces. (See TutSettling.) You will be given a selection of nearby tiles to spread to. Note: shoreline tiles are special.
 
