@@ -25,7 +25,7 @@ The copyright name should only include authors that actually worked on a signifi
 
 = Spacing =
 
-Use 8-space tabs limited to 80-char width. If you run out of room, make a new function or:
+Use 8-space indents limited to 80-char width. If you run out of room, make a new function or:
 {{{
 C_my_obscenely_long_function(wrap, really_long_arguments,
                              like_this, please);
