@@ -1,0 +1,13 @@
+﻿# An explanation of how settling a new island works
+
+1) Bring your settler ship over to an island.
+http://plutocracy.googlecode.com/svn/wiki/tut_settle/tut_settle-1.png
+
+2) When you begin to settle, you will have an option of shoreline tiles.
+http://plutocracy.googlecode.com/svn/wiki/tut_settle/tut_settle-2.png
+
+3) You select a space, and a dock will be bult there.
+http://plutocracy.googlecode.com/svn/wiki/tut_settle/tut_settle-3.png
+
+4) After a dock is built, you cannot spread further into an island until a town centre is built there also.
+http://plutocracy.googlecode.com/svn/wiki/tut_settle/tut_settle-4.png
