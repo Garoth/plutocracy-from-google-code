@@ -14,35 +14,24 @@
 #include <stdlib.h>
 
 /******************************************************************************\
- Allocate size bytes. Abort on error.
+ Reallocate [ptr] to [size] bytes large. Abort on error.
 \******************************************************************************/
-void* C_malloc(size_t size)
+void *C_realloc_full(const char *file, int line, const char *function,
+                     void *ptr, size_t size)
 {
-        void* result = malloc(size);
-        if(!result) {
-                C_error("out of memory");
-        }
+        void *result;
 
-        return result;
-}
-
-/******************************************************************************\
- Reallocate ptr to size bytes large. Abort on error.
-\******************************************************************************/
-void* C_realloc(void* ptr, size_t size)
-{
-        void* result = realloc(ptr, size);
-        if(!result) {
-                C_error("out of memory");
-        }
-
+        result = realloc(ptr, size);
+        if (!result)
+                C_error("Out of memory, %s() (%s:%d) tried to allocate %d "
+                        "bytes", function, file, line, size );
         return result;
 }
 
 /******************************************************************************\
  Free memory pointed to by [ptr].
 \******************************************************************************/
-void C_free_void(void *ptr)
+void C_free_ptr(void *ptr)
 {
         free(ptr);
 }

@@ -4,6 +4,7 @@ AM_CFLAGS = @SDL_CFLAGS@
 
 bin_PROGRAMS = plutocracy
 
+# All source and header files part of the project
 plutocracy_SOURCES = \
 	src/plutocracy.c \
 	src/common/c_shared.h \
@@ -28,4 +29,8 @@ plutocracy_SOURCES = \
 	src/render/r_variables.c \
 	src/interface/i_shared.h \
 	src/interface/i_common.h
+
+# Distribute extra files with the tarball
+EXTRA_DIST = \
+        config/default.cfg
 
