@@ -13,3 +13,15 @@
 #include "../common/c_shared.h"
 #include "r_shared.h"
 
+typedef struct r_static_mesh {
+    unsigned short ninds;
+    unsigned short nverts;
+    c_pt3_t* verts;
+    c_pt3_t* norms;
+    c_pt2_t* sts;
+    unsigned short* inds;
+} r_static_mesh_t;
+
+/* r_static_mesh.c */
+r_static_mesh_t* R_load_static_mesh(const char* filename);
+void R_render_static_mesh(r_static_mesh_t*);

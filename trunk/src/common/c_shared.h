@@ -13,6 +13,9 @@
 /* Project configuration header */
 #include "config.h"
 
+/* c_pt2_t, c_pt3_t and associated stuff */
+#include "c_pts.h"
+
 /* Common definitions */
 #ifndef TRUE
 #define TRUE 1

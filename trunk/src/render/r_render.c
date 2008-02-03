@@ -15,6 +15,8 @@
 #include <GL/glu.h>
 #include "SDL.h"
 
+extern r_static_mesh_t* r_mesh_data;
+
 /******************************************************************************\
  Renders the scene (let's have a spinning cube for now?)
 \******************************************************************************/
@@ -26,7 +28,7 @@ void R_render(void)
         /* I'm pretty sure w=0 means directional. */
         static float left[] = { -1.0, 0.0, 0.0, 0.0 };
 
-        glClear(GL_COLOR_BUFFER_BIT);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         glLoadIdentity();
 
         glEnable(GL_LIGHTING);
@@ -36,68 +38,39 @@ void R_render(void)
 
         glEnable(GL_COLOR_MATERIAL);
         glColorMaterial(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE);
+        glColor3f(1.0, 1.0, 1.0);
+
+        glDisable(GL_CULL_FACE);
 
         glPushMatrix();
-        glTranslatef(0.0, 0.0, -6.0);
+        glTranslatef(0.0, 0.0, -20.0);
         glRotatef(x_rot, 1.0, 0.0, 0.0);
         glRotatef(y_rot, 0.0, 1.0, 0.0);
+        glTranslatef(0.0, -10.0, 0.0);
 
-        /* This is not how we generally draw things. */
-        glBegin(GL_QUADS);
-        {
-                /* front */
-                glColor3f(1.0, 0.0, 0.0);
-                glNormal3f(0, 0, 1);
-                glVertex3f(-1, -1, 1);
-                glVertex3f(1, -1, 1);
-                glVertex3f(1, 1, 1);
-                glVertex3f(-1, 1, 1);
+        /* Vertex arrays! */
+        if(r_mesh_data) {
+                glEnableClientState(GL_VERTEX_ARRAY);
+                glEnableClientState(GL_NORMAL_ARRAY);
+                glEnableClientState(GL_TEXTURE_COORD_ARRAY);
 
-                /* left */
-                glColor3f(0.0, 1.0, 0.0);
-                glNormal3f(-1, 0, 0);
-                glVertex3f(-1, -1, 1);
-                glVertex3f(-1, 1, 1);
-                glVertex3f(-1, 1, -1);
-                glVertex3f(-1, -1, -1);
+                glVertexPointer(3, GL_FLOAT, 0, r_mesh_data->verts);
+                glNormalPointer(GL_FLOAT, 0, r_mesh_data->norms);
+                glTexCoordPointer(2, GL_FLOAT, 0, r_mesh_data->sts);
 
-                /* back */
-                glColor3f(1.0, 0.0, 0.0);
-                glNormal3f(0, 0, -1);
-                glVertex3f(-1, 1, -1);
-                glVertex3f(1, 1, -1);
-                glVertex3f(1, -1, -1);
-                glVertex3f(-1, -1, -1);
+                glDrawElements(GL_TRIANGLES,
+                               r_mesh_data->ninds,
+                               GL_UNSIGNED_SHORT,
+                               r_mesh_data->inds);
 
-                /* right */
-                glColor3f(0.0, 1.0, 0.0);
-                glNormal3f(1, 0, 0);
-                glVertex3f(1, 1, -1);
-                glVertex3f(1, 1, 1);
-                glVertex3f(1, -1, 1);
-                glVertex3f(1, -1, -1);
-
-                /* top */
-                glColor3f(0.0, 0.0, 1.0);
-                glNormal3f(-1, 1, 0);
-                glVertex3f(1, 1, -1);
-                glVertex3f(-1, 1, -1);
-                glVertex3f(-1, 1, 1);
-                glVertex3f(1, 1, 1);
-
-                /* bottom */
-                glColor3f(0.0, 0.0, 1.0);
-                glNormal3f(-1, -1, 0);
-                glVertex3f(1, -1, 1);
-                glVertex3f(-1, -1, 1);
-                glVertex3f(-1, -1, -1);
-                glVertex3f(1, -1, -1);
+                glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+                glDisableClientState(GL_NORMAL_ARRAY);
+                glDisableClientState(GL_VERTEX_ARRAY);
         }
-        glEnd();
 
         glPopMatrix();
-        x_rot += 0.01;
-        y_rot += 0.05;
+        x_rot += 0.03;
+        y_rot += 0.1;
 
         SDL_GL_SwapBuffers();
 }

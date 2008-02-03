@@ -13,7 +13,10 @@
 #include "r_common.h"
 
 /* Window parameters */
-c_var_t r_width, r_height, r_depth, r_windowed;
+c_var_t r_width, r_height, r_colordepth, r_depth, r_windowed, r_mesh;
+
+/* The one mesh that we currently look at. */
+r_static_mesh_t* r_mesh_data = NULL;
 
 /******************************************************************************\
  Registers the render variables.
@@ -23,7 +26,9 @@ void R_register_variables(void)
         /* Window parameters */
         C_register_integer(&r_width, "r_width", 800);
         C_register_integer(&r_height, "r_height", 600);
+        C_register_integer(&r_depth, "r_colordepth", 24);
         C_register_integer(&r_depth, "r_depth", 16);
         C_register_integer(&r_windowed, "r_windowed", 1);
+        C_register_string(&r_mesh, "r_mesh", "");
 }
 

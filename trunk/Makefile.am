@@ -21,6 +21,7 @@ plutocracy_SOURCES = \
 	src/render/r_common.h \
 	src/render/r_window.c \
 	src/render/r_render.c \
+	src/render/r_static_mesh.c \
 	src/render/r_variables.c \
 	src/interface/i_shared.h \
 	src/interface/i_common.h
