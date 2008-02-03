@@ -16,9 +16,9 @@
 typedef struct r_static_mesh {
     unsigned short ninds;
     unsigned short nverts;
-    c_pt3_t* verts;
-    c_pt3_t* norms;
-    c_pt2_t* sts;
+    c_vec3_t* verts;
+    c_vec3_t* norms;
+    c_vec2_t* sts;
     unsigned short* inds;
 } r_static_mesh_t;
 
