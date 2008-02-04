@@ -116,6 +116,13 @@ void *C_realloc_full(const char *file, int line, const char *function,
 int C_read_file(const char *filename, char *buffer, int size);
 char *C_skip_spaces(const char *str);
 
+/* c_time.c */
+void C_time_update(void);
+unsigned int C_timer(void);
+
+extern unsigned int c_time_msec;
+extern float c_frame_sec;
+
 /* c_variables.c */
 int C_parse_config(const char *string);
 int C_parse_config_file(const char *filename);
@@ -132,3 +139,4 @@ void C_register_variable(c_var_t *var, const char *name, c_var_type_t type,
                          c_var_value_t value);
 void C_register_variables(void);
 void C_set_variable(c_var_t *var, const char *value);
+

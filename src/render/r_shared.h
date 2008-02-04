@@ -17,6 +17,7 @@ void R_render(void);
 void R_register_variables(void);
 
 /* r_window.c */
-void R_close_window(void);
 int R_create_window(void);
+void R_free_assets(void);
+void R_load_assets(void);
 

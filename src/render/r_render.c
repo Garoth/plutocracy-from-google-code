@@ -15,47 +15,56 @@
 #include <GL/glu.h>
 #include "SDL.h"
 
-extern r_static_mesh_t* r_mesh_data;
-
 /******************************************************************************\
- Renders the scene (let's have a spinning cube for now?)
+ Render the test mesh.
 \******************************************************************************/
-void R_render(void)
+static void render_test_mesh(void)
 {
-        static float x_rot = 0.0, y_rot = 0.0;
-        static float white[] = { 1.0, 1.0, 1.0, 1.0 };
+        static float x_rot, y_rot;
+        float white[] = { 1.0, 1.0, 1.0, 1.0 };
+        float left[] = { -1.0, 0.0, 0.0, 0.0 };
 
-        /* I'm pretty sure w=0 means directional. */
-        static float left[] = { -1.0, 0.0, 0.0, 0.0 };
+        if (!r_test_mesh_data)
+                return;
 
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         glLoadIdentity();
 
+        /* Setup a white light to the left */
         glEnable(GL_LIGHTING);
         glEnable(GL_LIGHT0);
         glLightfv(GL_LIGHT0, GL_POSITION, left);
         glLightfv(GL_LIGHT0, GL_COLOR, white);
 
+        /* Use a white testing material */
         glEnable(GL_COLOR_MATERIAL);
         glColorMaterial(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE);
         glColor3f(1.0, 1.0, 1.0);
 
+        /* FIXME: Disabling culling */
         glDisable(GL_CULL_FACE);
 
+        /* Render the test mesh */
         glPushMatrix();
         glTranslatef(0.0, 0.0, -20.0);
         glRotatef(x_rot, 1.0, 0.0, 0.0);
         glRotatef(y_rot, 0.0, 1.0, 0.0);
         glTranslatef(0.0, -10.0, 0.0);
-
-        /* Vertex arrays! */
-        if(r_mesh_data) {
-                R_static_mesh_render(r_mesh_data);
-        }
-
+        R_static_mesh_render(r_test_mesh_data);
         glPopMatrix();
-        x_rot += 0.08;
-        y_rot += 0.2;
+
+        x_rot += 8 * c_frame_sec;
+        y_rot += 20 * c_frame_sec;
+}
+
+/******************************************************************************\
+ Renders the scene.
+\******************************************************************************/
+void R_render(void)
+{
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+        render_test_mesh();
 
         SDL_GL_SwapBuffers();
 }
+

@@ -186,7 +186,7 @@ r_static_mesh_t* R_static_mesh_load(const char* filename)
                 }
         }
 
-        C_debug("loaded %s: %d entries, %d indices",
+        C_debug("Loaded '%s' (%d entries, %d indices)",
                 filename,
                 real_verts.len,
                 inds.len);
