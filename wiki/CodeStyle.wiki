@@ -169,7 +169,7 @@ Class constructors that return the type, not a pointer take the name of the clas
 c_my_type_t C_my_type();
 }}}
 
-Class functions contain the full name of the class first, then the action verb(s):
+Class functions contain the full name of the class first, then the action verbs (this only applies to classes):
 {{{
 void C_my_type_mogrify(c_my_type_t *type, other, args);
 }}}
