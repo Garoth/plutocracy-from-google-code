@@ -10,28 +10,37 @@
  FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
 \******************************************************************************/
 
-#include "r_common.h"
+/* Contains code that uses SDL timers for various purposes */
 
-/* Window parameters */
-c_var_t r_width, r_height, r_colordepth, r_depth, r_windowed, r_vsync;
+#include "c_shared.h"
+#include "SDL.h"
 
-/* Render testing */
-c_var_t r_test_mesh;
+unsigned int c_time_msec;
+float c_frame_sec;
 
 /******************************************************************************\
- Registers the render variables.
+ Updates the current time.
 \******************************************************************************/
-void R_register_variables(void)
+void C_time_update(void)
 {
-        /* Window parameters */
-        C_register_integer(&r_width, "r_width", 800);
-        C_register_integer(&r_height, "r_height", 600);
-        C_register_integer(&r_colordepth, "r_colordepth", 32);
-        C_register_integer(&r_depth, "r_depth", 16);
-        C_register_integer(&r_windowed, "r_windowed", 1);
-        C_register_integer(&r_vsync, "r_vsync", 1);
+        static unsigned int last_msec;
 
-        /* Render testing */
-        C_register_string(&r_test_mesh, "r_test_mesh", "");
+        c_time_msec = SDL_GetTicks();
+        c_frame_sec = (c_time_msec - last_msec) / 1000.f;
+        last_msec = c_time_msec;
+}
+
+/******************************************************************************\
+ Returns the time since the last call to C_timer(). Useful for measuring the
+ efficiency of sections of code.
+\******************************************************************************/
+unsigned int C_timer(void)
+{
+        static unsigned int last_msec;
+        unsigned int elapsed;
+
+        elapsed = SDL_GetTicks() - last_msec;
+        last_msec += elapsed;
+        return elapsed;
 }
 

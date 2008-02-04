@@ -16,13 +16,19 @@
 typedef struct r_static_mesh {
     unsigned short ninds;
     unsigned short nverts;
-    c_vec3_t* verts;
-    c_vec3_t* norms;
-    c_vec2_t* sts;
-    unsigned short* inds;
+    c_vec3_t *verts;
+    c_vec3_t *norms;
+    c_vec2_t *sts;
+    unsigned short *inds;
 } r_static_mesh_t;
 
 /* r_static_mesh.c */
-r_static_mesh_t* R_static_mesh_load(const char* filename);
-void R_static_mesh_render(r_static_mesh_t*);
-void R_static_mesh_free(r_static_mesh_t*);
+r_static_mesh_t *R_static_mesh_load(const char *filename);
+void R_static_mesh_render(r_static_mesh_t *);
+void R_static_mesh_free(r_static_mesh_t *);
+
+extern r_static_mesh_t *r_test_mesh_data;
+
+/* r_variables.c */
+extern c_var_t r_width, r_height, r_colordepth, r_depth, r_windowed, r_vsync;
+

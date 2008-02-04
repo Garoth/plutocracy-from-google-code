@@ -10,6 +10,9 @@
  FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
 \******************************************************************************/
 
+/* Vector type declarations and static inline definitions for the vector
+   operations. Requires math.h to be included. */
+
 #pragma pack(push, 4)
 
 typedef struct {

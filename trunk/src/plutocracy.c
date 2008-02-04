@@ -18,6 +18,29 @@
 #include "SDL.h"
 
 /******************************************************************************\
+ This is the client's graphical main loop.
+\******************************************************************************/
+static void main_loop(void)
+{
+        SDL_Event ev;
+
+        C_status("Main loop");
+        for (;;) {
+                C_time_update();
+                while (SDL_PollEvent(&ev)) {
+                        switch(ev.type) {
+                        case SDL_QUIT:
+                                return;
+                        default:
+                                break;
+                        }
+                }
+                R_render();
+        }
+        C_debug("Exited main loop");
+}
+
+/******************************************************************************\
  Concatenates an argument array and runs it through the config parser.
 \******************************************************************************/
 static void parse_config_args(int argc, char *argv[])
@@ -62,7 +85,8 @@ static void cleanup(void)
         ran_once = TRUE;
 
         C_status("Cleaning up");
-        R_close_window();
+        R_free_assets();
+        SDL_Quit();
         C_debug("Done");
 }
 
@@ -71,8 +95,6 @@ static void cleanup(void)
 \******************************************************************************/
 int main(int argc, char *argv[])
 {
-        int running;
-
         /* Use the cleanup function instead of lots of atexit() calls to
            control the order of cleanup */
         atexit(cleanup);
@@ -86,29 +108,14 @@ int main(int argc, char *argv[])
         C_parse_config_file("config/default.cfg");
         parse_config_args(argc, argv);
         C_status("Initializing " PACKAGE_STRING " client");
-        if(!R_create_window()) {
-                C_debug("Window creation failed");
-                return 1;
-        }
+        if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER) < 0)
+                C_error("Failed to initialize SDL: %s", SDL_GetError());
+        if (!R_create_window())
+                C_error("Window creation failed");
+        R_load_assets();
 
         /* Run the main loop */
-        C_status("Main loop");
-        running = TRUE;
-        while(running) {
-                SDL_Event ev;
-
-                while(SDL_PollEvent(&ev)) {
-                        switch(ev.type) {
-                        case SDL_QUIT:
-                                running = FALSE;
-                                break;
-                        default:
-                                break;
-                        }
-                }
-                R_render();
-        }
-        C_debug("Exited main loop");
+        main_loop();
 
         return 0;
 }
