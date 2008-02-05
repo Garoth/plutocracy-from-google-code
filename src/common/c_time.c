@@ -13,7 +13,6 @@
 /* Contains code that uses SDL timers for various purposes */
 
 #include "c_shared.h"
-#include "SDL.h"
 
 unsigned int c_time_msec;
 float c_frame_sec;

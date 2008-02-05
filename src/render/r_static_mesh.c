@@ -11,12 +11,6 @@
 \******************************************************************************/
 
 #include "r_common.h"
-#include <GL/gl.h>
-#include <GL/glu.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
-#include <ctype.h>
 
 /****************************************************************************** \
  Find or insert the given (vert,norm,st) triplet into the parallel arrays

@@ -13,7 +13,6 @@
 /* This file holds utility functions that manipulate strings */
 
 #include "c_shared.h"
-#include <stdio.h>
 
 /******************************************************************************\
  Skips any space characters in the string.

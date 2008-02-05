@@ -15,7 +15,6 @@
 
 #include "common/c_shared.h"
 #include "render/r_shared.h"
-#include "SDL.h"
 
 /******************************************************************************\
  This is the client's graphical main loop.

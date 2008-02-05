@@ -13,9 +13,6 @@
 /* This file implements the logging system */
 
 #include "c_shared.h"
-#include <stdlib.h>
-#include <stdio.h>
-#include <stdarg.h>
 
 extern c_var_t c_log_level, c_log_file;
 

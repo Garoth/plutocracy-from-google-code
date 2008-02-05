@@ -15,12 +15,6 @@
      TODO: Implement as a trie */
 
 #include "c_shared.h"
-#include <stdlib.h>
-#include <ctype.h>
-#include <string.h>
-#ifdef HAVE_STRINGS_H
-#include <strings.h>
-#endif
 
 /* Message logging */
 c_var_t c_log_level, c_log_file;
