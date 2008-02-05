@@ -13,6 +13,10 @@
 #include "r_common.h"
 #include "../game/g_shared.h"
 
+/* Render testing */
+extern c_var_t r_test_globe;
+extern r_static_mesh_t *r_test_mesh_data;
+
 /******************************************************************************\
  Render the test mesh.
 \******************************************************************************/
@@ -122,10 +126,11 @@ void R_render(void)
 {
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        if (0)
+        /* Render testing */
+        if (r_test_globe.value.n)
+                render_test_sphere();
+        else
                 render_test_mesh();
-
-        render_test_sphere();
 
         SDL_GL_SwapBuffers();
 }

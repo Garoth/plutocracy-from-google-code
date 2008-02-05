@@ -27,8 +27,6 @@ r_static_mesh_t *R_static_mesh_load(const char *filename);
 void R_static_mesh_render(r_static_mesh_t *);
 void R_static_mesh_free(r_static_mesh_t *);
 
-extern r_static_mesh_t *r_test_mesh_data;
-
 /* r_variables.c */
 extern c_var_t r_width, r_height, r_colordepth, r_depth, r_windowed, r_vsync;
 
