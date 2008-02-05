@@ -12,9 +12,6 @@
 
 #include "r_common.h"
 #include "../game/g_shared.h"
-#include <GL/gl.h>
-#include <GL/glu.h>
-#include "SDL.h"
 
 /******************************************************************************\
  Render the test mesh.

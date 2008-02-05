@@ -14,13 +14,28 @@
 #include "config.h"
 
 /* Standard library */
-#include <stddef.h> /* size_t */
-#include <math.h> /* sqrt() */
+#include <stdlib.h>
+#include <stdio.h>
+#include <stddef.h>
+#include <stdarg.h>
+#include <math.h>
+#include <ctype.h>
+#include <string.h>
+#ifdef HAVE_STRINGS_H
+#include <strings.h>
+#endif
+
+/* OpenGL */
+#include <GL/gl.h>
+#include <GL/glu.h>
+
+/* SDL */
+#include <SDL.h>
 
 /* Vectors */
 #include "c_vectors.h"
 
-/* Common definitions */
+/* Ensure common definitions */
 #ifndef TRUE
 #define TRUE 1
 #endif

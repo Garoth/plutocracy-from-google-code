@@ -11,10 +11,6 @@
 \******************************************************************************/
 
 #include "r_common.h"
-#include <GL/gl.h>
-#include <GL/glu.h>
-#include "SDL.h"
-#include <stdlib.h>
 
 /* Mesh render testing */
 extern c_var_t r_test_mesh;
