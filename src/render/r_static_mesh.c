@@ -218,12 +218,17 @@ r_static_mesh_t* R_static_mesh_load(const char* filename)
 void R_static_mesh_render(r_static_mesh_t* mesh)
 {
         glEnableClientState(GL_VERTEX_ARRAY);
-        glEnableClientState(GL_NORMAL_ARRAY);
-        glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-
         glVertexPointer(3, GL_FLOAT, 0, mesh->verts);
-        glNormalPointer(GL_FLOAT, 0, mesh->norms);
-        glTexCoordPointer(2, GL_FLOAT, 0, mesh->sts);
+
+        if (mesh->norms) {
+                glEnableClientState(GL_NORMAL_ARRAY);
+                glNormalPointer(GL_FLOAT, 0, mesh->norms);
+        }
+
+        if (mesh->sts) {
+                glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+                glTexCoordPointer(2, GL_FLOAT, 0, mesh->sts);
+        }
 
         glDrawElements(GL_TRIANGLES,
                        mesh->ninds,
