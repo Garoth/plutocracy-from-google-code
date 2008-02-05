@@ -16,7 +16,7 @@
 c_var_t r_width, r_height, r_colordepth, r_depth, r_windowed, r_vsync;
 
 /* Render testing */
-c_var_t r_test_mesh;
+c_var_t r_test_mesh, r_test_globe;
 
 /******************************************************************************\
  Registers the render variables.
@@ -33,5 +33,6 @@ void R_register_variables(void)
 
         /* Render testing */
         C_register_string(&r_test_mesh, "r_test_mesh", "");
+        C_register_integer(&r_test_globe, "r_test_globe", FALSE);
 }
 
