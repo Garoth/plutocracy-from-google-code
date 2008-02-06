@@ -68,7 +68,7 @@ void render_test_sphere()
         r_static_mesh_t fake_mesh;
 
         if (!sphere)
-                sphere = G_sphere_alloc(5); /* subdivide thrice */
+                sphere = G_sphere_alloc(3);
 
         /* No lighting or culling */
         glDisable(GL_LIGHTING);
@@ -88,7 +88,7 @@ void render_test_sphere()
         glTranslatef(0.0, 0.0, -20.0);
         glRotatef(x_rot, 1.0, 0.0, 0.0);
         glRotatef(y_rot, 0.0, 1.0, 0.0);
-        glScalef(5, 5, 5);
+        glScalef(10, 10, 10);
         glColor3f(0.0, 0.0, 0.0);
         R_static_mesh_render(&fake_mesh); /* render for depth */
         glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
@@ -96,16 +96,17 @@ void render_test_sphere()
         R_static_mesh_render(&fake_mesh); /* render lines over */
 
         /* See if neighbors works */
-        c_vec3_t v = sphere->verts[8];
         int i;
+        c_vec3_t v = sphere->verts[31];
 
         glPointSize(5.0);
         glBegin(GL_POINTS);
+
         glColor3f(1.0, 0.0, 0.0);
         glVertex3f(v.x, v.y, v.z);
         glColor3f(0.0, 1.0, 1.0);
-        for (i = 0; i < sphere->neighbors_lists[8].count; i++) {
-                v = sphere->verts[sphere->neighbors_lists[8].indices[i]];
+        for (i = 0; i < sphere->neighbors_lists[31].count; i++) {
+                v = sphere->verts[sphere->neighbors_lists[31].indices[i]];
                 glVertex3f(v.x, v.y, v.z);
         }
         glEnd();
