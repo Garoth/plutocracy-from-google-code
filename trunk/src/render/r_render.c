@@ -59,26 +59,26 @@ static void render_test_mesh(void)
 }
 
 /******************************************************************************\
- Render the test sphere.
+ Render the test globe.
 \******************************************************************************/
-void render_test_sphere()
+void render_test_globe()
 {
         static float x_rot, y_rot;
-        static g_sphere_t *sphere = NULL;
+        static g_globe_t *globe = NULL;
         r_static_mesh_t fake_mesh;
 
-        if (!sphere)
-                sphere = G_sphere_alloc(3);
+        if (!globe)
+                globe = G_globe_alloc(3);
 
         /* No lighting or culling */
         glDisable(GL_LIGHTING);
         glDisable(GL_CULL_FACE);
 
         /* Fake a static mesh */
-        fake_mesh.nverts = sphere->nverts;
-        fake_mesh.ninds = sphere->ninds;
-        fake_mesh.verts = sphere->verts;
-        fake_mesh.inds = sphere->inds;
+        fake_mesh.nverts = globe->nverts;
+        fake_mesh.ninds = globe->ninds;
+        fake_mesh.verts = globe->verts;
+        fake_mesh.inds = globe->inds;
         fake_mesh.norms = NULL;
         fake_mesh.sts = NULL;
 
@@ -97,7 +97,7 @@ void render_test_sphere()
 
         /* See if neighbors works */
         int i;
-        c_vec3_t v = sphere->verts[31];
+        c_vec3_t v = globe->verts[31];
 
         glPointSize(5.0);
         glBegin(GL_POINTS);
@@ -105,8 +105,8 @@ void render_test_sphere()
         glColor3f(1.0, 0.0, 0.0);
         glVertex3f(v.x, v.y, v.z);
         glColor3f(0.0, 1.0, 1.0);
-        for (i = 0; i < sphere->neighbors_lists[31].count; i++) {
-                v = sphere->verts[sphere->neighbors_lists[31].indices[i]];
+        for (i = 0; i < globe->neighbors_lists[31].count; i++) {
+                v = globe->verts[globe->neighbors_lists[31].indices[i]];
                 glVertex3f(v.x, v.y, v.z);
         }
         glEnd();
@@ -129,7 +129,7 @@ void R_render(void)
 
         /* Render testing */
         if (r_test_globe.value.n)
-                render_test_sphere();
+                render_test_globe();
         else
                 render_test_mesh();
 

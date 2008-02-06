@@ -51,18 +51,18 @@ static void set_edge(edge_t *edge,
 }
 
 /****************************************************************************** \
- Generates the sphere to be used as the map for the game by tesselating a
+ Generates the globe to be used as the map for the game by tesselating a
  tetrahedron.
 \******************************************************************************/
-g_sphere_t *G_sphere_alloc(int subdiv_levels) {
-        g_sphere_t *result;
+g_globe_t *G_globe_alloc(int subdiv_levels) {
+        g_globe_t *result;
         c_array_t verts, tris1, tris2, edges1, edges2;
         c_array_t *cur_tris, *other_tris, *cur_edges, *other_edges, *atmp;
         c_vec3_t vtmp;
         tri_t ttmp;
         edge_t etmp;
         c_vec3_t origin;
-        float sphere_r, tau, phi, one;
+        float globe_r, tau, phi, one;
         int loop;
 
         C_array_init(&verts, c_vec3_t, 512);
@@ -121,7 +121,7 @@ g_sphere_t *G_sphere_alloc(int subdiv_levels) {
         }
 
         /* Remember radius */
-        sphere_r = C_vec3_len(C_array_elem(&verts, c_vec3_t, 0));
+        globe_r = C_vec3_len(C_array_elem(&verts, c_vec3_t, 0));
 
         /* Triangles */
         ttmp.n = 0;
@@ -247,8 +247,8 @@ g_sphere_t *G_sphere_alloc(int subdiv_levels) {
                         vtmp = C_vec3_add(vtmp, vtmp2);
                         vtmp = C_vec3_invscalef(vtmp, 2);
 
-                        /* Scale to radius of sphere */
-                        //vtmp = C_vec3_scalef(vtmp, sphere_r / C_vec3_len(vtmp));
+                        /* Scale to radius of globe */
+                        //vtmp = C_vec3_scalef(vtmp, globe_r / C_vec3_len(vtmp));
 
                         C_array_elem(cur_edges, edge_t, i).i = verts.len;
                         C_array_append(&verts, &vtmp);
@@ -389,18 +389,18 @@ g_sphere_t *G_sphere_alloc(int subdiv_levels) {
 
         /* That was even more gross */
 
-        /* Put the sphere together. */
-        result = C_malloc(sizeof(g_sphere_t));
+        /* Put the globe together. */
+        result = C_malloc(sizeof(g_globe_t));
         result->nverts = verts.len;
         result->neighbors_lists = C_malloc(verts.len * sizeof(g_vert_neighbors_t));
         result->verts = C_array_steal(&verts);
 
-        /* Scale vertices to be on the sphere. */
+        /* Scale vertices to be on the globe. */
         for (loop = 0; loop < result->nverts; loop++) {
                 c_vec3_t *v;
 
                 v = &result->verts[loop];
-                *v = C_vec3_scalef(*v, sphere_r / C_vec3_len(*v));
+                *v = C_vec3_scalef(*v, globe_r / C_vec3_len(*v));
         }
 
         /* No neighbours initially */
@@ -445,9 +445,9 @@ g_sphere_t *G_sphere_alloc(int subdiv_levels) {
 }
 
 /******************************************************************************\
- Free the sphere structure.
+ Free the globe structure.
 \******************************************************************************/
-void G_sphere_free(g_sphere_t *s)
+void G_globe_free(g_globe_t *s)
 {
         C_free(s->verts);
         C_free(s->neighbors_lists);
