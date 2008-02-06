@@ -28,6 +28,29 @@ typedef struct edge {
 } edge_t;
 
 /******************************************************************************\
+ Set the indices of a triangle.
+\******************************************************************************/
+static void set_tri(tri_t *tri, ushort_t a, ushort_t b, ushort_t c)
+{
+        tri->orig[0] = a;
+        tri->orig[1] = b;
+        tri->orig[2] = c;
+}
+
+/******************************************************************************\
+ Fill in an edge. The compiler bitches if I use ushort_t here. Wonder why...?
+\******************************************************************************/
+static void set_edge(edge_t *edge,
+                     unsigned short v0, unsigned short v1,
+                     unsigned short t0, unsigned short t1)
+{
+        edge->v[0] = v0;
+        edge->v[1] = v1;
+        edge->t[0] = t0;
+        edge->t[1] = t1;
+}
+
+/****************************************************************************** \
  Generates the sphere to be used as the map for the game by tesselating a
  tetrahedron.
 \******************************************************************************/
@@ -39,7 +62,7 @@ g_sphere_t *G_sphere_alloc(int subdiv_levels) {
         tri_t ttmp;
         edge_t etmp;
         c_vec3_t origin;
-        float sphere_r;
+        float sphere_r, tau, phi, one;
         int loop;
 
         C_array_init(&verts, c_vec3_t, 512);
@@ -53,25 +76,44 @@ g_sphere_t *G_sphere_alloc(int subdiv_levels) {
         cur_edges = &edges1;
         other_edges = &edges2;
 
-        /* Initialize tetrahedron */
+        /* Initialize icosahedron */
+        phi = (1 + sqrt(5)) / 2;
+        tau = phi / sqrt(1 + phi*phi);
+        one = 1 / sqrt(1 + phi*phi);
 
         /* Vertices */
-        vtmp = C_vec3(-1, -1, 1);
+        vtmp = C_vec3(tau, one, 0.0);
         C_array_append(&verts, &vtmp);
-        vtmp = C_vec3(1, -1, -1);
+        vtmp = C_vec3(-tau, one, 0.0);
         C_array_append(&verts, &vtmp);
-        vtmp = C_vec3(-1, 1, -1);
+        vtmp = C_vec3(-tau, -one, 0.0);
         C_array_append(&verts, &vtmp);
-        vtmp = C_vec3(1, 1, 1);
+        vtmp = C_vec3(tau, -one, 0.0);
+        C_array_append(&verts, &vtmp);
+        vtmp = C_vec3(one, 0.0, tau);
+        C_array_append(&verts, &vtmp);
+        vtmp = C_vec3(one, 0.0, -tau);
+        C_array_append(&verts, &vtmp);
+        vtmp = C_vec3(-one, 0.0, -tau);
+        C_array_append(&verts, &vtmp);
+        vtmp = C_vec3(-one, 0.0, tau);
+        C_array_append(&verts, &vtmp);
+        vtmp = C_vec3(0.0, tau, one);
+        C_array_append(&verts, &vtmp);
+        vtmp = C_vec3(0.0, -tau, one);
+        C_array_append(&verts, &vtmp);
+        vtmp = C_vec3(0.0, -tau, -one);
+        C_array_append(&verts, &vtmp);
+        vtmp = C_vec3(0.0, tau, -one);
         C_array_append(&verts, &vtmp);
 
         /* Re-center on origin (which we'll hope is the average of the points). */
         origin = C_vec3(0, 0, 0);
-        for (loop = 0; loop < 4; loop++)
+        for (loop = 0; loop < verts.len; loop++)
                 origin = C_vec3_add(origin, C_array_elem(&verts, c_vec3_t, loop));
-        origin = C_vec3_invscalef(origin, 4);
+        origin = C_vec3_invscalef(origin, verts.len);
 
-        for (loop = 0; loop < 4; loop++) {
+        for (loop = 0; loop < verts.len; loop++) {
                 c_vec3_t *v;
 
                 v = &C_array_elem(&verts, c_vec3_t, loop);
@@ -83,42 +125,107 @@ g_sphere_t *G_sphere_alloc(int subdiv_levels) {
 
         /* Triangles */
         ttmp.n = 0;
-        ttmp.orig[0] = 0;
-        ttmp.orig[1] = 1;
-        ttmp.orig[2] = 3;
+        set_tri(&ttmp, 4, 8, 7);
         C_array_append(cur_tris, &ttmp);
-        ttmp.orig[0] = 2;
-        ttmp.orig[1] = 0;
+        set_tri(&ttmp, 4, 7, 9);
         C_array_append(cur_tris, &ttmp);
-        ttmp.orig[0] = 1;
-        ttmp.orig[1] = 2;
+        set_tri(&ttmp, 5, 6, 11);
         C_array_append(cur_tris, &ttmp);
-        ttmp.orig[1] = 0;
-        ttmp.orig[2] = 2;
+        set_tri(&ttmp, 5, 10, 6);
+        C_array_append(cur_tris, &ttmp);
+        set_tri(&ttmp, 0, 4, 3);
+        C_array_append(cur_tris, &ttmp);
+        set_tri(&ttmp, 0, 3, 5);
+        C_array_append(cur_tris, &ttmp);
+        set_tri(&ttmp, 2, 7, 1);
+        C_array_append(cur_tris, &ttmp);
+        set_tri(&ttmp, 2, 1, 6);
+        C_array_append(cur_tris, &ttmp);
+        set_tri(&ttmp, 8, 0, 11);
+        C_array_append(cur_tris, &ttmp);
+        set_tri(&ttmp, 8, 11, 1);
+        C_array_append(cur_tris, &ttmp);
+        set_tri(&ttmp, 9, 10, 3);
+        C_array_append(cur_tris, &ttmp);
+        set_tri(&ttmp, 9, 2, 10);
+        C_array_append(cur_tris, &ttmp);
+        set_tri(&ttmp, 8, 4, 0);
+        C_array_append(cur_tris, &ttmp);
+        set_tri(&ttmp, 11, 0, 5);
+        C_array_append(cur_tris, &ttmp);
+        set_tri(&ttmp, 4, 9, 3);
+        C_array_append(cur_tris, &ttmp);
+        set_tri(&ttmp, 5, 3, 10);
+        C_array_append(cur_tris, &ttmp);
+        set_tri(&ttmp, 7, 8, 1);
+        C_array_append(cur_tris, &ttmp);
+        set_tri(&ttmp, 6, 1, 11);
+        C_array_append(cur_tris, &ttmp);
+        set_tri(&ttmp, 7, 2, 9);
+        C_array_append(cur_tris, &ttmp);
+        set_tri(&ttmp, 6, 10, 2);
         C_array_append(cur_tris, &ttmp);
 
         /* Edges */
-        etmp.v[0] = 0;
-        etmp.v[1] = 3;
-        etmp.t[0] = 0;
-        etmp.t[1] = 1;
+        set_edge(&etmp, 4, 8, 0, 12);
         C_array_append(cur_edges, &etmp);
-        etmp.v[1] = 1;
-        etmp.t[1] = 3;
+        set_edge(&etmp, 4, 7, 0, 1);
         C_array_append(cur_edges, &etmp);
-        etmp.v[0] = 1;
-        etmp.v[1] = 3;
-        etmp.t[1] = 2;
+        set_edge(&etmp, 7, 8, 0, 16);
         C_array_append(cur_edges, &etmp);
-        etmp.v[0] = 2;
-        etmp.t[0] = 1;
+        set_edge(&etmp, 4, 9, 1, 14);
         C_array_append(cur_edges, &etmp);
-        etmp.v[0] = 1;
-        etmp.v[1] = 2;
-        etmp.t[0] = 3;
+        set_edge(&etmp, 7, 9, 1, 18);
         C_array_append(cur_edges, &etmp);
-        etmp.v[0] = 0;
-        etmp.t[1] = 1;
+        set_edge(&etmp, 5, 6, 2, 3);
+        C_array_append(cur_edges, &etmp);
+        set_edge(&etmp, 5, 11, 2, 13);
+        C_array_append(cur_edges, &etmp);
+        set_edge(&etmp, 6, 11, 2, 17);
+        C_array_append(cur_edges, &etmp);
+        set_edge(&etmp, 5, 10, 3, 15);
+        C_array_append(cur_edges, &etmp);
+        set_edge(&etmp, 6, 10, 3, 19);
+        C_array_append(cur_edges, &etmp);
+        set_edge(&etmp, 0, 4, 4, 12);
+        C_array_append(cur_edges, &etmp);
+        set_edge(&etmp, 0, 3, 4, 5);
+        C_array_append(cur_edges, &etmp);
+        set_edge(&etmp, 3, 4, 4, 14);
+        C_array_append(cur_edges, &etmp);
+        set_edge(&etmp, 0, 5, 5, 13);
+        C_array_append(cur_edges, &etmp);
+        set_edge(&etmp, 3, 5, 5, 15);
+        C_array_append(cur_edges, &etmp);
+        set_edge(&etmp, 2, 7, 6, 18);
+        C_array_append(cur_edges, &etmp);
+        set_edge(&etmp, 1, 2, 6, 7);
+        C_array_append(cur_edges, &etmp);
+        set_edge(&etmp, 1, 7, 6, 16);
+        C_array_append(cur_edges, &etmp);
+        set_edge(&etmp, 2, 6, 7, 19);
+        C_array_append(cur_edges, &etmp);
+        set_edge(&etmp, 1, 6, 7, 17);
+        C_array_append(cur_edges, &etmp);
+        set_edge(&etmp, 0, 8, 8, 12);
+        C_array_append(cur_edges, &etmp);
+        set_edge(&etmp, 8, 11, 8, 9);
+        C_array_append(cur_edges, &etmp);
+        set_edge(&etmp, 0, 11, 8, 13);
+        C_array_append(cur_edges, &etmp);
+        set_edge(&etmp, 1, 11, 9, 17);
+        C_array_append(cur_edges, &etmp);
+        set_edge(&etmp, 1, 8, 9, 16);
+        C_array_append(cur_edges, &etmp);
+        set_edge(&etmp, 9, 10, 10, 11);
+        C_array_append(cur_edges, &etmp);
+        set_edge(&etmp, 3, 9, 10, 14);
+        C_array_append(cur_edges, &etmp);
+        set_edge(&etmp, 3, 10, 10, 15);
+        C_array_append(cur_edges, &etmp);
+        set_edge(&etmp, 2, 9, 11, 18);
+        C_array_append(cur_edges, &etmp);
+        set_edge(&etmp, 2, 10, 11, 19);
         C_array_append(cur_edges, &etmp);
 
         /* That was gross. Now we do a bunch of iterations of subdivision. */
