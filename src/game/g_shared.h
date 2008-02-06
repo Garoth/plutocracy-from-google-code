@@ -17,13 +17,14 @@ typedef struct g_vert_neighbors {
 } g_vert_neighbors_t;
 
 /* Type to hold the spherical map */
-typedef struct g_sphere {
+typedef struct g_globe {
     int nverts;
     int ninds;
     c_vec3_t *verts;
     g_vert_neighbors_t *neighbors_lists;
     unsigned short *inds; /* triangles if you want 'em */
-} g_sphere_t;
+} g_globe_t;
 
-/* g_sphere.c */
-g_sphere_t *G_sphere_alloc(int subdiv_levels);
+/* g_globe.c */
+g_globe_t *G_globe_alloc(int subdiv_levels);
+void G_globe_free(g_globe_t *s);
