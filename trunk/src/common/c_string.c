@@ -33,19 +33,19 @@ char *C_skip_spaces(const char *str)
 \******************************************************************************/
 int C_read_file(const char *filename, char *buffer, int size)
 {
-        FILE *file;
+        c_file_t *file;
         size_t bytes_read;
 
-        file = fopen(filename, "r");
+        file = C_file_open_read(filename);
         if (!file) {
                 C_warning("Failed to open '%s'", filename);
                 return -1;
         }
-        bytes_read = fread(buffer, sizeof (*buffer), size, file);
+        bytes_read = C_file_read(file, buffer, size);
         if (bytes_read > size - 1)
                 bytes_read = size - 1;
         buffer[bytes_read] = NUL;
-        fclose(file);
+        C_file_close(file);
         C_debug("Read '%s' (%d bytes)", filename, bytes_read);
         return bytes_read;
 }

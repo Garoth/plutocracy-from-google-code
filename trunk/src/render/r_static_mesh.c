@@ -239,6 +239,8 @@ void R_static_mesh_render(r_static_mesh_t* mesh)
 \******************************************************************************/
 void R_static_mesh_free(r_static_mesh_t* mesh)
 {
+        if (!mesh)
+                return;
         C_free(mesh->verts);
         C_free(mesh->norms);
         C_free(mesh->sts);

@@ -14,13 +14,28 @@
 #include "r_shared.h"
 
 typedef struct r_static_mesh {
-    unsigned short ninds;
-    unsigned short nverts;
-    c_vec3_t *verts;
-    c_vec3_t *norms;
-    c_vec2_t *sts;
-    unsigned short *inds;
+        unsigned short ninds;
+        unsigned short nverts;
+        c_vec3_t *verts;
+        c_vec3_t *norms;
+        c_vec2_t *sts;
+        unsigned short *inds;
 } r_static_mesh_t;
+
+#pragma pack(push, 4)
+
+typedef struct r_vertex {
+        float tu, tv, nx, ny, nz, x, y, z;
+} r_vertex_t;
+
+#define R_VERTEX_FLAGS GL_T2F_N3F_V3F
+#pragma pack(pop)
+
+typedef struct r_model {
+        r_vertex_t *verts;
+        unsigned short *indices;
+        unsigned int verts_len, indices_len;
+} r_model_t;
 
 /* r_static_mesh.c */
 r_static_mesh_t *R_static_mesh_load(const char *filename);

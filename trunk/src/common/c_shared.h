@@ -32,6 +32,9 @@
 /* SDL */
 #include <SDL.h>
 
+/* PhysicsFS */
+/* #include <physfs.h> */
+
 /* Vectors */
 #include "c_vectors.h"
 
@@ -48,6 +51,15 @@
 #ifndef NUL
 #define NUL '\0'
 #endif
+
+/* Wrap file access functions */
+#define C_file_close(f) fclose(f)
+#define C_file_open_read(name) fopen(name, "r")
+#define C_file_open_write(name) fopen(name, "w")
+#define C_file_read(f, buf, len) fread(buf, 1, len, f)
+#define C_file_write(f, buf, len) fwrite(buf, 1, len, f)
+
+#define c_file_t FILE
 
 /* Debug log levels, errors are fatal and will always abort */
 typedef enum {
