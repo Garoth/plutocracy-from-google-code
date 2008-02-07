@@ -10,6 +10,8 @@
  FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
 \******************************************************************************/
 
+/* Functions and structures that allocate or manage generic memory. */
+
 #include "c_shared.h"
 
 /******************************************************************************\
@@ -69,3 +71,19 @@ void C_array_cleanup(c_array_t *ary)
         C_free(ary->elems);
         memset(ary, '\0', sizeof(*ary));
 }
+
+/******************************************************************************\
+ Reallocate [ptr] to [size] bytes large. Abort on error.
+\******************************************************************************/
+void *C_realloc_full(const char *file, int line, const char *function,
+                     void *ptr, size_t size)
+{
+        void *result;
+
+        result = realloc(ptr, size);
+        if (!result)
+                C_error("Out of memory, %s() (%s:%d) tried to allocate %d "
+                        "bytes", function, file, line, size );
+        return result;
+}
+

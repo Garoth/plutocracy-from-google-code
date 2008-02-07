@@ -11,8 +11,8 @@
 \******************************************************************************/
 
 /* This file contains the common configurable variables and the framework
-   for handling configurable variables system-wide.
-     TODO: Implement as a trie */
+   for handling configurable variables system-wide. Variables are not set
+   or referred to by their names often, so efficiency here is not important. */
 
 #include "c_shared.h"
 

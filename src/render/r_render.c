@@ -60,6 +60,7 @@ static void render_test_mesh(void)
 
 /******************************************************************************\
  Render the test globe.
+   FIXME: Broken thanks to new vertex type.
 \******************************************************************************/
 void render_test_globe()
 {
@@ -75,12 +76,12 @@ void render_test_globe()
         glDisable(GL_CULL_FACE);
 
         /* Fake a static mesh */
-        fake_mesh.nverts = globe->nverts;
+        /*fake_mesh.nverts = globe->nverts;
         fake_mesh.ninds = globe->ninds;
         fake_mesh.verts = globe->verts;
         fake_mesh.inds = globe->inds;
         fake_mesh.norms = NULL;
-        fake_mesh.sts = NULL;
+        fake_mesh.sts = NULL;*/
 
         glPushMatrix();
 
@@ -128,9 +129,9 @@ void R_render(void)
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         /* Render testing */
-        if (r_test_globe.value.n)
+        /*if (r_test_globe.value.n)
                 render_test_globe();
-        else
+        else*/
                 render_test_mesh();
 
         SDL_GL_SwapBuffers();

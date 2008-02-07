@@ -31,8 +31,9 @@
 
 /* SDL */
 #include <SDL.h>
+#include <SDL_image.h>
 
-/* PhysicsFS */
+/* TODO: PhysicsFS? Do we need it or no? */
 /* #include <physfs.h> */
 
 /* Vectors */
@@ -96,24 +97,19 @@ typedef struct c_var {
         struct c_var *next;
 } c_var_t;
 
-/* Resizing arrays for fun and profit. This is OH GOD SO UNTYPESAFE. */
-typedef struct r_ary {
+/* Resizing arrays */
+typedef struct c_array {
         size_t capacity;
         size_t len;
         size_t item_size;
         void *elems;
 } c_array_t;
 
-/* c_array.c */
-#define C_array_elem(pary, type, i) (((type*)(pary)->elems)[i])
-#define C_array_init(ary, type, cap) \
-        C_array_init_real(ary, sizeof(type), cap)
-
-void C_array_init_real(c_array_t *ary, size_t item_size, size_t cap);
-void C_array_reserve(c_array_t *ary, size_t n);
-void C_array_append(c_array_t *ary, void* item);
-void* C_array_steal(c_array_t* ary);
-void C_array_cleanup(c_array_t* ary);
+/* A structure to hold the data for a file that is being read in tokens */
+typedef struct c_token_file {
+        c_file_t *file;
+        char *pos, *token, swap, filename[32], buffer[4000];
+} c_token_file_t;
 
 /* c_log.c */
 void C_close_log_file(void);
@@ -130,9 +126,15 @@ void C_open_log_file(void);
 #define C_warning(fmt, ...) C_debug_full(C_LOG_WARNING, __FILE__, __LINE__, \
                                          __func__, fmt, ## __VA_ARGS__)
 
-/* c_malloc.c */
-#define C_free(p) do { C_free_ptr(p); (p) = NULL; } while(FALSE)
-void C_free_ptr(void *);
+/* c_memory.c */
+void C_array_append(c_array_t *ary, void* item);
+void C_array_cleanup(c_array_t* ary);
+#define C_array_elem(pary, type, i) (((type*)(pary)->elems)[i])
+#define C_array_init(ary, type, cap) C_array_init_real(ary, sizeof(type), cap)
+void C_array_init_real(c_array_t *ary, size_t item_size, size_t cap);
+void C_array_reserve(c_array_t *ary, size_t n);
+void* C_array_steal(c_array_t* ary);
+#define C_free(p) do { free(p); (p) = NULL; } while(FALSE)
 #define C_malloc(s) C_realloc(NULL, s)
 #define C_realloc(p, s) C_realloc_full(__FILE__, __LINE__, __func__, p, s)
 void *C_realloc_full(const char *file, int line, const char *function,
@@ -140,8 +142,12 @@ void *C_realloc_full(const char *file, int line, const char *function,
 
 /* c_string.c */
 #define C_is_digit(c) (((c) >= '0' && (c) <= '9') || c == '.' || c == '-')
+#define C_is_space(c) ((c) && (c) <= ' ')
 int C_read_file(const char *filename, char *buffer, int size);
 char *C_skip_spaces(const char *str);
+void C_token_file_cleanup(c_token_file_t *tf);
+int C_token_file_init(c_token_file_t *tf, const char *filename);
+const char *C_token_file_read(c_token_file_t *tf);
 
 /* c_time.c */
 void C_time_update(void);
