@@ -10,30 +10,16 @@
  FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
 \******************************************************************************/
 
+/* This file implements the PLUM (Plutocracy Model) model loading and rendering
+   functions. */
+
 #include "r_common.h"
 
-/* Window parameters */
-c_var_t r_width, r_height, r_colordepth, r_depth, r_windowed, r_vsync;
-
-/* Render testing */
-c_var_t r_test_mesh, r_test_globe, r_test_model;
-
 /******************************************************************************\
- Registers the render variables.
-\******************************************************************************/
-void R_register_variables(void)
-{
-        /* Window parameters */
-        C_register_integer(&r_width, "r_width", 800);
-        C_register_integer(&r_height, "r_height", 600);
-        C_register_integer(&r_colordepth, "r_colordepth", 32);
-        C_register_integer(&r_depth, "r_depth", 16);
-        C_register_integer(&r_windowed, "r_windowed", 1);
-        C_register_integer(&r_vsync, "r_vsync", 1);
 
-        /* Render testing */
-        C_register_string(&r_test_mesh, "r_test_mesh", "");
-        C_register_integer(&r_test_globe, "r_test_globe", FALSE);
-        C_register_string(&r_test_model, "r_test_model", "");
+\******************************************************************************/
+r_model_t *R_model_load(const char *filename)
+{
+        return NULL;
 }
 
