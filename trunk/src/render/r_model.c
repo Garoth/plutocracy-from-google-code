@@ -16,10 +16,24 @@
 #include "r_common.h"
 
 /******************************************************************************\
-
+ Allocate memory for and load a model and its textures.
 \******************************************************************************/
 r_model_t *R_model_load(const char *filename)
 {
+        c_token_file_t token_file;
+
+        C_token_file_init(&token_file, filename);
+        C_debug("1st token = '%s'", C_token_file_read(&token_file));
+        C_debug("2nd token = '%s'", C_token_file_read(&token_file));
+        C_debug("3rd token = '%s'", C_token_file_read(&token_file));
+        C_token_file_cleanup(&token_file);
         return NULL;
+}
+
+/******************************************************************************\
+ Free memory used by a model and decrease the reference count of its textures.
+\******************************************************************************/
+void R_model_free(r_model_t *model)
+{
 }
 

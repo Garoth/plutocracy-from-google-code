@@ -28,6 +28,9 @@ typedef struct {
 
 #pragma pack(pop)
 
+/* Vector types can be converted to float arrays and vice versa */
+#define C_VEC_ARRAY(v) ((float *)&(v))
+
 /******************************************************************************\
  Constructors.
 \******************************************************************************/

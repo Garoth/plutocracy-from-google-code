@@ -13,34 +13,44 @@
 #include "../common/c_shared.h"
 #include "r_shared.h"
 
-typedef struct r_static_mesh {
-        unsigned short ninds;
-        unsigned short nverts;
-        c_vec3_t *verts;
-        c_vec3_t *norms;
-        c_vec2_t *sts;
-        unsigned short *inds;
-} r_static_mesh_t;
-
+/* Vertex type for meshes */
 #pragma pack(push, 4)
-
 typedef struct r_vertex {
-        float tu, tv, nx, ny, nz, x, y, z;
+        c_vec2_t uv;
+        c_vec3_t no;
+        c_vec3_t co;
 } r_vertex_t;
-
-#define R_VERTEX_FLAGS GL_T2F_N3F_V3F
+#define R_VERTEX_FORMAT GL_T2F_N3F_V3F
 #pragma pack(pop)
 
-typedef struct r_model {
+/* Non-animated, untextured mesh */
+typedef struct r_static_mesh {
         r_vertex_t *verts;
+        int verts_len, indices_len;
         unsigned short *indices;
-        unsigned int verts_len, indices_len;
+} r_static_mesh_t;
+
+/* Texture class */
+typedef struct r_texture {
+        struct r_texture *prev, *next;
+        SDL_Surface *surface;
+        int refs;
+        char filename[256];
+} r_texture_t;
+
+/* Animated, textured, multi-mesh model */
+typedef struct r_model {
+        /* TODO */
 } r_model_t;
 
 /* r_static_mesh.c */
 r_static_mesh_t *R_static_mesh_load(const char *filename);
 void R_static_mesh_render(r_static_mesh_t *);
 void R_static_mesh_free(r_static_mesh_t *);
+
+/* r_model.c */
+r_model_t *R_model_load(const char *filename);
+void R_model_free(r_model_t *model);
 
 /* r_variables.c */
 extern c_var_t r_width, r_height, r_colordepth, r_depth, r_windowed, r_vsync;

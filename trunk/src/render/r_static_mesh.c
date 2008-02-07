@@ -12,36 +12,34 @@
 
 #include "r_common.h"
 
-/****************************************************************************** \
- Find or insert the given (vert,norm,st) triplet into the parallel arrays
+/******************************************************************************\
+ Find or insert the given (vert, norm, uv) triplet into the parallel arrays
  given. Returns TRUE on success.
 \******************************************************************************/
-static unsigned short find_vert(c_array_t *vs,
-                                c_array_t *ns,
-                                c_array_t *sts,
-                                c_vec3_t v,
-                                c_vec3_t n,
-                                c_vec2_t st)
+static unsigned short find_vert(c_array_t *vs, c_vec3_t v, c_vec3_t n,
+                                c_vec2_t uv)
 {
+        r_vertex_t new_vert;
         unsigned short i;
 
-        for(i = 0; i < vs->len; i++) {
-                if(C_vec3_eq(v, C_array_elem(vs, c_vec3_t, i)) &&
-                   C_vec3_eq(n, C_array_elem(ns, c_vec3_t, i)) &&
-                   C_vec2_eq(st, C_array_elem(sts, c_vec2_t, i))) {
+        for (i = 0; i < vs->len; i++) {
+                r_vertex_t *vert;
+
+                vert = &C_array_elem(vs, r_vertex_t, i);
+                if (C_vec3_eq(v, vert->co) &&
+                    C_vec3_eq(n, vert->no) &&
+                    C_vec2_eq(uv, vert->uv)) {
                         return i;
                 }
         }
-
-        /* not found */
-        C_array_append(vs, &v);
-        C_array_append(ns, &n);
-        C_array_append(sts, &st);
-
+        new_vert.co = v;
+        new_vert.no = n;
+        new_vert.uv = uv;
+        C_array_append(vs, &new_vert);
         return i;
 }
 
-/****************************************************************************** \
+/******************************************************************************\
  Parse a v/vt/vn triplet as you would find in a face line in .OBJ format.
 \******************************************************************************/
 static char* parse_face(char* s,
@@ -76,8 +74,9 @@ static char* parse_face(char* s,
 }
 
 
-/****************************************************************************** \
+/******************************************************************************\
  Loads a static mesh from a .OBJ text file.
+   FIXME: Need to get rid of fgets() to convert to C_file_*
 \******************************************************************************/
 r_static_mesh_t* R_static_mesh_load(const char* filename)
 {
@@ -94,10 +93,8 @@ r_static_mesh_t* R_static_mesh_load(const char* filename)
         C_array_init(&norms, c_vec3_t, 512);
         C_array_init(&sts, c_vec2_t, 512);
 
-        c_array_t real_verts, real_norms, real_sts, inds;
-        C_array_init(&real_verts, c_vec3_t, 512);
-        C_array_init(&real_norms, c_vec3_t, 512);
-        C_array_init(&real_sts, c_vec2_t, 512);
+        c_array_t real_verts, inds;
+        C_array_init(&real_verts, r_vertex_t, 512);
         C_array_init(&inds, unsigned short, 512);
 
         int flag = TRUE;
@@ -157,8 +154,6 @@ r_static_mesh_t* R_static_mesh_load(const char* filename)
                                 unsigned short ind;
                                 ind = find_vert(
                                         &real_verts,
-                                        &real_norms,
-                                        &real_sts,
                                         C_array_elem(&verts, c_vec3_t, ivert),
                                         C_array_elem(&norms, c_vec3_t, inorm),
                                         C_array_elem(&sts, c_vec2_t, ist));
@@ -181,21 +176,15 @@ r_static_mesh_t* R_static_mesh_load(const char* filename)
         }
 
         C_debug("Loaded '%s' (%d entries, %d indices)",
-                filename,
-                real_verts.len,
-                inds.len);
+                filename, real_verts.len, inds.len);
 
         result = C_malloc(sizeof(r_static_mesh_t));
-
-        result->nverts = verts.len;
-        result->ninds = inds.len;
+        result->verts_len = verts.len;
+        result->indices_len = inds.len;
 
         /* Shrink arrays and keep them in result structure. */
-
         result->verts = C_array_steal(&real_verts);
-        result->norms = C_array_steal(&real_norms);
-        result->sts = C_array_steal(&real_sts);
-        result->inds = C_array_steal(&inds);
+        result->indices = C_array_steal(&inds);
 
         /* Cleanup temporary arrays. */
         C_array_cleanup(&sts);
@@ -206,35 +195,20 @@ r_static_mesh_t* R_static_mesh_load(const char* filename)
         return result;
 }
 
-/****************************************************************************** \
+/******************************************************************************\
  Render a mesh.
 \******************************************************************************/
 void R_static_mesh_render(r_static_mesh_t* mesh)
 {
-        glEnableClientState(GL_VERTEX_ARRAY);
-        glVertexPointer(3, GL_FLOAT, 0, mesh->verts);
-
-        if (mesh->norms) {
-                glEnableClientState(GL_NORMAL_ARRAY);
-                glNormalPointer(GL_FLOAT, 0, mesh->norms);
-        }
-
-        if (mesh->sts) {
-                glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-                glTexCoordPointer(2, GL_FLOAT, 0, mesh->sts);
-        }
-
-        glDrawElements(GL_TRIANGLES,
-                       mesh->ninds,
-                       GL_UNSIGNED_SHORT,
-                       mesh->inds);
-
+        glInterleavedArrays(R_VERTEX_FORMAT, 0, mesh->verts);
+        glDrawElements(GL_TRIANGLES, mesh->indices_len,
+                       GL_UNSIGNED_SHORT, mesh->indices);
         glDisableClientState(GL_TEXTURE_COORD_ARRAY);
         glDisableClientState(GL_NORMAL_ARRAY);
         glDisableClientState(GL_VERTEX_ARRAY);
 }
 
-/****************************************************************************** \
+/******************************************************************************\
  Release the resources for a mesh.
 \******************************************************************************/
 void R_static_mesh_free(r_static_mesh_t* mesh)
@@ -242,8 +216,6 @@ void R_static_mesh_free(r_static_mesh_t* mesh)
         if (!mesh)
                 return;
         C_free(mesh->verts);
-        C_free(mesh->norms);
-        C_free(mesh->sts);
-        C_free(mesh->inds);
+        C_free(mesh->indices);
         C_free(mesh);
 }

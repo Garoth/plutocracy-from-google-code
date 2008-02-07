@@ -12,30 +12,6 @@
 
 #include "r_common.h"
 
-/* Mesh render testing */
-extern c_var_t r_test_mesh;
-r_static_mesh_t *r_test_mesh_data = NULL;
-
-/******************************************************************************\
- Loads render assets.
-\******************************************************************************/
-void R_load_assets(void)
-{
-        C_status("Loading render assets");
-
-        /* Load the test mesh */
-        if (*r_test_mesh.value.s)
-                r_test_mesh_data = R_static_mesh_load(r_test_mesh.value.s);
-}
-
-/******************************************************************************\
- Cleans up the asset resources.
-\******************************************************************************/
-void R_free_assets(void)
-{
-        R_static_mesh_free(r_test_mesh_data);
-}
-
 /******************************************************************************\
  Initializes OpenGL settings such view matrices, culling, and depth testing.
 \******************************************************************************/
