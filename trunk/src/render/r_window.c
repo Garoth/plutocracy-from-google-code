@@ -33,12 +33,20 @@ static void R_init_gl_state(void)
         glCullFace(GL_BACK);
         glFrontFace(GL_CW);
 
-        /* Clear to black. */
+        /* Clear to black */
         glClearColor(0.0, 0.0, 0.0, 1.0);
 
         /* Depth testing */
         glEnable(GL_DEPTH_TEST);
         glDepthFunc(GL_LEQUAL);
+
+        /* Textures */
+        glEnable(GL_TEXTURE_2D);
+        glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,
+                        GL_LINEAR_MIPMAP_NEAREST);
+        glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+        glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 }
 
 /******************************************************************************\

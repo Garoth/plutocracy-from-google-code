@@ -185,6 +185,7 @@ r_static_mesh_t* R_static_mesh_load(const char* filename)
         /* Shrink arrays and keep them in result structure. */
         result->verts = C_array_steal(&real_verts);
         result->indices = C_array_steal(&inds);
+        result->texture = NULL;
 
         /* Cleanup temporary arrays. */
         C_array_cleanup(&sts);
@@ -200,6 +201,8 @@ r_static_mesh_t* R_static_mesh_load(const char* filename)
 \******************************************************************************/
 void R_static_mesh_render(r_static_mesh_t* mesh)
 {
+        glBindTexture(GL_TEXTURE_2D,
+                      mesh->texture ? mesh->texture->gl_name : 0);
         glInterleavedArrays(R_VERTEX_FORMAT, 0, mesh->verts);
         glDrawElements(GL_TRIANGLES, mesh->indices_len,
                        GL_UNSIGNED_SHORT, mesh->indices);
@@ -211,11 +214,21 @@ void R_static_mesh_render(r_static_mesh_t* mesh)
 /******************************************************************************\
  Release the resources for a mesh.
 \******************************************************************************/
-void R_static_mesh_free(r_static_mesh_t* mesh)
+void R_static_mesh_cleanup(r_static_mesh_t* mesh)
 {
         if (!mesh)
                 return;
+        R_texture_free(mesh->texture);
         C_free(mesh->verts);
         C_free(mesh->indices);
+}
+
+/******************************************************************************\
+ Release the resources for and free an allocated mesh.
+\******************************************************************************/
+void R_static_mesh_free(r_static_mesh_t* mesh)
+{
+        R_static_mesh_cleanup(mesh);
         C_free(mesh);
 }
+

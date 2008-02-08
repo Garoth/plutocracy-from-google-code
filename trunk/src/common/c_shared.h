@@ -127,27 +127,32 @@ void C_open_log_file(void);
                                          __func__, fmt, ## __VA_ARGS__)
 
 /* c_memory.c */
-void C_array_append(c_array_t *ary, void* item);
-void C_array_cleanup(c_array_t* ary);
-#define C_array_elem(pary, type, i) (((type*)(pary)->elems)[i])
+void C_array_append(c_array_t *ary, void *item);
+void C_array_cleanup(c_array_t *ary);
+#define C_array_elem(ary, type, i) (((type*)(ary)->elems)[i])
 #define C_array_init(ary, type, cap) C_array_init_real(ary, sizeof(type), cap)
 void C_array_init_real(c_array_t *ary, size_t item_size, size_t cap);
 void C_array_reserve(c_array_t *ary, size_t n);
-void* C_array_steal(c_array_t* ary);
-#define C_free(p) do { free(p); (p) = NULL; } while(FALSE)
+void *C_array_steal(c_array_t *ary);
+#define C_calloc(s) C_recalloc(NULL, s)
+#define C_free(p) free(p)
 #define C_malloc(s) C_realloc(NULL, s)
 #define C_realloc(p, s) C_realloc_full(__FILE__, __LINE__, __func__, p, s)
 void *C_realloc_full(const char *file, int line, const char *function,
                      void *ptr, size_t size);
+void *C_recalloc_full(const char *file, int line, const char *function,
+                      void *ptr, size_t size);
 
 /* c_string.c */
 #define C_is_digit(c) (((c) >= '0' && (c) <= '9') || c == '.' || c == '-')
 #define C_is_space(c) ((c) && (c) <= ' ')
 int C_read_file(const char *filename, char *buffer, int size);
 char *C_skip_spaces(const char *str);
-void C_token_file_cleanup(c_token_file_t *tf);
-int C_token_file_init(c_token_file_t *tf, const char *filename);
-const char *C_token_file_read(c_token_file_t *tf);
+size_t C_strncpy(char *dest, const char *src, size_t len);
+void C_token_file_cleanup(c_token_file_t *);
+int C_token_file_init(c_token_file_t *, const char *filename);
+const char *C_token_file_read_full(c_token_file_t *, int *out_quoted);
+#define C_token_file_read(f) C_token_file_read_full(f, NULL)
 
 /* c_time.c */
 void C_time_update(void);

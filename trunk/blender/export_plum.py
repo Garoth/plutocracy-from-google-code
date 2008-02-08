@@ -67,11 +67,29 @@ def sanitize(s):
 	return s.replace('"', '\\"')
 
 
-# Materials can have ".001" etc appended to their names when the name is
-# already taken, this should be stripped
 def sanitize_strip(s):
-	s = s.rstrip(".0123456789");
+	if s[0:2] == '//':
+		s = s[2:len(s)]
+	while s[0:3] == '../':
+		s = s[3:len(s)]
 	return sanitize(s)
+
+
+def object_valid(scn, ob):
+	me = BPyMesh.getMeshFromObject(ob, None, True, False, scn)
+	if not me or not me.faces or not (len(me.faces) + len(me.verts)):
+		return False
+	return True
+
+
+def get_image_filename(scn, ob):
+	me = BPyMesh.getMeshFromObject(ob, None, True, False, scn)
+	for mat in me.materials:
+		for mtex in mat.getTextures():
+			image = mtex.tex.getImage()
+			if image and image.getFilename():
+				return image.getFilename()
+	return ''
 
 
 def write_frame(file, objects):
@@ -80,24 +98,15 @@ def write_frame(file, objects):
 	# Get all meshes
 	for ob_main in objects:
 		for ob, ob_mat in BPyObject.getDerivedObjects(ob_main):
-			me = BPyMesh.getMeshFromObject(ob, None, True, False, scn)
-
-			# Make sure there is something to write
-			if not me or not me.faces or not (len(me.faces) + len(me.verts)):
+			if not object_valid(scn, ob):
 				continue
+			me = BPyMesh.getMeshFromObject(ob, None, True, False, scn)
 
 			# High quality normals
 			BPyMesh.meshCalcNormals(me)
 
-			# Write object and material shader name
-			file.write('\no "%s"\n' % sanitize(ob.name))
-			if ob.getData(1):
-				file.write('m "%s"\n' % sanitize_strip(ob.getData(1)))
-
-			# Get the material name
-			#materials = ob.getMaterials()
-			#if materials:
-			#	file.write('m "%s"\n' % sanitize_strip(materials[0].getName()))
+			# Indicate that this is a new object
+			file.write('\no\n')
 
 			verts = [ ]
 			for f in me.faces:
@@ -134,31 +143,75 @@ def write(filename):
 	if not BPyMessages.Warning_SaveOver(filename):
 		return
 
-	# TODO: When overwriting a file, preserve any "anim" entries
-
 	Window.EditMode(0)
 	Window.WaitCursor(1)
 
 	# Export an animation up to and including the current frame
 	scn = orig_scene = Scene.GetCurrent()
 	orig_frame = Blender.Get('curframe')
-	scene_frames = range(1, orig_frame + 1)
+
+	# Extract the existing 'anims:' block
+	# TODO: we can use this as an upper limit on the animation frames
+	anims = ''
+	max_frame = orig_frame
+	try:
+		file = open(filename, 'r')
+		parsing_anim = False
+		line = '\n'
+		while len(line) > 0 and line[-1] == '\n':
+			line = file.readline()
+			if parsing_anim:
+				anims += line;
+				end_pos = line.find('end')
+				comment_pos = line.find('#')
+				if comment_pos == -1:
+					comment_pos = 9999;
+				if end_pos >= 0 and end_pos < comment_pos:
+					break
+				sline = line;
+				if comment_pos < 9999:
+					sline = sline[0:comment_pos]
+				sline = sline.split();
+				if len(sline) >= 4 and sline[-3] > max_frame:
+					max_frame = int(sline[-3])
+				continue
+			anim_pos = line.find('anims:')
+			comment_pos = line.find('#')
+			if comment_pos == -1:
+				comment_pos = 9999;
+			if anim_pos >= 0 and anim_pos < comment_pos:
+				parsing_anim = True
+				anims += line;
+		file.close()
+	except:
+		pass
+	if len(anims) < 1:
+		anims = 'anims:\n        "idle" 1 %d 30 ""\nend\n' % orig_frame;
 
 	file = open(filename, "w")
 	file.write(('########################################' + \
-		        '########################################\n' + \
+		    '########################################\n' + \
 	            '# Blender3D v%s PLUM file: %s\n' + \
 	            '# www.blender3d.org\n' + \
 	            '########################################' + \
-		        '########################################\n\n') % \
-		       (Blender.Get('version'), \
+		    '########################################\n\n') % \
+		    (Blender.Get('version'), \
 	           Blender.Get('filename').split('/')[-1].split('\\')[-1] ))
 
 	# Animation definitions
-	file.write('# anim [name] [start] [end] [fps]\n' + \
-	           'anim "idle" 1 %d 30\n' % orig_frame)
+	file.write('# [name] [start] [end] [fps] [end-anim]\n' + anims)
+
+	# List all the objects ahead of time
+	file.write('\n# object [name] [material]\n')
+	for ob in scn.objects:
+		if not object_valid(scn, ob):
+			continue
+		file.write('object "%s" "%s"\n' % \
+		           (sanitize(ob.name), \
+		            sanitize_strip(get_image_filename(scn, ob))))
 
 	# Write all frames into one file
+	scene_frames = range(1, max_frame + 1)
 	for frame in scene_frames:
 		file.write(('\n########################################' + \
 		            '########################################\n' + \
@@ -167,6 +220,7 @@ def write(filename):
 		            '########################################\n') % frame);
 		Blender.Set('curframe', frame)
 		write_frame(file, scn.objects)
+
 	file.close()
 
 	Blender.Set('curframe', orig_frame)
