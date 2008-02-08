@@ -56,7 +56,7 @@ int C_read_file(const char *filename, char *buffer, int size)
 int C_token_file_init(c_token_file_t *tf, const char *filename)
 {
         strncpy(tf->filename, filename, sizeof (tf->filename));
-        tf->token = tf->pos = tf->buffer + sizeof (tf->buffer) - 1;
+        tf->token = tf->pos = tf->buffer + sizeof (tf->buffer) - 2;
         tf->swap = ' ';
         tf->file = C_file_open_read(filename);
         if (!tf->file) {
@@ -77,26 +77,26 @@ void C_token_file_cleanup(c_token_file_t *tf)
 }
 
 /******************************************************************************\
- Fills the buffer with new data.
+ Fills the buffer with new data when necessary. Should be run before any time
+ the token file buffer position advances.
 \******************************************************************************/
-static void token_file_read_chunk(c_token_file_t *tf)
+static void token_file_check_chunk(c_token_file_t *tf)
 {
         size_t token_len, bytes_read;
 
-        token_len = tf->pos - tf->token;
+        if (tf->pos < tf->buffer + sizeof (tf->buffer) - 2 && tf->pos[1])
+                return;
+        token_len = tf->pos - tf->token + 1;
         if (token_len >= sizeof (tf->buffer) - 1) {
                 C_warning("Oversize token in '%s'", tf->filename);
                 token_len = 0;
         }
-        if (token_len) {
-                memmove(tf->buffer, tf->token, token_len);
-                tf->token = tf->buffer;
-                tf->pos = tf->token + token_len;
-        } else
-                tf->token = tf->pos = tf->buffer;
+        memmove(tf->buffer, tf->token, token_len);
+        tf->token = tf->buffer;
+        tf->pos = tf->token + token_len - 1;
         bytes_read = C_file_read(tf->file, tf->buffer + token_len,
                                  sizeof (tf->buffer) - token_len - 1);
-        tf->buffer[bytes_read] = NUL;
+        tf->buffer[token_len + bytes_read] = NUL;
 
 }
 
@@ -106,7 +106,7 @@ static void token_file_read_chunk(c_token_file_t *tf)
  strings are parsed for backslash symbols. A token file supports '#' line
  comments.
 \******************************************************************************/
-const char *C_token_file_read(c_token_file_t *tf)
+const char *C_token_file_read_full(c_token_file_t *tf, int *quoted)
 {
         int parsing_comment, parsing_string;
 
@@ -121,48 +121,65 @@ const char *C_token_file_read(c_token_file_t *tf)
                         parsing_comment = TRUE;
                 if (*tf->pos == '\n')
                         parsing_comment = FALSE;
-                if (tf->pos == tf->buffer + sizeof (tf->buffer) - 1) {
-                        token_file_read_chunk(tf);
-                        continue;
-                }
-                tf->pos++;
+                token_file_check_chunk(tf);
+                tf->token = ++tf->pos;
         }
         if (!*tf->pos)
                 return "";
 
         /* Read token */
-        if ((parsing_string = *tf->pos == '"'))
-                tf->pos++;
-        tf->token = tf->pos;
+        if ((parsing_string = *tf->pos == '"')) {
+                token_file_check_chunk(tf);
+                tf->token = ++tf->pos;
+        }
         while (*tf->pos) {
                 if (parsing_string) {
                         if (*tf->pos == '"') {
+                                token_file_check_chunk(tf);
                                 *(tf->pos++) = NUL;
                                 break;
                         }
                 } else if (C_is_space(*tf->pos) || *tf->pos == '#')
                         break;
-                if (*tf->pos == '\\' && tf->pos[1]) {
-                        if (tf->pos[1] == 'n')
+                if (tf->pos[-1] == '\\') {
+                        if (*tf->pos == 'n')
                                 *tf->pos = '\n';
-                        else if (tf->pos[1] == 'r')
+                        else if (*tf->pos == 'r')
                                 *tf->pos = '\r';
-                        else if (tf->pos[1] == 't')
+                        else if (*tf->pos == 't')
                                 *tf->pos = '\t';
                         else
-                                memmove(tf->pos, tf->pos + 1,
-                                        sizeof (tf->buffer) - (int)tf->pos - 1);
+                                memmove(tf->pos - 1, tf->pos, tf->buffer +
+                                        sizeof (tf->buffer) - tf->pos);
                 }
-                if (tf->pos == tf->buffer + sizeof (tf->buffer) - 1 ||
-                    !*tf->pos) {
-                        token_file_read_chunk(tf);
-                        continue;
-                }
+                token_file_check_chunk(tf);
                 tf->pos++;
         }
 
         tf->swap = *tf->pos;
         *tf->pos = NUL;
+        if (quoted)
+                *quoted = parsing_string;
         return tf->token;
+}
+
+/******************************************************************************\
+ Equivalent to the standard library strncpy, but ensures that there is always
+ a NUL terminator. Sometimes known as "strncpyz". Can copy overlapped strings.
+ Returns the length of the source string.
+\******************************************************************************/
+size_t C_strncpy(char *dest, const char *src, size_t len)
+{
+        size_t src_len;
+
+        src_len = strlen(src);
+        if (src_len > --len) {
+                C_debug("dest (%d bytes) too short to hold src (%d bytes)",
+                        len, src_len);
+                src_len = len;
+        }
+        memmove(dest, src, src_len);
+        dest[src_len] = NUL;
+        return src_len;
 }
 

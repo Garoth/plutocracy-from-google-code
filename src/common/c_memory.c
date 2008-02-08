@@ -39,16 +39,15 @@ void C_array_reserve(c_array_t *ary, size_t n)
  Append something to an array. item points to something of size item_size.
  Returns TRUE on success.
 \******************************************************************************/
-void C_array_append(c_array_t *ary, void* item)
+void C_array_append(c_array_t *ary, void *item)
 {
-        if(ary->len >= ary->capacity) {
+        if (ary->len >= ary->capacity) {
+                if (ary->len > ary->capacity)
+                        C_error("Invalid array");
                 C_array_reserve(ary, ary->capacity * 2);
         }
-
-        memcpy((char*)ary->elems + ary->len * ary->item_size,
-               item,
-               ary->item_size);
-
+        memcpy((char *)ary->elems + ary->len * ary->item_size,
+               item, ary->item_size);
         ary->len++;
 }
 
@@ -56,10 +55,12 @@ void C_array_append(c_array_t *ary, void* item)
  Realloc so the array isn't overallocated, and return the pointer to the
  dynamic memory, otherwise cleaning up.
 \******************************************************************************/
-void* C_array_steal(c_array_t *ary)
+void *C_array_steal(c_array_t *ary)
 {
-        void* result = C_realloc(ary->elems, ary->len * ary->item_size);
-        memset(ary, '\0', sizeof(*ary));
+        void *result;
+
+        result = C_realloc(ary->elems, ary->len * ary->item_size);
+        memset(ary, 0, sizeof (*ary));
         return result;
 }
 
@@ -69,7 +70,7 @@ void* C_array_steal(c_array_t *ary)
 void C_array_cleanup(c_array_t *ary)
 {
         C_free(ary->elems);
-        memset(ary, '\0', sizeof(*ary));
+        memset(ary, 0, sizeof (*ary));
 }
 
 /******************************************************************************\
@@ -85,5 +86,16 @@ void *C_realloc_full(const char *file, int line, const char *function,
                 C_error("Out of memory, %s() (%s:%d) tried to allocate %d "
                         "bytes", function, file, line, size );
         return result;
+}
+
+/******************************************************************************\
+ Allocate zero'd memory.
+\******************************************************************************/
+void *C_recalloc_full(const char *file, int line, const char *function,
+                      void *ptr, size_t size)
+{
+        ptr = C_realloc_full(file, line, function, ptr, size);
+        memset(ptr, 0, size);
+        return ptr;
 }
 
