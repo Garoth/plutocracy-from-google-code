@@ -75,6 +75,8 @@ void C_array_cleanup(c_array_t *ary)
 
 /******************************************************************************\
  Reallocate [ptr] to [size] bytes large. Abort on error.
+   TODO: String all the allocated chunks into a linked list and complain
+         about memory leaks when the program closes
 \******************************************************************************/
 void *C_realloc_full(const char *file, int line, const char *function,
                      void *ptr, size_t size)
@@ -97,5 +99,113 @@ void *C_recalloc_full(const char *file, int line, const char *function,
         ptr = C_realloc_full(file, line, function, ptr, size);
         memset(ptr, 0, size);
         return ptr;
+}
+
+/******************************************************************************\
+ Will first try to find the resource and reference if it has already been
+ allocated. In this case *[found] will be set to TRUE. Otherwise, a new
+ resource will be allocated and cleared and *[found] will be set to FALSE.
+\******************************************************************************/
+void *C_ref_alloc_full(const char *file, int line, const char *function,
+                       size_t size, c_ref_t **root, c_ref_cleanup_f cleanup,
+                       const char *name, int *found)
+{
+        c_ref_t *prev, *next, *ref;
+
+        if (size < sizeof (c_ref_t) || !root || !name)
+                C_error_full(file, line, function,
+                             "Invalid reference structure initilization");
+
+        /* Find a place for the object */
+        prev = NULL;
+        next = NULL;
+        ref = *root;
+        while (ref) {
+                int cmp;
+
+                cmp = strcmp(name, ref->name);
+                if (!cmp) {
+                        ref->refs++;
+                        C_debug_full(file, line, function,
+                                     "Loading '%s', cache hit (%d refs)",
+                                     name, ref->refs);
+                        if (found)
+                                *found = TRUE;
+                        return ref;
+                }
+                if (cmp < 0) {
+                        next = ref;
+                        ref = NULL;
+                        break;
+                }
+                prev = ref;
+                ref = ref->next;
+        }
+        if (found)
+                *found = FALSE;
+
+        /* Allocate a new object */
+        ref = C_calloc(size);
+        if (!*root)
+                *root = ref;
+        ref->prev = prev;
+        if (prev)
+                ref->prev->next = ref;
+        ref->next = next;
+        if (next)
+                ref->next->prev = ref;
+        ref->refs = 1;
+        ref->cleanup_func = cleanup;
+        ref->root = root;
+        C_strncpy_buf(ref->name, name);
+        C_debug_full(file, line, function, "Loading '%s', allocated new", name);
+        return ref;
+}
+
+/******************************************************************************\
+ Increases the reference count.
+\******************************************************************************/
+void C_ref_up_full(const char *file, int line, const char *function,
+                   c_ref_t *ref)
+{
+        if (!ref)
+                return;
+        if (ref->refs < 1)
+                C_error_full(file, line, function,
+                             "Invalid reference structure");
+        ref->refs++;
+        C_debug_full(file, line, function,
+                     "Referenced '%s' (%d refs)", ref->name, ref->refs);
+}
+
+/******************************************************************************\
+ Decreases the reference count. If there are no references left, the
+ cleanup function is called on the data and the memory is free'd.
+\******************************************************************************/
+void C_ref_down_full(const char *file, int line, const char *function,
+                     c_ref_t *ref)
+{
+        if (!ref)
+                return;
+        if (ref->refs < 1 || !ref->root)
+                C_error_full(file, line, function,
+                             "Invalid reference structure");
+        ref->refs--;
+        if (ref->refs > 0) {
+                C_debug_full(file, line, function,
+                             "Dereferenced '%s' (%d refs)",
+                             ref->name, ref->refs);
+                return;
+        }
+        if (*ref->root == ref)
+                *ref->root = ref->next;
+        if (ref->prev)
+                ref->prev->next = ref->next;
+        if (ref->next)
+                ref->next->prev = ref->prev;
+        C_debug_full(file, line, function, "Free'd '%s'", ref->name, ref->refs);
+        if (ref->cleanup_func)
+                ref->cleanup_func(ref);
+        C_free(ref);
 }
 

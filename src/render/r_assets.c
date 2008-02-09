@@ -17,16 +17,25 @@
 #include "r_common.h"
 
 /* Render testing */
-extern c_var_t r_test_mesh, r_test_model, r_test_globe;
-r_static_mesh_t *r_test_mesh_data = NULL;
-r_model_t *r_test_model_data = NULL;
+extern c_var_t r_test_mesh_path, r_test_model_path, r_test_globe;
+r_static_mesh_t *r_test_mesh;
+r_model_t r_test_model;
 
 /* Texture linked list */
-static r_texture_t *root;
+static c_ref_t *root;
 
 /* SDL/OpenGL variables */
 static SDL_PixelFormat sdl_pixel_format;
 int gl_pixel_format;
+
+/******************************************************************************\
+ Frees memory associated with a texture.
+\******************************************************************************/
+static void texture_cleanup(r_texture_t *pt)
+{
+        SDL_FreeSurface(pt->surface);
+        glDeleteTextures(1, &pt->gl_name);
+}
 
 /******************************************************************************\
  Loads a texture using SDL_image. If the texture has already been loaded,
@@ -35,31 +44,18 @@ int gl_pixel_format;
 \******************************************************************************/
 r_texture_t *R_texture_load(const char *filename)
 {
-        r_texture_t *prev, *next, *pt;
         SDL_Surface *surface, *surface_rgba;
+        r_texture_t *pt;
+        int found;
+
+        if (!filename || !filename[0])
+                return NULL;
 
         /* Find a place for the texture */
-        prev = NULL;
-        next = NULL;
-        pt = root;
-        while (pt) {
-                int cmp;
-
-                cmp = strcmp(filename, pt->filename);
-                if (!cmp) {
-                        pt->refs++;
-                        C_debug("Loading '%s', cache hit (%d refs)",
-                                filename, pt->refs);
-                        return pt;
-                }
-                if (cmp < 0) {
-                        next = pt;
-                        pt = NULL;
-                        break;
-                }
-                prev = pt;
-                pt = pt->next;
-        }
+        pt = C_ref_alloc(sizeof (*pt), &root, (c_ref_cleanup_f)texture_cleanup,
+                         filename, &found);
+        if (found)
+                return pt;
 
         /* Load the image file */
         surface = IMG_Load(filename);
@@ -71,73 +67,27 @@ r_texture_t *R_texture_load(const char *filename)
         /* Convert to our texture format */
         surface_rgba = SDL_ConvertSurface(surface, &sdl_pixel_format,
                                           SDL_SRCALPHA);
+        SDL_FreeSurface(surface);
         if (!surface_rgba) {
                 C_warning("Failed to convert texture '%s'", filename);
                 return NULL;
         }
-        SDL_FreeSurface(surface);
-
-        /* Allocate a new texture object */
-        pt = C_malloc(sizeof (*pt));
-        if (!root)
-                root = pt;
-        pt->prev = prev;
-        if (prev)
-                pt->prev->next = pt;
-        pt->next = next;
-        if (next)
-                pt->next->prev = pt;
         pt->surface = surface_rgba;
         pt->format = gl_pixel_format;
-        pt->refs = 1;
-        C_strncpy(pt->filename, filename, sizeof (pt->filename));
 
         /* Load the texture into OpenGL */
         glGenTextures(1, &pt->gl_name);
+        glBindTexture(GL_TEXTURE_2D, pt->gl_name);
+        glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,
+                        GL_LINEAR_MIPMAP_NEAREST);
+        glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+        glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
         gluBuild2DMipmaps(GL_TEXTURE_2D, GL_RGBA,
                           surface_rgba->w, surface_rgba->h,
                           GL_RGBA, gl_pixel_format, surface_rgba->pixels);
 
-        C_debug("Loaded '%s'", filename);
         return pt;
-}
-
-/******************************************************************************\
- Frees memory associated with a texture. If there are still hanging references,
- just lowers the reference count.
-\******************************************************************************/
-void R_texture_free(r_texture_t *pt)
-{
-        if (!pt)
-                return;
-        pt->refs--;
-        if (pt->refs > 0) {
-                C_debug("Dereferenced '%s' (%d refs)", pt->filename, pt->refs);
-                return;
-        }
-        if (root == pt)
-                root = pt->next;
-        if (pt->prev)
-                pt->prev->next = pt->next;
-        if (pt->next)
-                pt->next->prev = pt->prev;
-        SDL_FreeSurface(pt->surface);
-        glDeleteTextures(1, &pt->gl_name);
-        C_debug("Free'd '%s'", pt->filename);
-        C_free(pt);
-}
-
-/******************************************************************************\
- Raises a texture's reference count by one. Use this when you have a copy of a
- texture pointer and you expect your pointer will be free'd later.
-\******************************************************************************/
-void R_texture_ref(r_texture_t *texture)
-{
-        if (!texture)
-                return;
-        texture->refs++;
-        C_debug("Referenced texture '%s' (%d refs)",
-                texture->filename, texture->refs);
 }
 
 /******************************************************************************\
@@ -180,10 +130,10 @@ void R_load_assets(void)
         /* Load the test assets */
         if (r_test_globe.value.n)
                 return;
-        if (*r_test_model.value.s)
-                r_test_model_data = R_model_load(r_test_model.value.s);
-        else if (*r_test_mesh.value.s)
-                r_test_mesh_data = R_static_mesh_load(r_test_mesh.value.s);
+        if (*r_test_model_path.value.s)
+                R_model_init(&r_test_model, r_test_model_path.value.s);
+        else if (*r_test_mesh_path.value.s)
+                r_test_mesh = R_static_mesh_load(r_test_mesh_path.value.s);
 }
 
 /******************************************************************************\
@@ -192,7 +142,7 @@ void R_load_assets(void)
 void R_free_assets(void)
 {
         /* Render testing */
-        R_static_mesh_free(r_test_mesh_data);
-        R_model_free(r_test_model_data);
+        R_static_mesh_free(r_test_mesh);
+        R_model_cleanup(&r_test_model);
 }
 

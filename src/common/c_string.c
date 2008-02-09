@@ -56,6 +56,7 @@ int C_read_file(const char *filename, char *buffer, int size)
 int C_token_file_init(c_token_file_t *tf, const char *filename)
 {
         strncpy(tf->filename, filename, sizeof (tf->filename));
+        C_zero_buf(tf->buffer);
         tf->token = tf->pos = tf->buffer + sizeof (tf->buffer) - 2;
         tf->swap = ' ';
         tf->file = C_file_open_read(filename);
@@ -84,7 +85,7 @@ static void token_file_check_chunk(c_token_file_t *tf)
 {
         size_t token_len, bytes_read;
 
-        if (tf->pos < tf->buffer + sizeof (tf->buffer) - 2 && tf->pos[1])
+        if (tf->pos[1])
                 return;
         token_len = tf->pos - tf->token + 1;
         if (token_len >= sizeof (tf->buffer) - 1) {
@@ -110,8 +111,9 @@ const char *C_token_file_read_full(c_token_file_t *tf, int *quoted)
 {
         int parsing_comment, parsing_string;
 
-        if (!tf->file)
-                return "";
+        if (!tf->file || !tf->pos || tf->pos < tf->buffer ||
+            tf->pos >= tf->buffer + sizeof (tf->buffer))
+                C_error("Invalid token file");
         *tf->pos = tf->swap;
 
         /* Skip space */

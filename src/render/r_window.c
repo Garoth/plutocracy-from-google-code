@@ -21,6 +21,7 @@ static void R_init_gl_state(void)
 
         /* The range of z values here is arbitrary and shoud be
            modified to fit ranges that we typically have. */
+        glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
         glMatrixMode(GL_PROJECTION);
         glLoadIdentity();
         gluPerspective(90.0, (float)r_width.value.n / r_height.value.n,
@@ -28,10 +29,16 @@ static void R_init_gl_state(void)
         glMatrixMode(GL_MODELVIEW);
         glLoadIdentity();
 
-        /* Backface culling. Only rasterize polygons that are facing you. */
+        /* Backface culling. Only rasterize polygons that are facing you.
+           Blender seems to export its polygons in counter-clockwise order. */
         glEnable(GL_CULL_FACE);
         glCullFace(GL_BACK);
-        glFrontFace(GL_CW);
+        glFrontFace(GL_CCW);
+
+        /* Use a white default material */
+        glEnable(GL_COLOR_MATERIAL);
+        glColorMaterial(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE);
+        glColor3f(1.0, 1.0, 1.0);
 
         /* Clear to black */
         glClearColor(0.0, 0.0, 0.0, 1.0);
@@ -42,11 +49,9 @@ static void R_init_gl_state(void)
 
         /* Textures */
         glEnable(GL_TEXTURE_2D);
-        glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,
-                        GL_LINEAR_MIPMAP_NEAREST);
-        glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-        glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-        glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+
+        /* Enable smooth shading */
+        glShadeModel(GL_SMOOTH);
 }
 
 /******************************************************************************\
@@ -59,6 +64,7 @@ int R_create_window(void)
 
         C_status("Opening window");
 
+        /* Set OpenGL attributes */
         SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
         SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 8);
         SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, r_depth.value.n);
@@ -75,13 +81,14 @@ int R_create_window(void)
                         SDL_GL_SetAttribute(SDL_GL_ALPHA_SIZE, 8);
         }
 
-        /* Open context. */
-        flags = SDL_OPENGL;
+        /* Set the video mode */
+        flags = SDL_OPENGL | SDL_GL_DOUBLEBUFFER | SDL_HWPALETTE |
+                SDL_HWSURFACE;
         if (!r_windowed.value.n)
                 flags |= SDL_FULLSCREEN;
         screen = SDL_SetVideoMode(r_width.value.n, r_height.value.n, 0, flags);
         if (!screen) {
-                C_warning("Failed to get context: %s", SDL_GetError());
+                C_warning("Failed to set video mode: %s", SDL_GetError());
                 return FALSE;
         }
         R_init_gl_state();

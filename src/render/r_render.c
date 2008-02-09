@@ -14,22 +14,20 @@
 #include "../game/g_shared.h"
 
 /* Render testing */
-extern c_var_t r_test_globe;
-extern r_static_mesh_t *r_test_mesh_data;
+extern c_var_t r_test_globe, r_test_model_path;
+extern r_static_mesh_t *r_test_mesh;
+extern r_model_t r_test_model;
 
 /******************************************************************************\
- Render the test mesh.
+ Render the test model.
 \******************************************************************************/
-static void render_test_mesh(void)
+static int render_test_model(void)
 {
-        static float x_rot, y_rot;
         float white[] = { 1.0, 1.0, 1.0, 1.0 };
         float left[] = { -1.0, 0.0, 0.0, 0.0 };
 
-        if (!r_test_mesh_data)
-                return;
-
-        glLoadIdentity();
+        if (!r_test_model.data)
+                return FALSE;
 
         /* Setup a white light to the left */
         glEnable(GL_LIGHTING);
@@ -37,36 +35,66 @@ static void render_test_mesh(void)
         glLightfv(GL_LIGHT0, GL_POSITION, left);
         glLightfv(GL_LIGHT0, GL_COLOR, white);
 
-        /* Use a white testing material */
-        glEnable(GL_COLOR_MATERIAL);
-        glColorMaterial(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE);
-        glColor3f(1.0, 1.0, 1.0);
+        /* Render the test mesh */
+        r_test_model.origin.z = -8;
+        R_model_render(&r_test_model);
+
+        /* Spin the model around a bit */
+        r_test_model.angles.x += 0.05 * c_frame_sec;
+        r_test_model.angles.y += 0.30 * c_frame_sec;
+
+        return TRUE;
+}
+
+/******************************************************************************\
+ Render the test mesh.
+\******************************************************************************/
+static int render_test_mesh(void)
+{
+        static float x_rot, y_rot;
+        float white[] = { 1.0, 1.0, 1.0, 1.0 };
+        float left[] = { -1.0, 0.0, 0.0, 0.0 };
+
+        if (!r_test_mesh)
+                return FALSE;
+
+        /* Setup a white light to the left */
+        glEnable(GL_LIGHTING);
+        glEnable(GL_LIGHT0);
+        glLightfv(GL_LIGHT0, GL_POSITION, left);
+        glLightfv(GL_LIGHT0, GL_COLOR, white);
 
         /* FIXME: Disabling culling */
         glDisable(GL_CULL_FACE);
 
         /* Render the test mesh */
         glPushMatrix();
+        glLoadIdentity();
         glTranslatef(0.0, 0.0, -20.0);
         glRotatef(x_rot, 1.0, 0.0, 0.0);
         glRotatef(y_rot, 0.0, 1.0, 0.0);
         glTranslatef(0.0, -10.0, 0.0);
-        R_static_mesh_render(r_test_mesh_data);
+        R_static_mesh_render(r_test_mesh, NULL);
         glPopMatrix();
 
         x_rot += 8 * c_frame_sec;
         y_rot += 20 * c_frame_sec;
+
+        return TRUE;
 }
 
 /******************************************************************************\
  Render the test globe.
    FIXME: Broken thanks to new vertex type.
 \******************************************************************************/
-void render_test_globe()
+int render_test_globe()
 {
         static float x_rot, y_rot;
         static g_globe_t *globe = NULL;
         r_static_mesh_t fake_mesh;
+
+        if (!r_test_globe.value.n)
+                return FALSE;
 
         if (!globe)
                 globe = G_globe_alloc(3);
@@ -91,10 +119,10 @@ void render_test_globe()
         glRotatef(y_rot, 0.0, 1.0, 0.0);
         glScalef(10, 10, 10);
         glColor3f(0.0, 0.0, 0.0);
-        R_static_mesh_render(&fake_mesh); /* render for depth */
+        R_static_mesh_render(&fake_mesh, NULL); /* render for depth */
         glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
         glColor3f(1.0, 1.0, 1.0);
-        R_static_mesh_render(&fake_mesh); /* render lines over */
+        R_static_mesh_render(&fake_mesh, NULL); /* render lines over */
 
         /* See if neighbors works */
         int i;
@@ -119,6 +147,8 @@ void render_test_globe()
 
         x_rot += 8 * c_frame_sec;
         y_rot += 20 * c_frame_sec;
+
+        return TRUE;
 }
 
 /****************************************************************************** \
@@ -128,11 +158,9 @@ void R_render(void)
 {
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        /* Render testing */
-        /*if (r_test_globe.value.n)
-                render_test_globe();
-        else*/
-                render_test_mesh();
+        /* Render testing.
+             FIXME: Test globe */
+        if (render_test_model() || render_test_mesh());
 
         SDL_GL_SwapBuffers();
 }

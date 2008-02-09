@@ -13,8 +13,26 @@
 #include "r_common.h"
 
 /******************************************************************************\
+ Find a vertex in a static mesh vertex array. Returns the length of the array
+ if a matching vertex is not found.
+\******************************************************************************/
+unsigned short R_static_mesh_find_vert(const r_static_mesh_t *mesh,
+                                       const r_vertex_t *vert)
+{
+        int i;
+
+        for (i = 0; i < mesh->verts_len; i++)
+                if (C_vec3_eq(vert->co, mesh->verts[i].co) &&
+                    C_vec3_eq(vert->no, mesh->verts[i].no) &&
+                    C_vec2_eq(vert->uv, mesh->verts[i].uv))
+                        break;
+        return (unsigned short)i;
+}
+
+/******************************************************************************\
  Find or insert the given (vert, norm, uv) triplet into the parallel arrays
  given. Returns TRUE on success.
+   TODO: Make this function less confusable with R_static_mesh_find_vert()
 \******************************************************************************/
 static unsigned short find_vert(c_array_t *vs, c_vec3_t v, c_vec3_t n,
                                 c_vec2_t uv)
@@ -185,7 +203,6 @@ r_static_mesh_t* R_static_mesh_load(const char* filename)
         /* Shrink arrays and keep them in result structure. */
         result->verts = C_array_steal(&real_verts);
         result->indices = C_array_steal(&inds);
-        result->texture = NULL;
 
         /* Cleanup temporary arrays. */
         C_array_cleanup(&sts);
@@ -199,10 +216,9 @@ r_static_mesh_t* R_static_mesh_load(const char* filename)
 /******************************************************************************\
  Render a mesh.
 \******************************************************************************/
-void R_static_mesh_render(r_static_mesh_t* mesh)
+void R_static_mesh_render(r_static_mesh_t* mesh, r_texture_t *texture)
 {
-        glBindTexture(GL_TEXTURE_2D,
-                      mesh->texture ? mesh->texture->gl_name : 0);
+        glBindTexture(GL_TEXTURE_2D, texture ? texture->gl_name : 0);
         glInterleavedArrays(R_VERTEX_FORMAT, 0, mesh->verts);
         glDrawElements(GL_TRIANGLES, mesh->indices_len,
                        GL_UNSIGNED_SHORT, mesh->indices);
@@ -218,7 +234,6 @@ void R_static_mesh_cleanup(r_static_mesh_t* mesh)
 {
         if (!mesh)
                 return;
-        R_texture_free(mesh->texture);
         C_free(mesh->verts);
         C_free(mesh->indices);
 }

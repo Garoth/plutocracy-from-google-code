@@ -15,43 +15,81 @@
 
 #include "r_common.h"
 
+static c_ref_t *data_root;
+
 /******************************************************************************\
  Finish parsing an object.
 \******************************************************************************/
-static void finish_object(r_model_t *model, int object,
+static int finish_object(r_model_data_t *data, int frame, int object,
                           c_array_t *verts, c_array_t *indices)
 {
         r_static_mesh_t *mesh;
+        int index, index_last;
 
         if (object < 0 )
-                return;
-        mesh = model->matrix + model->frame * model->frames + object;
-        R_texture_ref(mesh->texture = model->objects[object].texture);
+                return TRUE;
+        mesh = data->matrix + frame * data->objects_len + object;
         mesh->verts_len = verts->len;
         mesh->verts = C_array_steal(verts);
         mesh->indices_len = indices->len;
         mesh->indices = C_array_steal(indices);
+        index_last = (frame - 1) * data->objects_len + object;
+        index = frame * data->objects_len + object;
+        if (frame > 0 && data->matrix[index_last].indices_len !=
+                         data->matrix[index].indices_len) {
+                C_warning("PLUM file '%s' object '%s' faces mismatch at "
+                          "frame %d", data->ref.name,
+                          data->objects[object].name, frame);
+                return FALSE;
+        }
+        return TRUE;
 }
 
 /******************************************************************************\
- Allocate memory for and load a model and its textures.
+ Free resources associated with the model private structure.
 \******************************************************************************/
-r_model_t *R_model_load(const char *filename)
+static void model_data_cleanup(r_model_data_t *data)
+{
+        int i;
+
+        if (!data)
+                return;
+        if (data->matrix) {
+                for (i = 0; i < data->objects_len * data->frames; i++)
+                        R_static_mesh_cleanup(data->matrix + i);
+                C_free(data->matrix);
+        }
+        for (i = 0; i < data->objects_len; i++)
+                R_texture_free(data->objects[i].texture);
+        C_free(data->objects);
+        C_free(data->anims);
+}
+
+/******************************************************************************\
+ Allocate memory for and load model data and its textures. Data is cached so
+ calling this function again will return and reference the cached data.
+\******************************************************************************/
+static r_model_data_t *model_data_load(const char *filename)
 {
         c_token_file_t token_file;
         c_array_t anims, objects, verts, indices;
-        r_model_t *model;
+        r_model_data_t *data;
         const char *token;
-        int quoted, object;
+        int found, quoted, object, frame;
 
+        data = C_ref_alloc(sizeof (*data), &data_root,
+                           (c_ref_cleanup_f)model_data_cleanup,
+                           filename, &found);
+        if (found)
+                return data;
+
+        /* Start parsing the file */
+        C_zero(&verts);
+        C_zero(&indices);
         if (!C_token_file_init(&token_file, filename)) {
                 C_warning("Failed to open model '%s'", filename);
-                return NULL;
+                goto error;
         }
-        memset(&verts, 0, sizeof (verts));
-        memset(&indices, 0, sizeof (indices));
-        model = C_calloc(sizeof (*model));
-        C_strncpy(model->filename, filename, sizeof (model->filename));
 
         /* Load 'anims:' block */
         token = C_token_file_read(&token_file);
@@ -65,18 +103,27 @@ r_model_t *R_model_load(const char *filename)
                         if (!quoted && !strcmp(token, "end"))
                                 break;
                         C_strncpy(anim.name, token, sizeof (anim.name));
-                        anim.from = atoi(C_token_file_read(&token_file));
-                        anim.to = atoi(C_token_file_read(&token_file));
-                        if (anim.to > model->frames)
-                                model->frames = anim.to;
+                        anim.from = atoi(C_token_file_read(&token_file)) - 1;
+                        anim.to = atoi(C_token_file_read(&token_file)) - 1;
+                        if (anim.from < 0 || anim.to < 0) {
+                                C_warning("PLUM file '%s' contains invalid "
+                                          "animation frame indices", filename);
+                                goto error;
+                        }
+                        if (anim.from >= data->frames)
+                                data->frames = anim.from + 1;
+                        if (anim.to >= data->frames)
+                                data->frames = anim.to + 1;
                         anim.delay = 1000 /
                                      atoi(C_token_file_read(&token_file));
+                        if (anim.delay < 1)
+                                anim.delay = 1;
                         token = C_token_file_read(&token_file);
                         C_strncpy(anim.end_anim, token, sizeof (anim.end_anim));
                         C_array_append(&anims, &anim);
                 }
-                model->anims_len = anims.len;
-                model->anims = C_array_steal(&anims);
+                data->anims_len = anims.len;
+                data->anims = C_array_steal(&anims);
         } else {
                 C_warning("PLUM file '%s' lacks anims block", filename);
                 goto error;
@@ -96,33 +143,35 @@ r_model_t *R_model_load(const char *filename)
                 obj.texture = R_texture_load(token);
                 C_array_append(&objects, &obj);
         }
-        model->objects_len = objects.len;
-        model->objects = C_array_steal(&objects);
+        data->objects_len = objects.len;
+        data->objects = C_array_steal(&objects);
 
         /* Load frames into matrix */
-        model->matrix = C_calloc(model->frames * model->objects_len *
-                                 sizeof (r_static_mesh_t));
+        data->matrix = C_calloc(data->frames * data->objects_len *
+                                sizeof (r_static_mesh_t));
         C_array_init(&verts, r_vertex_t, 512);
-        for (model->frame = -1, object = -1; token[0] || quoted;
+        for (frame = -1, object = -1; token[0] || quoted;
              token = C_token_file_read_full(&token_file, &quoted)) {
                 int verts_parsed;
 
                 /* Each frame starts with 'frame #' where # is the frame
                    index numbered from 1 */
                 if (!strcmp(token, "frame")) {
-                        finish_object(model, object, &verts, &indices);
+                        if (!finish_object(data, frame, object,
+                                           &verts, &indices))
+                                goto error;
                         object = -1;
-                        if (++model->frame > model->frames)
+                        if (++frame > data->frames)
                                 break;
                         token = C_token_file_read(&token_file);
-                        if (atoi(token) != model->frame + 1) {
+                        if (atoi(token) != frame + 1) {
                                 C_warning("PLUM file '%s' missing frames",
                                           filename);
                                 goto error;
                         }
                         continue;
                 }
-                if (model->frame < 0) {
+                if (frame < 0) {
                         C_warning("PLUM file '%s' has '%s' instead of 'frame'",
                                   filename, token);
                         goto error;
@@ -130,14 +179,15 @@ r_model_t *R_model_load(const char *filename)
 
                 /* Objects start with an 'o' and are listed in order */
                 if (!strcmp(token, "o")) {
-                        finish_object(model, object++, &verts, &indices);
+                        if (!finish_object(data, frame, object++,
+                                           &verts, &indices))
+                                goto error;
                         C_array_init(&verts, r_vertex_t, 512);
                         C_array_init(&indices, unsigned short, 512);
                         verts_parsed = 0;
-                        if (object > model->objects_len) {
+                        if (object > data->objects_len) {
                                 C_warning("PLUM file '%s' frame %d has too"
-                                          "many objects", filename,
-                                          model->frame);
+                                          "many objects", filename, frame);
                                 goto error;
                         }
                         continue;
@@ -204,47 +254,186 @@ r_model_t *R_model_load(const char *filename)
                           filename, token);
                 goto error;
         }
-        finish_object(model, object, &verts, &indices);
+        if (!finish_object(data, frame, object, &verts, &indices))
+                goto error;
+        if (frame < data->frames - 1) {
+                C_warning("PLUM file '%s' lacks %d frame(s)",
+                          filename, data->frames - frame + 1);
+                goto error;
+        }
 
         C_token_file_cleanup(&token_file);
         C_debug("Loaded '%s' (%d frames, %d objects, %d animations)",
-                filename, model->frames, model->objects_len, model->anims_len);
-        return model;
+                filename, data->frames, data->objects_len, data->anims_len);
+        return data;
 
 error:  C_token_file_cleanup(&token_file);
         C_array_cleanup(&verts);
         C_array_cleanup(&indices);
-        R_model_free(model);
+        C_ref_down(&data->ref);
         return NULL;
 }
 
 /******************************************************************************\
- Free memory used by a model and decrease the reference count of its textures.
+ Initialize a model instance. Model data is loaded if it is not already in
+ memory. Returns FALSE and invalidates the model instance if the model data
+ failed to load.
 \******************************************************************************/
-void R_model_free(r_model_t *model)
+int R_model_init(r_model_t *model, const char *filename)
+{
+        C_zero(model);
+        model->data = model_data_load(filename);
+        model->scale = 1.f;
+        model->time_left = -1;
+
+        /* Start playing the first animation */
+        if (model->data->anims_len)
+                R_model_play(model, model->data->anims[0].name);
+
+        /* Allocate memory for interpolated object meshes */
+        if (model->data->frames)
+                model->lerp_meshes = C_calloc(model->data->objects_len *
+                                              sizeof (*model->lerp_meshes));
+
+        return model->data != NULL;
+}
+
+/******************************************************************************\
+ Decrease reference counts to resources used by a model and free those
+ resources if they have no references left.
+\******************************************************************************/
+void R_model_cleanup(r_model_t *model)
 {
         int i;
 
         if (!model)
                 return;
-        if (model->matrix) {
-                for (i = 0; i < model->objects_len * model->frames; i++)
-                        R_static_mesh_cleanup(model->matrix + i);
-                C_free(model->matrix);
+        if (model->lerp_meshes) {
+                for (i = 0; i < model->data->objects_len; i++)
+                        R_static_mesh_cleanup(model->lerp_meshes + i);
+                C_free(model->lerp_meshes);
         }
-        for (i = 0; i < model->objects_len; i++)
-                R_texture_free(model->objects[i].texture);
-        C_free(model->objects);
-        C_free(model->anims);
-        C_debug("Free'd '%s'", model->filename);
-        C_free(model);
+        C_ref_down(&model->data->ref);
+        C_zero(model);
 }
 
 /******************************************************************************\
- Render and advance the animation of a model.
+ Interpolate between two frames. If the target mesh has vertex and index
+ arrays, it is assumed that there is sufficient space allocated in those
+ arrays to hold the new interpolated arrays otherwise these arrays are
+ allocated with enough room to hold the largest possible interpolated frame.
+ Textures are not interpolated.
+\******************************************************************************/
+static void interpolate_mesh(r_static_mesh_t *dest, float lerp,
+                             const r_static_mesh_t *from,
+                             const r_static_mesh_t *to)
+{
+        int j;
+
+        /* Allocate memory for index and vertex arrays */
+        if (!dest->indices)
+                dest->indices = C_malloc(to->indices_len *
+                                         sizeof (*to->indices));
+        if (!dest->verts)
+                dest->verts = C_malloc(to->indices_len * sizeof (*to->verts));
+
+        /* Interpolate each vertex */
+        dest->verts_len = 0;
+        dest->indices_len = to->indices_len;
+        for (j = 0; j < to->indices_len; j++) {
+                r_vertex_t *to_vert, *from_vert, vert;
+                unsigned short index;
+
+                to_vert = to->verts + to->indices[j];
+                from_vert = from->verts + from->indices[j];
+                vert.co = C_vec3_lerp(from_vert->co, lerp, to_vert->co);
+                vert.no = C_vec3_lerp(from_vert->no, lerp, to_vert->no);
+                vert.uv = C_vec2_lerp(from_vert->uv, lerp, to_vert->uv);
+                index = R_static_mesh_find_vert(dest, &vert);
+                if (index >= dest->verts_len)
+                        dest->verts[dest->verts_len++] = vert;
+                dest->indices[j] = index;
+        }
+}
+
+/******************************************************************************\
+ Updates animation progress and frame. Interpolates between key-frame meshes.
+\******************************************************************************/
+static void update_animation(r_model_t *model)
+{
+        r_model_anim_t *anim;
+        float lerp;
+        int i;
+
+        anim = model->data->anims + model->anim;
+        model->time_left -= c_frame_msec;
+
+        /* Advance a frame forward or backward */
+        if (model->time_left <= 0) {
+                model->last_frame = model->frame;
+                if (anim->to > anim->from) {
+                        model->frame++;
+                        if (model->frame > anim->to)
+                                R_model_play(model, anim->end_anim);
+                } else {
+                        model->frame--;
+                        if (model->frame < anim->to)
+                                R_model_play(model, anim->end_anim);
+                }
+                model->time_left = anim->delay;
+        }
+
+        /* Generate interpolated meshes */
+        if (anim->delay < 1)
+                C_error("Invalid animation structure");
+        lerp = 1.f - (float)model->time_left / anim->delay;
+        for (i = 0; i < model->data->objects_len; i++)
+                interpolate_mesh(model->lerp_meshes + i, lerp,
+                                 model->data->matrix + i +
+                                 model->last_frame * model->data->objects_len,
+                                 model->data->matrix + i +
+                                 model->frame * model->data->objects_len);
+}
+
+/******************************************************************************\
+ Render and advance the animation of a model. Applies the model's translation,
+ rotation, and scale.
 \******************************************************************************/
 void R_model_render(r_model_t *model)
 {
+        r_static_mesh_t *meshes;
+        int i;
+
+        if (!model || !model->data)
+                return;
+        glMatrixMode(GL_MODELVIEW);
+        glPushMatrix();
+        glLoadIdentity();
+        glScalef(model->scale, model->scale, model->scale);
+        glTranslatef(model->origin.x, model->origin.y, model->origin.z);
+        glRotatef(C_rad_to_deg(model->angles.x), 1.0, 0.0, 0.0);
+        glRotatef(C_rad_to_deg(model->angles.y), 0.0, 1.0, 0.0);
+        glRotatef(C_rad_to_deg(model->angles.z), 0.0, 0.0, 1.0);
+        if (model->time_left >= 0) {
+                update_animation(model);
+                meshes = model->lerp_meshes;
+        } else
+                meshes = model->data->matrix;
+        for (i = 0; i < model->data->objects_len; i++)
+                R_static_mesh_render(meshes + i,
+                                     model->data->objects[i].texture);
+        glPopMatrix();
+}
+
+/******************************************************************************\
+ Stop the model from playing animations.
+\******************************************************************************/
+static void model_stop(r_model_t *model)
+{
+        model->anim = 0;
+        model->frame = 0;
+        model->last_frame = 0;
+        model->time_left = -1;
 }
 
 /******************************************************************************\
@@ -252,5 +441,22 @@ void R_model_render(r_model_t *model)
 \******************************************************************************/
 void R_model_play(r_model_t *model, const char *name)
 {
+        int i;
+
+        if (!model || !model->data)
+                return;
+        if (!name || !name[0]) {
+                model_stop(model);
+                return;
+        }
+        for (i = 0; i < model->data->anims_len; i++)
+                if (!strcasecmp(model->data->anims[i].name, name)) {
+                        model->anim = i;
+                        model->frame = model->data->anims[i].from;
+                        model->time_left = model->data->anims[i].delay;
+                        return;
+                }
+        model_stop(model);
+        C_warning("Model '%s' lacks anim '%s'", model->data->ref.name, name);
 }
 
