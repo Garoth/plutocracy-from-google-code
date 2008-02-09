@@ -16,19 +16,33 @@
 #include "common/c_shared.h"
 #include "render/r_shared.h"
 
+/* Never burn the user's CPU, if we are running through frames too quickly
+   (faster than this rate), we need to take a nap */
+#define MAX_FPS 120
+
 /******************************************************************************\
  This is the client's graphical main loop.
 \******************************************************************************/
 static void main_loop(void)
 {
         SDL_Event ev;
+        c_count_t fps, throttled;
+        int desired_msec;
 
         C_status("Main loop");
-        C_time_update();
+        C_time_init();
+        C_count_init(&fps, 20000);
+        C_count_init(&throttled, 20000);
+        desired_msec = c_frame_msec < 1000.f / MAX_FPS;
         for (;;) {
-                C_time_update();
                 while (SDL_PollEvent(&ev)) {
                         switch(ev.type) {
+                        case SDL_KEYDOWN:
+                                if (ev.key.keysym.sym == SDLK_ESCAPE) {
+                                        C_debug("Escape key pressed");
+                                        return;
+                                }
+                                break;
                         case SDL_QUIT:
                                 return;
                         default:
@@ -36,6 +50,21 @@ static void main_loop(void)
                         }
                 }
                 R_render();
+                C_time_update();
+                C_count_add(&fps, 1);
+                if (C_count_ready(&fps))
+                        C_debug("Frame %d, %.1f FPS (%.1f%% throttled)",
+                                c_frame, C_count_per_sec(&fps),
+                                C_count_per_frame(&throttled) / desired_msec);
+
+                /* Throttle framerate if vsync is broken */
+                if (c_frame_msec < desired_msec) {
+                        int msec;
+
+                        msec = desired_msec - c_frame_msec;
+                        C_count_add(&throttled, msec);
+                        SDL_Delay(msec);
+                }
         }
         C_debug("Exited main loop");
 }
