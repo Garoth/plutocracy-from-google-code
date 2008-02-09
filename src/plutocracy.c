@@ -16,9 +16,7 @@
 #include "common/c_shared.h"
 #include "render/r_shared.h"
 
-/* Never burn the user's CPU, if we are running through frames too quickly
-   (faster than this rate), we need to take a nap */
-#define MAX_FPS 120
+extern c_var_t c_max_fps;
 
 /******************************************************************************\
  This is the client's graphical main loop.
@@ -27,13 +25,21 @@ static void main_loop(void)
 {
         SDL_Event ev;
         c_count_t fps, throttled;
-        int desired_msec;
+        int desired_msec, wait_msec;
 
         C_status("Main loop");
         C_time_init();
         C_count_init(&fps, 20000);
         C_count_init(&throttled, 20000);
-        desired_msec = c_frame_msec < 1000.f / MAX_FPS;
+
+        /* Calculate the desired frame msec.
+             FIXME: I don't know why, but we need to wait twice as long as
+                    the mathematically correct rate...? */
+        if (c_max_fps.value.n < 1)
+                c_max_fps.value.n = 1;
+        desired_msec = 2000 / c_max_fps.value.n;
+        wait_msec = 0;
+
         for (;;) {
                 while (SDL_PollEvent(&ev)) {
                         switch(ev.type) {
@@ -51,20 +57,30 @@ static void main_loop(void)
                 }
                 R_render();
                 C_time_update();
+
+                /* Throttle framerate if vsync is broken. SDL_Delay() will
+                   only work in 10ms increments on some systems so it is
+                   necessary to break down our delays into bite-sized chunks. */
+                if (c_frame_msec < desired_msec) {
+                        int msec, delay;
+
+                        msec = desired_msec - c_frame_msec;
+                        C_count_add(&throttled, msec);
+                        wait_msec += msec;
+                        delay = wait_msec / 10;
+                        if (delay > 0) {
+                                SDL_Delay(delay);
+                                wait_msec -= delay;
+                        }
+                }
+
+                /* Print FPS to console periodically */
                 C_count_add(&fps, 1);
                 if (C_count_ready(&fps))
                         C_debug("Frame %d, %.1f FPS (%.1f%% throttled)",
                                 c_frame, C_count_per_sec(&fps),
-                                C_count_per_frame(&throttled) / desired_msec);
-
-                /* Throttle framerate if vsync is broken */
-                if (c_frame_msec < desired_msec) {
-                        int msec;
-
-                        msec = desired_msec - c_frame_msec;
-                        C_count_add(&throttled, msec);
-                        SDL_Delay(msec);
-                }
+                                100.f * C_count_per_frame(&throttled) /
+                                desired_msec);
         }
         C_debug("Exited main loop");
 }
