@@ -1,1 +1,35 @@
+================================================================================
 
+   Plutocracy
+
+=== Introduction ===============================================================
+
+This is an SVN development version and has not officially been released. There
+is no guarantee of compatibility or that it will even compile!
+
+Please report bugs to the project issue tracker:
+http://plutocracy.googlecode.com/
+
+=== GPL License ================================================================
+
+Plutocracy (including both source code and media) is licensed under the terms
+of the GNU General Public License (GPL) version 2 or (at your option) any later
+version. There are some exceptions for specific files however (see below).
+
+The full text of the license may be found in the COPYING file.
+
+=== CC License Exceptions ======================================================
+
+The following files are licensed under the CREATIVE COMMONS ATTRIBUTION-
+SHAREALIKE 2.5 LICENSE. The full license text is contained in the file named
+CC. Please read http://creativecommons.org/licenses/by-sa/2.5/ to learn
+more about this license.
+
+The following files are derived from files originally from the Tremulous
+project, authored by Robin 'Overflow' Marshall, Mike 'Veda' McInnerney, and
+Paul 'MoP' Greveson:
+
+        models/blender/granger.blend
+        models/test/granger.plum
+
+================================================================================

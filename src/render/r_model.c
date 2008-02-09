@@ -26,8 +26,12 @@ static int finish_object(r_model_data_t *data, int frame, int object,
         r_static_mesh_t *mesh;
         int index, index_last;
 
-        if (object < 0 )
+        if (object < 0 || frame < 0)
                 return TRUE;
+        if (frame >= data->frames)
+                C_error("Invalid frame %d", frame);
+        if (object >= data->objects_len)
+                C_error("Invalid obejct %d", object);
         mesh = data->matrix + frame * data->objects_len + object;
         mesh->verts_len = verts->len;
         mesh->verts = C_array_steal(verts);
@@ -149,7 +153,6 @@ static r_model_data_t *model_data_load(const char *filename)
         /* Load frames into matrix */
         data->matrix = C_calloc(data->frames * data->objects_len *
                                 sizeof (r_static_mesh_t));
-        C_array_init(&verts, r_vertex_t, 512);
         for (frame = -1, object = -1; token[0] || quoted;
              token = C_token_file_read_full(&token_file, &quoted)) {
                 int verts_parsed;
@@ -161,7 +164,7 @@ static r_model_data_t *model_data_load(const char *filename)
                                            &verts, &indices))
                                 goto error;
                         object = -1;
-                        if (++frame > data->frames)
+                        if (++frame >= data->frames)
                                 break;
                         token = C_token_file_read(&token_file);
                         if (atoi(token) != frame + 1) {
@@ -357,7 +360,8 @@ static void interpolate_mesh(r_static_mesh_t *dest, float lerp,
 }
 
 /******************************************************************************\
- Updates animation progress and frame. Interpolates between key-frame meshes.
+ Updates animation progress and frame. Interpolates between key-frame meshes
+ when necessary to smooth the animation.
 \******************************************************************************/
 static void update_animation(r_model_t *model)
 {
@@ -381,9 +385,16 @@ static void update_animation(r_model_t *model)
                                 R_model_play(model, anim->end_anim);
                 }
                 model->time_left = anim->delay;
+                model->last_frame_time = c_time_msec;
+                model->use_lerp_meshes = FALSE;
+                return;
         }
 
-        /* Generate interpolated meshes */
+        /* Generate interpolated meshes if we need a new frame now */
+        if (c_time_msec - model->last_frame_time < 1000 / R_MODEL_ANIM_FPS)
+                return;
+        model->last_frame_time = c_time_msec;
+        model->use_lerp_meshes = TRUE;
         if (anim->delay < 1)
                 C_error("Invalid animation structure");
         lerp = 1.f - (float)model->time_left / anim->delay;
@@ -414,11 +425,13 @@ void R_model_render(r_model_t *model)
         glRotatef(C_rad_to_deg(model->angles.x), 1.0, 0.0, 0.0);
         glRotatef(C_rad_to_deg(model->angles.y), 0.0, 1.0, 0.0);
         glRotatef(C_rad_to_deg(model->angles.z), 0.0, 0.0, 1.0);
-        if (model->time_left >= 0) {
+        if (model->time_left >= 0)
                 update_animation(model);
+        if (model->use_lerp_meshes)
                 meshes = model->lerp_meshes;
-        } else
-                meshes = model->data->matrix;
+        else
+                meshes = model->data->matrix +
+                         model->data->objects_len * model->last_frame;
         for (i = 0; i < model->data->objects_len; i++)
                 R_static_mesh_render(meshes + i,
                                      model->data->objects[i].texture);
@@ -434,6 +447,7 @@ static void model_stop(r_model_t *model)
         model->frame = 0;
         model->last_frame = 0;
         model->time_left = -1;
+        model->use_lerp_meshes = FALSE;
 }
 
 /******************************************************************************\
@@ -454,6 +468,8 @@ void R_model_play(r_model_t *model, const char *name)
                         model->anim = i;
                         model->frame = model->data->anims[i].from;
                         model->time_left = model->data->anims[i].delay;
+                        model->last_frame_time = c_time_msec;
+                        model->use_lerp_meshes = FALSE;
                         return;
                 }
         model_stop(model);

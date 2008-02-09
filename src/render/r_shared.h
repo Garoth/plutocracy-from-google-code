@@ -10,13 +10,18 @@
  FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
 \******************************************************************************/
 
+/* This is the minimum FPS that model animations must maintain. If they are
+   slower than this, frames are interpolated. */
+#define R_MODEL_ANIM_FPS 30
+
 /* Model instance type */
 typedef struct r_model {
         struct r_static_mesh *lerp_meshes;
         c_vec3_t origin, angles;
         struct r_model_data *data;
         float scale;
-        int anim, frame, last_frame, time_left;
+        int anim, frame, last_frame, last_frame_time, time_left,
+            use_lerp_meshes;
 } r_model_t;
 
 /* r_model.c */
