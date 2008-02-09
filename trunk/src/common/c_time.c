@@ -57,40 +57,49 @@ unsigned int C_timer(void)
 /******************************************************************************\
  Initializes a counter structure.
 \******************************************************************************/
-void C_count_init(c_count_t *counter, int interval)
+void C_count_init(c_count_t *counter)
 {
         counter->last_time = c_time_msec;
-        counter->interval = interval;
         counter->start_frame = c_frame;
         counter->start_time = c_time_msec;
         counter->value = 0.f;
 }
 
 /******************************************************************************\
+ Polls a counter to see if [interval] msec have elapsed since the last poll.
+ Returns TRUE if the counter is ready to be polled and sets the poll time.
+\******************************************************************************/
+int C_count_poll(c_count_t *counter, int interval)
+{
+        if (c_time_msec - counter->last_time < interval)
+                return FALSE;
+        counter->last_time = c_time_msec;
+        return TRUE;
+}
+
+/******************************************************************************\
  Returns the per-frame count of a counter.
 \******************************************************************************/
-float C_count_per_frame(c_count_t *counter)
+float C_count_per_frame(const c_count_t *counter)
 {
         int frames;
 
         frames = c_frame - counter->start_frame;
         if (frames < 1)
                 return 0.f;
-        counter->last_time = c_time_msec;
         return counter->value / frames;
 }
 
 /******************************************************************************\
  Returns the per-second count of a counter.
 \******************************************************************************/
-float C_count_per_sec(c_count_t *counter)
+float C_count_per_sec(const c_count_t *counter)
 {
         float seconds;
 
         seconds = (c_time_msec - counter->start_time) / 1000.f;
         if (seconds <= 0.f)
                 return 0.f;
-        counter->last_time = c_time_msec;
         return counter->value / seconds;
 }
 

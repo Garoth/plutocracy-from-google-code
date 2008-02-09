@@ -218,6 +218,7 @@ r_static_mesh_t* R_static_mesh_load(const char* filename)
 \******************************************************************************/
 void R_static_mesh_render(r_static_mesh_t* mesh, r_texture_t *texture)
 {
+        C_count_add(&r_count_faces, mesh->indices_len);
         glBindTexture(GL_TEXTURE_2D, texture ? texture->gl_name : 0);
         glInterleavedArrays(R_VERTEX_FORMAT, 0, mesh->verts);
         glDrawElements(GL_TRIANGLES, mesh->indices_len,
