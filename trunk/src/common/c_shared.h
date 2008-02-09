@@ -128,6 +128,12 @@ typedef struct c_ref {
         char name[256];
 } c_ref_t;
 
+/* A counter for counting how often something happens per frame */
+typedef struct c_counter {
+        int start_frame, start_time, last_time, interval;
+        float value;
+} c_count_t;
+
 /* c_log.c */
 void C_close_log_file(void);
 #define C_debug(fmt, ...) C_log(C_LOG_DEBUG, __FILE__, __LINE__, \
@@ -196,10 +202,16 @@ const char *C_token_file_read_full(c_token_file_t *, int *out_quoted);
 #define C_token_file_read(f) C_token_file_read_full(f, NULL)
 
 /* c_time.c */
+#define C_count_add(c, v) ((c)->value += (v))
+void C_count_init(c_count_t *, int interval);
+float C_count_per_frame(c_count_t *);
+float C_count_per_sec(c_count_t *);
+#define C_count_ready(c) (c_time_msec - (c)->last_time > (c)->interval)
+void C_time_init(void);
 void C_time_update(void);
 unsigned int C_timer(void);
 
-extern unsigned int c_time_msec, c_frame_msec;
+extern unsigned int c_time_msec, c_frame_msec, c_frame;
 extern float c_frame_sec;
 
 /* c_variables.c */

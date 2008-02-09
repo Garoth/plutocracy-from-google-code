@@ -14,11 +14,20 @@
 
 #include "c_shared.h"
 
-unsigned int c_time_msec, c_frame_msec;
+unsigned int c_time_msec, c_frame_msec, c_frame;
 float c_frame_sec;
 
 /******************************************************************************\
- Updates the current time.
+ Initializes counters and timers.
+\******************************************************************************/
+void C_time_init(void)
+{
+        c_frame = 1;
+        c_time_msec = SDL_GetTicks();
+}
+
+/******************************************************************************\
+ Updates the current time. This needs to be called exactly once per frame.
 \******************************************************************************/
 void C_time_update(void)
 {
@@ -28,6 +37,7 @@ void C_time_update(void)
         c_frame_msec = c_time_msec - last_msec;
         c_frame_sec = c_frame_msec / 1000.f;
         last_msec = c_time_msec;
+        c_frame++;
 }
 
 /******************************************************************************\
@@ -42,5 +52,45 @@ unsigned int C_timer(void)
         elapsed = SDL_GetTicks() - last_msec;
         last_msec += elapsed;
         return elapsed;
+}
+
+/******************************************************************************\
+ Initializes a counter structure.
+\******************************************************************************/
+void C_count_init(c_count_t *counter, int interval)
+{
+        counter->last_time = c_time_msec;
+        counter->interval = interval;
+        counter->start_frame = c_frame;
+        counter->start_time = c_time_msec;
+        counter->value = 0.f;
+}
+
+/******************************************************************************\
+ Returns the per-frame count of a counter.
+\******************************************************************************/
+float C_count_per_frame(c_count_t *counter)
+{
+        int frames;
+
+        frames = c_frame - counter->start_frame;
+        if (frames < 1)
+                return 0.f;
+        counter->last_time = c_time_msec;
+        return counter->value / frames;
+}
+
+/******************************************************************************\
+ Returns the per-second count of a counter.
+\******************************************************************************/
+float C_count_per_sec(c_count_t *counter)
+{
+        float seconds;
+
+        seconds = (c_time_msec - counter->start_time) / 1000.f;
+        if (seconds <= 0.f)
+                return 0.f;
+        counter->last_time = c_time_msec;
+        return counter->value / seconds;
 }
 
