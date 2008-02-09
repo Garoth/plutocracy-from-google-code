@@ -12,6 +12,8 @@
 
 #include "r_common.h"
 
+extern c_var_t r_gamma;
+
 /******************************************************************************\
  Initializes OpenGL settings such view matrices, culling, and depth testing.
 \******************************************************************************/
@@ -52,6 +54,9 @@ static void R_init_gl_state(void)
 
         /* Enable smooth shading */
         glShadeModel(GL_SMOOTH);
+
+        /* Gamma */
+        SDL_SetGamma(r_gamma.value.f, r_gamma.value.f, r_gamma.value.f);
 }
 
 /******************************************************************************\

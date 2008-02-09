@@ -78,6 +78,8 @@ def sanitize_strip(s):
 def get_image_filename(scn, me):
         for mat in me.materials:
                 for mtex in mat.getTextures():
+                        if not mtex:
+                                continue
                         image = mtex.tex.getImage()
                         if image and image.getFilename():
                                 return image.getFilename()
