@@ -45,12 +45,12 @@ void C_open_log_file(void)
 }
 
 /******************************************************************************\
- Prints a string to the debug log file or to standard output. The output detail
+ Prints a string to the log file or to standard output. The output detail
  can be controlled using [c_log_level]. Debug calls without any text are
  considered traces.
 \******************************************************************************/
-void C_debug_full(c_log_level_t level, const char *file, int line,
-                  const char *function, const char *fmt, ...)
+void C_log(c_log_level_t level, const char *file, int line,
+           const char *function, const char *fmt, ...)
 {
         char fmt2[128];
         va_list va;

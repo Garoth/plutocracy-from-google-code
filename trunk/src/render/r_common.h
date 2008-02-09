@@ -25,16 +25,14 @@ typedef struct r_vertex {
 
 /* Texture class */
 typedef struct r_texture {
-        struct r_texture *prev, *next;
+        c_ref_t ref;
         SDL_Surface *surface;
         GLuint gl_name;
-        int refs, format;
-        char filename[256];
+        int format;
 } r_texture_t;
 
 /* Non-animated mesh */
 typedef struct r_static_mesh {
-        r_texture_t *texture;
         r_vertex_t *verts;
         unsigned short *indices;
         int verts_len, indices_len;
@@ -55,29 +53,25 @@ typedef struct r_model_object {
 /* Animated, textured, multi-mesh model. The matrix contains enough room to
    store every object's static mesh for every frame, it is indexed by frame
    then by object. */
-typedef struct r_model {
-        r_static_mesh_t lerp_mesh, *matrix;
+typedef struct r_model_data {
+        c_ref_t ref;
+        r_static_mesh_t *matrix;
         r_model_anim_t *anims;
         r_model_object_t *objects;
-        int anims_len, objects_len, anim, frame, frames, time_left;
-        char filename[32];
-} r_model_t;
+        int anims_len, objects_len, frames;
+} r_model_data_t;
 
 /* r_assets.c */
-void R_texture_free(r_texture_t *);
+#define R_texture_free(t) C_ref_down((c_ref_t *)(t))
 r_texture_t *R_texture_load(const char *filename);
-void R_texture_ref(r_texture_t *);
-
-/* r_model.c */
-void R_model_free(r_model_t *);
-r_model_t *R_model_load(const char *filename);
-void R_model_play(r_model_t *, const char *anim_name);
-void R_model_render(r_model_t *);
+#define R_texture_ref(t) C_ref_up((c_ref_t *)(t))
 
 /* r_static_mesh.c */
 void R_static_mesh_cleanup(r_static_mesh_t *);
+unsigned short R_static_mesh_find_vert(const r_static_mesh_t *mesh,
+                                       const r_vertex_t *vert);
 r_static_mesh_t *R_static_mesh_load(const char *filename);
-void R_static_mesh_render(r_static_mesh_t *);
+void R_static_mesh_render(r_static_mesh_t *, r_texture_t *);
 void R_static_mesh_free(r_static_mesh_t *);
 
 /* r_variables.c */

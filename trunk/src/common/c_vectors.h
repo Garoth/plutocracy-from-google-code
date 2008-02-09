@@ -181,3 +181,19 @@ static inline int C_vec3_eq(c_vec3_t a, c_vec3_t b)
     return a.x == b.x && a.y == b.y && a.z == b.z;
 }
 
+/******************************************************************************\
+ Vector interpolation.
+\******************************************************************************/
+
+static inline c_vec2_t C_vec2_lerp(c_vec2_t a, float lerp, c_vec2_t b)
+{
+        return C_vec2(a.x + lerp * (b.x - a.x), a.y + lerp * (b.y - a.y));
+}
+
+static inline c_vec3_t C_vec3_lerp(c_vec3_t a, float lerp, c_vec3_t b)
+{
+        return C_vec3(a.x + lerp * (b.x - a.x),
+                      a.y + lerp * (b.y - a.y),
+                      a.z + lerp * (b.z - a.z));
+}
+

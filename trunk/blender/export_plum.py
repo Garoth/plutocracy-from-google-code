@@ -95,12 +95,16 @@ def get_image_filename(scn, ob):
 def write_frame(file, objects):
 	scn = Scene.GetCurrent()
 
+	# Blender has screwy coordinates
+	mat_xrot90 = Blender.Mathutils.RotationMatrix(-90, 4, 'x')
+
 	# Get all meshes
 	for ob_main in objects:
 		for ob, ob_mat in BPyObject.getDerivedObjects(ob_main):
 			if not object_valid(scn, ob):
 				continue
 			me = BPyMesh.getMeshFromObject(ob, None, True, False, scn)
+			me.transform(ob_mat * mat_xrot90)
 
 			# High quality normals
 			BPyMesh.meshCalcNormals(me)
@@ -113,12 +117,16 @@ def write_frame(file, objects):
 				inds = [ 0, 0, 0 ]
 				reused = False
 				for j in range(0, 3):
-					vec = [ f.v[j].co.x, f.v[j].co.y, f.v[j].co.z, \
-					        f.no.x, f.no.y, f.no.z, f.uv[j].x, f.uv[j].y ]
+					vec = [ f.v[j].co.x, f.v[j].co.y, \
+					        f.v[j].co.z,  f.no.x, f.no.y, \
+					        f.no.z, 0, 0 ]
 					if f.smooth:
-						vec[4] = f.v[j].no[0]
-						vec[5] = f.v[j].no[1]
-						vec[6] = f.v[j].no[2]
+						vec[3] = f.v[j].no[0]
+						vec[4] = f.v[j].no[1]
+						vec[5] = f.v[j].no[2]
+					if me.faceUV:
+					        vec[6] = f.uv[j].x
+					        vec[7] = f.uv[j].y
 
 					# See if this vertex line has already been written
 					for i in range(0, len(verts)):
@@ -186,7 +194,8 @@ def write(filename):
 	except:
 		pass
 	if len(anims) < 1:
-		anims = 'anims:\n        "idle" 1 %d 30 ""\nend\n' % orig_frame;
+		anims = 'anims:\n        "idle" 1 %d 30 "idle"\nend\n' % \
+		        orig_frame;
 
 	file = open(filename, "w")
 	file.write(('########################################' + \

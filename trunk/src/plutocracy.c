@@ -24,6 +24,7 @@ static void main_loop(void)
         SDL_Event ev;
 
         C_status("Main loop");
+        C_time_update();
         for (;;) {
                 C_time_update();
                 while (SDL_PollEvent(&ev)) {
@@ -98,14 +99,16 @@ int main(int argc, char *argv[])
            control the order of cleanup */
         atexit(cleanup);
 
-        /* Register configurable variables */
+        /* Each namespace must register its configurable variables */
         C_register_variables();
         R_register_variables();
 
-        /* Initialize */
-        C_open_log_file();
+        /* Parse configuration scripts and open the log file */
         C_parse_config_file("config/default.cfg");
         parse_config_args(argc, argv);
+        C_open_log_file();
+
+        /* Initialize */
         C_status("Initializing " PACKAGE_STRING " client");
         if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER) < 0)
                 C_error("Failed to initialize SDL: %s", SDL_GetError());

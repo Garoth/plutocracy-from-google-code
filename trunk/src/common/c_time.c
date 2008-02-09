@@ -14,7 +14,7 @@
 
 #include "c_shared.h"
 
-unsigned int c_time_msec;
+unsigned int c_time_msec, c_frame_msec;
 float c_frame_sec;
 
 /******************************************************************************\
@@ -25,7 +25,8 @@ void C_time_update(void)
         static unsigned int last_msec;
 
         c_time_msec = SDL_GetTicks();
-        c_frame_sec = (c_time_msec - last_msec) / 1000.f;
+        c_frame_msec = c_time_msec - last_msec;
+        c_frame_sec = c_frame_msec / 1000.f;
         last_msec = c_time_msec;
 }
 

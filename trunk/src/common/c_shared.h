@@ -62,6 +62,11 @@
 
 #define c_file_t FILE
 
+/* All angles should be in radians but there are some cases (OpenGL) where
+   conversions are necessary */
+#define C_rad_to_deg(a) ((a) * 180 / M_PI)
+#define C_deg_to_rad(a) ((a) * M_PI / 180)
+
 /* Debug log levels, errors are fatal and will always abort */
 typedef enum {
         C_LOG_ERROR,
@@ -111,20 +116,42 @@ typedef struct c_token_file {
         char *pos, *token, swap, filename[32], buffer[4000];
 } c_token_file_t;
 
+/* Callback for cleaning up referenced memory */
+typedef void (*c_ref_cleanup_f)(void *data);
+
+/* Reference-counted linked-list. Memory allocated using the referenced
+   memory allocator must have this structure as the first member! */
+typedef struct c_ref {
+        struct c_ref *prev, *next, **root;
+        c_ref_cleanup_f cleanup_func;
+        int refs;
+        char name[256];
+} c_ref_t;
+
 /* c_log.c */
 void C_close_log_file(void);
-#define C_debug(fmt, ...) C_debug_full(C_LOG_DEBUG, __FILE__, __LINE__, \
-                                       __func__, fmt, ## __VA_ARGS__)
-void C_debug_full(c_log_level_t, const char *file, int line,
-                  const char *function, const char *fmt, ...);
-#define C_error(fmt, ...) C_debug_full(C_LOG_ERROR, __FILE__, __LINE__, \
-                                       __func__, fmt, ## __VA_ARGS__)
+#define C_debug(fmt, ...) C_log(C_LOG_DEBUG, __FILE__, __LINE__, \
+                                __func__, fmt, ## __VA_ARGS__)
+#define C_debug_full(f, l, fn, fmt, ...) C_log(C_LOG_DEBUG, f, l, fn, \
+                                               fmt, ## __VA_ARGS__)
+#define C_error(fmt, ...) C_log(C_LOG_ERROR, __FILE__, __LINE__, \
+                                __func__, fmt, ## __VA_ARGS__)
+#define C_error_full(f, l, fn, fmt, ...) C_log(C_LOG_ERROR, f, l, \
+                                               fn, fmt, ## __VA_ARGS__)
+void C_log(c_log_level_t, const char *file, int line,
+           const char *function, const char *fmt, ...);
 void C_open_log_file(void);
-#define C_status(fmt, ...) C_debug_full(C_LOG_STATUS, __FILE__, __LINE__, \
-                                        __func__, fmt, ## __VA_ARGS__)
-#define C_trace() C_debug_full(C_LOG_TRACE, __FILE__, __LINE__, __func__, NULL)
-#define C_warning(fmt, ...) C_debug_full(C_LOG_WARNING, __FILE__, __LINE__, \
-                                         __func__, fmt, ## __VA_ARGS__)
+#define C_status(fmt, ...) C_log(C_LOG_STATUS, __FILE__, __LINE__, \
+                                 __func__, fmt, ## __VA_ARGS__)
+#define C_status_full(f, l, fn, fmt, ...) C_log(C_LOG_STATUS, f, l, \
+                                                fn, fmt, ## __VA_ARGS__)
+#define C_trace() C_log(C_LOG_TRACE, __FILE__, __LINE__, __func__, NULL)
+#define C_trace_full(f, l, fn, fmt, ...) C_log(C_LOG_TRACE, f, l, \
+                                               fn, fmt, ## __VA_ARGS__)
+#define C_warning(fmt, ...) C_log(C_LOG_WARNING, __FILE__, __LINE__, \
+                                  __func__, fmt, ## __VA_ARGS__)
+#define C_warning_full(f, l, fn, fmt, ...) C_log(C_LOG_TRACE, f, l, fn, \
+                                                 fmt, ## __VA_ARGS__)
 
 /* c_memory.c */
 void C_array_append(c_array_t *ary, void *item);
@@ -134,7 +161,7 @@ void C_array_cleanup(c_array_t *ary);
 void C_array_init_real(c_array_t *ary, size_t item_size, size_t cap);
 void C_array_reserve(c_array_t *ary, size_t n);
 void *C_array_steal(c_array_t *ary);
-#define C_calloc(s) C_recalloc(NULL, s)
+#define C_calloc(s) C_recalloc_full(__FILE__, __LINE__, __func__, NULL, s)
 #define C_free(p) free(p)
 #define C_malloc(s) C_realloc(NULL, s)
 #define C_realloc(p, s) C_realloc_full(__FILE__, __LINE__, __func__, p, s)
@@ -142,6 +169,19 @@ void *C_realloc_full(const char *file, int line, const char *function,
                      void *ptr, size_t size);
 void *C_recalloc_full(const char *file, int line, const char *function,
                       void *ptr, size_t size);
+#define C_ref_alloc(s, r, c, n, f) C_ref_alloc_full(__FILE__, __LINE__, \
+                                                    __func__, s, r, c, n, f)
+void *C_ref_alloc_full(const char *file, int line, const char *function,
+                       size_t, c_ref_t **root, c_ref_cleanup_f,
+                       const char *name, int *found);
+#define C_ref_down(r) C_ref_down_full(__FILE__, __LINE__, __func__, r);
+void C_ref_down_full(const char *file, int line, const char *function,
+                     c_ref_t *ref);
+#define C_ref_up(r) C_ref_up_full(__FILE__, __LINE__, __func__, r);
+void C_ref_up_full(const char *file, int line, const char *function,
+                   c_ref_t *ref);
+#define C_zero(s) memset(s, 0, sizeof (*(s)))
+#define C_zero_buf(s) memset(s, 0, sizeof (s))
 
 /* c_string.c */
 #define C_is_digit(c) (((c) >= '0' && (c) <= '9') || c == '.' || c == '-')
@@ -149,6 +189,7 @@ void *C_recalloc_full(const char *file, int line, const char *function,
 int C_read_file(const char *filename, char *buffer, int size);
 char *C_skip_spaces(const char *str);
 size_t C_strncpy(char *dest, const char *src, size_t len);
+#define C_strncpy_buf(d, s) C_strncpy(d, s, sizeof (d))
 void C_token_file_cleanup(c_token_file_t *);
 int C_token_file_init(c_token_file_t *, const char *filename);
 const char *C_token_file_read_full(c_token_file_t *, int *out_quoted);
@@ -158,7 +199,7 @@ const char *C_token_file_read_full(c_token_file_t *, int *out_quoted);
 void C_time_update(void);
 unsigned int C_timer(void);
 
-extern unsigned int c_time_msec;
+extern unsigned int c_time_msec, c_frame_msec;
 extern float c_frame_sec;
 
 /* c_variables.c */
