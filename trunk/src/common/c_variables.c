@@ -19,6 +19,10 @@
 /* Message logging */
 c_var_t c_log_level, c_log_file;
 
+/* Never burn the user's CPU, if we are running through frames too quickly
+   (faster than this rate), we need to take a nap */
+c_var_t c_max_fps;
+
 static c_var_t *root;
 
 /******************************************************************************\
@@ -29,6 +33,9 @@ void C_register_variables(void)
         /* Message logging */
         C_register_integer(&c_log_level, "c_log_level", C_LOG_WARNING);
         C_register_string(&c_log_file, "c_log_file", "");
+
+        /* FPS cap */
+        C_register_integer(&c_max_fps, "c_max_fps", 120);
 }
 
 /******************************************************************************\
