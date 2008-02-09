@@ -13,10 +13,109 @@
 #include "r_common.h"
 #include "../game/g_shared.h"
 
+/* Keep track of how many faces we render each frame */
+c_count_t r_count_faces;
+
 /* Render testing */
 extern c_var_t r_test_globe, r_test_model_path;
 extern r_static_mesh_t *r_test_mesh;
 extern r_model_t r_test_model;
+
+/******************************************************************************\
+ Creates the client window. Initializes OpenGL settings such view matrices,
+ culling, and depth testing.Returns TRUE on success.
+\******************************************************************************/
+int R_render_init(void)
+{
+        SDL_Surface *screen;
+        int flags;
+
+        C_status("Opening window");
+
+        /* Initialize counters */
+        C_count_init(&r_count_faces);
+
+        /* Set OpenGL attributes */
+        SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
+        SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 8);
+        SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, r_depth.value.n);
+        SDL_GL_SetAttribute(SDL_GL_SWAP_CONTROL, r_vsync.value.n);
+        if (r_colordepth.value.n == 16) {
+                SDL_GL_SetAttribute(SDL_GL_RED_SIZE, 5);
+                SDL_GL_SetAttribute(SDL_GL_GREEN_SIZE, 5);
+                SDL_GL_SetAttribute(SDL_GL_BLUE_SIZE, 5);
+        } else {
+                SDL_GL_SetAttribute(SDL_GL_RED_SIZE, 8);
+                SDL_GL_SetAttribute(SDL_GL_GREEN_SIZE, 8);
+                SDL_GL_SetAttribute(SDL_GL_BLUE_SIZE, 8);
+                if (r_colordepth.value.n != 24)
+                        SDL_GL_SetAttribute(SDL_GL_ALPHA_SIZE, 8);
+        }
+
+        /* Set the video mode */
+        flags = SDL_OPENGL | SDL_GL_DOUBLEBUFFER | SDL_HWPALETTE |
+                SDL_HWSURFACE;
+        if (!r_windowed.value.n)
+                flags |= SDL_FULLSCREEN;
+        screen = SDL_SetVideoMode(r_width.value.n, r_height.value.n, 0, flags);
+        if (!screen) {
+                C_warning("Failed to set video mode: %s", SDL_GetError());
+                return FALSE;
+        }
+
+        /* Set screen view */
+        glViewport(0, 0, r_width.value.n, r_height.value.n);
+
+        /* The range of z values here is arbitrary and shoud be
+           modified to fit ranges that we typically have. */
+        glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
+        glMatrixMode(GL_PROJECTION);
+        glLoadIdentity();
+        gluPerspective(90.0, (float)r_width.value.n / r_height.value.n,
+                       1.0, 10000.0);
+        glMatrixMode(GL_MODELVIEW);
+        glLoadIdentity();
+
+        /* Backface culling. Only rasterize polygons that are facing you.
+           Blender seems to export its polygons in counter-clockwise order. */
+        glEnable(GL_CULL_FACE);
+        glCullFace(GL_BACK);
+        glFrontFace(GL_CCW);
+
+        /* Use a white default material */
+        glEnable(GL_COLOR_MATERIAL);
+        glColorMaterial(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE);
+        glColor3f(1.0, 1.0, 1.0);
+
+        /* Clear to black */
+        glClearColor(0.0, 0.0, 0.0, 1.0);
+
+        /* Depth testing */
+        glEnable(GL_DEPTH_TEST);
+        glDepthFunc(GL_LEQUAL);
+
+        /* Textures */
+        glEnable(GL_TEXTURE_2D);
+
+        /* Enable smooth shading */
+        glShadeModel(GL_SMOOTH);
+
+        /* Gamma */
+        SDL_SetGamma(r_gamma.value.f, r_gamma.value.f, r_gamma.value.f);
+
+        /* All set to start loading models and textures */
+        R_load_assets();
+
+        return TRUE;
+}
+
+/******************************************************************************\
+ Cleanup the OpenGL mess.
+\******************************************************************************/
+void R_render_cleanup(void)
+{
+        R_free_assets();
+}
 
 /******************************************************************************\
  Render the test model.

@@ -31,7 +31,6 @@ plutocracy_SOURCES = \
         src/render/r_shared.h \
         src/render/r_static_mesh.c \
         src/render/r_variables.c \
-        src/render/r_window.c \
         src/plutocracy.c
 
 # Precompiled header rules

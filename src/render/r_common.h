@@ -62,6 +62,8 @@ typedef struct r_model_data {
 } r_model_data_t;
 
 /* r_assets.c */
+void R_free_assets(void);
+void R_load_assets(void);
 #define R_texture_free(t) C_ref_down((c_ref_t *)(t))
 r_texture_t *R_texture_load(const char *filename);
 #define R_texture_ref(t) C_ref_up((c_ref_t *)(t))
@@ -75,5 +77,6 @@ void R_static_mesh_render(r_static_mesh_t *, r_texture_t *);
 void R_static_mesh_free(r_static_mesh_t *);
 
 /* r_variables.c */
-extern c_var_t r_width, r_height, r_colordepth, r_depth, r_windowed, r_vsync;
+extern c_var_t r_colordepth, r_depth, r_gamma, r_height, r_width, r_vsync,
+               r_windowed;
 

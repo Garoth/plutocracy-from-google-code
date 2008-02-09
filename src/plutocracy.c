@@ -29,8 +29,8 @@ static void main_loop(void)
 
         C_status("Main loop");
         C_time_init();
-        C_count_init(&fps, 20000);
-        C_count_init(&throttled, 20000);
+        C_count_init(&fps);
+        C_count_init(&throttled);
 
         /* Calculate the desired frame msec.
              FIXME: I don't know why, but we need to wait twice as long as
@@ -76,11 +76,13 @@ static void main_loop(void)
 
                 /* Print FPS to console periodically */
                 C_count_add(&fps, 1);
-                if (C_count_ready(&fps))
-                        C_debug("Frame %d, %.1f FPS (%.1f%% throttled)",
+                if (C_count_poll(&fps, 20000))
+                        C_debug("Frame %d, %.1f FPS (%.1f%% throttled), "
+                                "%.1f verts/frame",
                                 c_frame, C_count_per_sec(&fps),
                                 100.f * C_count_per_frame(&throttled) /
-                                desired_msec);
+                                        desired_msec,
+                                C_count_per_frame(&r_count_faces));
         }
         C_debug("Exited main loop");
 }
@@ -130,7 +132,7 @@ static void cleanup(void)
         ran_once = TRUE;
 
         C_status("Cleaning up");
-        R_free_assets();
+        R_render_cleanup();
         SDL_Quit();
         C_debug("Done");
 }
@@ -157,9 +159,8 @@ int main(int argc, char *argv[])
         C_status("Initializing " PACKAGE_STRING " client");
         if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER) < 0)
                 C_error("Failed to initialize SDL: %s", SDL_GetError());
-        if (!R_create_window())
+        if (!R_render_init())
                 C_error("Window creation failed");
-        R_load_assets();
 
         /* Run the main loop */
         main_loop();

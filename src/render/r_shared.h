@@ -32,12 +32,11 @@ void R_model_render(r_model_t *);
 
 /* r_render.c */
 void R_render(void);
+void R_render_cleanup(void);
+int R_render_init(void);
+
+extern c_count_t r_count_faces;
 
 /* r_variables.c */
 void R_register_variables(void);
-
-/* r_window.c */
-int R_create_window(void);
-void R_free_assets(void);
-void R_load_assets(void);
 
