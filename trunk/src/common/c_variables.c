@@ -23,6 +23,11 @@ c_var_t c_log_level, c_log_file;
    (faster than this rate), we need to take a nap */
 c_var_t c_max_fps;
 
+/* We can do some detailed allocated memory tracking and detect double-free,
+   memory under/overrun, and leaks on the fly. This variable cannot be changed
+   after initilization! */
+c_var_t c_mem_check;
+
 static c_var_t *root;
 
 /******************************************************************************\
@@ -36,6 +41,9 @@ void C_register_variables(void)
 
         /* FPS cap */
         C_register_integer(&c_max_fps, "c_max_fps", 120);
+
+        /* Memory checking */
+        C_register_integer(&c_mem_check, "c_mem_check", FALSE);
 }
 
 /******************************************************************************\
@@ -99,7 +107,7 @@ void C_set_variable(c_var_t *var, const char *value)
                 C_debug("Static string '%s' set to '%s'", var->name,
                         var->value.s, value);
         } else if (var->type == C_VAR_STRING_DYNAMIC) {
-                free(var->value.s);
+                C_free(var->value.s);
                 var->value.s = strdup(value);
                 var->type = C_VAR_STRING_DYNAMIC;
                 C_debug("Dynamic string '%s' set to '%s'", var->name,

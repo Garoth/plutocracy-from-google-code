@@ -94,13 +94,14 @@ static char* parse_face(char* s,
 
 /******************************************************************************\
  Loads a static mesh from a .OBJ text file.
-   FIXME: Need to get rid of fgets() to convert to C_file_*
+   FIXME: Need to rewrite to use the tokenizer. This function will break for
+          files larger than BUFSIZ (whatever the hell that is).
 \******************************************************************************/
 r_static_mesh_t* R_static_mesh_load(const char* filename)
 {
         r_static_mesh_t* result = NULL;
 
-        FILE* fp = fopen(filename, "r");
+        c_file_t *fp = C_file_open_read(filename);
         if(!fp) {
                 C_debug("can't open file %s", filename);
                 return NULL;
@@ -118,7 +119,7 @@ r_static_mesh_t* R_static_mesh_load(const char* filename)
         int flag = TRUE;
 
         char buffer[BUFSIZ];
-        while(fgets(buffer, BUFSIZ, fp)) {
+        while(C_file_gets(fp, buffer)) {
                 size_t len = strlen(buffer);
                 if(buffer[len - 1] == '\n') { buffer[--len] = '\0'; }
 
@@ -208,7 +209,7 @@ r_static_mesh_t* R_static_mesh_load(const char* filename)
         C_array_cleanup(&sts);
         C_array_cleanup(&norms);
         C_array_cleanup(&verts);
-        fclose(fp);
+        C_file_close(fp);
 
         return result;
 }
