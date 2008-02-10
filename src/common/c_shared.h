@@ -65,6 +65,7 @@
 #define free(s) ERROR_use_C_free
 #define malloc(s) ERROR_use_C_malloc
 #define realloc(p, s) ERROR_use_C_realloc
+#define strdup(s) ERROR_use_C_strdup
 #define strncpy(d, s, n) ERROR_use_C_strncpy
 
 /* Debug log levels, errors are fatal and will always abort */
@@ -211,6 +212,7 @@ void C_token_file_cleanup(c_token_file_t *);
 int C_token_file_init(c_token_file_t *, const char *filename);
 const char *C_token_file_read_full(c_token_file_t *, int *out_quoted);
 #define C_token_file_read(f) C_token_file_read_full(f, NULL)
+char *C_strdup(const char *);
 
 /* c_time.c */
 #define C_count_add(c, v) ((c)->value += (v))

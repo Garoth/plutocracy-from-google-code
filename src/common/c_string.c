@@ -198,3 +198,20 @@ void C_file_close(c_file_t *file)
         fclose(file);
 }
 
+/******************************************************************************\
+ Allocates new heap memory for and duplicates a string. Doesn't crash if the
+ string passed in is NULL.
+\******************************************************************************/
+char *C_strdup(const char *str)
+{
+        char *new_str;
+        size_t len;
+
+        if (!str)
+                return NULL;
+        len = strlen(str) + 1;
+        new_str = C_malloc(len);
+        memcpy(new_str, str, len);
+        return new_str;
+}
+

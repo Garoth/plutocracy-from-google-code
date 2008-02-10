@@ -102,13 +102,13 @@ void C_set_variable(c_var_t *var, const char *value)
                 C_debug("Float '%s' set to %g ('%s')", var->name,
                         var->value.f, value);
         } else if (var->type == C_VAR_STRING) {
-                var->value.s = strdup(value);
+                var->value.s = C_strdup(value);
                 var->type = C_VAR_STRING_DYNAMIC;
                 C_debug("Static string '%s' set to '%s'", var->name,
                         var->value.s, value);
         } else if (var->type == C_VAR_STRING_DYNAMIC) {
                 C_free(var->value.s);
-                var->value.s = strdup(value);
+                var->value.s = C_strdup(value);
                 var->type = C_VAR_STRING_DYNAMIC;
                 C_debug("Dynamic string '%s' set to '%s'", var->name,
                         var->value.s, value);
@@ -168,6 +168,7 @@ int C_parse_config(const char *string)
         value[0] = NUL;
         pos = name;
         parsing_name = TRUE;
+        parsing_string = FALSE;
         parsed = 0;
 
         for (;; string++) {

@@ -121,6 +121,7 @@ def write_frame(scn, file, objects):
         mat_xrot90 = Blender.Mathutils.RotationMatrix(-90, 4, 'x')
 
         # Get all meshes
+        faces_done = 10000
         for me, ob, ob_mat in objects:
                 me = me.__copy__();
                 me.transform(ob_mat * mat_xrot90)
@@ -132,6 +133,9 @@ def write_frame(scn, file, objects):
                         write_face(file, me, f, verts, False)
                         if len(f.v) == 4:
                                 write_face(file, me, f, verts, True)
+                        if len(verts) > faces_done:
+                                print '   %d faces' % faces_done
+                                faces_done += 10000
 
                 # Cleanup
                 del me
