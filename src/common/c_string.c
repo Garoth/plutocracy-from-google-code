@@ -185,3 +185,13 @@ size_t C_strncpy(char *dest, const char *src, size_t len)
         return src_len;
 }
 
+/******************************************************************************\
+ A simpler wrapper that won't cause a segfault when passed a NULL pointer.
+\******************************************************************************/
+void C_file_close(c_file_t *file)
+{
+        if (!file)
+                return;
+        fclose(file);
+}
+

@@ -53,15 +53,6 @@
 #define NUL '\0'
 #endif
 
-/* Wrap file access functions */
-#define C_file_close(f) fclose(f)
-#define C_file_open_read(name) fopen(name, "r")
-#define C_file_open_write(name) fopen(name, "w")
-#define C_file_read(f, buf, len) fread(buf, 1, len, f)
-#define C_file_write(f, buf, len) fwrite(buf, 1, len, f)
-
-#define c_file_t FILE
-
 /* All angles should be in radians but there are some cases (OpenGL) where
    conversions are necessary */
 #define C_rad_to_deg(a) ((a) * 180 / M_PI)
@@ -109,6 +100,9 @@ typedef struct c_array {
         size_t item_size;
         void *elems;
 } c_array_t;
+
+/* Wrap the standard library file I/O */
+typedef FILE c_file_t;
 
 /* A structure to hold the data for a file that is being read in tokens */
 typedef struct c_token_file {
@@ -190,6 +184,11 @@ void C_ref_up_full(const char *file, int line, const char *function,
 #define C_zero_buf(s) memset(s, 0, sizeof (s))
 
 /* c_string.c */
+void C_file_close(c_file_t *);
+#define C_file_open_read(name) fopen(name, "r")
+#define C_file_open_write(name) fopen(name, "w")
+#define C_file_read(f, buf, len) fread(buf, 1, len, f)
+#define C_file_write(f, buf, len) fwrite(buf, 1, len, f)
 #define C_is_digit(c) (((c) >= '0' && (c) <= '9') || c == '.' || c == '-')
 #define C_is_space(c) ((c) && (c) <= ' ')
 int C_read_file(const char *filename, char *buffer, int size);

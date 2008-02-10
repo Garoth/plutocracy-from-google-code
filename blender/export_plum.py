@@ -57,7 +57,7 @@ import BPyMessages
 
 
 def vec_eq(a, b):
-        for i in range(0, len(a)):
+        for i in xrange(0, len(a)):
                 if a[i] != b[i]:
                         return False
         return True
@@ -93,7 +93,19 @@ def write_frame(scn, file, objects):
 
         # Get all meshes
         for me, ob, ob_mat in objects:
+                me = me.__copy__();
                 me.transform(ob_mat * mat_xrot90)
+
+                # Select all quads and convert them to triangles
+                has_quads = False
+                for f in me.faces:
+                        if len(f.v) == 4:
+                                has_quads = True
+                                f.sel = True
+                        else:
+                                f.sel = False
+                if has_quads:
+                        me.quadToTriangle()
 
                 # Indicate that this is a new object
                 file.write('\no\n')
@@ -101,9 +113,7 @@ def write_frame(scn, file, objects):
                 for f in me.faces:
                         inds = [ 0, 0, 0 ]
                         reused = False
-                        if len(f.v) != 3:
-                                print 'WARNING: non-triangular face'
-                        for j in range(0, 3):
+                        for j in xrange(0, 3):
                                 vec = [ f.v[j].co.x, f.v[j].co.y, \
                                         f.v[j].co.z,  f.no.x, f.no.y, \
                                         f.no.z, 0, 0 ]
@@ -116,12 +126,10 @@ def write_frame(scn, file, objects):
                                         vec[7] = 1 - f.uv[j].y # v flipped!
 
                                 # See if this vertex has already been written
-                                for i in range(0, len(verts)):
-                                        if vec_eq(verts[i], vec):
-                                                inds[j] = i
-                                                reused = True
-                                                break
-                                else:
+                                try:
+                                        inds[j] = verts.index(vec)
+                                        reused = True
+                                except:
                                         inds[j] = len(verts)
                                         verts.append(vec)
                                         file.write('v %g %g %g %g %g %g %g %g\n'
@@ -129,6 +137,8 @@ def write_frame(scn, file, objects):
                         if reused:
                                 file.write('i %d %d %d\n' % tuple(inds))
 
+                # Cleanup
+                del me
 
 def write(filename):
         if not filename.lower().endswith('.plum'):
@@ -216,7 +226,7 @@ def write(filename):
                             sanitize_strip(get_image_filename(scn, me))))
 
         # Write all frames into one file
-        scene_frames = range(1, max_frame + 1)
+        scene_frames = xrange(1, max_frame + 1)
         print "Exporting '%s', %d frames:" % (filename, max_frame + 1)
         for frame in scene_frames:
                 print "... frame %d" % frame

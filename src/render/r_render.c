@@ -52,6 +52,10 @@ int R_render_init(void)
                         SDL_GL_SetAttribute(SDL_GL_ALPHA_SIZE, 8);
         }
 
+        /* NVidia drivers respect this environment variable for vsync */
+        SDL_putenv(r_vsync.value.n ? "__GL_SYNC_TO_VBLANK=1" :
+                                     "__GL_SYNC_TO_VBLANK=0");
+
         /* Set the video mode */
         flags = SDL_OPENGL | SDL_GL_DOUBLEBUFFER | SDL_HWPALETTE |
                 SDL_HWSURFACE;
