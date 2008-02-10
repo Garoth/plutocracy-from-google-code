@@ -86,6 +86,35 @@ def get_image_filename(scn, me):
         return ''
 
 
+def write_face(file, me, f, verts, quad):
+        inds = [ 0, 0, 0 ]
+        reused = False
+        for j in xrange(0, 3):
+                o = 0
+                if quad and j > 0:
+                        o = 1
+                vec = [ f.v[o + j].co.x, f.v[o + j].co.y, f.v[o + j].co.z, \
+                        f.no.x, f.no.y, f.no.z, 0, 0 ]
+                if f.smooth:
+                        vec[3] = f.v[j].no[0]
+                        vec[4] = f.v[j].no[1]
+                        vec[5] = f.v[j].no[2]
+                if me.faceUV:
+                        vec[6] = f.uv[j].x
+                        vec[7] = 1 - f.uv[j].y # v flipped!
+
+                # See if this vertex has already been written
+                try:
+                        inds[j] = verts.index(vec)
+                        reused = True
+                except:
+                        inds[j] = len(verts)
+                        verts.append(vec)
+                        file.write('v %g %g %g %g %g %g %g %g\n' % tuple(vec))
+        if reused:
+                file.write('i %d %d %d\n' % tuple(inds))
+
+
 def write_frame(scn, file, objects):
 
         # Blender has front and side confused
@@ -96,46 +125,13 @@ def write_frame(scn, file, objects):
                 me = me.__copy__();
                 me.transform(ob_mat * mat_xrot90)
 
-                # Select all quads and convert them to triangles
-                has_quads = False
-                for f in me.faces:
-                        if len(f.v) == 4:
-                                has_quads = True
-                                f.sel = True
-                        else:
-                                f.sel = False
-                if has_quads:
-                        me.quadToTriangle()
-
                 # Indicate that this is a new object
                 file.write('\no\n')
                 verts = [ ]
                 for f in me.faces:
-                        inds = [ 0, 0, 0 ]
-                        reused = False
-                        for j in xrange(0, 3):
-                                vec = [ f.v[j].co.x, f.v[j].co.y, \
-                                        f.v[j].co.z,  f.no.x, f.no.y, \
-                                        f.no.z, 0, 0 ]
-                                if f.smooth:
-                                        vec[3] = f.v[j].no[0]
-                                        vec[4] = f.v[j].no[1]
-                                        vec[5] = f.v[j].no[2]
-                                if me.faceUV:
-                                        vec[6] = f.uv[j].x
-                                        vec[7] = 1 - f.uv[j].y # v flipped!
-
-                                # See if this vertex has already been written
-                                try:
-                                        inds[j] = verts.index(vec)
-                                        reused = True
-                                except:
-                                        inds[j] = len(verts)
-                                        verts.append(vec)
-                                        file.write('v %g %g %g %g %g %g %g %g\n'
-                                                   % tuple(vec))
-                        if reused:
-                                file.write('i %d %d %d\n' % tuple(inds))
+                        write_face(file, me, f, verts, False)
+                        if len(f.v) == 4:
+                                write_face(file, me, f, verts, True)
 
                 # Cleanup
                 del me
