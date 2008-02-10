@@ -9,7 +9,7 @@ anims:
 end
 
 # object [name] [material]
-object "builder" "/home/risujin/src/plutocracy/plutocracy-svn/models/test/granger.jpg"
+object "builder" "./models/test/granger.jpg"
 
 ################################################################################
 frame 1
