@@ -58,6 +58,15 @@
 #define C_rad_to_deg(a) ((a) * 180 / M_PI)
 #define C_deg_to_rad(a) ((a) * M_PI / 180)
 
+/* Certain functions should not be used. Files that legitimately use these
+   should undefine these replacements */
+#define calloc(s) ERROR_use_C_calloc
+#define fclose(f) ERROR_use_C_file_close
+#define free(s) ERROR_use_C_free
+#define malloc(s) ERROR_use_C_malloc
+#define realloc(p, s) ERROR_use_C_realloc
+#define strncpy(d, s, n) ERROR_use_C_strncpy
+
 /* Debug log levels, errors are fatal and will always abort */
 typedef enum {
         C_LOG_ERROR,
@@ -162,7 +171,8 @@ void C_array_init_real(c_array_t *ary, size_t item_size, size_t cap);
 void C_array_reserve(c_array_t *ary, size_t n);
 void *C_array_steal(c_array_t *ary);
 #define C_calloc(s) C_recalloc_full(__FILE__, __LINE__, __func__, NULL, s)
-#define C_free(p) free(p)
+#define C_free(p) C_free_full(__FILE__, __LINE__, __func__, p)
+void C_free_full(const char *file, int line, const char *function, void *ptr);
 #define C_malloc(s) C_realloc(NULL, s)
 #define C_realloc(p, s) C_realloc_full(__FILE__, __LINE__, __func__, p, s)
 void *C_realloc_full(const char *file, int line, const char *function,
@@ -185,9 +195,11 @@ void C_ref_up_full(const char *file, int line, const char *function,
 
 /* c_string.c */
 void C_file_close(c_file_t *);
+#define C_file_gets(f, buf) fgets(buf, sizeof (buf), f)
 #define C_file_open_read(name) fopen(name, "r")
 #define C_file_open_write(name) fopen(name, "w")
 #define C_file_read(f, buf, len) fread(buf, 1, len, f)
+#define C_file_vprintf(f, fm, v) vfprintf(f, fm, v)
 #define C_file_write(f, buf, len) fwrite(buf, 1, len, f)
 #define C_is_digit(c) (((c) >= '0' && (c) <= '9') || c == '.' || c == '-')
 #define C_is_space(c) ((c) && (c) <= ' ')

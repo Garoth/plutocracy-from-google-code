@@ -14,6 +14,9 @@
 
 #include "c_shared.h"
 
+/* This file legitimately uses standard library file I/O functions */
+#undef fclose
+
 /******************************************************************************\
  Skips any space characters in the string.
 \******************************************************************************/
@@ -55,7 +58,7 @@ int C_read_file(const char *filename, char *buffer, int size)
 \******************************************************************************/
 int C_token_file_init(c_token_file_t *tf, const char *filename)
 {
-        strncpy(tf->filename, filename, sizeof (tf->filename));
+        C_strncpy_buf(tf->filename, filename);
         C_zero_buf(tf->buffer);
         tf->token = tf->pos = tf->buffer + sizeof (tf->buffer) - 2;
         tf->swap = ' ';

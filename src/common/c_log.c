@@ -26,7 +26,7 @@ void C_close_log_file(void)
         if (!log_file || log_file == stderr)
                 return;
         C_debug("Closing log-file");
-        fclose(log_file);
+        C_file_close(log_file);
 }
 
 /******************************************************************************\
@@ -36,7 +36,7 @@ void C_open_log_file(void)
 {
         if (!c_log_file.value.s[0])
                 return;
-        log_file = fopen(c_log_file.value.s, "r");
+        log_file = C_file_open_write(c_log_file.value.s);
         if (log_file)
                 C_debug("Opened log-file '%s'", c_log_file.value.s);
         else
@@ -97,7 +97,10 @@ void C_log(c_log_level_t level, const char *file, int line,
                         snprintf(fmt2, sizeof(fmt2), "*** %s:%d, %s(): %s\n",
                                  file, line, function, fmt);
         }
-        vfprintf(log_file ? log_file : stderr, fmt2, va);
+        if (log_file)
+                C_file_vprintf(log_file, fmt2, va);
+        else
+                vfprintf(stderr, fmt2, va);
         va_end(va);
         if (level == C_LOG_ERROR)
                 abort();

@@ -395,6 +395,8 @@ static void update_animation(r_model_t *model)
         /* Generate interpolated meshes if we need a new frame now */
         if (c_time_msec - model->last_frame_time < 1000 / R_MODEL_ANIM_FPS)
                 return;
+        if (model->frame == model->last_frame)
+                return;
         model->last_frame_time = c_time_msec;
         model->use_lerp_meshes = TRUE;
         if (anim->delay < 1)

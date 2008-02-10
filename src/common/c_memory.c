@@ -14,6 +14,30 @@
 
 #include "c_shared.h"
 
+/* This is the only file that legitimately uses standard library allocation
+   and freeing functions */
+#undef calloc
+#undef free
+#undef malloc
+#undef realloc
+
+/* When memory checking is enabled, this structure is prepended to every
+   allocated block. There is also a no-mans-land chunk, filled with a specific
+   byte, at the end of every allocated block as well. */
+#define NO_MANS_LAND_BYTE 0x5a
+#define NO_MANS_LAND_SIZE 64
+typedef struct c_mem_tag {
+        struct c_mem_tag *next;
+        const char *alloc_file, *alloc_func, *free_file, *free_func;
+        void *data;
+        size_t size;
+        int alloc_line, free_line, freed;
+        char no_mans_land[NO_MANS_LAND_SIZE];
+} c_mem_tag_t;
+
+static c_mem_tag_t *mem_root;
+extern c_var_t c_mem_check;
+
 /******************************************************************************\
  Initialize an array.
 \******************************************************************************/
@@ -74,20 +98,163 @@ void C_array_cleanup(c_array_t *ary)
 }
 
 /******************************************************************************\
- Reallocate [ptr] to [size] bytes large. Abort on error.
-   TODO: String all the allocated chunks into a linked list and complain
-         about memory leaks when the program closes
+ Allocates new memory, similar to realloc_checked().
+\******************************************************************************/
+static void *malloc_checked(const char *file, int line, const char *function,
+                            size_t size)
+{
+        c_mem_tag_t *tag;
+        size_t real_size;
+
+        real_size = size + sizeof (c_mem_tag_t) + NO_MANS_LAND_SIZE;
+        tag = malloc(real_size);
+        tag->data = (char *)tag + sizeof (c_mem_tag_t);
+        tag->size = size;
+        tag->alloc_file = file;
+        tag->alloc_line = line;
+        tag->alloc_func = function;
+        tag->freed = FALSE;
+        memset(tag->no_mans_land, NO_MANS_LAND_BYTE, NO_MANS_LAND_SIZE);
+        memset((char *)tag + sizeof (c_mem_tag_t) + size,
+               NO_MANS_LAND_BYTE, NO_MANS_LAND_SIZE);
+        tag->next = NULL;
+        if (mem_root)
+                tag->next = mem_root;
+        mem_root = tag;
+        return tag->data;
+}
+
+/******************************************************************************\
+ Finds the memory tag that holds [ptr].
+\******************************************************************************/
+static c_mem_tag_t *find_tag(const void *ptr, c_mem_tag_t **prev_tag)
+{
+        c_mem_tag_t *tag, *prev;
+
+        prev = NULL;
+        tag = mem_root;
+        while (tag && tag->data != ptr) {
+                prev = tag;
+                tag = tag->next;
+        }
+        if (prev_tag)
+                *prev_tag = prev;
+        return tag;
+}
+
+/******************************************************************************\
+ Reallocate [ptr] to [size] bytes large. Abort on error. String all the
+ allocated chunks into a linked list and tracks information about the
+ memory and where it was allocated from. This is used later in C_free() and
+ C_check_leaks() to detect various errors.
+\******************************************************************************/
+static void *realloc_checked(const char *file, int line, const char *function,
+                             void *ptr, size_t size)
+{
+        c_mem_tag_t *tag, *prev_tag;
+        size_t real_size;
+
+        if (!ptr)
+                return malloc_checked(file, line, function, size);
+        if (!(tag = find_tag(ptr, &prev_tag)))
+                C_error_full(file, line, function,
+                             "Trying to reallocate unallocated address (0x%x)",
+                             ptr);
+        real_size = size + sizeof (c_mem_tag_t) + NO_MANS_LAND_SIZE;
+        tag = realloc(ptr - sizeof (c_mem_tag_t), real_size);
+        if (!tag)
+                C_error("Out of memory, %s() (%s:%d) tried to allocate %d "
+                        "bytes", function, file, line, size );
+        tag->size = size;
+        tag->alloc_file = file;
+        tag->alloc_line = line;
+        tag->alloc_func = function;
+        tag->data = (char *)tag + sizeof (c_mem_tag_t);
+        return tag->data;
+}
+
+/******************************************************************************\
+ Reallocate [ptr] to [size] bytes large. Abort on error. When memory checking
+ is enabled, this calls realloc_checked() instead.
 \******************************************************************************/
 void *C_realloc_full(const char *file, int line, const char *function,
                      void *ptr, size_t size)
 {
-        void *result;
-
-        result = realloc(ptr, size);
-        if (!result)
+        if (c_mem_check.value.n)
+                return realloc_checked(file, line, function, ptr, size);
+        ptr = realloc(ptr, size);
+        if (!ptr)
                 C_error("Out of memory, %s() (%s:%d) tried to allocate %d "
                         "bytes", function, file, line, size );
-        return result;
+        return ptr;
+}
+
+/******************************************************************************\
+ Checks if a no-mans-land region has been corrupted.
+\******************************************************************************/
+static int check_no_mans_land(const char *ptr)
+{
+        int i;
+
+        for (i = 0; i < NO_MANS_LAND_SIZE; i++)
+                if (ptr[i] != NO_MANS_LAND_BYTE)
+                        return FALSE;
+        return TRUE;
+}
+
+/******************************************************************************\
+ Frees memory. If memory checking is enabled, will check the following:
+ - [ptr] was never allocated
+ - [ptr] was already freed
+ - [ptr] no-mans-land (upper or lower) was corrupted
+\******************************************************************************/
+void C_free_full(const char *file, int line, const char *function, void *ptr)
+{
+        c_mem_tag_t *tag, *prev_tag, *old_tag;
+
+        if (!c_mem_check.value.n) {
+                free(ptr);
+                return;
+        }
+        if (!(tag = find_tag(ptr, &prev_tag)))
+                C_error_full(file, line, function,
+                             "Trying to free unallocated address (0x%x)", ptr);
+        if (tag->freed)
+                C_error_full(file, line, function,
+                             "Address (0x%x), %d bytes allocated by "
+                             "%s in %s:%d, already freed by %s() in %s:%d",
+                             ptr, tag->size,
+                             tag->alloc_func, tag->alloc_file, tag->alloc_line,
+                             tag->free_func, tag->free_file, tag->free_line);
+        if (!check_no_mans_land(tag->no_mans_land))
+                C_error_full(file, line, function,
+                             "Address (0x%x), %d bytes allocated by "
+                             "%s in %s:%d, overran lower boundary",
+                             ptr, tag->size,
+                             tag->alloc_func, tag->alloc_file, tag->alloc_line);
+        if (!check_no_mans_land((char *)ptr + tag->size + sizeof (*tag)))
+                C_error_full(file, line, function,
+                             "Address (0x%x), %d bytes allocated by "
+                             "%s in %s:%d, overran upper boundary",
+                             ptr, tag->size,
+                             tag->alloc_func, tag->alloc_file, tag->alloc_line);
+        tag->freed = TRUE;
+        tag->free_file = file;
+        tag->free_line = line;
+        tag->free_func = function;
+        old_tag = tag;
+        tag = realloc(tag, sizeof (*tag));
+        if (prev_tag)
+                prev_tag->next = tag;
+        if (old_tag == mem_root)
+                mem_root = tag;
+}
+
+/******************************************************************************\
+ If memory checking is enabled, checks for memory leaks and prints warnings.
+\******************************************************************************/
+void C_check_leaks(void)
+{
 }
 
 /******************************************************************************\
@@ -180,7 +347,7 @@ void C_ref_up_full(const char *file, int line, const char *function,
 
 /******************************************************************************\
  Decreases the reference count. If there are no references left, the
- cleanup function is called on the data and the memory is free'd.
+ cleanup function is called on the data and the memory is freed.
 \******************************************************************************/
 void C_ref_down_full(const char *file, int line, const char *function,
                      c_ref_t *ref)
@@ -203,7 +370,7 @@ void C_ref_down_full(const char *file, int line, const char *function,
                 ref->prev->next = ref->next;
         if (ref->next)
                 ref->next->prev = ref->prev;
-        C_debug_full(file, line, function, "Free'd '%s'", ref->name, ref->refs);
+        C_debug_full(file, line, function, "Freed '%s'", ref->name, ref->refs);
         if (ref->cleanup_func)
                 ref->cleanup_func(ref);
         C_free(ref);
