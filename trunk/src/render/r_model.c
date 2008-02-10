@@ -284,17 +284,19 @@ error:  C_token_file_cleanup(&token_file);
 \******************************************************************************/
 int R_model_init(r_model_t *model, const char *filename)
 {
+        if (!model)
+                return FALSE;
         C_zero(model);
         model->data = model_data_load(filename);
         model->scale = 1.f;
         model->time_left = -1;
 
         /* Start playing the first animation */
-        if (model->data->anims_len)
+        if (model->data && model->data->anims_len)
                 R_model_play(model, model->data->anims[0].name);
 
         /* Allocate memory for interpolated object meshes */
-        if (model->data->frames)
+        if (model->data && model->data->frames)
                 model->lerp_meshes = C_calloc(model->data->objects_len *
                                               sizeof (*model->lerp_meshes));
 
