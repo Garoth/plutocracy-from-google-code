@@ -14,7 +14,7 @@
 #include <stdio.h>
 
 /* Define the radius of the globe */
-#define G_GLOBE_RADIUS (100.0)
+#define G_GLOBE_RADIUS (1000.0)
 
 /* Some local datatypes. */
 typedef unsigned short ushort_t;
@@ -70,7 +70,7 @@ static void offset_terrain(unsigned int seed, float water, g_globe_t *g)
                 c_vec3_t offset;
 
                 v = &g->verts[i];
-                noise = C_noise3_fractal(8, v->x / 20, v->y / 20, v->z / 20);
+                noise = C_noise3_fractal(8, v->x / 200, v->y / 200, v->z / 200);
                 offset = C_vec3_scalef(*v, 0.1 * noise);
                 *v = C_vec3_add(*v, offset);
 
@@ -84,6 +84,38 @@ static void offset_terrain(unsigned int seed, float water, g_globe_t *g)
 
         C_debug("minimum noise: %f", min_noise);
         C_debug("maximum noise: %f", max_noise);
+}
+
+
+/******************************************************************************\
+ Compute normal values based on geometry.
+\******************************************************************************/
+static void compute_normals(g_globe_t *g)
+{
+        int i;
+
+        g->norms = C_malloc(g->nverts * sizeof (c_vec3_t));
+        for (i = 0; i < g->nverts; i++)
+                g->norms[i] = C_vec3(0, 0, 0);
+
+        for (i = 0; i < g->ninds; i += 3) {
+                c_vec3_t a, b, face_norm;
+                int j;
+
+                a = C_vec3_sub(g->verts[g->inds[i]], g->verts[g->inds[i+1]]);
+                b = C_vec3_sub(g->verts[g->inds[i]], g->verts[g->inds[i+2]]);
+                face_norm = C_vec3_norm(C_vec3_cross(a, b));
+
+                for (j = 0; j < 3; j++) {
+                        int vind;
+
+                        vind = g->inds[i + j];
+                        g->norms[vind] = C_vec3_add(g->norms[vind], face_norm);
+                }
+        }
+
+        for (i = 0; i < g->nverts; i++)
+                g->norms[i] = C_vec3_norm(g->norms[i]);
 }
 
 /******************************************************************************\
@@ -481,12 +513,15 @@ g_globe_t *G_globe_alloc(int subdiv_levels, unsigned int seed, float water)
         C_array_cleanup(&edges2);
 
 
-        /* Calculate terrain while keeping the originals */
+        /* Calculate terrain while keeping the originals for water. */
         result->water_verts = C_malloc(result->nverts * sizeof(c_vec3_t));
         memcpy(result->water_verts, result->verts,
                result->nverts * sizeof(c_vec3_t));
 
         offset_terrain(seed, water, result);
+
+        /* And compute normals */
+        compute_normals(result);
 
         return result;
 }
