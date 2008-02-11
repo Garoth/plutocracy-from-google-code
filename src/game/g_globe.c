@@ -497,6 +497,7 @@ g_globe_t *G_globe_alloc(int subdiv_levels, unsigned int seed, float water)
 void G_globe_free(g_globe_t *s)
 {
         C_free(s->verts);
+        C_free(s->water_verts);
         C_free(s->neighbors_lists);
         C_free(s->inds);
         C_free(s);
