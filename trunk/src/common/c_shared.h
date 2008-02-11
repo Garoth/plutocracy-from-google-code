@@ -194,6 +194,11 @@ void C_ref_up_full(const char *file, int line, const char *function,
 #define C_zero(s) memset(s, 0, sizeof (*(s)))
 #define C_zero_buf(s) memset(s, 0, sizeof (s))
 
+/* c_noise.c */
+void C_noise3_seed(unsigned int seed);
+float C_noise3(float x, float y, float z);
+float C_noise3_fractal(int levels, float x, float y, float z);
+
 /* c_string.c */
 void C_file_close(c_file_t *);
 #define C_file_gets(f, buf) fgets(buf, sizeof (buf), f)
@@ -202,7 +207,7 @@ void C_file_close(c_file_t *);
 #define C_file_read(f, buf, len) fread(buf, 1, len, f)
 #define C_file_vprintf(f, fm, v) vfprintf(f, fm, v)
 #define C_file_write(f, buf, len) fwrite(buf, 1, len, f)
-#define C_is_digit(c) (((c) >= '0' && (c) <= '9') || c == '.' || c == '-')
+#define C_is_digit(c) (((c) >= '0' && (c) <= '9') || (c) == '.' || (c) == '-')
 #define C_is_space(c) ((c) && (c) <= ' ')
 int C_read_file(const char *filename, char *buffer, int size);
 char *C_skip_spaces(const char *str);

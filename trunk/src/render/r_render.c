@@ -12,6 +12,7 @@
 
 #include "r_common.h"
 #include "../game/g_shared.h"
+#include <time.h>
 
 /* Keep track of how many faces we render each frame */
 c_count_t r_count_faces;
@@ -188,44 +189,47 @@ static int render_test_mesh(void)
 
 /******************************************************************************\
  Render the test globe.
-   FIXME: Broken thanks to new vertex type.
 \******************************************************************************/
 int render_test_globe()
 {
         static float x_rot, y_rot;
         static g_globe_t *globe = NULL;
-        r_static_mesh_t fake_mesh;
 
         if (!r_test_globe.value.n)
                 return FALSE;
 
         if (!globe)
-                globe = G_globe_alloc(3);
+                globe = G_globe_alloc(5, time(NULL), 0.1);
 
         /* No lighting or culling */
         glDisable(GL_LIGHTING);
-        glDisable(GL_CULL_FACE);
-
-        /* Fake a static mesh */
-        /*fake_mesh.nverts = globe->nverts;
-        fake_mesh.ninds = globe->ninds;
-        fake_mesh.verts = globe->verts;
-        fake_mesh.inds = globe->inds;
-        fake_mesh.norms = NULL;
-        fake_mesh.sts = NULL;*/
 
         glPushMatrix();
 
-        /* And render */
-        glTranslatef(0.0, 0.0, -20.0);
+        glTranslatef(0.0, 0.0, -2000.0);
         glRotatef(x_rot, 1.0, 0.0, 0.0);
         glRotatef(y_rot, 0.0, 1.0, 0.0);
         glScalef(10, 10, 10);
-        glColor3f(0.0, 0.0, 0.0);
-        R_static_mesh_render(&fake_mesh, NULL); /* render for depth */
-        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+
+        /* And render. I'll just shove stuff in here right now.
+           I'm actually worried about the generation of the thing. */
+        glEnableClientState(GL_VERTEX_ARRAY);
+        glVertexPointer(3, GL_FLOAT, 0, globe->water_verts);
         glColor3f(1.0, 1.0, 1.0);
-        R_static_mesh_render(&fake_mesh, NULL); /* render lines over */
+
+        /* Render for depth */
+        glColorMask(FALSE, FALSE, FALSE, FALSE);
+        glDrawElements(GL_TRIANGLES, globe->ninds,
+                       GL_UNSIGNED_SHORT, globe->inds);
+
+        /* Lines overtop */
+        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+        glColorMask(TRUE, TRUE, TRUE, TRUE);
+        glVertexPointer(3, GL_FLOAT, 0, globe->verts);
+        glDrawElements(GL_TRIANGLES, globe->ninds,
+                       GL_UNSIGNED_SHORT, globe->inds);
+
+        glDisableClientState(GL_VERTEX_ARRAY);
 
         /* See if neighbors works */
         int i;
@@ -261,9 +265,7 @@ void R_render(void)
 {
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        /* Render testing.
-             FIXME: Test globe */
-        if (render_test_model() || render_test_mesh());
+        if (render_test_globe() || render_test_model() || render_test_mesh());
 
         SDL_GL_SwapBuffers();
 }
