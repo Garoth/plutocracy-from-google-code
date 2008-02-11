@@ -26,7 +26,7 @@ c_var_t c_max_fps;
 /* We can do some detailed allocated memory tracking and detect double-free,
    memory under/overrun, and leaks on the fly. This variable cannot be changed
    after initilization! */
-c_var_t c_mem_check;
+c_var_t c_mem_check, c_test_mem_check;
 
 static c_var_t *root;
 
@@ -44,6 +44,7 @@ void C_register_variables(void)
 
         /* Memory checking */
         C_register_integer(&c_mem_check, "c_mem_check", FALSE);
+        C_register_integer(&c_test_mem_check, "c_test_mem_check", 0);
 }
 
 /******************************************************************************\
