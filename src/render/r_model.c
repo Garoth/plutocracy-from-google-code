@@ -429,6 +429,7 @@ void R_model_render(r_model_t *model)
         glRotatef(C_rad_to_deg(model->angles.x), 1.0, 0.0, 0.0);
         glRotatef(C_rad_to_deg(model->angles.y), 0.0, 1.0, 0.0);
         glRotatef(C_rad_to_deg(model->angles.z), 0.0, 0.0, 1.0);
+        R_check_errors();
         if (model->time_left >= 0)
                 update_animation(model);
         if (model->use_lerp_meshes)

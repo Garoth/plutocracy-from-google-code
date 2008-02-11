@@ -68,6 +68,10 @@ void R_load_assets(void);
 r_texture_t *R_texture_load(const char *filename);
 #define R_texture_ref(t) C_ref_up((c_ref_t *)(t))
 
+/* r_render.c */
+#define R_check_errors() R_check_errors_full(__FILE__, __LINE__, __func__);
+void R_check_errors_full(const char *file, int line, const char *func);
+
 /* r_static_mesh.c */
 void R_static_mesh_cleanup(r_static_mesh_t *);
 unsigned short R_static_mesh_find_vert(const r_static_mesh_t *mesh,

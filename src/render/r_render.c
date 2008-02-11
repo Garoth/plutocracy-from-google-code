@@ -15,7 +15,7 @@
 #include <time.h>
 
 /* Render testing */
-extern c_var_t r_test_globe, r_test_globe_seed, r_test_model_path;
+extern c_var_t r_test_globe, r_test_globe_seed, r_test_model_path, r_gl_errors;
 extern r_static_mesh_t *r_test_mesh;
 extern r_model_t r_test_model;
 
@@ -56,7 +56,9 @@ int R_render_init(void)
                         SDL_GL_SetAttribute(SDL_GL_ALPHA_SIZE, 8);
         }
 
-        /* NVidia drivers respect this environment variable for vsync */
+        /* NVidia drivers respect this environment variable for vsync
+             FIXME: Check if this works. Should it be called before
+                    SDL_Init()? */
         SDL_putenv(r_vsync.value.n ? "__GL_SYNC_TO_VBLANK=1" :
                                      "__GL_SYNC_TO_VBLANK=0");
 
@@ -91,7 +93,9 @@ int R_render_init(void)
         glFrontFace(GL_CCW);
 
         /* Use a white default material */
+        glEnable(GL_TEXTURE_2D);
         glEnable(GL_COLOR_MATERIAL);
+        glShadeModel(GL_SMOOTH);
         glColorMaterial(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE);
         glColor3f(1.0, 1.0, 1.0);
 
@@ -102,16 +106,16 @@ int R_render_init(void)
         glEnable(GL_DEPTH_TEST);
         glDepthFunc(GL_LEQUAL);
 
-        /* Textures */
-        glEnable(GL_TEXTURE_2D);
+        /* Turn the lights on */
+        glEnable(GL_LIGHTING);
 
-        /* Enable smooth shading */
-        glShadeModel(GL_SMOOTH);
+        /* TODO: Alpha */
 
         /* Gamma */
         SDL_SetGamma(r_gamma.value.f, r_gamma.value.f, r_gamma.value.f);
 
         /* All set to start loading models and textures */
+        R_check_errors();
         R_load_assets();
 
         return TRUE;
@@ -131,7 +135,6 @@ void R_render_cleanup(void)
 \******************************************************************************/
 static int render_test_model(void)
 {
-        float white[] = { 1.0, 1.0, 1.0, 1.0 };
         float left[] = { -1.0, 0.0, 0.0, 0.0 };
 
         if (!r_test_model.data)
@@ -140,13 +143,14 @@ static int render_test_model(void)
         glLoadIdentity();
 
         /* Setup a white light to the left */
-        glEnable(GL_LIGHTING);
+        glMatrixMode(GL_MODELVIEW);
+        glLoadIdentity();
         glEnable(GL_LIGHT0);
         glLightfv(GL_LIGHT0, GL_POSITION, left);
-        glLightfv(GL_LIGHT0, GL_COLOR, white);
+        R_check_errors();
 
         /* Render the test mesh */
-        r_test_model.origin.z = -8;
+        r_test_model.origin.z = -7;
         R_model_render(&r_test_model);
 
         /* Spin the model around a bit */
@@ -162,7 +166,6 @@ static int render_test_model(void)
 static int render_test_mesh(void)
 {
         static float x_rot, y_rot;
-        float white[] = { 1.0, 1.0, 1.0, 1.0 };
         float left[] = { -1.0, 0.0, 0.0, 0.0 };
 
         if (!r_test_mesh)
@@ -172,20 +175,17 @@ static int render_test_mesh(void)
         glEnable(GL_LIGHTING);
         glEnable(GL_LIGHT0);
         glLightfv(GL_LIGHT0, GL_POSITION, left);
-        glLightfv(GL_LIGHT0, GL_COLOR, white);
-
-        /* FIXME: Disabling culling */
-        glDisable(GL_CULL_FACE);
 
         /* Render the test mesh */
         glPushMatrix();
         glLoadIdentity();
-        glTranslatef(0.0, 0.0, -20.0);
+        glTranslatef(0.0, 0.0, -2000.0);
         glRotatef(x_rot, 1.0, 0.0, 0.0);
         glRotatef(y_rot, 0.0, 1.0, 0.0);
         glTranslatef(0.0, -10.0, 0.0);
         R_static_mesh_render(r_test_mesh, NULL);
         glPopMatrix();
+        R_check_errors();
 
         x_rot += 8 * c_frame_sec;
         y_rot += 20 * c_frame_sec;
@@ -199,7 +199,6 @@ static int render_test_mesh(void)
 int render_test_globe()
 {
         static float x_rot, y_rot;
-        float white[] = { 1.0, 1.0, 1.0, 1.0 };
         float left[] = { -1.0, 0.0, 0.0, 0.0 };
 
         if (!r_test_globe.value.n)
@@ -218,7 +217,6 @@ int render_test_globe()
         glEnable(GL_LIGHTING);
         glEnable(GL_LIGHT0);
         glLightfv(GL_LIGHT0, GL_POSITION, left);
-        glLightfv(GL_LIGHT0, GL_COLOR, white);
 
         /* Colormaterial! Make the land green. */
         glEnable(GL_COLOR_MATERIAL);
@@ -280,10 +278,31 @@ int render_test_globe()
         /* Reset polygon mode */
         glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
+        R_check_errors();
+
         x_rot += 2 * c_frame_sec;
         y_rot += 20 * c_frame_sec;
 
         return TRUE;
+}
+
+/****************************************************************************** \
+ See if there were any OpenGL errors.
+\******************************************************************************/
+void R_check_errors_full(const char *file, int line, const char *func)
+{
+        int gl_error;
+
+        if (r_gl_errors.value.n < 1)
+                return;
+        gl_error = glGetError();
+        if (gl_error == GL_NO_ERROR)
+                return;
+        if (r_gl_errors.value.n > 1)
+                C_error_full(file, line, func, "OpenGL error %d: %s",
+                             gl_error, gluErrorString(gl_error));
+        C_warning(file, line, func, "OpenGL error %d: %s",
+                  gl_error, gluErrorString(gl_error));
 }
 
 /****************************************************************************** \
@@ -296,5 +315,6 @@ void R_render(void)
         if (render_test_globe() || render_test_model() || render_test_mesh());
 
         SDL_GL_SwapBuffers();
+        R_check_errors();
 }
 
