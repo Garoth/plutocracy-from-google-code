@@ -20,11 +20,11 @@ typedef struct g_vert_neighbors {
 typedef struct g_globe {
     int nverts;
     int ninds;
-    c_vec3_t *verts;
+    c_vec3_t *verts, *water_verts;
     g_vert_neighbors_t *neighbors_lists;
     unsigned short *inds; /* triangles if you want 'em */
 } g_globe_t;
 
 /* g_globe.c */
-g_globe_t *G_globe_alloc(int subdiv_levels);
+g_globe_t *G_globe_alloc(int subdiv_levels, unsigned int seed, float water);
 void G_globe_free(g_globe_t *s);

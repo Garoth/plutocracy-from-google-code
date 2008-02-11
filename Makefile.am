@@ -8,6 +8,7 @@ bin_PROGRAMS = plutocracy
 plutocracy_SOURCES = \
         src/common/c_log.c \
         src/common/c_memory.c \
+	src/common/c_noise.c \
         src/common/c_precompiled.h \
         src/common/c_shared.h \
         src/common/c_string.c \

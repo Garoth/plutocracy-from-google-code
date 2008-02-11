@@ -13,6 +13,9 @@
 #include "g_common.h"
 #include <stdio.h>
 
+/* Define the radius of the globe */
+#define G_GLOBE_RADIUS (100.0)
+
 /* Some local datatypes. */
 typedef unsigned short ushort_t;
 
@@ -50,11 +53,45 @@ static void set_edge(edge_t *edge,
         edge->t[1] = t1;
 }
 
-/****************************************************************************** \
+/******************************************************************************\
+ Seed the noise and generate heights based on 3D fractal noise, and offset each
+ point according to it. The water vertices are offset as though their height
+ value had been [water].
+\******************************************************************************/
+static void offset_terrain(unsigned int seed, float water, g_globe_t *g)
+{
+        int i;
+        float min_noise = 0.0, max_noise = 0.0;
+
+        C_noise3_seed(seed);
+        for (i = 0; i < g->nverts; i++) {
+                c_vec3_t *v;
+                float noise;
+                c_vec3_t offset;
+
+                v = &g->verts[i];
+                noise = C_noise3_fractal(8, v->x / 20, v->y / 20, v->z / 20);
+                offset = C_vec3_scalef(*v, 0.1 * noise);
+                *v = C_vec3_add(*v, offset);
+
+                v = &g->water_verts[i];
+                offset = C_vec3_scalef(*v, 0.1 * water);
+                *v = C_vec3_add(*v, offset);
+
+                min_noise = min_noise < noise ? min_noise : noise;
+                max_noise = max_noise > noise ? max_noise : noise;
+        }
+
+        C_debug("minimum noise: %f", min_noise);
+        C_debug("maximum noise: %f", max_noise);
+}
+
+/******************************************************************************\
  Generates the globe to be used as the map for the game by tesselating a
  tetrahedron.
 \******************************************************************************/
-g_globe_t *G_globe_alloc(int subdiv_levels) {
+g_globe_t *G_globe_alloc(int subdiv_levels, unsigned int seed, float water)
+{
         g_globe_t *result;
         c_array_t verts, tris1, tris2, edges1, edges2;
         c_array_t *cur_tris, *other_tris, *cur_edges, *other_edges, *atmp;
@@ -62,7 +99,7 @@ g_globe_t *G_globe_alloc(int subdiv_levels) {
         tri_t ttmp;
         edge_t etmp;
         c_vec3_t origin;
-        float globe_r, tau, phi, one;
+        float tau, phi, one;
         int loop;
 
         C_array_init(&verts, c_vec3_t, 512);
@@ -118,10 +155,8 @@ g_globe_t *G_globe_alloc(int subdiv_levels) {
 
                 v = &C_array_elem(&verts, c_vec3_t, loop);
                 *v = C_vec3_sub(*v, origin);
+                *v = C_vec3_scalef(*v, G_GLOBE_RADIUS / C_vec3_len(*v));
         }
-
-        /* Remember radius */
-        globe_r = C_vec3_len(C_array_elem(&verts, c_vec3_t, 0));
 
         /* Triangles */
         ttmp.n = 0;
@@ -247,9 +282,6 @@ g_globe_t *G_globe_alloc(int subdiv_levels) {
                         vtmp = C_vec3_add(vtmp, vtmp2);
                         vtmp = C_vec3_invscalef(vtmp, 2);
 
-                        /* Scale to radius of globe */
-                        //vtmp = C_vec3_scalef(vtmp, globe_r / C_vec3_len(vtmp));
-
                         C_array_elem(cur_edges, edge_t, i).i = verts.len;
                         C_array_append(&verts, &vtmp);
 
@@ -307,44 +339,55 @@ g_globe_t *G_globe_alloc(int subdiv_levels) {
                 /* For each triangle, actually do the subdivision. */
                 for (i = 0; i < cur_tris->len; i++) {
                         tri_t *tri;
+                        tri_t center_tri;
                         int j;
 
                         tri = &C_array_elem(cur_tris, tri_t, i);
 
                         /* ttmp.n is zero through all of this. */
                         ttmp.n = 0;
+                        center_tri.n = 0;
 
                         /* Loop through original vertices for the triangle.
                            Create the sub-triangle that owns that vertex. */
                         for (j = 0; j < 3; j++) {
-                                ushort_t vert_ind;
                                 edge_t *edge1, *edge2;
+                                unsigned short vert_ind0, vert_ind1, vert_ind2;
                                 int k;
 
-                                vert_ind= tri->orig[j];
+                                vert_ind0 = tri->orig[j];
+                                vert_ind1 = tri->orig[(j + 1) % 3];
+                                vert_ind2 = tri->orig[(j + 2) % 3];
                                 edge1 = NULL;
                                 edge2 = NULL;
 
-                                /* Two of the edges will share this vertex */
+                                /* Two of the edges will share this vertex.
+                                   Our vertices are in CCW order, pick them
+                                   that way */
                                 for (k = 0; k < 3; k++) {
                                         edge_t *e;
 
                                         e = &C_array_elem(cur_edges, edge_t,
                                                           tri->new[k]);
-                                        if (e->v[0] == vert_ind ||
-                                            e->v[1] == vert_ind) {
-                                                if (!edge1)
+                                        if (e->v[0] == vert_ind0) {
+                                                if (e->v[1] == vert_ind1)
                                                         edge1 = e;
-                                                else if (!edge2)
+                                                else if (e->v[1] == vert_ind2)
                                                         edge2 = e;
-                                                else
-                                                        C_error("error 2");
+                                        } else if(e->v[1] == vert_ind0) {
+                                                if (e->v[0] == vert_ind1)
+                                                        edge1 = e;
+                                                else if (e->v[0] == vert_ind2)
+                                                        edge2 = e;
                                         }
                                 }
 
                                 /* sanity check */
+                                if (!edge1 || !edge2)
+                                        C_error("error 5");
+
                                 if (other_tris->len != i * 4 + j)
-                                        C_error("error 3 - length %d", other_tris->len);
+                                        C_error("error 3");
 
                                 /* Create the new edge that bridges these */
                                 etmp.v[0] = edge1->i;
@@ -354,23 +397,19 @@ g_globe_t *G_globe_alloc(int subdiv_levels) {
                                 C_array_append(other_edges, &etmp);
 
                                 /* Create this triangle */
-                                ttmp.orig[0] = vert_ind;
+                                ttmp.orig[0] = vert_ind0;
                                 ttmp.orig[1] = edge1->i;
                                 ttmp.orig[2] = edge2->i;
 
                                 /* new[] can have garbage in it. */
                                 C_array_append(other_tris, &ttmp);
+
+                                /* Center triangle, incrementally */
+                                center_tri.orig[j] = edge1->i;
                         }
 
                         /* Create the center sub-triangle (number 3) */
-                        for (j = 0; j < 3; j++) {
-                                edge_t *e;
-
-                                e = &C_array_elem(cur_edges, edge_t, tri->new[j]);
-                                ttmp.orig[j] = e->i;
-                        }
-
-                        C_array_append(other_tris, &ttmp);
+                        C_array_append(other_tris, &center_tri);
                 }
 
                 /* For the next level of subdivision,
@@ -400,7 +439,7 @@ g_globe_t *G_globe_alloc(int subdiv_levels) {
                 c_vec3_t *v;
 
                 v = &result->verts[loop];
-                *v = C_vec3_scalef(*v, globe_r / C_vec3_len(*v));
+                *v = C_vec3_scalef(*v, G_GLOBE_RADIUS / C_vec3_len(*v));
         }
 
         /* No neighbours initially */
@@ -440,6 +479,14 @@ g_globe_t *G_globe_alloc(int subdiv_levels) {
         C_array_cleanup(&tris2);
         C_array_cleanup(&edges1);
         C_array_cleanup(&edges2);
+
+
+        /* Calculate terrain while keeping the originals */
+        result->water_verts = C_malloc(result->nverts * sizeof(c_vec3_t));
+        memcpy(result->water_verts, result->verts,
+               result->nverts * sizeof(c_vec3_t));
+
+        offset_terrain(seed, water, result);
 
         return result;
 }
