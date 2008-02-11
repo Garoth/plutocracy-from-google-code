@@ -217,7 +217,7 @@ r_static_mesh_t* R_static_mesh_load(const char* filename)
 /******************************************************************************\
  Render a mesh.
 \******************************************************************************/
-void R_static_mesh_render(r_static_mesh_t* mesh, r_texture_t *texture)
+void R_static_mesh_render(r_static_mesh_t *mesh, r_texture_t *texture)
 {
         C_count_add(&r_count_faces, mesh->indices_len);
         glBindTexture(GL_TEXTURE_2D, texture ? texture->gl_name : 0);
@@ -227,12 +227,13 @@ void R_static_mesh_render(r_static_mesh_t* mesh, r_texture_t *texture)
         glDisableClientState(GL_TEXTURE_COORD_ARRAY);
         glDisableClientState(GL_NORMAL_ARRAY);
         glDisableClientState(GL_VERTEX_ARRAY);
+        R_check_errors();
 }
 
 /******************************************************************************\
  Release the resources for a mesh.
 \******************************************************************************/
-void R_static_mesh_cleanup(r_static_mesh_t* mesh)
+void R_static_mesh_cleanup(r_static_mesh_t *mesh)
 {
         if (!mesh)
                 return;
@@ -243,7 +244,7 @@ void R_static_mesh_cleanup(r_static_mesh_t* mesh)
 /******************************************************************************\
  Release the resources for and free an allocated mesh.
 \******************************************************************************/
-void R_static_mesh_free(r_static_mesh_t* mesh)
+void R_static_mesh_free(r_static_mesh_t *mesh)
 {
         R_static_mesh_cleanup(mesh);
         C_free(mesh);

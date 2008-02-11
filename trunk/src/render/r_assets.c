@@ -86,6 +86,7 @@ r_texture_t *R_texture_load(const char *filename)
         gluBuild2DMipmaps(GL_TEXTURE_2D, GL_RGBA,
                           surface_rgba->w, surface_rgba->h,
                           GL_RGBA, gl_pixel_format, surface_rgba->pixels);
+        R_check_errors();
 
         return pt;
 }

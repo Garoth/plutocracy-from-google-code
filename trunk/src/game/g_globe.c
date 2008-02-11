@@ -532,7 +532,6 @@ void G_globe_free(g_globe_t *s)
 {
         if (!s)
                 return;
-
         C_free(s->verts);
         C_free(s->water_verts);
         C_free(s->norms);
