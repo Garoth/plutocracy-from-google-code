@@ -14,6 +14,9 @@
 #include "../game/g_shared.h"
 #include <time.h>
 
+/* The globe for globe rendering. */
+static g_globe_t *r_globe = NULL;
+
 /* Keep track of how many faces we render each frame */
 c_count_t r_count_faces;
 
@@ -120,6 +123,7 @@ int R_render_init(void)
 void R_render_cleanup(void)
 {
         R_free_assets();
+        G_globe_free(r_globe);
 }
 
 /******************************************************************************\
@@ -193,15 +197,14 @@ static int render_test_mesh(void)
 int render_test_globe()
 {
         static float x_rot, y_rot;
-        static g_globe_t *globe = NULL;
         float white[] = { 1.0, 1.0, 1.0, 1.0 };
         float left[] = { -1.0, 0.0, 0.0, 0.0 };
 
         if (!r_test_globe.value.n)
                 return FALSE;
 
-        if (!globe)
-                globe = G_globe_alloc(5, time(NULL), 0.1);
+        if (!r_globe)
+                r_globe = G_globe_alloc(5, time(NULL), 0.1);
 
         /* Have a light from the left */
         glEnable(GL_LIGHTING);
@@ -227,11 +230,11 @@ int render_test_globe()
         /* Water */
         /*glColorMask(FALSE, FALSE, FALSE, FALSE);*/
         glColor3f(0.0, 0.5, 1.0);
-        glVertexPointer(3, GL_FLOAT, 0, globe->water_verts);
-        glNormalPointer(GL_FLOAT, 0, globe->water_verts);
+        glVertexPointer(3, GL_FLOAT, 0, r_globe->water_verts);
+        glNormalPointer(GL_FLOAT, 0, r_globe->water_verts);
         glEnable(GL_NORMALIZE); /* So I can be lazy */
-        glDrawElements(GL_TRIANGLES, globe->ninds,
-                       GL_UNSIGNED_SHORT, globe->inds);
+        glDrawElements(GL_TRIANGLES, r_globe->ninds,
+                       GL_UNSIGNED_SHORT, r_globe->inds);
         glDisable(GL_NORMALIZE);
 
         /* Lines - scratch that - Solid land overtop */
@@ -240,17 +243,17 @@ int render_test_globe()
         glColor3f(0.435294117647059,
                   0.741176470588235,
                   0.298039215686275);
-        glVertexPointer(3, GL_FLOAT, 0, globe->verts);
-        glNormalPointer(GL_FLOAT, 0, globe->norms);
-        glDrawElements(GL_TRIANGLES, globe->ninds,
-                       GL_UNSIGNED_SHORT, globe->inds);
+        glVertexPointer(3, GL_FLOAT, 0, r_globe->verts);
+        glNormalPointer(GL_FLOAT, 0, r_globe->norms);
+        glDrawElements(GL_TRIANGLES, r_globe->ninds,
+                       GL_UNSIGNED_SHORT, r_globe->inds);
 
         glDisableClientState(GL_VERTEX_ARRAY);
         glDisableClientState(GL_NORMAL_ARRAY);
 
         /* See if neighbors works */
         int i;
-        c_vec3_t v = globe->verts[31];
+        c_vec3_t v = r_globe->verts[31];
 
         glPointSize(5.0);
         glBegin(GL_POINTS);
@@ -258,8 +261,8 @@ int render_test_globe()
         glColor3f(1.0, 0.0, 0.0);
         glVertex3f(v.x, v.y, v.z);
         glColor3f(0.0, 1.0, 1.0);
-        for (i = 0; i < globe->neighbors_lists[31].count; i++) {
-                v = globe->verts[globe->neighbors_lists[31].indices[i]];
+        for (i = 0; i < r_globe->neighbors_lists[31].count; i++) {
+                v = r_globe->verts[r_globe->neighbors_lists[31].indices[i]];
                 glVertex3f(v.x, v.y, v.z);
         }
         glEnd();

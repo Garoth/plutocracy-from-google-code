@@ -512,7 +512,6 @@ g_globe_t *G_globe_alloc(int subdiv_levels, unsigned int seed, float water)
         C_array_cleanup(&edges1);
         C_array_cleanup(&edges2);
 
-
         /* Calculate terrain while keeping the originals for water. */
         result->water_verts = C_malloc(result->nverts * sizeof(c_vec3_t));
         memcpy(result->water_verts, result->verts,
@@ -533,6 +532,7 @@ void G_globe_free(g_globe_t *s)
 {
         C_free(s->verts);
         C_free(s->water_verts);
+        C_free(s->norms);
         C_free(s->neighbors_lists);
         C_free(s->inds);
         C_free(s);
