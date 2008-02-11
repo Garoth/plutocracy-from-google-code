@@ -25,11 +25,27 @@ static c_vec3_t grad[256];
    beyond about \pm 0.4. It should be in [-1, 1]. */
 
 /******************************************************************************\
- Generate a random floating number in [0, 1)
+ Generate a random floating number in [0, 1).
+   FIXME: Possible 64-bit issues with larger ints and overflows?
 \******************************************************************************/
-static float C_rand()
+static float noise3_rand(unsigned int *seed)
 {
-        return rand() / (RAND_MAX + 1.0);
+        *seed = 69069 * (*seed) + 1;
+        return (*seed & 0xffff) / (float)0x10000;
+}
+
+/******************************************************************************\
+ Generate a random normal vector. Do each component in order because function
+ argument evaluation order may not be standardized.
+\******************************************************************************/
+static c_vec3_t noise3_rand_vec(unsigned int *seed)
+{
+        c_vec3_t vec;
+
+        vec.x = noise3_rand(seed);
+        vec.y = noise3_rand(seed);
+        vec.z = noise3_rand(seed);
+        return C_vec3_norm(vec);
 }
 
 /******************************************************************************\
@@ -40,8 +56,6 @@ void C_noise3_seed(unsigned int seed)
 {
         int i;
 
-        srand(seed);
-
         /* Fill mapping sequentially */
         for (i = 0; i < 256; i++)
                 map[i] = (unsigned char)i;
@@ -51,7 +65,7 @@ void C_noise3_seed(unsigned int seed)
                 int j;
                 unsigned char tmp;
 
-                j = i + (int)(C_rand() * 256 - i);
+                j = i + (int)(noise3_rand(&seed) * 256 - i);
                 tmp = map[i];
                 map[i] = map[j];
                 map[j] = tmp;
@@ -59,11 +73,11 @@ void C_noise3_seed(unsigned int seed)
 
         /* Fill in random gradients */
         for (i = 0; i < 256; i++) {
-                grad[i] = C_vec3(C_rand(), C_rand(), C_rand());
+                grad[i] = noise3_rand_vec(&seed);
 
                 /* Avoid divide-by-zero */
                 while (grad[i].x == 0.0 && grad[i].y == 0.0 && grad[i].z == 0)
-                        grad[i] = C_vec3(C_rand(), C_rand(), C_rand());
+                        grad[i] = noise3_rand_vec(&seed);
 
                 grad[i] = C_vec3_norm(grad[i]);
         }
