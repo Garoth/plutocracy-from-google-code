@@ -134,6 +134,7 @@ static void cleanup(void)
         C_status("Cleaning up");
         R_render_cleanup();
         SDL_Quit();
+        C_check_leaks();
         C_debug("Done");
 }
 
@@ -154,6 +155,9 @@ int main(int argc, char *argv[])
         C_parse_config_file("config/default.cfg");
         parse_config_args(argc, argv);
         C_open_log_file();
+
+        /* Run tests if they are enabled */
+        C_test_mem_check();
 
         /* Initialize */
         C_status("Initializing " PACKAGE_STRING " client");

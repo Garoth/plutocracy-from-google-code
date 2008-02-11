@@ -35,8 +35,10 @@ typedef struct c_mem_tag {
         char no_mans_land[NO_MANS_LAND_SIZE];
 } c_mem_tag_t;
 
+extern c_var_t c_mem_check, c_test_mem_check;
+
 static c_mem_tag_t *mem_root;
-extern c_var_t c_mem_check;
+static unsigned int mem_bytes, mem_bytes_max, mem_calls;
 
 /******************************************************************************\
  Initialize an array.
@@ -84,7 +86,7 @@ void *C_array_steal(c_array_t *ary)
         void *result;
 
         result = C_realloc(ary->elems, ary->len * ary->item_size);
-        memset(ary, 0, sizeof (*ary));
+        C_zero(ary);
         return result;
 }
 
@@ -115,12 +117,14 @@ static void *malloc_checked(const char *file, int line, const char *function,
         tag->alloc_func = function;
         tag->freed = FALSE;
         memset(tag->no_mans_land, NO_MANS_LAND_BYTE, NO_MANS_LAND_SIZE);
-        memset((char *)tag + sizeof (c_mem_tag_t) + size,
-               NO_MANS_LAND_BYTE, NO_MANS_LAND_SIZE);
+        memset((char *)tag->data + size, NO_MANS_LAND_BYTE, NO_MANS_LAND_SIZE);
         tag->next = NULL;
         if (mem_root)
                 tag->next = mem_root;
         mem_root = tag;
+        mem_bytes += size;
+        if (mem_bytes > mem_bytes_max)
+                mem_bytes_max = mem_bytes;
         return tag->data;
 }
 
@@ -151,7 +155,7 @@ static c_mem_tag_t *find_tag(const void *ptr, c_mem_tag_t **prev_tag)
 static void *realloc_checked(const char *file, int line, const char *function,
                              void *ptr, size_t size)
 {
-        c_mem_tag_t *tag, *prev_tag;
+        c_mem_tag_t *tag, *prev_tag, *old_tag;
         size_t real_size;
 
         if (!ptr)
@@ -160,16 +164,28 @@ static void *realloc_checked(const char *file, int line, const char *function,
                 C_error_full(file, line, function,
                              "Trying to reallocate unallocated address (0x%x)",
                              ptr);
+        old_tag = tag;
         real_size = size + sizeof (c_mem_tag_t) + NO_MANS_LAND_SIZE;
         tag = realloc(ptr - sizeof (c_mem_tag_t), real_size);
         if (!tag)
                 C_error("Out of memory, %s() (%s:%d) tried to allocate %d "
                         "bytes", function, file, line, size );
+        if (prev_tag)
+                prev_tag->next = tag;
+        if (old_tag == mem_root)
+                mem_root = tag;
+        mem_bytes += size - tag->size;
+        if (size > tag->size) {
+                mem_calls++;
+                if (mem_bytes > mem_bytes_max)
+                        mem_bytes_max = mem_bytes;
+        }
         tag->size = size;
         tag->alloc_file = file;
         tag->alloc_line = line;
         tag->alloc_func = function;
         tag->data = (char *)tag + sizeof (c_mem_tag_t);
+        memset((char *)tag->data + size, NO_MANS_LAND_BYTE, NO_MANS_LAND_SIZE);
         return tag->data;
 }
 
@@ -216,26 +232,28 @@ void C_free_full(const char *file, int line, const char *function, void *ptr)
                 free(ptr);
                 return;
         }
+        if (!ptr)
+                return;
         if (!(tag = find_tag(ptr, &prev_tag)))
                 C_error_full(file, line, function,
                              "Trying to free unallocated address (0x%x)", ptr);
         if (tag->freed)
                 C_error_full(file, line, function,
                              "Address (0x%x), %d bytes allocated by "
-                             "%s in %s:%d, already freed by %s() in %s:%d",
+                             "%s() in %s:%d, already freed by %s() in %s:%d",
                              ptr, tag->size,
                              tag->alloc_func, tag->alloc_file, tag->alloc_line,
                              tag->free_func, tag->free_file, tag->free_line);
         if (!check_no_mans_land(tag->no_mans_land))
                 C_error_full(file, line, function,
                              "Address (0x%x), %d bytes allocated by "
-                             "%s in %s:%d, overran lower boundary",
+                             "%s() in %s:%d, overran lower boundary",
                              ptr, tag->size,
                              tag->alloc_func, tag->alloc_file, tag->alloc_line);
-        if (!check_no_mans_land((char *)ptr + tag->size + sizeof (*tag)))
+        if (!check_no_mans_land((char *)ptr + tag->size))
                 C_error_full(file, line, function,
                              "Address (0x%x), %d bytes allocated by "
-                             "%s in %s:%d, overran upper boundary",
+                             "%s() in %s:%d, overran upper boundary",
                              ptr, tag->size,
                              tag->alloc_func, tag->alloc_file, tag->alloc_line);
         tag->freed = TRUE;
@@ -248,6 +266,7 @@ void C_free_full(const char *file, int line, const char *function, void *ptr)
                 prev_tag->next = tag;
         if (old_tag == mem_root)
                 mem_root = tag;
+        mem_bytes -= tag->size;
 }
 
 /******************************************************************************\
@@ -255,6 +274,84 @@ void C_free_full(const char *file, int line, const char *function, void *ptr)
 \******************************************************************************/
 void C_check_leaks(void)
 {
+        c_mem_tag_t *tag;
+        int tags;
+
+        if (!c_mem_check.value.n)
+                return;
+        tags = 0;
+        tag = mem_root;
+        while (tag) {
+                tags++;
+                if (!tag->freed)
+                        C_warning("%s() leaked %d bytes in %s:%d",
+                                  tag->alloc_func, tag->size, tag->alloc_file,
+                                  tag->alloc_line);
+                tag = tag->next;
+        }
+        C_debug("%d allocation calls, high mark %.1fmb, %d tags",
+                mem_calls, mem_bytes_max / 1048576.f, tags);
+}
+
+/******************************************************************************\
+ Run some test to see if memory checking actually works. Note that code here
+ is intentionally poor, so do not fix "bugs" here they are there for a reason.
+\******************************************************************************/
+void C_test_mem_check(void)
+{
+        char *ptr;
+        int i;
+
+        switch (c_test_mem_check.value.n) {
+        case 0: return;
+
+        case 1: /* Normal operation, shouldn't fail */
+                ptr = C_malloc(1024);
+                C_free(ptr);
+                ptr = C_calloc(1024);
+                C_realloc(ptr, 2048);
+                C_realloc(ptr, 512);
+                C_free(ptr);
+                return;
+
+        case 2: /* Intentionally leak memory */
+                ptr = C_malloc(1024);
+                return;
+
+        case 3: /* Free unallocated memory */
+                C_free((void *)0x12345678);
+                break;
+
+        case 4: /* Double free */
+                ptr = C_malloc(1024);
+                C_free(ptr);
+                C_free(ptr);
+                break;
+
+        case 5: /* Lower overrun */
+                ptr = C_malloc(1024);
+                for (i = 0; i > -NO_MANS_LAND_SIZE / 2; i--)
+                        ptr[i] = 42;
+                C_free(ptr);
+                break;
+
+        case 6: /* Upper overrun */
+                ptr = C_malloc(1024);
+                for (i = 1024; i < 1024 + NO_MANS_LAND_SIZE / 2; i++)
+                        ptr[i] = 42;
+                C_free(ptr);
+                break;
+
+        case 7: /* Reallocate unallocated memory */
+                ptr = C_realloc((void *)0x12345678, 1024);
+                break;
+
+        default:
+                C_error("Unknown memory check test %d",
+                        c_test_mem_check.value.n);
+        }
+
+        C_error("Memory check test %d failed", c_test_mem_check.value.n);
 }
 
 /******************************************************************************\

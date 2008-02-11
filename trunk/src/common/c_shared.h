@@ -172,6 +172,7 @@ void C_array_init_real(c_array_t *ary, size_t item_size, size_t cap);
 void C_array_reserve(c_array_t *ary, size_t n);
 void *C_array_steal(c_array_t *ary);
 #define C_calloc(s) C_recalloc_full(__FILE__, __LINE__, __func__, NULL, s)
+void C_check_leaks(void);
 #define C_free(p) C_free_full(__FILE__, __LINE__, __func__, p)
 void C_free_full(const char *file, int line, const char *function, void *ptr);
 #define C_malloc(s) C_realloc(NULL, s)
@@ -191,6 +192,7 @@ void C_ref_down_full(const char *file, int line, const char *function,
 #define C_ref_up(r) C_ref_up_full(__FILE__, __LINE__, __func__, r);
 void C_ref_up_full(const char *file, int line, const char *function,
                    c_ref_t *ref);
+void C_test_mem_check(void);
 #define C_zero(s) memset(s, 0, sizeof (*(s)))
 #define C_zero_buf(s) memset(s, 0, sizeof (s))
 
