@@ -137,6 +137,8 @@ static int render_test_model(void)
         if (!r_test_model.data)
                 return FALSE;
 
+        glLoadIdentity();
+
         /* Setup a white light to the left */
         glEnable(GL_LIGHTING);
         glEnable(GL_LIGHT0);
