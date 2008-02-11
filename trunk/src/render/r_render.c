@@ -14,16 +14,16 @@
 #include "../game/g_shared.h"
 #include <time.h>
 
+/* Render testing */
+extern c_var_t r_test_globe, r_test_globe_seed, r_test_model_path;
+extern r_static_mesh_t *r_test_mesh;
+extern r_model_t r_test_model;
+
 /* The globe for globe rendering. */
 static g_globe_t *r_globe = NULL;
 
 /* Keep track of how many faces we render each frame */
 c_count_t r_count_faces;
-
-/* Render testing */
-extern c_var_t r_test_globe, r_test_model_path;
-extern r_static_mesh_t *r_test_mesh;
-extern r_model_t r_test_model;
 
 /******************************************************************************\
  Creates the client window. Initializes OpenGL settings such view matrices,
@@ -203,8 +203,14 @@ int render_test_globe()
         if (!r_test_globe.value.n)
                 return FALSE;
 
-        if (!r_globe)
-                r_globe = G_globe_alloc(5, time(NULL), 0.1);
+        if (!r_globe) {
+                unsigned int seed;
+
+                seed = r_test_globe_seed.value.n ? r_test_globe_seed.value.n :
+                                                   time(NULL);
+                C_debug("Test globe seed %u", seed);
+                r_globe = G_globe_alloc(5, seed, 0.1);
+        }
 
         /* Have a light from the left */
         glEnable(GL_LIGHTING);
