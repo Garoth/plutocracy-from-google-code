@@ -20,7 +20,7 @@ typedef struct g_vert_neighbors {
 typedef struct g_globe {
     int nverts;
     int ninds;
-    c_vec3_t *verts, *water_verts;
+    c_vec3_t *verts, *water_verts, *norms;
     g_vert_neighbors_t *neighbors_lists;
     unsigned short *inds; /* triangles if you want 'em */
 } g_globe_t;

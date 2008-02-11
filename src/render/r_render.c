@@ -194,6 +194,8 @@ int render_test_globe()
 {
         static float x_rot, y_rot;
         static g_globe_t *globe = NULL;
+        float white[] = { 1.0, 1.0, 1.0, 1.0 };
+        float left[] = { -1.0, 0.0, 0.0, 0.0 };
 
         if (!r_test_globe.value.n)
                 return FALSE;
@@ -201,35 +203,50 @@ int render_test_globe()
         if (!globe)
                 globe = G_globe_alloc(5, time(NULL), 0.1);
 
-        /* No lighting or culling */
-        glDisable(GL_LIGHTING);
+        /* Have a light from the left */
+        glEnable(GL_LIGHTING);
+        glEnable(GL_LIGHT0);
+        glLightfv(GL_LIGHT0, GL_POSITION, left);
+        glLightfv(GL_LIGHT0, GL_COLOR, white);
+
+        /* Colormaterial! Make the land green. */
+        glEnable(GL_COLOR_MATERIAL);
+        glColorMaterial(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE);
 
         glPushMatrix();
 
         glTranslatef(0.0, 0.0, -2000.0);
         glRotatef(x_rot, 1.0, 0.0, 0.0);
         glRotatef(y_rot, 0.0, 1.0, 0.0);
-        glScalef(10, 10, 10);
 
         /* And render. I'll just shove stuff in here right now.
            I'm actually worried about the generation of the thing. */
         glEnableClientState(GL_VERTEX_ARRAY);
-        glVertexPointer(3, GL_FLOAT, 0, globe->water_verts);
-        glColor3f(1.0, 1.0, 1.0);
+        glEnableClientState(GL_NORMAL_ARRAY);
 
-        /* Render for depth */
-        glColorMask(FALSE, FALSE, FALSE, FALSE);
+        /* Water */
+        /*glColorMask(FALSE, FALSE, FALSE, FALSE);*/
+        glColor3f(0.0, 0.5, 1.0);
+        glVertexPointer(3, GL_FLOAT, 0, globe->water_verts);
+        glNormalPointer(GL_FLOAT, 0, globe->water_verts);
+        glEnable(GL_NORMALIZE); /* So I can be lazy */
         glDrawElements(GL_TRIANGLES, globe->ninds,
                        GL_UNSIGNED_SHORT, globe->inds);
+        glDisable(GL_NORMALIZE);
 
-        /* Lines overtop */
-        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-        glColorMask(TRUE, TRUE, TRUE, TRUE);
+        /* Lines - scratch that - Solid land overtop */
+        /*glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);*/
+        /*glColorMask(TRUE, TRUE, TRUE, TRUE);*/
+        glColor3f(0.435294117647059,
+                  0.741176470588235,
+                  0.298039215686275);
         glVertexPointer(3, GL_FLOAT, 0, globe->verts);
+        glNormalPointer(GL_FLOAT, 0, globe->norms);
         glDrawElements(GL_TRIANGLES, globe->ninds,
                        GL_UNSIGNED_SHORT, globe->inds);
 
         glDisableClientState(GL_VERTEX_ARRAY);
+        glDisableClientState(GL_NORMAL_ARRAY);
 
         /* See if neighbors works */
         int i;
@@ -252,7 +269,7 @@ int render_test_globe()
         /* Reset polygon mode */
         glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
-        x_rot += 8 * c_frame_sec;
+        x_rot += 2 * c_frame_sec;
         y_rot += 20 * c_frame_sec;
 
         return TRUE;
