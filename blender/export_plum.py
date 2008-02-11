@@ -93,23 +93,28 @@ def write_face(file, me, f, verts, quad):
                 o = 0
                 if quad and j > 0:
                         o = 1
-                vec = [ f.v[o + j].co.x, f.v[o + j].co.y, f.v[o + j].co.z, \
-                        f.no.x, f.no.y, f.no.z, 0, 0 ]
+                no_x = f.no.x
+                no_y = f.no.y
+                no_z = f.no.z
+                u = 0
+                v = 0
                 if f.smooth:
-                        vec[3] = f.v[j].no[0]
-                        vec[4] = f.v[j].no[1]
-                        vec[5] = f.v[j].no[2]
+                        no_x = f.v[j].no[0]
+                        no_y = f.v[j].no[1]
+                        no_z = f.v[j].no[2]
                 if me.faceUV:
-                        vec[6] = f.uv[j].x
-                        vec[7] = 1 - f.uv[j].y # v flipped!
+                        u = f.uv[j].x
+                        v = 1 - f.uv[j].y # v flipped!
+                vec = ( f.v[o + j].co.x, f.v[o + j].co.y, f.v[o + j].co.z, \
+                        no_x, no_y, no_z, u, v )
 
                 # See if this vertex has already been written
                 try:
-                        inds[j] = verts.index(vec)
+                        inds[j] = verts[vec]
                         reused = True
                 except:
                         inds[j] = len(verts)
-                        verts.append(vec)
+                        verts[vec] = len(verts)
                         file.write('v %g %g %g %g %g %g %g %g\n' % tuple(vec))
         if reused:
                 file.write('i %d %d %d\n' % tuple(inds))
@@ -128,13 +133,13 @@ def write_frame(scn, file, objects):
 
                 # Indicate that this is a new object
                 file.write('\no\n')
-                verts = [ ]
+                verts = { }
                 for f in me.faces:
                         write_face(file, me, f, verts, False)
                         if len(f.v) == 4:
                                 write_face(file, me, f, verts, True)
                         if len(verts) > faces_done:
-                                print '   %d faces' % faces_done
+                                print '    %d faces' % faces_done
                                 faces_done += 10000
 
                 # Cleanup
