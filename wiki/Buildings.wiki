@@ -1,0 +1,50 @@
+#summary A list of constructible buildings.
+
+= List of Ground Buildings =
+These buildings must be constructed on a rented ground tile. The owner of the tile may demolish the building and partially recoup construction materials.
+
+== Town Center ==
+  * Large (2 unit radius) buildings
+  * Constructed automatically at the beginning of the game on large islands
+  * Always placed adjacent to a water tile
+  * Always owned by a nation. Only pirate players can own a Town Center
+  * If attacked and "destroyed" by a hostile player, the island government changes to the attacker's affiliation
+
+== Lumber Yard ==
+  * Can be built next to forest tiles to generate lumber
+  * All Lumber Yards adjacent to a forest patch will draw lumber evenly from every tile until the entire patch is gone
+
+== Farm House ==
+  * Makes surrounding fields more efficient
+
+== Field ==
+  * Grows basic foods
+
+== Brick Kiln ==
+  * Makes bricks
+
+== Ore Mine ==
+  * Extracts iron ore from nearby mountain tiles
+
+== Ore Refinery ==
+  * Refines ore into metals used in construction
+
+== Rum Distiller ==
+  * Makes rum :)
+
+= List of Shallow Water Buildings ==
+These buildings may be constructed on shallow water up to 3 tiles away from a rented tile. These buildings are not owned and cannot be demolished.
+
+== Dock ==
+  * Allows ships to trade with and transfer goods to land tiles
+  * Can be raided by hostile ships for a portion of goods on the island
+  * Can be used to construct a basic ship
+  * Can be upgraded to a Shipyard and construct more advanced hulls
+
+== Guard Tower ==
+  * Attacks hostile ships up to 2 tiles away
+
+== Barricade Raft ==
+  * Blocks ships
+  * Connects to another raft to extend
+  * If a section of raft is "cut" and has no connection to shore, it sinks
