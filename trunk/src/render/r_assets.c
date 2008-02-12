@@ -25,8 +25,8 @@ r_model_t r_test_model;
 static c_ref_t *root;
 
 /* SDL/OpenGL variables */
-static SDL_PixelFormat sdl_pixel_format;
-int gl_pixel_format;
+static SDL_PixelFormat sdl_rgb_fmt, sdl_rgba_fmt;
+int gl_rgb_type, gl_rgba_type;
 
 /******************************************************************************\
  Frees memory associated with a texture.
@@ -38,15 +38,68 @@ static void texture_cleanup(r_texture_t *pt)
 }
 
 /******************************************************************************\
+ Gets a pixel from a locked SDL surface.
+\******************************************************************************/
+static Uint32 get_surface_pixel(const SDL_Surface *surf, int x, int y)
+{
+        Uint8 *p;
+        int bpp;
+
+        bpp = surf->format->BytesPerPixel;
+        p = (Uint8 *)surf->pixels + y * surf->pitch + x * bpp;
+        switch(bpp) {
+        case 1: return *p;
+        case 2: return *(Uint16 *)p;
+        case 3: if(SDL_BYTEORDER == SDL_BIG_ENDIAN)
+                        return p[0] << 16 | p[1] << 8 | p[2];
+                else
+                        return p[0] | p[1] << 8 | p[2] << 16;
+        case 4: return *(Uint32 *)p;
+        default:
+                return 0;
+        }
+}
+
+/******************************************************************************\
+ Iterates over an SDL surface and checks if any pixels actually use alpha
+ blending. Returns TRUE if at least one pixel has alpha less than full.
+\******************************************************************************/
+static int surface_uses_alpha(SDL_Surface *surf)
+{
+        int x, y, bpp;
+
+        if (SDL_LockSurface(surf) < 0) {
+                C_warning("Failed to lock surface");
+                return TRUE;
+        }
+        bpp = surf->format->BytesPerPixel;
+        for (y = 0; y < surf->h; y++)
+                for (x = 0; x < surf->w; x++) {
+                        Uint32 pixel;
+                        Uint8 r, g, b, a;
+
+                        pixel = get_surface_pixel(surf, x, y);
+                        SDL_GetRGBA(pixel, surf->format, &r, &g, &b, &a);
+                        if (a < 255) {
+                                SDL_UnlockSurface(surf);
+                                return TRUE;
+                        }
+                }
+        SDL_UnlockSurface(surf);
+        return FALSE;
+}
+
+/******************************************************************************\
  Loads a texture using SDL_image. If the texture has already been loaded,
  just ups the reference count and returns the loaded surface.
    TODO: Support loading from sources other than files.
 \******************************************************************************/
 r_texture_t *R_texture_load(const char *filename)
 {
-        SDL_Surface *surface, *surface_rgba;
+        SDL_Surface *surface, *surface_new;
+        SDL_PixelFormat *sdl_format;
         r_texture_t *pt;
-        int found;
+        int found, flags, gl_internal, gl_format, gl_type;
 
         if (!filename || !filename[0])
                 return NULL;
@@ -65,15 +118,28 @@ r_texture_t *R_texture_load(const char *filename)
         }
 
         /* Convert to our texture format */
-        surface_rgba = SDL_ConvertSurface(surface, &sdl_pixel_format,
-                                          SDL_SRCALPHA);
+        flags = SDL_HWSURFACE;
+        if (surface_uses_alpha(surface)) {
+                gl_type = gl_rgba_type;
+                gl_format = GL_RGBA;
+                gl_internal = GL_RGBA;
+                sdl_format = &sdl_rgba_fmt;
+                flags |= SDL_SRCALPHA;
+                pt->alpha = TRUE;
+        } else {
+                gl_format = r_color_bits.value.n > 16 ? GL_RGBA : GL_RGB;
+                gl_type = gl_rgb_type;
+                gl_internal = GL_RGB;
+                sdl_format = &sdl_rgb_fmt;
+                pt->alpha = FALSE;
+        }
+        surface_new = SDL_ConvertSurface(surface, sdl_format, flags);
         SDL_FreeSurface(surface);
-        if (!surface_rgba) {
+        if (!surface_new) {
                 C_warning("Failed to convert texture '%s'", filename);
                 return NULL;
         }
-        pt->surface = surface_rgba;
-        pt->format = gl_pixel_format;
+        pt->surface = surface_new;
 
         /* Load the texture into OpenGL */
         glGenTextures(1, &pt->gl_name);
@@ -83,9 +149,9 @@ r_texture_t *R_texture_load(const char *filename)
         glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
         glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
         glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-        gluBuild2DMipmaps(GL_TEXTURE_2D, GL_RGBA,
-                          surface_rgba->w, surface_rgba->h,
-                          GL_RGBA, gl_pixel_format, surface_rgba->pixels);
+        gluBuild2DMipmaps(GL_TEXTURE_2D, gl_internal,
+                          surface_new->w, surface_new->h,
+                          gl_format, gl_type, surface_new->pixels);
         R_check_errors();
 
         return pt;
@@ -99,33 +165,58 @@ void R_load_assets(void)
         C_status("Loading render assets");
 
         /* Setup the texture pixel format, RGBA in 32 or 16 bits */
-        memset(&sdl_pixel_format, 0 , sizeof (sdl_pixel_format));
-        if (r_colordepth.value.n > 16) {
-                sdl_pixel_format.BitsPerPixel = 32;
-                sdl_pixel_format.BytesPerPixel = 4;
-                sdl_pixel_format.Rmask = 0xff000000;
-                sdl_pixel_format.Gmask = 0x00ff0000;
-                sdl_pixel_format.Bmask = 0x0000ff00;
-                sdl_pixel_format.Amask = 0x000000ff;
-                sdl_pixel_format.Rshift = 24;
-                sdl_pixel_format.Gshift = 16;
-                sdl_pixel_format.Bshift = 8;
-                gl_pixel_format = GL_UNSIGNED_INT_8_8_8_8;
+        memset(&sdl_rgb_fmt, 0 , sizeof (sdl_rgb_fmt));
+        if (r_color_bits.value.n > 16) {
+
+                /* RGBA */
+                sdl_rgba_fmt.BitsPerPixel = 32;
+                sdl_rgba_fmt.BytesPerPixel = 4;
+                sdl_rgba_fmt.Rmask = 0xff000000;
+                sdl_rgba_fmt.Gmask = 0x00ff0000;
+                sdl_rgba_fmt.Bmask = 0x0000ff00;
+                sdl_rgba_fmt.Amask = 0x000000ff;
+                sdl_rgba_fmt.Rshift = 24;
+                sdl_rgba_fmt.Gshift = 16;
+                sdl_rgba_fmt.Bshift = 8;
+                gl_rgba_type = GL_UNSIGNED_INT_8_8_8_8;
+
+                /* FIXME: Just using RGBA format, is there even a plain RGB? */
+                sdl_rgb_fmt = sdl_rgba_fmt;
+                gl_rgb_type = gl_rgba_type;
+
+                C_debug("Using 32-bit textures");
         } else {
-                sdl_pixel_format.BitsPerPixel = 16;
-                sdl_pixel_format.BytesPerPixel = 2;
-                sdl_pixel_format.Rmask = 0xf000;
-                sdl_pixel_format.Gmask = 0x0f00;
-                sdl_pixel_format.Bmask = 0x00f0;
-                sdl_pixel_format.Amask = 0x000f;
-                sdl_pixel_format.Rshift = 12;
-                sdl_pixel_format.Gshift = 8;
-                sdl_pixel_format.Bshift = 4;
-                sdl_pixel_format.Rloss = 4;
-                sdl_pixel_format.Gloss = 4;
-                sdl_pixel_format.Bloss = 4;
-                sdl_pixel_format.Aloss = 4;
-                gl_pixel_format = GL_UNSIGNED_SHORT_4_4_4_4;
+
+                /* RGB */
+                sdl_rgb_fmt.BitsPerPixel = 16;
+                sdl_rgb_fmt.BytesPerPixel = 2;
+                sdl_rgb_fmt.Rmask = 0xf800;
+                sdl_rgb_fmt.Gmask = 0x07e0;
+                sdl_rgb_fmt.Bmask = 0x001f;
+                sdl_rgb_fmt.Rshift = 11;
+                sdl_rgb_fmt.Gshift = 5;
+                sdl_rgb_fmt.Rloss = 3;
+                sdl_rgb_fmt.Gloss = 2;
+                sdl_rgb_fmt.Bloss = 3;
+                gl_rgb_type = GL_UNSIGNED_SHORT_5_6_5;
+
+                /* RGBA */
+                sdl_rgba_fmt.BitsPerPixel = 16;
+                sdl_rgba_fmt.BytesPerPixel = 2;
+                sdl_rgba_fmt.Rmask = 0xf000;
+                sdl_rgba_fmt.Gmask = 0x0f00;
+                sdl_rgba_fmt.Bmask = 0x00f0;
+                sdl_rgba_fmt.Amask = 0x000f;
+                sdl_rgba_fmt.Rshift = 12;
+                sdl_rgba_fmt.Gshift = 8;
+                sdl_rgba_fmt.Bshift = 4;
+                sdl_rgba_fmt.Rloss = 4;
+                sdl_rgba_fmt.Gloss = 4;
+                sdl_rgba_fmt.Bloss = 4;
+                sdl_rgba_fmt.Aloss = 4;
+                gl_rgba_type = GL_UNSIGNED_SHORT_4_4_4_4;
+
+                C_debug("Using 16-bit textures");
         }
 
         /* Load the test assets */

@@ -28,7 +28,7 @@ typedef struct r_texture {
         c_ref_t ref;
         SDL_Surface *surface;
         GLuint gl_name;
-        int format;
+        int alpha;
 } r_texture_t;
 
 /* Non-animated mesh */
@@ -81,6 +81,6 @@ void R_static_mesh_render(r_static_mesh_t *, r_texture_t *);
 void R_static_mesh_free(r_static_mesh_t *);
 
 /* r_variables.c */
-extern c_var_t r_colordepth, r_depth, r_gamma, r_height, r_width, r_vsync,
+extern c_var_t r_color_bits, r_depth_bits, r_gamma, r_height, r_width, r_vsync,
                r_windowed;
 

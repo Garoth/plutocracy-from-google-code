@@ -42,18 +42,16 @@ int R_render_init(void)
         /* Set OpenGL attributes */
         SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
         SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 8);
-        SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, r_depth.value.n);
+        SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, r_depth_bits.value.n);
         SDL_GL_SetAttribute(SDL_GL_SWAP_CONTROL, r_vsync.value.n);
-        if (r_colordepth.value.n == 16) {
+        if (r_color_bits.value.n <= 16) {
                 SDL_GL_SetAttribute(SDL_GL_RED_SIZE, 5);
-                SDL_GL_SetAttribute(SDL_GL_GREEN_SIZE, 5);
+                SDL_GL_SetAttribute(SDL_GL_GREEN_SIZE, 6);
                 SDL_GL_SetAttribute(SDL_GL_BLUE_SIZE, 5);
         } else {
                 SDL_GL_SetAttribute(SDL_GL_RED_SIZE, 8);
                 SDL_GL_SetAttribute(SDL_GL_GREEN_SIZE, 8);
                 SDL_GL_SetAttribute(SDL_GL_BLUE_SIZE, 8);
-                if (r_colordepth.value.n != 24)
-                        SDL_GL_SetAttribute(SDL_GL_ALPHA_SIZE, 8);
         }
 
         /* NVidia drivers respect this environment variable for vsync
@@ -92,12 +90,16 @@ int R_render_init(void)
         glCullFace(GL_BACK);
         glFrontFace(GL_CCW);
 
-        /* Use a white default material */
+        /* Enable textures, use a white default material */
         glEnable(GL_TEXTURE_2D);
         glEnable(GL_COLOR_MATERIAL);
-        glShadeModel(GL_SMOOTH);
         glColorMaterial(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE);
         glColor3f(1.0, 1.0, 1.0);
+        glShadeModel(GL_SMOOTH);
+
+        /* Enable normal alpha blending with alpha test */
+        glAlphaFunc(GL_GREATER, 4);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
         /* Clear to black */
         glClearColor(0.0, 0.0, 0.0, 1.0);
