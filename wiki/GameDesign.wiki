@@ -1,0 +1,38 @@
+#summary High-level game-design document.
+
+= Nations =
+At the start of a game, each player chooses one national (or pirate) affiliation from the following:
+  * [NationSpain Spain]
+  * [NationEngland England]
+  * [NationFrance France]
+  * [NationHolland Holland]
+  * [NationPirate Pirates]
+Each nation has special characteristics that it's citizen merchants benefit from. See the individual pages for details.
+
+National affiliation can be changed at any time by any player. The player must pay the minimum fee for citizenship and, if the nation is hostile, must pay for all damages incurred by their ships against that nation. There is no fee for going pirate. All territory rented from and property owned on now hostile territory will be lost by the change.
+
+When a player begins the game, he or she will receive a lightly armed ship and some gold near a friendly port. The player is then free to find a shore tile to begin renting land or engage in combat.
+
+= Winning and Losing =
+The game ends when one player obtains enough gold to purchase victory. The exact amount depends on the size of the map and the number of players. Servers may disable victory to allow players to play indefinitely in "sandbox" mode.
+
+Players do not lose the game when all ships, rented tiles, and property and are allowed to start over with a new initial vessel and national affiliation.
+
+= Renting Land =
+Island territory is owned by the nation and rented by the merchant player. At regular intervals the player must pay rent for every tile owned to the island government. Pirates pay no rent on territory they conquer but cannot bid on tiles.
+
+Land is obtained by bidding. If a player either already rents and adjacent tile or controls a ship in an adjacent water tile, the player may bid on that tile. By bidding, the player sets the price he or she is willing to pay regularly in rent for that tile. If a bid is not challenged by another, higher bid within a certain duration, the tile's ownership changes to the highest bidder. The bidder must then pay the previous owner for any property owned on that tile. This price is determined by cost of labor (a fixed amount per building) and cost of construction materials used.
+
+Players can only bid the price up and only to a limit. The player must have enough gold to pay the rent for a certain amount of turns at minimum. If a tile can no longer be bid on by any player other than the owner, if it is fully enclosed for instance, the rent price gradually decreases over time down to a minimum.
+
+Players may relinquish their bids at any time, in which case the tile ownership will go to the next highest bidder, who must then pay the original owner for the property. If there are no other bidders, the island government reclaims the tile and pays for any property which then becomes idle. Any players wishing to bid on the tile again will have to purchase the property from the island government.
+
+= Buildings and Ships =
+Players may construct buildings on tiles by paying their construction cost in gold and using collected resources. Resources must be stored on ships adjacent to a dock tile or in warehouses. The exception to this rule are buildings constructed on shallow water, which draw resources from adjacent ships. See [Buildings] for a list of constructible structures and their requirements.
+
+Ships may be constructed at docks. The characteristics of a ship are determined by the cargo it carries -- allowing for a wide variety of customizations. See [Ships] for a list of ships, construction criteria, and ship parts.
+
+= Warfare =
+Player ships capable of combat can only attack enemies of the player's nation. When an island is conquered by a player, the island government is overthrown and a new government, affiliated to the player's nation is established. Because pirates are not affiliated with a government, pirate players can claim entire islands for themselves. Pirates are permanently at war with all other players, including other pirates.
+
+In order to declare war on or make peace with another nation, the players affiliated with that nation must bribe their government by paying money either for 'yes' or 'no' votes when the government considers a war or peace action. Government AI will initiate war or peace votes, and assign votes on its own if no bribes are made.
