@@ -24,6 +24,14 @@ typedef struct r_model {
             use_lerp_meshes;
 } r_model_t;
 
+/* 2D textured quad sprite, can only be rendered in 2D mode */
+typedef struct r_sprite {
+        struct r_texture *texture;
+        c_vec3_t origin;
+        c_vec2_t size;
+        float angle;
+} r_sprite_t;
+
 /* r_model.c */
 void R_model_cleanup(r_model_t *);
 int R_model_init(r_model_t *, const char *filename);
@@ -36,6 +44,12 @@ void R_render_cleanup(void);
 int R_render_init(void);
 
 extern c_count_t r_count_faces;
+extern int r_width_2d, r_height_2d;
+
+/* r_sprite.c */
+void R_sprite_cleanup(r_sprite_t *);
+void R_sprite_init(r_sprite_t *, const char *filename);
+void R_sprite_render(r_sprite_t *);
 
 /* r_variables.c */
 void R_register_variables(void);

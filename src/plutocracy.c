@@ -78,7 +78,7 @@ static void main_loop(void)
                 C_count_add(&fps, 1);
                 if (C_count_poll(&fps, 20000))
                         C_debug("Frame %d, %.1f FPS (%.1f%% throttled), "
-                                "%.1f verts/frame",
+                                "%.1f faces/frame",
                                 c_frame, C_count_per_sec(&fps),
                                 100.f * C_count_per_frame(&throttled) /
                                         desired_msec,

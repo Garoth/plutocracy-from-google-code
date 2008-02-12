@@ -30,6 +30,7 @@ plutocracy_SOURCES = \
         src/render/r_model.c \
         src/render/r_render.c \
         src/render/r_shared.h \
+        src/render/r_sprite.c \
         src/render/r_static_mesh.c \
         src/render/r_variables.c \
         src/plutocracy.c

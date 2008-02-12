@@ -200,6 +200,8 @@ void C_test_mem_check(void);
 void C_noise3_seed(unsigned int seed);
 float C_noise3(float x, float y, float z);
 float C_noise3_fractal(int levels, float x, float y, float z);
+#define C_rand() ((float)rand() / RAND_MAX)
+#define C_rand_seed(s) srand(s)
 
 /* c_string.c */
 void C_file_close(c_file_t *);
