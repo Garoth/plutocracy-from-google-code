@@ -16,11 +16,6 @@
 
 #include "r_common.h"
 
-/* Render testing */
-extern c_var_t r_test_mesh_path, r_test_model_path, r_test_globe;
-r_static_mesh_t *r_test_mesh;
-r_model_t r_test_model;
-
 /* Texture linked list */
 static c_ref_t *root;
 
@@ -144,17 +139,49 @@ r_texture_t *R_texture_load(const char *filename)
         /* Load the texture into OpenGL */
         glGenTextures(1, &pt->gl_name);
         glBindTexture(GL_TEXTURE_2D, pt->gl_name);
-        glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,
-                        GL_LINEAR_MIPMAP_NEAREST);
-        glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-        glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-        glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
         gluBuild2DMipmaps(GL_TEXTURE_2D, gl_internal,
                           surface_new->w, surface_new->h,
                           gl_format, gl_type, surface_new->pixels);
+        glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,
+                        GL_LINEAR_MIPMAP_NEAREST);
+        glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
         R_check_errors();
 
         return pt;
+}
+
+/******************************************************************************\
+ Selects (binds) a texture for rendering in OpenGL. Also sets whatever options
+ are necessary to get the texture to show up properly.
+\******************************************************************************/
+void R_texture_select(r_texture_t *texture)
+{
+        int alpha;
+
+        alpha = FALSE;
+        if (texture) {
+                glBindTexture(GL_TEXTURE_2D, texture->gl_name);
+                alpha = texture->alpha;
+                if (r_mode == R_MODE_3D) {
+                        glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S,
+                                        GL_REPEAT);
+                        glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T,
+                                        GL_REPEAT);
+                } else {
+                        glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S,
+                                        GL_CLAMP);
+                        glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T,
+                                        GL_CLAMP);
+                }
+        } else
+                glBindTexture(GL_TEXTURE_2D, 0);
+        if (alpha) {
+                glEnable(GL_BLEND);
+                glEnable(GL_ALPHA_TEST);
+        } else {
+                glDisable(GL_BLEND);
+                glDisable(GL_ALPHA_TEST);
+        }
 }
 
 /******************************************************************************\
@@ -218,14 +245,6 @@ void R_load_assets(void)
 
                 C_debug("Using 16-bit textures");
         }
-
-        /* Load the test assets */
-        if (r_test_globe.value.n)
-                return;
-        if (*r_test_model_path.value.s)
-                R_model_init(&r_test_model, r_test_model_path.value.s);
-        else if (*r_test_mesh_path.value.s)
-                r_test_mesh = R_static_mesh_load(r_test_mesh_path.value.s);
 }
 
 /******************************************************************************\
@@ -233,8 +252,5 @@ void R_load_assets(void)
 \******************************************************************************/
 void R_free_assets(void)
 {
-        /* Render testing */
-        R_static_mesh_free(r_test_mesh);
-        R_model_cleanup(&r_test_model);
 }
 

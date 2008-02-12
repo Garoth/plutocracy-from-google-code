@@ -17,7 +17,7 @@
  if a matching vertex is not found.
 \******************************************************************************/
 unsigned short R_static_mesh_find_vert(const r_static_mesh_t *mesh,
-                                       const r_vertex_t *vert)
+                                       const r_vertex3_t *vert)
 {
         int i;
 
@@ -37,13 +37,13 @@ unsigned short R_static_mesh_find_vert(const r_static_mesh_t *mesh,
 static unsigned short find_vert(c_array_t *vs, c_vec3_t v, c_vec3_t n,
                                 c_vec2_t uv)
 {
-        r_vertex_t new_vert;
+        r_vertex3_t new_vert;
         unsigned short i;
 
         for (i = 0; i < vs->len; i++) {
-                r_vertex_t *vert;
+                r_vertex3_t *vert;
 
-                vert = &C_array_elem(vs, r_vertex_t, i);
+                vert = &C_array_elem(vs, r_vertex3_t, i);
                 if (C_vec3_eq(v, vert->co) &&
                     C_vec3_eq(n, vert->no) &&
                     C_vec2_eq(uv, vert->uv)) {
@@ -113,7 +113,7 @@ r_static_mesh_t* R_static_mesh_load(const char* filename)
         C_array_init(&sts, c_vec2_t, 512);
 
         c_array_t real_verts, inds;
-        C_array_init(&real_verts, r_vertex_t, 512);
+        C_array_init(&real_verts, r_vertex3_t, 512);
         C_array_init(&inds, unsigned short, 512);
 
         int flag = TRUE;
@@ -219,23 +219,10 @@ r_static_mesh_t* R_static_mesh_load(const char* filename)
 \******************************************************************************/
 void R_static_mesh_render(r_static_mesh_t *mesh, r_texture_t *texture)
 {
-        int alpha;
-
-        alpha = FALSE;
-        if (texture) {
-                glBindTexture(GL_TEXTURE_2D, texture->gl_name);
-                alpha = texture->alpha;
-        } else
-                glBindTexture(GL_TEXTURE_2D, 0);
-        if (alpha) {
-                glEnable(GL_BLEND);
-                glEnable(GL_ALPHA_TEST);
-        } else {
-                glDisable(GL_BLEND);
-                glDisable(GL_ALPHA_TEST);
-        }
-        C_count_add(&r_count_faces, mesh->indices_len);
-        glInterleavedArrays(R_VERTEX_FORMAT, 0, mesh->verts);
+        R_set_mode(R_MODE_3D);
+        R_texture_select(texture);
+        C_count_add(&r_count_faces, mesh->indices_len / 3);
+        glInterleavedArrays(R_VERTEX3_FORMAT, 0, mesh->verts);
         glDrawElements(GL_TRIANGLES, mesh->indices_len,
                        GL_UNSIGNED_SHORT, mesh->indices);
         glDisableClientState(GL_TEXTURE_COORD_ARRAY);

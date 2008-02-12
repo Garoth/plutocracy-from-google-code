@@ -185,7 +185,7 @@ static r_model_data_t *model_data_load(const char *filename)
                         if (!finish_object(data, frame, object++,
                                            &verts, &indices))
                                 goto error;
-                        C_array_init(&verts, r_vertex_t, 512);
+                        C_array_init(&verts, r_vertex3_t, 512);
                         C_array_init(&indices, unsigned short, 512);
                         verts_parsed = 0;
                         if (object > data->objects_len) {
@@ -203,7 +203,7 @@ static r_model_data_t *model_data_load(const char *filename)
 
                 /* A 'v' means we need to add a new vertex */
                 if (!strcmp(token, "v")) {
-                        r_vertex_t vert;
+                        r_vertex3_t vert;
 
                         /* Syntax: v [coords x y z] [normal x y z] [uv x y] */
                         verts_parsed++;
@@ -346,7 +346,7 @@ static void interpolate_mesh(r_static_mesh_t *dest, float lerp,
         dest->verts_len = 0;
         dest->indices_len = to->indices_len;
         for (j = 0; j < to->indices_len; j++) {
-                r_vertex_t *to_vert, *from_vert, vert;
+                r_vertex3_t *to_vert, *from_vert, vert;
                 unsigned short index;
 
                 to_vert = to->verts + to->indices[j];
@@ -429,7 +429,6 @@ void R_model_render(r_model_t *model)
         glRotatef(C_rad_to_deg(model->angles.x), 1.0, 0.0, 0.0);
         glRotatef(C_rad_to_deg(model->angles.y), 0.0, 1.0, 0.0);
         glRotatef(C_rad_to_deg(model->angles.z), 0.0, 0.0, 1.0);
-        R_check_errors();
         if (model->time_left >= 0)
                 update_animation(model);
         if (model->use_lerp_meshes)
@@ -441,6 +440,7 @@ void R_model_render(r_model_t *model)
                 R_static_mesh_render(meshes + i,
                                      model->data->objects[i].texture);
         glPopMatrix();
+        R_check_errors();
 }
 
 /******************************************************************************\
