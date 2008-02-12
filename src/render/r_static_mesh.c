@@ -219,8 +219,22 @@ r_static_mesh_t* R_static_mesh_load(const char* filename)
 \******************************************************************************/
 void R_static_mesh_render(r_static_mesh_t *mesh, r_texture_t *texture)
 {
+        int alpha;
+
+        alpha = FALSE;
+        if (texture) {
+                glBindTexture(GL_TEXTURE_2D, texture->gl_name);
+                alpha = texture->alpha;
+        } else
+                glBindTexture(GL_TEXTURE_2D, 0);
+        if (alpha) {
+                glEnable(GL_BLEND);
+                glEnable(GL_ALPHA_TEST);
+        } else {
+                glDisable(GL_BLEND);
+                glDisable(GL_ALPHA_TEST);
+        }
         C_count_add(&r_count_faces, mesh->indices_len);
-        glBindTexture(GL_TEXTURE_2D, texture ? texture->gl_name : 0);
         glInterleavedArrays(R_VERTEX_FORMAT, 0, mesh->verts);
         glDrawElements(GL_TRIANGLES, mesh->indices_len,
                        GL_UNSIGNED_SHORT, mesh->indices);

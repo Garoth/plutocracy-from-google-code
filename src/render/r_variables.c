@@ -12,8 +12,9 @@
 
 #include "r_common.h"
 
-/* Window parameters */
-c_var_t r_width, r_height, r_colordepth, r_depth, r_windowed, r_vsync, r_gamma;
+/* Video parameters */
+c_var_t r_width, r_height, r_color_bits, r_depth_bits, r_windowed, r_vsync,
+        r_gamma;
 
 /* Render testing */
 c_var_t r_gl_errors, r_test_globe, r_test_globe_seed,
@@ -24,11 +25,11 @@ c_var_t r_gl_errors, r_test_globe, r_test_globe_seed,
 \******************************************************************************/
 void R_register_variables(void)
 {
-        /* Window parameters */
+        /* Video parameters */
         C_register_integer(&r_width, "r_width", 800);
         C_register_integer(&r_height, "r_height", 600);
-        C_register_integer(&r_colordepth, "r_colordepth", 32);
-        C_register_integer(&r_depth, "r_depth", 16);
+        C_register_integer(&r_color_bits, "r_color_bits", 32);
+        C_register_integer(&r_depth_bits, "r_depth_bits", 16);
         C_register_integer(&r_windowed, "r_windowed", 1);
         C_register_integer(&r_vsync, "r_vsync", 1);
         C_register_float(&r_gamma, "r_gamma", 1);
