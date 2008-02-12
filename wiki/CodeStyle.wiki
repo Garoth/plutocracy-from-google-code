@@ -161,7 +161,12 @@ void C_blah_blah_blah();
 
 Type names are prefixed and end with {{{_t}}}, try not to abbreviate names:
 {{{
-c_my_type_t
+typedef struct c_my_type c_my_type_t;
+}}}
+
+Function pointer types end with {{{_f}}}:
+{{{
+typedef void (*c_my_func_f)(void);
 }}}
 
 Class constructors that return the type, not a pointer take the name of the class:
@@ -190,4 +195,19 @@ c_my_type_t *C_my_type_load();
 If you return a pointer that should not be {{{free}}}'d, put {{{get}}} somewhere in the name:
 {{{
 void *C_get_static_pointer();
+}}}
+
+= Standard Library Functions =
+
+A fair number of the standard library functions have been wrapped in {{{C_}}} namespace equivalents. Using these functions will generate a compiler warning. Read the top of {{{c_shared.h}}} for the full list of these functions:
+{{{
+/* Certain functions should not be used. Files that legitimately use these
+   should undefine these replacements */
+#define calloc(s) ERROR_use_C_calloc
+#define fclose(f) ERROR_use_C_file_close
+#define free(s) ERROR_use_C_free
+#define malloc(s) ERROR_use_C_malloc
+#define realloc(p, s) ERROR_use_C_realloc
+#define strdup(s) ERROR_use_C_strdup
+#define strncpy(d, s, n) ERROR_use_C_strncpy
 }}}
