@@ -25,6 +25,10 @@ void R_sprite_init(r_sprite_t *sprite, const char *filename)
                 sprite->size.x = sprite->texture->surface->w;
                 sprite->size.y = sprite->texture->surface->h;
         }
+        sprite->red = 1.f;
+        sprite->green = 1.f;
+        sprite->blue = 1.f;
+        sprite->alpha = 1.f;
 }
 
 /******************************************************************************\
@@ -42,6 +46,8 @@ void R_sprite_cleanup(r_sprite_t *sprite)
  Renders a 2D textured quad on screen. If we are rendering a rotated sprite
  that doesn't use alpha, this function will draw an anti-aliased border for it.
    TODO: Disable anti-aliasing here if FSAA is on.
+   FIXME: There is a slight overlap between the antialiased edge line and the
+          polygon which should probably be fixed if possible.
 \******************************************************************************/
 void R_sprite_render(r_sprite_t *sprite)
 {
@@ -52,6 +58,13 @@ void R_sprite_render(r_sprite_t *sprite)
         if (!sprite || !sprite->texture)
                 return;
         R_set_mode(R_MODE_2D);
+        R_texture_select(sprite->texture);
+
+        /* Modulate color */
+        glColor4f(sprite->red, sprite->green, sprite->blue, sprite->alpha);
+        if (sprite->alpha < 1.f)
+                glEnable(GL_BLEND);
+
         dw = sprite->size.x / 2;
         dh = sprite->size.y / 2;
         verts[0].co = C_vec3(-dw - 0.5f, dh - 0.5f, 0.f);
@@ -63,18 +76,21 @@ void R_sprite_render(r_sprite_t *sprite)
         verts[3].co = C_vec3(dw - 0.5f, dh - 0.5f, 0.f);
         verts[3].uv = C_vec2(1.f, 1.f);
         C_count_add(&r_count_faces, 2);
-        R_texture_select(sprite->texture);
         glPushMatrix();
         glLoadIdentity();
         glTranslatef(sprite->origin.x, sprite->origin.y, sprite->origin.z);
         glRotatef(C_rad_to_deg(sprite->angle), 0.0, 0.0, 1.0);
         glInterleavedArrays(R_VERTEX2_FORMAT, 0, verts);
         glDrawElements(GL_QUADS, 4, GL_UNSIGNED_SHORT, indices);
-        if (!sprite->texture->alpha && sprite->angle != 0.f) {
+
+        /* Draw the edge lines to anti-alias non-alpha quads */
+        if (!sprite->texture->alpha && sprite->angle != 0.f &&
+            sprite->alpha == 1.f) {
                 glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
                 glEnable(GL_BLEND);
                 glDrawElements(GL_LINE_STRIP, 5, GL_UNSIGNED_SHORT, indices);
         }
+
         glDisableClientState(GL_TEXTURE_COORD_ARRAY);
         glDisableClientState(GL_VERTEX_ARRAY);
         glPopMatrix();
