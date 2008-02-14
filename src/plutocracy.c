@@ -139,6 +139,26 @@ static void cleanup(void)
 }
 
 /******************************************************************************\
+ Initialize SDL.
+\******************************************************************************/
+static void init_sdl(void)
+{
+        SDL_version compiled;
+        const SDL_version *linked;
+
+        SDL_VERSION(&compiled);
+        C_debug("Compiled with SDL %d.%d.%d",
+                compiled.major, compiled.minor, compiled.patch);
+        linked = SDL_Linked_Version();
+        if (!linked)
+                C_error("Failed to get SDL linked version");
+        C_debug("Linked with SDL %d.%d.%d",
+                linked->major, linked->minor, linked->patch);
+        if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER) < 0)
+                C_error("Failed to initialize SDL: %s", SDL_GetError());
+}
+
+/******************************************************************************\
  Start up the client program from here.
 \******************************************************************************/
 int main(int argc, char *argv[])
@@ -161,8 +181,7 @@ int main(int argc, char *argv[])
 
         /* Initialize */
         C_status("Initializing " PACKAGE_STRING " client");
-        if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER) < 0)
-                C_error("Failed to initialize SDL: %s", SDL_GetError());
+        init_sdl();
         if (!R_render_init())
                 C_error("Window creation failed");
 

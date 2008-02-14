@@ -29,7 +29,7 @@ typedef struct r_sprite {
         struct r_texture *texture;
         c_vec3_t origin;
         c_vec2_t size;
-        float angle;
+        float red, green, blue, alpha, angle;
 } r_sprite_t;
 
 /* r_model.c */

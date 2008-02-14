@@ -265,10 +265,6 @@ int render_test_globe()
         glEnable(GL_LIGHT0);
         glLightfv(GL_LIGHT0, GL_POSITION, left);
 
-        /* Colormaterial! Make the land green. */
-        glEnable(GL_COLOR_MATERIAL);
-        glColorMaterial(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE);
-
         glPushMatrix();
 
         glTranslatef(0.0, 0.0, -2000.0);
@@ -347,7 +343,8 @@ int render_test_sprites(void)
                 return FALSE;
         for (i = 0; i < r_test_sprite_num.value.n; i++) {
                 R_sprite_render(test_sprites + i);
-                test_sprites[i].angle += 0.01 * i * c_frame_sec;
+                test_sprites[i].angle += i * c_frame_sec /
+                                         r_test_sprite_num.value.n;
         }
         return TRUE;
 }
