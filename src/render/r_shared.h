@@ -14,6 +14,18 @@
    slower than this, frames are interpolated. */
 #define R_MODEL_ANIM_FPS 30
 
+/* This is the largest value that pixels can be stretched. This means that all
+   GUI textures need to be created this many times larger than normal. The
+   largest supported resoluton is WQXGA 2560x1600 (nVidia Geforce 8800GT)
+   which requires a pixel scale of 2 to have a 2D display area of approximately
+   1280x800. */
+#define R_PIXEL_SCALE_MIN 0.5
+#define R_PIXEL_SCALE_MAX 2.0
+
+/* The wide range of 2D scaling can shrink fonts too small to be viewable,
+   so we need to set a minimum (in points). */
+#define R_FONT_SIZE_MIN 10
+
 /* Model instance type */
 typedef struct r_model {
         struct r_static_mesh *lerp_meshes;
@@ -27,10 +39,23 @@ typedef struct r_model {
 /* 2D textured quad sprite, can only be rendered in 2D mode */
 typedef struct r_sprite {
         struct r_texture *texture;
-        c_vec3_t origin;
-        c_vec2_t size;
+        c_vec2_t origin, size;
         float red, green, blue, alpha, angle;
 } r_sprite_t;
+
+/* There is a fixed set of fonts available for the game */
+typedef enum {
+        R_FONT_CONSOLE,
+        R_FONTS
+} r_font_t;
+
+/* Stores an RGBA surface with the text rendered on it. Manipulate the sprite
+   attributes to change where and how the text is rendered. */
+typedef struct r_text {
+        r_sprite_t sprite;
+        r_font_t font;
+        char string[256];
+} r_text_t;
 
 /* r_model.c */
 void R_model_cleanup(r_model_t *);
@@ -49,7 +74,12 @@ extern int r_width_2d, r_height_2d;
 /* r_sprite.c */
 void R_sprite_cleanup(r_sprite_t *);
 void R_sprite_init(r_sprite_t *, const char *filename);
-void R_sprite_render(r_sprite_t *);
+void R_sprite_render(const r_sprite_t *);
+void R_text_cleanup(r_text_t *);
+#define R_text_cleanup(t) R_sprite_cleanup(&(t)->sprite)
+#define R_text_init(t) C_zero(t)
+void R_text_set_text(r_text_t *, const char *, r_font_t, float wrap);
+#define R_text_render(t) R_sprite_render((t)->sprite)
 
 /* r_variables.c */
 void R_register_variables(void);

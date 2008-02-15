@@ -85,6 +85,45 @@ static int surface_uses_alpha(SDL_Surface *surf)
 }
 
 /******************************************************************************\
+ Just allocate a texture object, does not load anything or add it to the
+ texture linked list.
+\******************************************************************************/
+r_texture_t *R_texture_alloc(void)
+{
+        r_texture_t *pt;
+
+        pt = C_calloc(sizeof (*pt));
+        pt->ref.refs = 1;
+        pt->ref.cleanup_func = (c_ref_cleanup_f)texture_cleanup;
+        glGenTextures(1, &pt->gl_name);
+        return pt;
+}
+
+/******************************************************************************\
+ If the texture's SDL surface has changed, the image must be reloaded into
+ OpenGL. This function will do this. It is assumed that the texture surface
+ format has not changed since the texture was created.
+\******************************************************************************/
+void R_texture_upload(const r_texture_t *pt)
+{
+        int flags, gl_internal;
+
+        flags = SDL_HWSURFACE;
+        if (pt->alpha) {
+                gl_internal = GL_RGBA;
+                flags |= SDL_SRCALPHA;
+        } else
+                gl_internal = GL_RGB;
+        glBindTexture(GL_TEXTURE_2D, pt->gl_name);
+        glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,
+                        GL_LINEAR_MIPMAP_NEAREST);
+        glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        gluBuild2DMipmaps(GL_TEXTURE_2D, gl_internal,
+                          pt->surface->w, pt->surface->h,
+                          pt->gl_format, pt->gl_type, pt->surface->pixels);
+}
+
+/******************************************************************************\
  Loads a texture using SDL_image. If the texture has already been loaded,
  just ups the reference count and returns the loaded surface.
    TODO: Support loading from sources other than files.
@@ -94,7 +133,7 @@ r_texture_t *R_texture_load(const char *filename)
         SDL_Surface *surface, *surface_new;
         SDL_PixelFormat *sdl_format;
         r_texture_t *pt;
-        int found, flags, gl_internal, gl_format, gl_type;
+        int found, flags;
 
         if (!filename || !filename[0])
                 return NULL;
@@ -113,20 +152,17 @@ r_texture_t *R_texture_load(const char *filename)
         }
 
         /* Convert to our texture format */
+        pt->alpha = surface_uses_alpha(surface);
         flags = SDL_HWSURFACE;
-        if (surface_uses_alpha(surface)) {
-                gl_type = gl_rgba_type;
-                gl_format = GL_RGBA;
-                gl_internal = GL_RGBA;
+        if (pt->alpha) {
+                pt->gl_type = gl_rgba_type;
+                pt->gl_format = GL_RGBA;
                 sdl_format = &sdl_rgba_fmt;
                 flags |= SDL_SRCALPHA;
-                pt->alpha = TRUE;
         } else {
-                gl_format = r_color_bits.value.n > 16 ? GL_RGBA : GL_RGB;
-                gl_type = gl_rgb_type;
-                gl_internal = GL_RGB;
+                pt->gl_format = r_color_bits.value.n > 16 ? GL_RGBA : GL_RGB;
+                pt->gl_type = gl_rgb_type;
                 sdl_format = &sdl_rgb_fmt;
-                pt->alpha = FALSE;
         }
         surface_new = SDL_ConvertSurface(surface, sdl_format, flags);
         SDL_FreeSurface(surface);
@@ -138,13 +174,7 @@ r_texture_t *R_texture_load(const char *filename)
 
         /* Load the texture into OpenGL */
         glGenTextures(1, &pt->gl_name);
-        glBindTexture(GL_TEXTURE_2D, pt->gl_name);
-        gluBuild2DMipmaps(GL_TEXTURE_2D, gl_internal,
-                          surface_new->w, surface_new->h,
-                          gl_format, gl_type, surface_new->pixels);
-        glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,
-                        GL_LINEAR_MIPMAP_NEAREST);
-        glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        R_texture_upload(pt);
         R_check_errors();
 
         return pt;

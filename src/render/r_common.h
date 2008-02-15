@@ -37,7 +37,7 @@ typedef struct r_texture {
         c_ref_t ref;
         SDL_Surface *surface;
         GLuint gl_name;
-        int alpha;
+        int gl_type, gl_format, alpha;
 } r_texture_t;
 
 /* Non-animated mesh */
@@ -80,10 +80,12 @@ typedef enum {
 /* r_assets.c */
 void R_free_assets(void);
 void R_load_assets(void);
+r_texture_t *R_texture_alloc(void);
 #define R_texture_free(t) C_ref_down((c_ref_t *)(t))
 r_texture_t *R_texture_load(const char *filename);
 #define R_texture_ref(t) C_ref_up((c_ref_t *)(t))
 void R_texture_select(r_texture_t *);
+void R_texture_upload(const r_texture_t *);
 
 /* r_render.c */
 #define R_check_errors() R_check_errors_full(__FILE__, __LINE__, __func__);
@@ -100,7 +102,7 @@ r_static_mesh_t *R_static_mesh_load(const char *filename);
 void R_static_mesh_render(r_static_mesh_t *, r_texture_t *);
 void R_static_mesh_free(r_static_mesh_t *);
 
-/* r_text.c */
+/* r_sprite.c */
 void R_cleanup_fonts(void);
 void R_init_fonts(void);
 

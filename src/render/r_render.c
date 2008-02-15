@@ -15,7 +15,8 @@
 #include <time.h>
 
 extern c_var_t r_gl_errors, r_test_globe, r_test_globe_seed, r_test_model_path,
-               r_test_mesh_path, r_test_sprite_num, r_test_sprite_path;
+               r_test_mesh_path, r_test_sprite_num, r_test_sprite_path,
+               r_test_text;
 
 /* Keep track of how many faces we render each frame */
 c_count_t r_count_faces;
@@ -28,6 +29,7 @@ int r_width_2d, r_height_2d;
 static r_static_mesh_t *test_mesh;
 static r_model_t test_model;
 static r_sprite_t *test_sprites;
+static r_text_t test_text;
 static g_globe_t *test_globe;
 
 /******************************************************************************\
@@ -77,10 +79,10 @@ int R_render_init(void)
         }
 
         /* The 2D dimensions are scaled */
-        if (r_pixel_scale.value.f < 1)
-                r_pixel_scale.value.f = 1;
-        if (r_pixel_scale.value.f > 4)
-                r_pixel_scale.value.f = 4;
+        if (r_pixel_scale.value.f < R_PIXEL_SCALE_MIN)
+                r_pixel_scale.value.f = R_PIXEL_SCALE_MIN;
+        if (r_pixel_scale.value.f > R_PIXEL_SCALE_MAX)
+                r_pixel_scale.value.f = R_PIXEL_SCALE_MAX;
         r_width_2d = r_width.value.n / r_pixel_scale.value.f + 0.5f;
         r_height_2d = r_height.value.n / r_pixel_scale.value.f + 0.5f;
         C_debug("2D area %dx%d", r_width_2d, r_height_2d);
@@ -120,6 +122,7 @@ int R_render_init(void)
 
         /* All set to start loading models and textures */
         R_check_errors();
+        R_init_fonts();
         R_load_assets();
 
         /* Load the 3D test assets */
@@ -145,15 +148,17 @@ int R_render_init(void)
                 for (i = 0; i < r_test_sprite_num.value.n; i++) {
                         R_sprite_init(test_sprites + i,
                                       r_test_sprite_path.value.s);
-                        test_sprites[i].origin = C_vec3(r_width_2d * C_rand(),
-                                                        r_height_2d * C_rand(),
-                                                        0.f);
+                        test_sprites[i].origin = C_vec2(r_width_2d * C_rand(),
+                                                        r_height_2d * C_rand());
                         test_sprites[i].angle = C_rand();
-                        C_debug("Test sprite %d at { %g, %g, %g }",
-                                i, test_sprites[i].origin.x,
-                                test_sprites[i].origin.y,
-                                test_sprites[i].origin.z);
                 }
+        }
+        R_text_init(&test_text);
+        if (r_test_text.value.s[0]) {
+                R_text_set_text(&test_text, r_test_text.value.s,
+                                R_FONT_CONSOLE, 100.f);
+                test_text.sprite.origin = C_vec2(r_width_2d / 2,
+                                                 r_height_2d / 2);
         }
 
         /* No mode intially */
@@ -168,6 +173,7 @@ int R_render_init(void)
 void R_render_cleanup(void)
 {
         R_free_assets();
+        R_cleanup_fonts();
 
         /* Cleanup render testing */
         R_static_mesh_free(test_mesh);
@@ -180,6 +186,7 @@ void R_render_cleanup(void)
                         R_sprite_cleanup(test_sprites + i);
                 C_free(test_sprites);
         }
+        R_text_cleanup(&test_text);
 }
 
 /******************************************************************************\
@@ -350,6 +357,18 @@ int render_test_sprites(void)
 }
 
 /******************************************************************************\
+ Render test text.
+\******************************************************************************/
+int render_test_text(void)
+{
+        if (!r_test_text.value.s[0])
+                return FALSE;
+        R_sprite_render(&test_text.sprite);
+        test_text.sprite.angle += 0.5f * c_frame_sec;
+        return TRUE;
+}
+
+/******************************************************************************\
  See if there were any OpenGL errors.
 \******************************************************************************/
 void R_check_errors_full(const char *file, int line, const char *func)
@@ -406,7 +425,8 @@ void R_render(void)
         if (render_test_globe() || render_test_model() || render_test_mesh());
 
         /* 2D rendering */
-        if (render_test_sprites());
+        render_test_sprites();
+        render_test_text();
 
         SDL_GL_SwapBuffers();
         R_check_errors();
