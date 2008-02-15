@@ -266,7 +266,7 @@ static r_model_data_t *model_data_load(const char *filename)
         }
 
         C_token_file_cleanup(&token_file);
-        C_debug("Loaded '%s' (%d frames, %d objects, %d animations)",
+        C_debug("Loaded '%s' (%d frm, %d obj, %d anim)",
                 filename, data->frames, data->objects_len, data->anims_len);
         return data;
 

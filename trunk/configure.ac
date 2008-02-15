@@ -32,6 +32,8 @@ AC_SUBST(SDL_LIBS)
 # SDL extensions
 AC_CHECK_LIB(SDL_image, IMG_Load, [],
              [AC_MSG_ERROR([*** -lSDL_image not found!])])
+AC_CHECK_LIB(SDL_ttf, TTF_Init, [],
+             [AC_MSG_ERROR([*** -lSDL_ttf not found!])])
 
 # Check for GL and GLU
 AC_CHECK_LIB(GL, glEnable, [], [AC_MSG_ERROR([*** -lGL not found!])])

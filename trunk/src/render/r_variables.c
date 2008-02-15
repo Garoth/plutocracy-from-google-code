@@ -17,9 +17,11 @@ c_var_t r_width, r_height, r_color_bits, r_depth_bits, r_windowed, r_vsync,
         r_gamma, r_pixel_scale;
 
 /* Render testing */
-c_var_t r_gl_errors, r_test_globe, r_test_globe_seed,
+c_var_t r_gl_errors,
+        r_test_globe, r_test_globe_seed,
         r_test_mesh_path, r_test_model_path,
-        r_test_sprite_num, r_test_sprite_path;
+        r_test_sprite_num, r_test_sprite_path,
+        r_test_text;
 
 /******************************************************************************\
  Registers the render variables.
@@ -44,5 +46,6 @@ void R_register_variables(void)
         C_register_string(&r_test_model_path, "r_test_model", "");
         C_register_integer(&r_test_sprite_num, "r_test_sprites", 0);
         C_register_string(&r_test_sprite_path, "r_test_sprite", "");
+        C_register_string(&r_test_text, "r_test_text", "");
 }
 

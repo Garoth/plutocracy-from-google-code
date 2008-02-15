@@ -378,7 +378,7 @@ void *C_ref_alloc_full(const char *file, int line, const char *function,
 
         if (size < sizeof (c_ref_t) || !root || !name)
                 C_error_full(file, line, function,
-                             "Invalid reference structure initilization");
+                             "Invalid reference structure initialization");
 
         /* Find a place for the object */
         prev = NULL;
@@ -451,7 +451,7 @@ void C_ref_down_full(const char *file, int line, const char *function,
 {
         if (!ref)
                 return;
-        if (ref->refs < 1 || !ref->root)
+        if (ref->refs < 1)
                 C_error_full(file, line, function,
                              "Invalid reference structure");
         ref->refs--;
@@ -461,13 +461,16 @@ void C_ref_down_full(const char *file, int line, const char *function,
                              ref->name, ref->refs);
                 return;
         }
-        if (*ref->root == ref)
-                *ref->root = ref->next;
-        if (ref->prev)
-                ref->prev->next = ref->next;
-        if (ref->next)
-                ref->next->prev = ref->prev;
-        C_debug_full(file, line, function, "Freed '%s'", ref->name, ref->refs);
+        if (ref->root) {
+                if (*ref->root == ref)
+                        *ref->root = ref->next;
+                if (ref->prev)
+                        ref->prev->next = ref->next;
+                if (ref->next)
+                        ref->next->prev = ref->prev;
+                C_debug_full(file, line, function, "Freed '%s'",
+                             ref->name, ref->refs);
+        }
         if (ref->cleanup_func)
                 ref->cleanup_func(ref);
         C_free(ref);
