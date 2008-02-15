@@ -1,0 +1,54 @@
+#summary Rough planning ideas
+
+Elements:
+
+ - Medium paced strategy. Must avoid slowdowns due to micromanagement. 
+   See freeciv. Game should have a balance of fast & relaxing.
+
+ - Buildup -- rewards for your efforts. Lets aim for making the player 
+   feel attachment to what they built over the course of a game.
+
+ - < Atom_Eve> I shouldn't have to micromanage my fleets in a ship battle 
+               during a game that's supposed to be about buying land and 
+	       building factories to trade things.
+
+ - < Khent> IE make it very very hard to invade an island. But its more 
+            possible to blockade their trade routes
+
+AI INDEPENDENCE (Majesty-esque)
+ - < Khent> Ship captains & naming your boats for a more personal touch. --  You pick captains for your ships, and give them orders, then the AI goes on their merry way doing what they do best.
+< Khent> But the trick is that a good captain will do what you tell him to
+13:10 < Khent> if you have a scoundrel he might just bend the rules
+13:10 <@Garoth> Ah, we were hoping to avoid leveling or per-unit statistics.
+13:10 < Khent> causing you diplomatic problems
+13:10 < Khent> not leveling. Its the captains AI
+13:11 < Khent> if you want them to not have to be micromanaged they have to have 
+               their own AI (ie, personalities and percent chance they'll do what you say)
+13:13 <@Garoth> You can only give orders to your Captains when they are "at home"
+13:13 <@Garoth> And if they do something that they know you won't like, they 
+                might become pirates or something.
+13:13 <@Garoth> Not bad, if we can make it not overly annoying.
+13:13 < Atom_Eve> Or if you send a scout ship out to catch them.
+13:13 < Khent> Well, I would say you can task orders for them (unlike magesty) 
+               list of co-ords, destroy the shore building. Return fire at 
+               anything that attacks you. Abandon mission if you reach below 65% 
+               health
+
+
+CUSTOMIZABILITY
+13:31 < Atom_Eve> A big thing for me is customizability. I like small touches 
+                  that make things seem more yours.
+13:31 < Atom_Eve> Even if that's just, y'know, naming ships.
+13:31 <@Garoth> Hmm, alright.
+13:31 < Atom_Eve> Little touches like that make games shine for me.
+(customizing ships, naming boats/cities, etc -- optional stuff that can add a personal touch.)
+
+ISLAND SPECIALIZATION
+- Perhaps TCs only have a certain amount of slots for different kinds of upgrades -- weaver, mason, etc -- and nothing else.
+
+CROPS
+15:20 < risujin> ok, so some crops need certain climate?
+15:21 <@Garoth> Naturally.
+15:21 < risujin> dry/moderate/wet climates?
+15:24 < risujin> your island has 20% tobacco-able tiles so focusing on tobacco 
+                 will be inefficient
