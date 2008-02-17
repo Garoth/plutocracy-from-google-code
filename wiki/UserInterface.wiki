@@ -1,5 +1,10 @@
 ﻿#summary Detailing of the User Interface (HUD, popups, menus, screens)
 
+= UI Layout =
+
+== Windows ==
+http://plutocracy.googlecode.com/svn/wiki/ui/Windows.png
+
 = Trade UI =
 == Price Pie ==
 http://plutocracy.googlecode.com/svn/wiki/ui/Price-Menu.png
