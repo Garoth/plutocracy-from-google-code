@@ -4,37 +4,42 @@
   * The map is largely covered in trees at the start of the game
   * Will regrow and forests can spread to adjacent tiles
   * Different types grow in different climates (with some randomness):
-    * Cold tiles produce Pine Trees
-    * Moderate tiles produce Apple Trees
-    * Moderate tiles produce Oak Trees as well
-    * Hot tiles produce Banana Trees
+    * Cold tiles produce Conifer Trees
+    * Moderate tiles produce Deciduous Trees
+    * Hot tiles produce Palm Trees
 
-= First Tier (Harvested Resources) =
+= Harvested Resources =
 
 == Lumber ==
-  * Harvested by building Sawmills. Trees adjacent to town structures can be harvested. (Only having trees near sawmills seems to be a hassle that the game can do without. Trade > town management.)
+  * Harvested from land you own by building Sawmills
   * Efficiency depends on tree type:
-    * Oak trees: 100%
-    * Pine trees: 75%
-    * Apple trees: 50%
-    * Banana trees: 25%
+    * Conifer trees: 100%
+    * Deciduous trees: 50%
+    * Palm trees: 25%
   * Used in building and ship construction
 
 == Fruit ==
   * Harvested by building Orchards by trees
   * Efficiency depends on tree type:
-    * Oak trees: 0%
-    * Pine trees: 25%
-    * Apple trees: 50%
-    * Banana trees: 100%
-  * Consumed by ship crew and islands for sustenance
+    * Conifer trees: 25%
+    * Deciduous trees: 50%
+    * Palm trees: 100%
+  * Consumed by ship crew and towns for sustenance
 
-== Grain ==
-  * Harvested by building Wheat Fields on Hot tiles
-  * Not used directly
+== Fish ==
+  * Harvested by ships equipped with fish nets that pass fish tiles
+  * Consumed by crew and towns for sustenance
+
+== Sugar ==
+  * Harvested by building Sugarcane Fields on Hot tiles
+  * Luxury consumed by towns for growth
 
 == Cotton ==
-  * Harvested by building Cotton Fields on Moderate tiles
+  * Harvested by building Cotton Fields on Hot tiles
+  * Not used directly
+
+== Grain ==
+  * Harvested by building Wheat Fields on Moderate tiles
   * Not used directly
 
 == Iron Ore ==
@@ -45,32 +50,45 @@
   * Harvested by building Sulfur Mines next to Mountain tiles
   * Not used directly
 
-= Second Tier (Intermediate Products) =
+= Intermediate Products =
 
-== Cloth ==
+== Textiles ==
   * Refined from Cotton
-  * Consumed by towns for growth
+  * Luxury consumed by towns for growth
 
 == Steel ==
-  * Refined from Iron Ore
+  * Refined from Iron Ore and Lumber
   * Used in ship and building construction
-
-= Third Tier (Refined Commodities) =
 
 == Fertilizer ==
   * Refined from Sulfur
-  * Consumed by Fields to boost production
+  * Consumed by Fields to boost efficiency
 
-== Shirts ==
-  * Refined from Cloth
-  * Consumed by towns for growth
+== Rope ==
+  * Refined from Cotton
+  * Not used directly
 
-== Furniture ==
-  * Refined from Lumber
-  * Consumed by towns for growth
+= Refined Commodities =
+
+== Rations ==
+  * Refined from Grain, Sugar, Fruit, and Fish
+  * Compressed form of sustenance for crew and towns
+
+== Rum ==
+  * Refined from Grain and Sugar
+  * Consumed by ships to boost efficiency
+  * Luxury consumed by towns for growth
+
+== Garments ==
+  * Refined from Textiles
+  * Luxury consumed by towns for growth
+
+== Fish Nets ==
+  * Refined from Rope
+  * Equipped by ships
 
 == Sails ==
-  * Refined from Cloth and Lumber
+  * Refined from Textiles, Rope, and Lumber
   * Equipped by ships
 
 == Cannon ==
@@ -84,9 +102,3 @@
 == Solid, Grapeshot, Chainshot Cannonballs ==
   * Refined from Iron Ore and Sulfur at Armory
   * Equipped by ships
-
-= Missing Resources =
-This is stuff that thematically or traditionally it makes sense to have but we haven't placed yet:
-  * Rum
-  * Bricks
-  * Tools
