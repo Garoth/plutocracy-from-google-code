@@ -1,0 +1,89 @@
+#summary A list of producible resources and commodities
+
+= Trees =
+  * The map is largely covered in trees at the start of the game
+  * Will regrow and can be replanted but take a long time to do so
+  * Different types grow in different climates (with some randomness):
+    * Cold tiles produce Pine Trees
+    * Moderate tiles produce Apple Trees
+    * Hot tiles produce Banana Trees
+
+= First Tier (Harvested Resources) =
+
+== Lumber ==
+  * Harvested by building Sawmills by trees
+  * Efficiency depends on tree type:
+    * Pine trees: 100%
+    * Apple trees: 50%
+    * Banana trees: 25%
+  * Used in building and ship construction
+
+== Fruit ==
+  * Harvested by building Orchards by trees
+  * Efficiency depends on tree type:
+    * Pine trees: 25%
+    * Apple trees: 50%
+    * Banana trees: 100%
+  * Consumed by ship crew and islands for sustenance
+
+== Grain ==
+  * Harvested by building Wheat Fields on Hot tiles
+  * Not used directly
+
+== Cotton ==
+  * Harvested by building Cotton Fields on Moderate tiles
+  * Not used directly
+
+== Iron Ore ==
+  * Harvested by building Ore Mines next to Mountain tiles
+  * Not used directly
+
+== Sulfur ==
+  * Harvested by building Sulfur Mines next to Mountain tiles
+  * Not used directly
+
+= Second Tier (Intermediate Products) =
+
+== Cloth ==
+  * Refined from Cotton
+  * Consumed by towns for growth
+
+== Steel ==
+  * Refined from Iron Ore
+  * Used in ship and building construction
+
+= Third Tier (Refined Commodities) =
+
+== Fertilizer ==
+  * Refined from Sulfur
+  * Consumed by Fields to boost production
+
+== Shirts ==
+  * Refined from Cloth
+  * Consumed by towns for growth
+
+== Furniture ==
+  * Refined from Lumber
+  * Consumed by towns for growth
+
+== Sails ==
+  * Refined from Cloth and Lumber
+  * Equipped by ships
+
+== Cannon ==
+  * Refined from Steel at Armory
+  * Equipped by ships
+
+== Armor Plate ==
+  * Refined from Steel at Armory
+  * Equipped by ships
+
+== Solid, Grapeshot, Chainshot Cannonballs ==
+  * Refined from Iron Ore and Sulfur at Armory
+  * Equipped by ships
+
+= Missing Resources =
+This is stuff that thematically or traditionally it makes sense to have but we haven't placed yet:
+  * Rum
+  * Bricks
+  * Tools
