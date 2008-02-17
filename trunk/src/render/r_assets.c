@@ -21,7 +21,7 @@ static c_ref_t *root;
 
 /* SDL/OpenGL variables */
 static SDL_PixelFormat sdl_rgb_fmt, sdl_rgba_fmt;
-int gl_rgb_type, gl_rgba_type;
+static int gl_rgb_type, gl_rgba_type;
 
 /******************************************************************************\
  Frees memory associated with a texture.
@@ -33,25 +33,67 @@ static void texture_cleanup(r_texture_t *pt)
 }
 
 /******************************************************************************\
- Gets a pixel from a locked SDL surface.
+ Gets a pixel from an SDL surface. Lock the surface before calling this!
 \******************************************************************************/
-static Uint32 get_surface_pixel(const SDL_Surface *surf, int x, int y)
+c_color_t R_SDL_get_pixel(const SDL_Surface *surf, int x, int y)
 {
-        Uint8 *p;
+        Uint8 *p, r, g, b, a;
+        Uint32 pixel;
         int bpp;
 
         bpp = surf->format->BytesPerPixel;
         p = (Uint8 *)surf->pixels + y * surf->pitch + x * bpp;
         switch(bpp) {
-        case 1: return *p;
-        case 2: return *(Uint16 *)p;
-        case 3: if(SDL_BYTEORDER == SDL_BIG_ENDIAN)
-                        return p[0] << 16 | p[1] << 8 | p[2];
-                else
-                        return p[0] | p[1] << 8 | p[2] << 16;
-        case 4: return *(Uint32 *)p;
+        case 1: pixel = *p;
+                break;
+        case 2: pixel = *(Uint16 *)p;
+                break;
+        case 3: pixel = SDL_BYTEORDER == SDL_BIG_ENDIAN ?
+                        p[0] << 16 | p[1] << 8 | p[2] :
+                        p[0] | p[1] << 8 | p[2] << 16;
+                break;
+        case 4: pixel = *(Uint32 *)p;
+                break;
         default:
-                return 0;
+                C_error("Invalid surface format");
+        }
+        SDL_GetRGBA(pixel, surf->format, &r, &g, &b, &a);
+        return C_color32(r, g, b, a);
+}
+
+/******************************************************************************\
+ Sets the color of a pixel on an SDL surface. Lock the surface before
+ calling this!
+\******************************************************************************/
+void R_SDL_put_pixel(SDL_Surface *surf, int x, int y, c_color_t color)
+{
+        Uint8 *p;
+        Uint32 pixel;
+        int bpp;
+
+        bpp = surf->format->BytesPerPixel;
+        p = (Uint8 *)surf->pixels + y * surf->pitch + x * bpp;
+        pixel = SDL_MapRGBA(surf->format, 255.f * color.r, 255.f * color.g,
+                            255.f * color.b, 255.f * color.a);
+        switch(bpp) {
+        case 1: *p = pixel;
+                break;
+        case 2: *(Uint16 *)p = pixel;
+                break;
+        case 3: if(SDL_BYTEORDER == SDL_BIG_ENDIAN) {
+                        p[0] = (pixel >> 16) & 0xff;
+                        p[1] = (pixel >> 8) & 0xff;
+                        p[2] = pixel & 0xff;
+                } else {
+                        p[0] = pixel & 0xff;
+                        p[1] = (pixel >> 8) & 0xff;
+                        p[2] = (pixel >> 16) & 0xff;
+                }
+                break;
+        case 4: *(Uint32 *)p = pixel;
+                break;
+        default:
+                C_error("Invalid surface format");
         }
 }
 
@@ -69,42 +111,78 @@ static int surface_uses_alpha(SDL_Surface *surf)
         }
         bpp = surf->format->BytesPerPixel;
         for (y = 0; y < surf->h; y++)
-                for (x = 0; x < surf->w; x++) {
-                        Uint32 pixel;
-                        Uint8 r, g, b, a;
-
-                        pixel = get_surface_pixel(surf, x, y);
-                        SDL_GetRGBA(pixel, surf->format, &r, &g, &b, &a);
-                        if (a < 255) {
+                for (x = 0; x < surf->w; x++)
+                        if (R_SDL_get_pixel(surf, x, y).a < 1.f) {
                                 SDL_UnlockSurface(surf);
                                 return TRUE;
                         }
-                }
         SDL_UnlockSurface(surf);
         return FALSE;
 }
 
 /******************************************************************************\
- Just allocate a texture object, does not load anything or add it to the
- texture linked list.
-\******************************************************************************/
-r_texture_t *R_texture_alloc(void)
-{
-        r_texture_t *pt;
+ Just allocate a texture object and cleared w by h SDL surface. Does not load
+ anything or add the texture to the texture linked list. The texture needs to
+ be uploaded after you are done editing it. Don't forget to lock the surface!
 
+ Mip-maps are disabled by default for allocated textures, if you are going to
+ use the texture on a 3D object, you will want to enable them for that
+ texture.
+\******************************************************************************/
+r_texture_t *R_texture_alloc_full(const char *file, int line, const char *func,
+                                  int w, int h, int alpha)
+{
+        static int count;
+        SDL_Rect rect;
+        SDL_PixelFormat *format;
+        r_texture_t *pt;
+        int flags;
+
+        if (w < 1 || h < 1)
+                C_error("Invalid texture dimensions");
         pt = C_calloc(sizeof (*pt));
         pt->ref.refs = 1;
         pt->ref.cleanup_func = (c_ref_cleanup_f)texture_cleanup;
+        if (c_mem_check.value.n)
+                C_strncpy_buf(pt->ref.name,
+                              C_va("Texture #%d allocated by %s()",
+                                   ++count, func));
+        pt->alpha = alpha;
+        flags = SDL_HWSURFACE;
+        if (alpha) {
+                flags |= SDL_SRCALPHA;
+                format = &sdl_rgba_fmt;
+                pt->gl_format = GL_RGBA;
+                pt->gl_type = gl_rgba_type;
+        } else {
+                format = &sdl_rgb_fmt;
+                pt->gl_format = r_color_bits.value.n > 16 ? GL_RGBA : GL_RGB;
+                pt->gl_type = gl_rgb_type;
+        }
+        pt->surface = SDL_CreateRGBSurface(flags, w, h, format->BitsPerPixel,
+                                           format->Rmask, format->Gmask,
+                                           format->Bmask, format->Amask);
+        SDL_SetAlpha(pt->surface, SDL_SRCALPHA, 255);
+        rect.x = 0;
+        rect.y = 0;
+        rect.w = w;
+        rect.h = h;
+        SDL_FillRect(pt->surface, &rect, 0);
         glGenTextures(1, &pt->gl_name);
+        R_check_errors();
+        if (c_mem_check.value.n)
+                C_debug_full(file, line, func, "Allocated texture #%d", count);
         return pt;
 }
 
 /******************************************************************************\
  If the texture's SDL surface has changed, the image must be reloaded into
  OpenGL. This function will do this. It is assumed that the texture surface
- format has not changed since the texture was created.
+ format has not changed since the texture was created. Note that mipmaps will
+ make UI textures look blurry so do not use them for anything that will be
+ rendered in 2D mode.
 \******************************************************************************/
-void R_texture_upload(const r_texture_t *pt)
+void R_texture_upload(const r_texture_t *pt, int mipmaps)
 {
         int flags, gl_internal;
 
@@ -115,12 +193,22 @@ void R_texture_upload(const r_texture_t *pt)
         } else
                 gl_internal = GL_RGB;
         glBindTexture(GL_TEXTURE_2D, pt->gl_name);
-        glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,
-                        GL_LINEAR_MIPMAP_NEAREST);
+        if (mipmaps) {
+                gluBuild2DMipmaps(GL_TEXTURE_2D, gl_internal,
+                                  pt->surface->w, pt->surface->h,
+                                  pt->gl_format, pt->gl_type,
+                                  pt->surface->pixels);
+                glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,
+                                GL_LINEAR_MIPMAP_NEAREST);
+        } else {
+                glTexImage2D(GL_TEXTURE_2D, 0, gl_internal,
+                             pt->surface->w, pt->surface->h, 0,
+                             pt->gl_format, pt->gl_type, pt->surface->pixels);
+                glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,
+                                GL_LINEAR);
+        }
         glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-        gluBuild2DMipmaps(GL_TEXTURE_2D, gl_internal,
-                          pt->surface->w, pt->surface->h,
-                          pt->gl_format, pt->gl_type, pt->surface->pixels);
+        R_check_errors();
 }
 
 /******************************************************************************\
@@ -128,7 +216,7 @@ void R_texture_upload(const r_texture_t *pt)
  just ups the reference count and returns the loaded surface.
    TODO: Support loading from sources other than files.
 \******************************************************************************/
-r_texture_t *R_texture_load(const char *filename)
+r_texture_t *R_texture_load(const char *filename, int mipmaps)
 {
         SDL_Surface *surface, *surface_new;
         SDL_PixelFormat *sdl_format;
@@ -174,7 +262,7 @@ r_texture_t *R_texture_load(const char *filename)
 
         /* Load the texture into OpenGL */
         glGenTextures(1, &pt->gl_name);
-        R_texture_upload(pt);
+        R_texture_upload(pt, mipmaps);
         R_check_errors();
 
         return pt;
@@ -222,7 +310,8 @@ void R_load_assets(void)
         C_status("Loading render assets");
 
         /* Setup the texture pixel format, RGBA in 32 or 16 bits */
-        memset(&sdl_rgb_fmt, 0 , sizeof (sdl_rgb_fmt));
+        C_zero(&sdl_rgb_fmt);
+        C_zero(&sdl_rgba_fmt);
         if (r_color_bits.value.n > 16) {
 
                 /* RGBA */

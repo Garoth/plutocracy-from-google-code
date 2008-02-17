@@ -144,7 +144,7 @@ static r_model_data_t *model_data_load(const char *filename)
                 token = C_token_file_read(&token_file);
                 C_strncpy(obj.name, token, sizeof (obj.name));
                 token = C_token_file_read(&token_file);
-                obj.texture = R_texture_load(token);
+                obj.texture = R_texture_load(token, TRUE);
                 C_array_append(&objects, &obj);
         }
         data->objects_len = objects.len;

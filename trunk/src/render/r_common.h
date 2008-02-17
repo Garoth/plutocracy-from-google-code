@@ -80,12 +80,17 @@ typedef enum {
 /* r_assets.c */
 void R_free_assets(void);
 void R_load_assets(void);
-r_texture_t *R_texture_alloc(void);
+c_color_t R_SDL_get_pixel(const SDL_Surface *surf, int x, int y);
+void R_SDL_put_pixel(SDL_Surface *surf, int x, int y, c_color_t color);
+#define R_texture_alloc(w, h, a) R_texture_alloc_full(__FILE__, __LINE__, \
+                                                      __func__, w, h, a)
+r_texture_t *R_texture_alloc_full(const char *file, int line, const char *func,
+                                  int width, int height, int alpha);
 #define R_texture_free(t) C_ref_down((c_ref_t *)(t))
-r_texture_t *R_texture_load(const char *filename);
+r_texture_t *R_texture_load(const char *filename, int mipmaps);
 #define R_texture_ref(t) C_ref_up((c_ref_t *)(t))
 void R_texture_select(r_texture_t *);
-void R_texture_upload(const r_texture_t *);
+void R_texture_upload(const r_texture_t *, int mipmaps);
 
 /* r_render.c */
 #define R_check_errors() R_check_errors_full(__FILE__, __LINE__, __func__);

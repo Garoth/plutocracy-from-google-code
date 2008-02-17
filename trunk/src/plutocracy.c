@@ -16,31 +16,79 @@
 #include "common/c_shared.h"
 #include "render/r_shared.h"
 
-extern c_var_t c_max_fps;
+#define CORRUPT_CHECK_VALUE 1776
+
+extern c_var_t c_max_fps, c_show_fps;
+
+static c_count_t throttled;
+static r_text_t status_text;
+static int desired_msec;
+
+/******************************************************************************\
+ Renders the status text on the screen. This function uses the throttled
+ counter for interval timing. Counters are reset periodically.
+\******************************************************************************/
+static void render_status(void)
+{
+        if (c_show_fps.value.n < 0)
+                return;
+        if (C_count_poll(&throttled, 5000)) {
+                char *str;
+
+                str = C_va("%.1f fps, (%.1f%% throttled), %.1f faces/frame",
+                           C_count_fps(&throttled),
+                           100.f * C_count_per_frame(&throttled) / desired_msec,
+                           C_count_per_frame(&r_count_faces));
+                R_text_set_text(&status_text, R_FONT_CONSOLE, 0, 1.f, str);
+                status_text.sprite.origin = C_vec2(5, 5);
+                C_count_reset(&throttled);
+                C_count_reset(&r_count_faces);
+        }
+        R_text_render(&status_text);
+}
+
+/******************************************************************************\
+ Throttle framerate if vsync is off or broken so we don't burn the CPU for no
+ reason. SDL_Delay() will only work in 10ms increments on some systems so it
+ is necessary to break down our delays into bite-sized chunks ([wait_msec]).
+\******************************************************************************/
+static void throttle_fps(void)
+{
+        static int wait_msec;
+        int msec;
+
+        if (c_max_fps.value.n < 1 || c_frame_msec > desired_msec)
+                return;
+        wait_msec += desired_msec - c_frame_msec;
+        msec = (wait_msec / 10) * 10;
+        if (msec > 0) {
+                SDL_Delay(msec);
+                wait_msec -= msec;
+                C_count_add(&throttled, msec);
+        }
+}
 
 /******************************************************************************\
  This is the client's graphical main loop.
 \******************************************************************************/
 static void main_loop(void)
 {
+        static int corrupt_check = CORRUPT_CHECK_VALUE;
         SDL_Event ev;
-        c_count_t fps, throttled;
-        int desired_msec, wait_msec;
 
         C_status("Main loop");
         C_time_init();
-        C_count_init(&fps);
-        C_count_init(&throttled);
+        C_count_reset(&throttled);
+        R_text_init(&status_text);
 
         /* Calculate the desired frame msec.
              FIXME: I don't know why, but we need to wait twice as long as
                     the mathematically correct rate...? */
-        if (c_max_fps.value.n < 1)
-                c_max_fps.value.n = 1;
-        desired_msec = 2000 / c_max_fps.value.n;
-        wait_msec = 0;
+        if (c_max_fps.value.n >= 1)
+                desired_msec = 2000 / c_max_fps.value.n;
 
         for (;;) {
+                R_start_frame();
                 while (SDL_PollEvent(&ev)) {
                         switch(ev.type) {
                         case SDL_KEYDOWN:
@@ -55,36 +103,18 @@ static void main_loop(void)
                                 break;
                         }
                 }
-                R_render();
+                render_status();
+                R_finish_frame();
                 C_time_update();
+                throttle_fps();
 
-                /* Throttle framerate if vsync is broken. SDL_Delay() will
-                   only work in 10ms increments on some systems so it is
-                   necessary to break down our delays into bite-sized chunks. */
-                if (c_frame_msec < desired_msec) {
-                        int msec, delay;
-
-                        msec = desired_msec - c_frame_msec;
-                        C_count_add(&throttled, msec);
-                        wait_msec += msec;
-                        delay = wait_msec / 10;
-                        if (delay > 0) {
-                                SDL_Delay(delay);
-                                wait_msec -= delay;
-                        }
-                }
-
-                /* Print FPS to console periodically */
-                C_count_add(&fps, 1);
-                if (C_count_poll(&fps, 20000))
-                        C_debug("Frame %d, %.1f FPS (%.1f%% throttled), "
-                                "%.1f faces/frame",
-                                c_frame, C_count_per_sec(&fps),
-                                100.f * C_count_per_frame(&throttled) /
-                                        desired_msec,
-                                C_count_per_frame(&r_count_faces));
+                /* This check is a long-shot, but if there was rampant memory
+                   corruption this variable's variable may have been changed */
+                if (corrupt_check != CORRUPT_CHECK_VALUE)
+                        C_error("Static memory corruption detected");
         }
-        C_debug("Exited main loop");
+
+        /* Do NOT do your cleanup here! This code is never reached. */
 }
 
 /******************************************************************************\
@@ -124,7 +154,8 @@ static void cleanup(void)
 {
         static int ran_once;
 
-        /* Don't cleanup twice */
+        /* It is possible that this function will get called multiple times
+           for certain kinds of exits, do not clean-up twice! */
         if (ran_once) {
                 C_warning("Cleanup already called");
                 return;
@@ -132,7 +163,8 @@ static void cleanup(void)
         ran_once = TRUE;
 
         C_status("Cleaning up");
-        R_render_cleanup();
+        R_text_cleanup(&status_text);
+        R_cleanup();
         SDL_Quit();
         C_check_leaks();
         C_debug("Done");
@@ -156,6 +188,7 @@ static void init_sdl(void)
                 linked->major, linked->minor, linked->patch);
         if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER) < 0)
                 C_error("Failed to initialize SDL: %s", SDL_GetError());
+        SDL_WM_SetCaption(PACKAGE_STRING, PACKAGE);
 }
 
 /******************************************************************************\
@@ -182,7 +215,7 @@ int main(int argc, char *argv[])
         /* Initialize */
         C_status("Initializing " PACKAGE_STRING " client");
         init_sdl();
-        if (!R_render_init())
+        if (!R_init())
                 C_error("Window creation failed");
 
         /* Run the main loop */

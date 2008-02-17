@@ -54,6 +54,14 @@
 #define NUL '\0'
 #endif
 
+/* If you are going to use the C_va* functions, keep in mind that after calling
+   any of those functions [C_VA_BUFFERS] times, you will begin overwriting
+   the buffers starting from the first. Each buffer also has a fixed size.
+   Note that [C_VA_BUFFERS] * [C_VA_BUFFER_SIZE] has to be less than 32k or
+   the function will not compile on some systems. */
+#define C_VA_BUFFERS 16
+#define C_VA_BUFFER_SIZE 2000
+
 /* All angles should be in radians but there are some cases (OpenGL) where
    conversions are necessary */
 #define C_rad_to_deg(a) ((a) * 180 / M_PI)
@@ -197,6 +205,8 @@ void C_test_mem_check(void);
 #define C_zero(s) memset(s, 0, sizeof (*(s)))
 #define C_zero_buf(s) memset(s, 0, sizeof (s))
 
+extern c_var_t c_mem_check;
+
 /* c_noise.c */
 void C_noise3_seed(unsigned int seed);
 float C_noise3(float x, float y, float z);
@@ -223,13 +233,17 @@ int C_token_file_init(c_token_file_t *, const char *filename);
 const char *C_token_file_read_full(c_token_file_t *, int *out_quoted);
 #define C_token_file_read(f) C_token_file_read_full(f, NULL)
 char *C_strdup(const char *);
+char *C_va(const char *fmt, ...);
+char *C_van(int *output_len, const char *fmt, ...);
+char *C_vanv(int *output_len, const char *fmt, va_list);
 
 /* c_time.c */
 #define C_count_add(c, v) ((c)->value += (v))
-void C_count_init(c_count_t *);
+float C_count_fps(const c_count_t *);
 float C_count_per_frame(const c_count_t *);
 float C_count_per_sec(const c_count_t *);
 int C_count_poll(c_count_t *, int interval);
+void C_count_reset(c_count_t *);
 void C_time_init(void);
 void C_time_update(void);
 unsigned int C_timer(void);

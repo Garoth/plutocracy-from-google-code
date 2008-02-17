@@ -34,7 +34,7 @@ void R_sprite_init(r_sprite_t *sprite, const char *filename)
         sprite->alpha = 1.f;
         if (!filename || !filename[0])
                 return;
-        sprite->texture = R_texture_load(filename);
+        sprite->texture = R_texture_load(filename, FALSE);
         if (sprite->texture) {
                 sprite->size.x = sprite->texture->surface->w;
                 sprite->size.y = sprite->texture->surface->h;
@@ -55,6 +55,8 @@ void R_sprite_cleanup(r_sprite_t *sprite)
 /******************************************************************************\
  Renders a 2D textured quad on screen. If we are rendering a rotated sprite
  that doesn't use alpha, this function will draw an anti-aliased border for it.
+ The coordinates work here like you would expect for 2D, the origin is in the
+ upper left of the sprite and y decreases down the screen.
    TODO: Disable anti-aliasing here if FSAA is on.
    FIXME: There is a slight overlap between the antialiased edge line and the
           polygon which should probably be fixed if possible.
@@ -77,18 +79,18 @@ void R_sprite_render(const r_sprite_t *sprite)
 
         dw = sprite->size.x / 2;
         dh = sprite->size.y / 2;
-        verts[0].co = C_vec3(-dw - 0.5f, dh - 0.5f, 0.f);
+        verts[0].co = C_vec3(-dw, dh, 0.f);
         verts[0].uv = C_vec2(0.f, 1.f);
-        verts[1].co = C_vec3(-dw - 0.5f, -dh - 0.5f, 0.f);
+        verts[1].co = C_vec3(-dw, -dh, 0.f);
         verts[1].uv = C_vec2(0.f, 0.f);
-        verts[2].co = C_vec3(dw - 0.5f, -dh - 0.5f, 0.f);
+        verts[2].co = C_vec3(dw, -dh, 0.f);
         verts[2].uv = C_vec2(1.f, 0.f);
-        verts[3].co = C_vec3(dw - 0.5f, dh - 0.5f, 0.f);
+        verts[3].co = C_vec3(dw, dh, 0.f);
         verts[3].uv = C_vec2(1.f, 1.f);
         C_count_add(&r_count_faces, 2);
         glPushMatrix();
         glLoadIdentity();
-        glTranslatef(sprite->origin.x, sprite->origin.y, 0.f);
+        glTranslatef(sprite->origin.x + dw, sprite->origin.y + dh, 0.f);
         glRotatef(C_rad_to_deg(sprite->angle), 0.0, 0.0, 1.0);
         glInterleavedArrays(R_VERTEX2_FORMAT, 0, verts);
         glDrawElements(GL_QUADS, 4, GL_UNSIGNED_SHORT, indices);
@@ -165,42 +167,148 @@ void R_cleanup_fonts(void)
 }
 
 /******************************************************************************\
+ Blits the entire [src] surface to dest at [x], [y] and applies a one-pixel
+ shadow of [alpha] opacity. This function could be made more efficient by
+ unrolling the loops a bit, but it is not worth the loss in readablitiy.
+\******************************************************************************/
+static void blit_shadowed(SDL_Surface *dest, SDL_Surface *src,
+                          int to_x, int to_y, float alpha)
+{
+        int y, x;
+
+        if (SDL_LockSurface(dest) < 0) {
+                C_warning("Failed to lock destination surface");
+                return;
+        }
+        if (SDL_LockSurface(src) < 0) {
+                C_warning("Failed to lock source surface");
+                return;
+        }
+        for (y = 0; y < src->h + 1; y++)
+                for (x = 0; x < src->w + 1; x++) {
+                        c_color_t dc, sc;
+
+                        dc = R_SDL_get_pixel(dest, to_x + x, to_y + y);
+                        if (x < src->w && y < src->h) {
+                                sc = R_SDL_get_pixel(src, x, y);
+                                dc = C_color_blend(dc, sc);
+                        }
+                        if (dc.a < 1.f && x && y && alpha) {
+                                sc = R_SDL_get_pixel(src, x - 1, y - 1);
+                                sc = C_color(0, 0, 0, sc.a * alpha);
+                                dc = C_color_blend(sc, dc);
+                        }
+                        R_SDL_put_pixel(dest, to_x + x, to_y + y, dc);
+                }
+        SDL_UnlockSurface(dest);
+        SDL_UnlockSurface(src);
+}
+
+/******************************************************************************\
  If the text or font has changed, this function will clean up old resources
  and generate a new SDL surface and texture. This function will setup the
  sprite member of the text structure for rendering. Note that sprite size will
- be reset if it is regenerated.
-   TODO: To implement text wrapping we need to make a new surface and manually
-         paste the text on there line by line. This will let us use our
-         texture format though. See:
-         http://www.gamedev.net/reference/articles/article1960.asp
+ be reset if it is regenerated. Text can be wrapped (or not, set wrap to 0)
+ and a shadow (of variable opacity) can be applied. [string] does need to
+ persist after the function call.
 \******************************************************************************/
-void R_text_set_text(r_text_t *text, const char *string, r_font_t font,
-                     float wrap)
+void R_text_set_text(r_text_t *text, r_font_t font, float wrap, float shadow,
+                     const char *string)
 {
-        SDL_Color white = { 255, 255, 255, 255 };
         r_texture_t *tex;
+        int i, j, y, last_break, last_line, width, height, line_skip;
+        char buf[1024], *line;
 
         if (font < 0 || font >= R_FONTS)
                 C_error("Invalid font index %d", font);
         if (!text || (font == text->font && !strcmp(string, text->string)))
                 return;
+        if (!string || !string[0]) {
+                text->string[0] = NUL;
+                R_sprite_cleanup(&text->sprite);
+                return;
+        }
         C_strncpy_buf(text->string, string);
         R_sprite_cleanup(&text->sprite);
 
-        /* SDL_ttf will generate a 32-bit RGBA surface with the text printed
-           on it in white (we can modulate the color later) */
-        tex = R_texture_alloc();
-        tex->surface = TTF_RenderUTF8_Blended(fonts[font].ttf_font,
-                                              string, white);
-        tex->alpha = TRUE;
-        tex->gl_format = GL_RGBA;
-        tex->gl_type = GL_UNSIGNED_INT_8_8_8_8;
-        R_texture_upload(tex);
+        /* Wrap the text and figure out how large the surface needs to be.
+           For some reason, SDL_ttf returns a line skip that is one pixel shy
+           of the image height returned by TTF_RenderUTF8_Blended(). The
+           width and height also need to be expanded by a pixel to leave room
+           for the shadow. */
+        wrap /= fonts[font].scale;
+        last_line = 0;
+        last_break = 0;
+        width = 0;
+        height = (line_skip = TTF_FontLineSkip(fonts[font].ttf_font)) + 2;
+        line = buf;
+        for (i = 0, j = 0; string[i]; i++) {
+                int w, h;
 
+                if (j >= sizeof (buf) - 1) {
+                        C_warning("Ran out of buffer space");
+                        break;
+                }
+                buf[j++] = string[i];
+                buf[j] = NUL;
+                if (C_is_space(string[i]))
+                        last_break = i;
+                TTF_SizeText(fonts[font].ttf_font, line, &w, &h);
+                if ((wrap > 0.f && w > wrap) || string[i] == '\n') {
+                        if (last_line == last_break)
+                                last_break = last_line >= i - 1 ? i : i - 1;
+                        j -= i - last_break + 1;
+                        buf[j++] = '\n';
+                        line = buf + j;
+                        while (C_is_space(string[last_break]))
+                                last_break++;
+                        i = last_break - 1;
+                        last_line = last_break;
+                        height += line_skip;
+                        continue;
+                }
+                if (w > width)
+                        width = w;
+        }
+        if (++width < 2 || height < 2)
+                return;
+
+        /* SDL_ttf will generate a 32-bit RGBA surface with the text printed
+           on it in white (we can modulate the color later) but it won't
+           recognize newlines so we need to print each line to a temporary
+           surface and blit to the final surface (in our format). */
+        tex = R_texture_alloc(width, height, TRUE);
+        for (i = 0, last_break = 0, y = 0; ; i++) {
+                SDL_Color white = { 255, 255, 255, 255 };
+                SDL_Surface *surf;
+                char swap;
+
+                if (buf[i] != '\n' && buf[i])
+                        continue;
+                swap = buf[i];
+                buf[i] = NUL;
+                surf = TTF_RenderUTF8_Blended(fonts[font].ttf_font,
+                                              buf + last_break, white);
+                if (!surf) {
+                        C_warning("TTF_RenderUTF8_Blended() failed: %s",
+                                  TTF_GetError());
+                        break;
+                }
+                blit_shadowed(tex->surface, surf, 0, y, shadow);
+                SDL_FreeSurface(surf);
+                if (!swap)
+                        break;
+                last_break = i + 1;
+                y += line_skip;
+        }
+        R_texture_upload(tex, FALSE);
+
+        /* Text is actually just a sprite and after this function has finished
+           the sprite itself can be manipulated as expected */
         R_sprite_init(&text->sprite, NULL);
         text->sprite.texture = tex;
-        text->sprite.size.x = tex->surface->w * fonts[font].scale;
-        text->sprite.size.y = tex->surface->h * fonts[font].scale;
+        text->sprite.size.x = width * fonts[font].scale;
+        text->sprite.size.y = height * fonts[font].scale;
         text->font = font;
 }
 

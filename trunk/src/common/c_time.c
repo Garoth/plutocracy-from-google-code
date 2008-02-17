@@ -57,7 +57,7 @@ unsigned int C_timer(void)
 /******************************************************************************\
  Initializes a counter structure.
 \******************************************************************************/
-void C_count_init(c_count_t *counter)
+void C_count_reset(c_count_t *counter)
 {
         counter->last_time = c_time_msec;
         counter->start_frame = c_frame;
@@ -101,5 +101,18 @@ float C_count_per_sec(const c_count_t *counter)
         if (seconds <= 0.f)
                 return 0.f;
         return counter->value / seconds;
+}
+
+/******************************************************************************\
+ Returns the average frames-per-second while counter was running.
+\******************************************************************************/
+float C_count_fps(const c_count_t *counter)
+{
+        float seconds;
+
+        seconds = (c_time_msec - counter->start_time) / 1000.f;
+        if (seconds <= 0.f)
+                return 0.f;
+        return (c_frame - counter->start_frame) / seconds;
 }
 
