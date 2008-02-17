@@ -1,19 +1,21 @@
-#summary A list of producible resources and commodities
+﻿#summary A list of producible resources and commodities
 
 = Trees =
   * The map is largely covered in trees at the start of the game
-  * Will regrow and can be replanted but take a long time to do so
+  * Will regrow and forests can spread to adjacent tiles
   * Different types grow in different climates (with some randomness):
     * Cold tiles produce Pine Trees
     * Moderate tiles produce Apple Trees
+    * Moderate tiles produce Oak Trees as well
     * Hot tiles produce Banana Trees
 
 = First Tier (Harvested Resources) =
 
 == Lumber ==
-  * Harvested by building Sawmills by trees
+  * Harvested by building Sawmills. Trees adjacent to town structures can be harvested. (Only having trees near sawmills seems to be a hassle that the game can do without. Trade > town management.)
   * Efficiency depends on tree type:
-    * Pine trees: 100%
+    * Oak trees: 100%
+    * Pine trees: 75%
     * Apple trees: 50%
     * Banana trees: 25%
   * Used in building and ship construction
@@ -21,6 +23,7 @@
 == Fruit ==
   * Harvested by building Orchards by trees
   * Efficiency depends on tree type:
+    * Oak trees: 0%
     * Pine trees: 25%
     * Apple trees: 50%
     * Banana trees: 100%
