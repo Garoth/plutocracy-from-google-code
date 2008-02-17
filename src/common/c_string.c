@@ -18,6 +18,51 @@
 #undef fclose
 
 /******************************************************************************\
+ These functions parse variable argument lists into a static buffer and return
+ a pointer to it. You can also pass a pointer to an integer to get the length
+ of the output. Not thread safe, but very convenient. Note that after repeated
+ calls to these functions, C_vanv will eventually run out of buffers and start
+ overwriting old ones. The idea for these functions comes from the Quake 3
+ source code.
+\******************************************************************************/
+char *C_vanv(int *plen, const char *fmt, va_list va)
+{
+	static char buffer[C_VA_BUFFERS][C_VA_BUFFER_SIZE];
+	static int which;
+	int len;
+
+	which++;
+	if (which >= C_VA_BUFFERS)
+	        which = 0;
+	len = vsnprintf(buffer[which], sizeof (buffer[which]), fmt, va);
+	if (plen)
+		*plen = len;
+	return buffer[which];
+}
+
+char *C_van(int *plen, const char *fmt, ...)
+{
+	va_list va;
+	char *string;
+
+	va_start(va, fmt);
+	string = C_vanv(plen, fmt, va);
+	va_end(va);
+	return string;
+}
+
+char *C_va(const char *fmt, ...)
+{
+	va_list va;
+	char *string;
+
+	va_start(va, fmt);
+	string = C_vanv(NULL, fmt, va);
+	va_end(va);
+	return string;
+}
+
+/******************************************************************************\
  Skips any space characters in the string.
 \******************************************************************************/
 char *C_skip_spaces(const char *str)

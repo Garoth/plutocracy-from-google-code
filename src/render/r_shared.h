@@ -54,7 +54,7 @@ typedef enum {
 typedef struct r_text {
         r_sprite_t sprite;
         r_font_t font;
-        char string[256];
+        char string[1024];
 } r_text_t;
 
 /* r_model.c */
@@ -64,9 +64,10 @@ void R_model_play(r_model_t *, const char *anim_name);
 void R_model_render(r_model_t *);
 
 /* r_render.c */
-void R_render(void);
-void R_render_cleanup(void);
-int R_render_init(void);
+void R_cleanup(void);
+void R_finish_frame(void);
+int R_init(void);
+void R_start_frame(void);
 
 extern c_count_t r_count_faces;
 extern int r_width_2d, r_height_2d;
@@ -78,8 +79,9 @@ void R_sprite_render(const r_sprite_t *);
 void R_text_cleanup(r_text_t *);
 #define R_text_cleanup(t) R_sprite_cleanup(&(t)->sprite)
 #define R_text_init(t) C_zero(t)
-void R_text_set_text(r_text_t *, const char *, r_font_t, float wrap);
-#define R_text_render(t) R_sprite_render((t)->sprite)
+void R_text_set_text(r_text_t *, r_font_t, float wrap, float shadow_alpha,
+                     const char *);
+#define R_text_render(t) R_sprite_render(&(t)->sprite)
 
 /* r_variables.c */
 void R_register_variables(void);

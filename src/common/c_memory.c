@@ -35,8 +35,6 @@ typedef struct c_mem_tag {
         char no_mans_land[NO_MANS_LAND_SIZE];
 } c_mem_tag_t;
 
-extern c_var_t c_mem_check, c_test_mem_check;
-
 static c_mem_tag_t *mem_root;
 static unsigned int mem_bytes, mem_bytes_max, mem_calls;
 
@@ -302,10 +300,10 @@ void C_test_mem_check(void)
         char *ptr;
         int i;
 
-        switch (c_test_mem_check.value.n) {
-        case 0: return;
-
-        case 1: /* Normal operation, shouldn't fail */
+        switch (c_mem_check.value.n) {
+        case 0:
+        case 1: return;
+        case 2: C_debug("Normal operation, shouldn't fail");
                 ptr = C_malloc(1024);
                 C_free(ptr);
                 ptr = C_calloc(1024);
@@ -313,45 +311,37 @@ void C_test_mem_check(void)
                 C_realloc(ptr, 512);
                 C_free(ptr);
                 return;
-
-        case 2: /* Intentionally leak memory */
+        case 3: C_debug("Intentionally leaking memory");
                 ptr = C_malloc(1024);
                 return;
-
-        case 3: /* Free unallocated memory */
+        case 4: C_debug("Freeing unallocated memory");
                 C_free((void *)0x12345678);
                 break;
-
-        case 4: /* Double free */
+        case 5: C_debug("Double freeing memory");
                 ptr = C_malloc(1024);
                 C_free(ptr);
                 C_free(ptr);
                 break;
-
-        case 5: /* Lower overrun */
+        case 6: C_debug("Simulating memory underrun");
                 ptr = C_malloc(1024);
                 for (i = 0; i > -NO_MANS_LAND_SIZE / 2; i--)
                         ptr[i] = 42;
                 C_free(ptr);
                 break;
-
-        case 6: /* Upper overrun */
+        case 7: C_debug("Simulating memory overrun");
                 ptr = C_malloc(1024);
                 for (i = 1024; i < 1024 + NO_MANS_LAND_SIZE / 2; i++)
                         ptr[i] = 42;
                 C_free(ptr);
                 break;
-
-        case 7: /* Reallocate unallocated memory */
+        case 8: C_debug("Reallocating unallocated memory");
                 ptr = C_realloc((void *)0x12345678, 1024);
                 break;
-
         default:
                 C_error("Unknown memory check test %d",
-                        c_test_mem_check.value.n);
+                        c_mem_check.value.n);
         }
-
-        C_error("Memory check test %d failed", c_test_mem_check.value.n);
+        C_error("Memory check test %d failed", c_mem_check.value.n);
 }
 
 /******************************************************************************\
@@ -390,9 +380,10 @@ void *C_ref_alloc_full(const char *file, int line, const char *function,
                 cmp = strcmp(name, ref->name);
                 if (!cmp) {
                         ref->refs++;
-                        C_debug_full(file, line, function,
-                                     "Loading '%s', cache hit (%d refs)",
-                                     name, ref->refs);
+                        if (c_mem_check.value.n)
+                                C_debug_full(file, line, function,
+                                             "Loading '%s', cache hit "
+                                             "(%d refs)", name, ref->refs);
                         if (found)
                                 *found = TRUE;
                         return ref;
@@ -422,7 +413,9 @@ void *C_ref_alloc_full(const char *file, int line, const char *function,
         ref->cleanup_func = cleanup;
         ref->root = root;
         C_strncpy_buf(ref->name, name);
-        C_debug_full(file, line, function, "Loading '%s', allocated new", name);
+        if (c_mem_check.value.n)
+                C_debug_full(file, line, function,
+                             "Loading '%s', allocated new", name);
         return ref;
 }
 
@@ -438,8 +431,9 @@ void C_ref_up_full(const char *file, int line, const char *function,
                 C_error_full(file, line, function,
                              "Invalid reference structure");
         ref->refs++;
-        C_debug_full(file, line, function,
-                     "Referenced '%s' (%d refs)", ref->name, ref->refs);
+        if (c_mem_check.value.n)
+                C_debug_full(file, line, function,
+                             "Referenced '%s' (%d refs)", ref->name, ref->refs);
 }
 
 /******************************************************************************\
@@ -456,9 +450,10 @@ void C_ref_down_full(const char *file, int line, const char *function,
                              "Invalid reference structure");
         ref->refs--;
         if (ref->refs > 0) {
-                C_debug_full(file, line, function,
-                             "Dereferenced '%s' (%d refs)",
-                             ref->name, ref->refs);
+                if (c_mem_check.value.n)
+                        C_debug_full(file, line, function,
+                                     "Dereferenced '%s' (%d refs)",
+                                     ref->name, ref->refs);
                 return;
         }
         if (ref->root) {
@@ -468,9 +463,10 @@ void C_ref_down_full(const char *file, int line, const char *function,
                         ref->prev->next = ref->next;
                 if (ref->next)
                         ref->next->prev = ref->prev;
+        }
+        if (c_mem_check.value.n)
                 C_debug_full(file, line, function, "Freed '%s'",
                              ref->name, ref->refs);
-        }
         if (ref->cleanup_func)
                 ref->cleanup_func(ref);
         C_free(ref);

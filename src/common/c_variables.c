@@ -21,12 +21,12 @@ c_var_t c_log_level, c_log_file;
 
 /* Never burn the user's CPU, if we are running through frames too quickly
    (faster than this rate), we need to take a nap */
-c_var_t c_max_fps;
+c_var_t c_max_fps, c_show_fps;
 
 /* We can do some detailed allocated memory tracking and detect double-free,
    memory under/overrun, and leaks on the fly. This variable cannot be changed
    after initilization! */
-c_var_t c_mem_check, c_test_mem_check;
+c_var_t c_mem_check;
 
 static c_var_t *root;
 
@@ -41,10 +41,10 @@ void C_register_variables(void)
 
         /* FPS cap */
         C_register_integer(&c_max_fps, "c_max_fps", 120);
+        C_register_integer(&c_show_fps, "c_show_fps", FALSE);
 
         /* Memory checking */
         C_register_integer(&c_mem_check, "c_mem_check", FALSE);
-        C_register_integer(&c_test_mem_check, "c_test_mem_check", 0);
 }
 
 /******************************************************************************\

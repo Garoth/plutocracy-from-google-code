@@ -33,20 +33,13 @@ static r_text_t test_text;
 static g_globe_t *test_globe;
 
 /******************************************************************************\
- Creates the client window. Initializes OpenGL settings such view matrices,
- culling, and depth testing. Returns TRUE on success.
+ Sets the video mode. SDL creates a window in windowed mode.
 \******************************************************************************/
-int R_render_init(void)
+static int set_video_mode(void)
 {
         SDL_Surface *screen;
         int flags;
 
-        C_status("Opening window");
-
-        /* Initialize counters */
-        C_count_init(&r_count_faces);
-
-        /* Set OpenGL attributes */
         SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
         SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 8);
         SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, r_depth_bits.value.n);
@@ -60,14 +53,6 @@ int R_render_init(void)
                 SDL_GL_SetAttribute(SDL_GL_GREEN_SIZE, 8);
                 SDL_GL_SetAttribute(SDL_GL_BLUE_SIZE, 8);
         }
-
-        /* NVidia drivers respect this environment variable for vsync
-             FIXME: Check if this works. Should it be called before
-                    SDL_Init()? */
-        SDL_putenv(r_vsync.value.n ? "__GL_SYNC_TO_VBLANK=1" :
-                                     "__GL_SYNC_TO_VBLANK=0");
-
-        /* Set the video mode */
         flags = SDL_OPENGL | SDL_GL_DOUBLEBUFFER | SDL_HWPALETTE |
                 SDL_HWSURFACE;
         if (!r_windowed.value.n)
@@ -89,43 +74,69 @@ int R_render_init(void)
 
         /* Set screen view */
         glViewport(0, 0, r_width.value.n, r_height.value.n);
+        R_check_errors();
+
+        return TRUE;
+}
+
+/******************************************************************************\
+ Outputs debug strings and checks supported extensions.
+\******************************************************************************/
+static void check_gl_extensions(void)
+{
+
+}
+
+/******************************************************************************\
+ Sets the initial OpenGL state.
+\******************************************************************************/
+static void set_gl_state(void)
+{
+        glEnable(GL_TEXTURE_2D);
+        glEnable(GL_COLOR_MATERIAL);
+
+        /* We use lines to do 2D edge anti-aliasing although there is probably
+           a better way so we need to always smooth lines (requires alpha
+           blending to be on to work) */
+        glEnable(GL_LINE_SMOOTH);
+
+        glHint(GL_GENERATE_MIPMAP_HINT, GL_NICEST);
+        glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);
         glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
 
-        /* Backface culling. Only rasterize polygons that are facing you.
-           Blender seems to export its polygons in counter-clockwise order. */
+        glAlphaFunc(GL_GREATER, 0);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+        glDepthFunc(GL_LEQUAL);
+
+        glClearColor(0.2, 0.2, 0.2, 1.0);
+
+        /* Setting the color parameter will modulate the texture color */
+        glColorMaterial(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE);
+        glColor3f(1.0, 1.0, 1.0);
+
+        /* Only rasterize polygons that are facing you. Blender seems to export
+           its polygons in counter-clockwise order. */
         glCullFace(GL_BACK);
         glFrontFace(GL_CCW);
 
-        /* Enable textures, use a white default material */
-        glEnable(GL_TEXTURE_2D);
-        glEnable(GL_COLOR_MATERIAL);
-        glColorMaterial(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE);
-        glColor3f(1.0, 1.0, 1.0);
+        /* GL_SMOOTH here means faces are shaded taking each vertex into
+           account rather than one solid color per face */
         glShadeModel(GL_SMOOTH);
 
-        /* Enable normal alpha blending with alpha test */
-        glAlphaFunc(GL_GREATER, 0);
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-        /* Clear to black */
-        glClearColor(0.0, 0.0, 0.0, 1.0);
-
-        /* Depth testing function */
-        glDepthFunc(GL_LEQUAL);
-
-        /* Always smooth lines (requires alpha blending to be on to work) */
-        glEnable(GL_LINE_SMOOTH);
-        glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);
-
-        /* Gamma */
+        /* Set the OpenGL gamma ramp using SDL */
         SDL_SetGamma(r_gamma.value.f, r_gamma.value.f, r_gamma.value.f);
 
-        /* All set to start loading models and textures */
-        R_check_errors();
-        R_init_fonts();
-        R_load_assets();
+        /* Not configured to a render mode intially */
+        r_mode = R_MODE_NONE;
 
-        /* Load the 3D test assets */
+        R_check_errors();
+}
+
+/******************************************************************************\
+ Loads all the render testing assets.
+\******************************************************************************/
+static void load_test_assets(void)
+{
         if (r_test_globe.value.n) {
                 unsigned int seed;
 
@@ -137,15 +148,15 @@ int R_render_init(void)
                 R_model_init(&test_model, r_test_model_path.value.s);
         else if (*r_test_mesh_path.value.s)
                 test_mesh = R_static_mesh_load(r_test_mesh_path.value.s);
-
-        /* Load the 2D test assets */
         if (r_test_sprite_num.value.n && r_test_sprite_path.value.s[0]) {
                 int i;
 
                 C_rand_seed(time(NULL));
                 test_sprites = C_malloc(r_test_sprite_num.value.n *
                                         sizeof (*test_sprites));
-                for (i = 0; i < r_test_sprite_num.value.n; i++) {
+                R_sprite_init(test_sprites, r_test_sprite_path.value.s);
+                test_sprites[0].origin = C_vec2(32, 32);
+                for (i = 1; i < r_test_sprite_num.value.n; i++) {
                         R_sprite_init(test_sprites + i,
                                       r_test_sprite_path.value.s);
                         test_sprites[i].origin = C_vec2(r_width_2d * C_rand(),
@@ -155,22 +166,44 @@ int R_render_init(void)
         }
         R_text_init(&test_text);
         if (r_test_text.value.s[0]) {
-                R_text_set_text(&test_text, r_test_text.value.s,
-                                R_FONT_CONSOLE, 100.f);
+                R_text_set_text(&test_text, R_FONT_CONSOLE, 100.f, 1.f,
+                                r_test_text.value.s);
                 test_text.sprite.origin = C_vec2(r_width_2d / 2,
                                                  r_height_2d / 2);
         }
+}
 
-        /* No mode intially */
-        r_mode = R_MODE_NONE;
+/******************************************************************************\
+ Creates the client window. Initializes OpenGL settings such view matrices,
+ culling, and depth testing. Returns TRUE on success.
+\******************************************************************************/
+int R_init(void)
+{
+        C_status("Opening window");
+        C_count_reset(&r_count_faces);
 
+        /* NVidia drivers respect this environment variable for vsync
+             FIXME: Check if this works. Should it be called before
+                    SDL_Init()? */
+        SDL_putenv(r_vsync.value.n ? "__GL_SYNC_TO_VBLANK=1" :
+                                     "__GL_SYNC_TO_VBLANK=0");
+
+        /* Need to do these initialization steps before loading any assets */
+        if (!set_video_mode())
+                return FALSE;
+        check_gl_extensions();
+        set_gl_state();
+
+        R_init_fonts();
+        R_load_assets();
+        load_test_assets();
         return TRUE;
 }
 
 /******************************************************************************\
  Cleanup the OpenGL mess.
 \******************************************************************************/
-void R_render_cleanup(void)
+void R_cleanup(void)
 {
         R_free_assets();
         R_cleanup_fonts();
@@ -363,7 +396,7 @@ int render_test_text(void)
 {
         if (!r_test_text.value.s[0])
                 return FALSE;
-        R_sprite_render(&test_text.sprite);
+        R_text_render(&test_text);
         test_text.sprite.angle += 0.5f * c_frame_sec;
         return TRUE;
 }
@@ -415,19 +448,21 @@ void R_set_mode(r_mode_t mode)
 }
 
 /******************************************************************************\
- Renders the scene.
+ Clears the buffer and starts rendering the scene.
 \******************************************************************************/
-void R_render(void)
+void R_start_frame(void)
 {
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+}
 
-        /* 3D rendering */
+/******************************************************************************\
+ Finishes rendering the scene and flips the buffer. Renders render tests.
+\******************************************************************************/
+void R_finish_frame(void)
+{
         if (render_test_globe() || render_test_model() || render_test_mesh());
-
-        /* 2D rendering */
         render_test_sprites();
         render_test_text();
-
         SDL_GL_SwapBuffers();
         R_check_errors();
 }
