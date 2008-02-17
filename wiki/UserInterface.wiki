@@ -1,0 +1,4 @@
+﻿#summary Detailing of the User Interface (HUD, popups, menus, screens)
+
+1) Setting up a price
+http://plutocracy.googlecode.com/svn/wiki/ui/Price-Menu.png
