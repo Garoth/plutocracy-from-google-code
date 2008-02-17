@@ -3,6 +3,8 @@
 = UI Layout =
 
 == Windows ==
+Only one window is shown for each category (left, taskbar, right) or no window, if the active button is clicked. Windows are not movable. Scrolling is accomplished by clicking on a simple scroll arrow that appears at the top of the window when some elements are obscured. The Unit window displays the options for the currently selected unit or tile.
+
 http://plutocracy.googlecode.com/svn/wiki/ui/Windows.png
 
 = Trade UI =
