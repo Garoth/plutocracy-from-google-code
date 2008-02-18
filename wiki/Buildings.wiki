@@ -1,4 +1,4 @@
-#summary A list of constructible buildings.
+#summary A list of constructible buildings
 
 = List of Ground Buildings =
 These buildings must be constructed on a rented ground tile. The owner of the tile may demolish the building and partially recoup construction materials.
@@ -8,6 +8,10 @@ These buildings must be constructed on a rented ground tile. The owner of the ti
   * Always placed adjacent to a water tile
   * Always owned by a nation or a pirate
   * If attacked and destroyed by a hostile player, may be rebuilt to change the island government changes to the attacker's affiliation
+
+== Housing ==
+  * Provides living room for island residents
+  * Generates income depending on the number of tenants
 
 == Sawmill ==
   * Generates Lumber
