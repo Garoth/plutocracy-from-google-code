@@ -1,5 +1,8 @@
 ﻿#summary A list of producible resources and commodities
 
+= Resource Chart =
+http://plutocracy.googlecode.com/svn/wiki/resources/Resources.png
+
 = Trees =
   * The map is largely covered in trees at the start of the game
   * Will regrow and forests can spread to adjacent tiles
@@ -24,11 +27,11 @@
     * Conifer trees: 25%
     * Deciduous trees: 50%
     * Palm trees: 100%
-  * Consumed by ship crew and towns for sustenance
+  * Consumed by ship crew and towns for low sustenance
 
 == Fish ==
   * Harvested by ships equipped with fish nets that pass fish tiles
-  * Consumed by crew and towns for sustenance
+  * Consumed by crew and towns for low sustenance
 
 == Sugar ==
   * Harvested by building Sugarcane Fields on Hot tiles
@@ -44,13 +47,24 @@
 
 == Iron Ore ==
   * Harvested by building Ore Mines next to Mountain tiles
+  * Mountain tile must have iron ore
   * Not used directly
 
 == Sulfur ==
   * Harvested by building Sulfur Mines next to Mountain tiles
+  * Mountain tile must have sulfur
   * Not used directly
 
+== Sulfur ==
+  * Harvested by building Gem Mines next to Mountain tiles
+  * Mountain tile must have gemstones
+  * Very expensive luxury consumed by towns for growth
+
 = Intermediate Products =
+
+== Bread ==
+  * Refined from Grain
+  * Consumed by crews and towns for medium sustenance
 
 == Textiles ==
   * Refined from Cotton
@@ -71,16 +85,12 @@
 = Refined Commodities =
 
 == Rations ==
-  * Refined from Grain, Sugar, Fruit, and Fish
-  * Compressed form of sustenance for crew and towns
+  * Refined from Bread, Sugar, Fruit, and Fish
+  * Compressed form of high sustenance for crew and towns
 
 == Rum ==
   * Refined from Grain and Sugar
   * Consumed by ships to boost efficiency
-  * Luxury consumed by towns for growth
-
-== Garments ==
-  * Refined from Textiles
   * Luxury consumed by towns for growth
 
 == Fish Nets ==
