@@ -1,4 +1,4 @@
-﻿#summary General Information for the game (with links to other pages)
+﻿#summary Tutorials list showing some of the ideas in Plutocracy.
 
 = _Tutorials Index_ =
 
@@ -6,8 +6,7 @@
   * Spreading           -- about spreading within an island. 
 
 = Settling Tutorial =
-
-#summary An explanation of how settling a new island works
+An explanation of how settling a new island works
 
 1) Bring your settler ship over to an island.
 
@@ -26,6 +25,7 @@ http://plutocracy.googlecode.com/svn/wiki/tut_settle/tut_settle-3.png
 http://plutocracy.googlecode.com/svn/wiki/tut_settle/tut_settle-4.png
 
 = Spreading Tutorial = 
+How to spread within an island, after you already have at least one building on it.
 
 1) After you have a dock and town centre established, you can start expanding to adjacent spaces. (See TutSettling.) You will be given a selection of nearby tiles to spread to. Note: shoreline tiles are special.
 
