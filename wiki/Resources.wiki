@@ -3,6 +3,14 @@
 = Resource Chart =
 http://plutocracy.googlecode.com/svn/wiki/resources/Resources.png
 
+= Resource Value =
+Ship crews and towns both consume food regularly and towns consume luxury items
+to grow. The amount their need is satiated (and thus the amount they pay)
+depends on the food or luxury value of the good. Additionally, towns value
+luxury variety and will pay more for luxury items they rarely receive.
+
+http://plutocracy.googlecode.com/svn/wiki/resources/Resources-Value.png
+
 = Trees =
   * The map is largely covered in trees at the start of the game
   * Will regrow and forests can spread to adjacent tiles
@@ -27,15 +35,18 @@ http://plutocracy.googlecode.com/svn/wiki/resources/Resources.png
     * Conifer trees: 25%
     * Deciduous trees: 50%
     * Palm trees: 100%
-  * Consumed by ship crew and towns for low sustenance
+  * Consumed by ship crew and towns for sustenance
+  * Low food value
 
 == Fish ==
   * Harvested by ships equipped with fish nets that pass fish tiles
-  * Consumed by crew and towns for low sustenance
+  * Consumed by crew and towns for sustenance
+  * Medium food value
 
 == Sugar ==
   * Harvested by building Sugarcane Fields on Hot tiles
   * Luxury consumed by towns for growth
+  * Low luxury value
 
 == Cotton ==
   * Harvested by building Cotton Fields on Hot tiles
@@ -55,20 +66,23 @@ http://plutocracy.googlecode.com/svn/wiki/resources/Resources.png
   * Mountain tile must have sulfur
   * Not used directly
 
-== Sulfur ==
+== Gemstone ==
   * Harvested by building Gem Mines next to Mountain tiles
   * Mountain tile must have gemstones
-  * Very expensive luxury consumed by towns for growth
+  * Luxury consumed by towns for growth
+  * High luxury value
 
 = Intermediate Products =
 
 == Bread ==
   * Refined from Grain
-  * Consumed by crews and towns for medium sustenance
+  * Consumed by crews and towns for sustenance
+  * Medium food value
 
 == Textiles ==
   * Refined from Cotton
   * Luxury consumed by towns for growth
+  * Medium luxury value
 
 == Steel ==
   * Refined from Iron Ore and Lumber
@@ -86,12 +100,14 @@ http://plutocracy.googlecode.com/svn/wiki/resources/Resources.png
 
 == Rations ==
   * Refined from Bread, Sugar, Fruit, and Fish
-  * Compressed form of high sustenance for crew and towns
+  * Compressed form of sustenance for crew and towns
+  * High food value
 
 == Rum ==
   * Refined from Grain and Sugar
   * Consumed by ships to boost efficiency
   * Luxury consumed by towns for growth
+  * Medium luxury value
 
 == Fish Nets ==
   * Refined from Rope
