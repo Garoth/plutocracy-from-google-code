@@ -4,45 +4,88 @@
 These buildings must be constructed on a rented ground tile. The owner of the tile may demolish the building and partially recoup construction materials.
 
 == Town Center ==
-  * Large (2 unit radius) buildings
-  * Constructed automatically at the beginning of the game on large islands
+  * The only building that can be constructed on unclaimed islands
   * Always placed adjacent to a water tile
-  * Always owned by a nation. Only pirate players can own a Town Center
-  * If attacked and "destroyed" by a hostile player, the island government changes to the attacker's affiliation
+  * Always owned by a nation or a pirate
+  * If attacked and destroyed by a hostile player, may be rebuilt to change the island government changes to the attacker's affiliation
 
-== Lumber Yard ==
-  * Can be built next to forest tiles to generate lumber
-  * All Lumber Yards adjacent to a forest patch will draw lumber evenly from every tile until the entire patch is gone
+== Sawmill ==
+  * Generates Lumber
+  * Will slowly consume mature trees on owner's land
+  * Amount of Lumber generated depends on tree type (see [Resources])
 
-== Farm House ==
-  * Makes surrounding fields more efficient
+== Orchard ==
+  * Generates Fruit
+  * Amount of Fruit generated depends on number of mature trees on owner's land
+  * Amount of Fruit generated also depends on tree type (see [Resources])
 
-== Field ==
-  * Grows basic foods
+== Sugarcane Field ==
+  * Can only be built on Hot climate tiles
+  * Generates Sugar
+  * Efficiency can be boosted by using Fertilizer
 
-== Brick Kiln ==
-  * Makes bricks
+== Cotton Field ==
+  * Can only be built on Hot climate tiles
+  * Generates Cotton
+  * Efficiency can be boosted by using Fertilizer
 
-== Ore Mine ==
-  * Extracts iron ore from nearby mountain tiles
+== Wheat Field ==
+  * Can only be built on Moderate climate tiles
+  * Generates Grain
+  * Efficiency can be boosted by using Fertilizer
+
+== Iron Mine ==
+  * Generates Iron Ore
+  * Depletes Iron reserves of Mountain tiles on owner's land
+
+== Sulfur Mine ==
+  * Generates Sulfur
+  * Depletes Sulfur reserves of Mountain tiles on owner's land
+
+== Gem Mine ==
+  * Generates Gemstone
+  * Depletes Gemstone reserves of Mountain tiles on owner's land
+
+== Bakery ==
+  * Generates Bread
+  * Will generate Rations instead of Bread if ingredients are available
+
+== Distillery ==
+  * Generates Rum
+
+== Weaver ==
+  * Generates Textiles
+
+== Rope Maker ==
+  * Generates Rope
 
 == Ore Refinery ==
-  * Refines ore into metals used in construction
+  * Generates Steel
 
-== Rum Distiller ==
-  * Makes rum :)
+== Compost Heap ==
+  * Generates Fertilizer
+
+== Armory ==
+  * Generates Cannon, Cannonballs, Chainshot, and Grapeshot
+  * Quotas for each product can be set per-region
 
 = List of Shallow Water Buildings ==
-These buildings may be constructed on shallow water up to 3 tiles away from a rented tile. These buildings are not owned and cannot be demolished.
+These buildings may be constructed on a rented shallow water tile up to 3 tiles away from shore. The owner of the tile may demolish the building and partially recoup construction materials.
 
 == Dock ==
   * Allows ships to trade with and transfer goods to land tiles
   * Can be raided by hostile ships for a portion of goods on the island
   * Can be used to construct a basic ship
-  * Can be upgraded to a Shipyard and construct more advanced hulls
+
+== Shipyard ==
+  * Can be used to construct a basic at reduced cost or to construct an advanced ship
+  * Generates Fish Nets, Sails, and Armor Plates
+  * Quotas for each product can be set per-region
 
 == Guard Tower ==
   * Attacks hostile ships up to 2 tiles away
+  * Stores Cannonballs
+  * Uses one Cannonball for every shot
 
 == Barricade Raft ==
   * Blocks ships
