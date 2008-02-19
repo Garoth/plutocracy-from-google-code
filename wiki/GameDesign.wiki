@@ -32,6 +32,8 @@ Players may construct buildings on tiles by paying their construction cost in go
 
 Ships may be constructed at docks. The characteristics of a ship are determined by the cargo it carries -- allowing for a wide variety of customizations. See [Ships] for a list of ships, construction criteria, and ship parts.
 
+Trading is a major gameplay mechanic. [Buildings] harvest or refine [Resources] which can be bought or sold at docks or ship-to-ship. The player has a high degree of control over prices and is able to set minimum and maximum desired quantities and buy/sell prices (see [UserInterface]).
+
 = Warfare =
 Player ships capable of combat can only attack enemies of the player's nation. When an island is conquered by a player, the island government is overthrown and a new government, affiliated to the player's nation is established. Because pirates are not affiliated with a government, pirate players can claim entire islands for themselves. Pirates are permanently at war with all other players, including other pirates.
 
