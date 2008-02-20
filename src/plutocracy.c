@@ -15,6 +15,7 @@
 
 #include "common/c_shared.h"
 #include "render/r_shared.h"
+#include "interface/i_shared.h"
 
 #define CORRUPT_CHECK_VALUE 1776
 
@@ -103,6 +104,7 @@ static void main_loop(void)
                                 break;
                         }
                 }
+                I_render_windows();
                 render_status();
                 R_finish_frame();
                 C_time_update();
@@ -163,6 +165,7 @@ static void cleanup(void)
         ran_once = TRUE;
 
         C_status("Cleaning up");
+        I_cleanup();
         R_text_cleanup(&status_text);
         R_cleanup();
         SDL_Quit();
@@ -203,6 +206,7 @@ int main(int argc, char *argv[])
         /* Each namespace must register its configurable variables */
         C_register_variables();
         R_register_variables();
+        I_register_variables();
 
         /* Parse configuration scripts and open the log file */
         C_parse_config_file("config/default.cfg");
@@ -216,7 +220,8 @@ int main(int argc, char *argv[])
         C_status("Initializing " PACKAGE_STRING " client");
         init_sdl();
         if (!R_init())
-                C_error("Window creation failed");
+                C_error("Render initialization failed");
+        I_init();
 
         /* Run the main loop */
         main_loop();

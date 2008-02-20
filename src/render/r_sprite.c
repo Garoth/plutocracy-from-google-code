@@ -21,7 +21,8 @@ static struct {
 } fonts[R_FONTS];
 
 /******************************************************************************\
- Initialize a sprite structure.
+ Initialize a sprite structure. 2D mode textures are expected to be at the
+ maximum pixel scale (2x).
 \******************************************************************************/
 void R_sprite_init(r_sprite_t *sprite, const char *filename)
 {
@@ -36,8 +37,10 @@ void R_sprite_init(r_sprite_t *sprite, const char *filename)
                 return;
         sprite->texture = R_texture_load(filename, FALSE);
         if (sprite->texture) {
-                sprite->size.x = sprite->texture->surface->w;
-                sprite->size.y = sprite->texture->surface->h;
+                sprite->size.x = sprite->texture->surface->w /
+                                 R_PIXEL_SCALE_MAX;
+                sprite->size.y = sprite->texture->surface->h /
+                                 R_PIXEL_SCALE_MAX;
         }
 }
 
@@ -53,22 +56,13 @@ void R_sprite_cleanup(r_sprite_t *sprite)
 }
 
 /******************************************************************************\
- Renders a 2D textured quad on screen. If we are rendering a rotated sprite
- that doesn't use alpha, this function will draw an anti-aliased border for it.
- The coordinates work here like you would expect for 2D, the origin is in the
- upper left of the sprite and y decreases down the screen.
-   TODO: Disable anti-aliasing here if FSAA is on.
-   FIXME: There is a slight overlap between the antialiased edge line and the
-          polygon which should probably be fixed if possible.
+ Sets up for a render of a 2D sprite. Returns FALSE if the sprite cannot
+ be rendered.
 \******************************************************************************/
-void R_sprite_render(const r_sprite_t *sprite)
+static int sprite_render_start(const r_sprite_t *sprite)
 {
-        r_vertex2_t verts[4];
-        unsigned short indices[] = { 0, 1, 2, 3, 0 };
-        float dw, dh;
-
         if (!sprite || !sprite->texture)
-                return;
+                return FALSE;
         R_set_mode(R_MODE_2D);
         R_texture_select(sprite->texture);
 
@@ -77,21 +71,63 @@ void R_sprite_render(const r_sprite_t *sprite)
         if (sprite->alpha < 1.f)
                 glEnable(GL_BLEND);
 
-        dw = sprite->size.x / 2;
-        dh = sprite->size.y / 2;
-        verts[0].co = C_vec3(-dw, dh, 0.f);
-        verts[0].uv = C_vec2(0.f, 1.f);
-        verts[1].co = C_vec3(-dw, -dh, 0.f);
-        verts[1].uv = C_vec2(0.f, 0.f);
-        verts[2].co = C_vec3(dw, -dh, 0.f);
-        verts[2].uv = C_vec2(1.f, 0.f);
-        verts[3].co = C_vec3(dw, dh, 0.f);
-        verts[3].uv = C_vec2(1.f, 1.f);
-        C_count_add(&r_count_faces, 2);
+        /* Setup transformation matrix */
         glPushMatrix();
         glLoadIdentity();
-        glTranslatef(sprite->origin.x + dw, sprite->origin.y + dh, 0.f);
+        glTranslatef(sprite->origin.x + sprite->size.x / 2,
+                     sprite->origin.y + sprite->size.y / 2, 0.f);
         glRotatef(C_rad_to_deg(sprite->angle), 0.0, 0.0, 1.0);
+
+        return TRUE;
+}
+
+/******************************************************************************\
+ Cleans up after rendering a 2D sprite.
+\******************************************************************************/
+static void sprite_render_finish(void)
+{
+        glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+        glDisableClientState(GL_VERTEX_ARRAY);
+        glPopMatrix();
+        R_check_errors();
+}
+
+/******************************************************************************\
+ Renders a 2D textured quad on screen. If we are rendering a rotated sprite
+ that doesn't use alpha, this function will draw an anti-aliased border for it.
+ The coordinates work here like you would expect for 2D, the origin is in the
+ upper left of the sprite and y decreases down the screen.
+
+ The vertices are arranged in the following order:
+
+   0---3
+   |   |
+   1---2
+
+   TODO: Disable anti-aliasing here if FSAA is on.
+   FIXME: There is a slight overlap between the antialiased edge line and the
+          polygon which should probably be fixed if possible.
+\******************************************************************************/
+void R_sprite_render(const r_sprite_t *sprite)
+{
+        r_vertex2_t verts[4];
+        c_vec2_t half;
+        unsigned short indices[] = { 0, 1, 2, 3, 0 };
+
+        if (!sprite_render_start(sprite))
+                return;
+
+        /* Render textured quad */
+        half = C_vec2_invscalef(sprite->size, 2.f);
+        verts[0].co = C_vec3(-half.x, half.y, 0.f);
+        verts[0].uv = C_vec2(0.f, 1.f);
+        verts[1].co = C_vec3(-half.x, -half.y, 0.f);
+        verts[1].uv = C_vec2(0.f, 0.f);
+        verts[2].co = C_vec3(half.x, -half.y, 0.f);
+        verts[2].uv = C_vec2(1.f, 0.f);
+        verts[3].co = C_vec3(half.x, half.y, 0.f);
+        verts[3].uv = C_vec2(1.f, 1.f);
+        C_count_add(&r_count_faces, 2);
         glInterleavedArrays(R_VERTEX2_FORMAT, 0, verts);
         glDrawElements(GL_QUADS, 4, GL_UNSIGNED_SHORT, indices);
 
@@ -103,10 +139,7 @@ void R_sprite_render(const r_sprite_t *sprite)
                 glDrawElements(GL_LINE_STRIP, 5, GL_UNSIGNED_SHORT, indices);
         }
 
-        glDisableClientState(GL_TEXTURE_COORD_ARRAY);
-        glDisableClientState(GL_VERTEX_ARRAY);
-        glPopMatrix();
-        R_check_errors();
+        sprite_render_finish();
 }
 
 /******************************************************************************\
@@ -310,5 +343,92 @@ void R_text_set_text(r_text_t *text, r_font_t font, float wrap, float shadow,
         text->sprite.size.x = width * fonts[font].scale;
         text->sprite.size.y = height * fonts[font].scale;
         text->font = font;
+}
+
+/******************************************************************************\
+ Initializes a window sprite.
+\******************************************************************************/
+void R_window_init(r_window_t *window, const char *path)
+{
+        if (!window)
+                return;
+        R_sprite_init(&window->sprite, path);
+        window->corner = C_vec2_invscalef(window->sprite.size, 4.f);
+}
+
+/******************************************************************************\
+ Renders a window sprite. A window sprite is composed of a grid of nine quads
+ where the corner quads have a fixed size and the connecting quads stretch to
+ fill the rest of the sprite size.
+
+ The array is indexed this way:
+
+   0---2------4---6
+   |   |      |   |
+   1---3------5---7
+   |   |      |   |
+   |   |      |   |
+   11--10-----9---8
+   |   |      |   |
+   12--13-----14--15
+
+ Note that unlike normal sprites, no edge anti-aliasing is done as it is
+ assumed that all windows will make use of alpha transparency.
+\******************************************************************************/
+void R_window_render(r_window_t *window)
+{
+        r_vertex2_t verts[16];
+        c_vec2_t mid_half;
+        unsigned short indices[] = { 0,  1,  2,  3,  4,  5,  6,  7,
+                                     8,  5,  9,  3,  10, 1,  11,
+                                     12, 10, 13, 9,  14, 8,  15 };
+
+        if (!window || !sprite_render_start(&window->sprite))
+                return;
+
+        /* Render quad strip */
+        mid_half = C_vec2_invscalef(window->sprite.size, 2.f);
+        mid_half = C_vec2_sub(mid_half, window->corner);
+        verts[0].co = C_vec3(-window->corner.x - mid_half.x,
+                             -window->corner.y - mid_half.y, 0.f);
+        verts[0].uv = C_vec2(0.00f, 0.00f);
+        verts[1].co = C_vec3(-window->corner.x - mid_half.x, -mid_half.y, 0.f);
+        verts[1].uv = C_vec2(0.00f, 0.25f);
+        verts[2].co = C_vec3(-mid_half.x, -window->corner.y - mid_half.y, 0.f);
+        verts[2].uv = C_vec2(0.25f, 0.00f);
+        verts[3].co = C_vec3(-mid_half.x, -mid_half.y, 0.f);
+        verts[3].uv = C_vec2(0.25f, 0.25f);
+        verts[4].co = C_vec3(mid_half.x, -window->corner.y - mid_half.y, 0.f);
+        verts[4].uv = C_vec2(0.75f, 0.00f);
+        verts[5].co = C_vec3(mid_half.x, -mid_half.y, 0.f);
+        verts[5].uv = C_vec2(0.75f, 0.25f);
+        verts[6].co = C_vec3(window->corner.x + mid_half.x,
+                             -window->corner.y - mid_half.y, 0.f);
+        verts[6].uv = C_vec2(1.00f, 0.00f);
+        verts[7].co = C_vec3(window->corner.x + mid_half.x, -mid_half.y, 0.f);
+        verts[7].uv = C_vec2(1.00f, 0.25f);
+        verts[8].co = C_vec3(window->corner.x + mid_half.x, mid_half.y, 0.f);
+        verts[8].uv = C_vec2(1.00f, 0.75f);
+        verts[9].co = C_vec3(mid_half.x, mid_half.y, 0.f);
+        verts[9].uv = C_vec2(0.75f, 0.75f);
+        verts[10].co = C_vec3(-mid_half.x, mid_half.y, 0.f);
+        verts[10].uv = C_vec2(0.25f, 0.75f);
+        verts[11].co = C_vec3(-window->corner.x - mid_half.x, mid_half.y, 0.f);
+        verts[11].uv = C_vec2(0.00f, 0.75f);
+        verts[12].co = C_vec3(-window->corner.x - mid_half.x,
+                              window->corner.y + mid_half.y, 0.f);
+        verts[12].uv = C_vec2(0.00f, 1.00f);
+        verts[13].co = C_vec3(-mid_half.x, window->corner.y + mid_half.y, 0.f);
+        verts[13].uv = C_vec2(0.25f, 1.00f);
+        verts[14].co = C_vec3(mid_half.x, window->corner.y + mid_half.y, 0.f);
+        verts[14].uv = C_vec2(0.75f, 1.00f);
+        verts[15].co = C_vec3(window->corner.x + mid_half.x,
+                              window->corner.y + mid_half.y, 0.f);
+        verts[15].uv = C_vec2(1.00f, 1.00f);
+        C_count_add(&r_count_faces, 20);
+        glInterleavedArrays(R_VERTEX2_FORMAT, 0, verts);
+        glDrawElements(GL_QUAD_STRIP, 22, GL_UNSIGNED_SHORT, indices);
+
+        sprite_render_finish();
 }
 

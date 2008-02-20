@@ -453,14 +453,14 @@ void R_set_mode(r_mode_t mode)
 void R_start_frame(void)
 {
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        if (render_test_globe() || render_test_model() || render_test_mesh());
 }
 
 /******************************************************************************\
- Finishes rendering the scene and flips the buffer. Renders render tests.
+ Finishes rendering the scene and flips the buffer.
 \******************************************************************************/
 void R_finish_frame(void)
 {
-        if (render_test_globe() || render_test_model() || render_test_mesh());
         render_test_sprites();
         render_test_text();
         SDL_GL_SwapBuffers();

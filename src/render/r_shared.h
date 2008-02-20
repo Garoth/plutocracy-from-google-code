@@ -57,6 +57,14 @@ typedef struct r_text {
         char string[1024];
 } r_text_t;
 
+/* A quad strip composed of nine quads that stretch with the size parameter
+   of the sprite. Adjust sprite parameters to change how the window is
+   displayed. */
+typedef struct r_window {
+        r_sprite_t sprite;
+        c_vec2_t corner;
+} r_window_t;
+
 /* r_model.c */
 void R_model_cleanup(r_model_t *);
 int R_model_init(r_model_t *, const char *filename);
@@ -82,6 +90,9 @@ void R_text_cleanup(r_text_t *);
 void R_text_set_text(r_text_t *, r_font_t, float wrap, float shadow_alpha,
                      const char *);
 #define R_text_render(t) R_sprite_render(&(t)->sprite)
+#define R_window_cleanup(w) R_sprite_cleanup(&(w)->sprite)
+void R_window_init(r_window_t *, const char *filename);
+void R_window_render(r_window_t *);
 
 /* r_variables.c */
 void R_register_variables(void);
