@@ -19,6 +19,8 @@ plutocracy_SOURCES = \
 	src/game/g_globe.c \
         src/interface/i_common.h \
         src/interface/i_shared.h \
+        src/interface/i_variables.c \
+        src/interface/i_window.c \
         src/network/n_client.c \
         src/network/n_common.h \
         src/network/n_shared.h \

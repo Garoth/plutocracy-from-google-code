@@ -10,11 +10,15 @@
  FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
 \******************************************************************************/
 
-/* i_window.c */
-void I_cleanup(void);
-void I_init(void);
-void I_render_windows(void);
+#include "i_common.h"
 
-/* i_variables.c */
-void I_register_variables(void);
+c_var_t i_window_bg;
+
+/******************************************************************************\
+ Registers interface namespace variables.
+\******************************************************************************/
+void I_register_variables(void)
+{
+        C_register_string(&i_window_bg, "i_window_bg", "gui/windows/blue.png");
+}
 

@@ -24,7 +24,7 @@ c_var_t r_gl_errors,
         r_test_text;
 
 /******************************************************************************\
- Registers the render variables.
+ Registers the render namespace variables.
 \******************************************************************************/
 void R_register_variables(void)
 {
