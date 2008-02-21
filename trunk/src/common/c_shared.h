@@ -147,6 +147,10 @@ typedef struct c_counter {
         float value;
 } c_count_t;
 
+/* c_glibc_rand.c */
+long int C_glibc_rand(void);
+void C_glibc_srand(unsigned int);
+
 /* c_log.c */
 void C_close_log_file(void);
 #define C_debug(fmt, ...) C_log(C_LOG_DEBUG, __FILE__, __LINE__, \
