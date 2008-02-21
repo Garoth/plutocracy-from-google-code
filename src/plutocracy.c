@@ -111,7 +111,7 @@ static void main_loop(void)
                 throttle_fps();
 
                 /* This check is a long-shot, but if there was rampant memory
-                   corruption this variable's variable may have been changed */
+                   corruption this variable's value may have been changed */
                 if (corrupt_check != CORRUPT_CHECK_VALUE)
                         C_error("Static memory corruption detected");
         }

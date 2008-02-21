@@ -300,12 +300,16 @@ int render_test_globe()
 
         R_set_mode(R_MODE_3D);
 
+        /* Globe renders without texturing atm */
+        glDisable(GL_TEXTURE_2D);
+
         /* Have a light from the left */
         glEnable(GL_LIGHTING);
         glEnable(GL_LIGHT0);
         glLightfv(GL_LIGHT0, GL_POSITION, left);
 
         glPushMatrix();
+        glLoadIdentity();
 
         glTranslatef(0.0, 0.0, -2000.0);
         glRotatef(x_rot, 1.0, 0.0, 0.0);
@@ -361,8 +365,9 @@ int render_test_globe()
 
         glPopMatrix();
 
-        /* Reset polygon mode */
+        /* Reset polygon mode and texturing */
         glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+        glEnable(GL_TEXTURE_2D);
 
         R_check_errors();
 
