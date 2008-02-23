@@ -5,14 +5,28 @@ Arrows show what buildings can be upgraded into from other buildings.
 
 http://plutocracy.googlecode.com/svn/wiki/resources/Buildings.png
 
+= Terrain =
+Buildings can only be constructed on certain terrain:
+  * *Desert* climate tiles are too hot to support agriculture
+  * *Hot* climate tiles can support Sugarcane and Cotton
+  * *Moderate* climate tiles can support Wheat
+  * *Cold* climate tiles are too cold to support agriculture
+  * *Shallow Water* tiles can support Barricades and Towers
+  * *Shore* tiles are Shallow Water tiles that touch land and can support Docks
+Some terrain cannot be built on:
+  * *Mountain* tiles can provide Iron Ore, Sulfur, and/or Gemstone
+  * *Deep Water* tiles can provide Fish but cannot support structures
+  * *Reef* tiles are Deep Water tiles that can damage passing ships
+
 = List of Ground Buildings =
 These buildings must be constructed on a rented ground tile. The owner of the tile may demolish the building and partially recoup construction materials.
 
 == Town Hall ==
   * The only building that can be constructed on unclaimed islands
   * Always placed adjacent to a water tile
-  * Always owned by a nation or a pirate
+  * Always owned by a nation or a pirate player
   * If attacked and destroyed by a hostile player, may be rebuilt to change the island government changes to the attacker's affiliation
+  * Buildings on islands without a Town Hall cannot be used
 
 == Housing ==
   * Provides living room for town residents
