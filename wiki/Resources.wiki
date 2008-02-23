@@ -39,7 +39,7 @@ http://plutocracy.googlecode.com/svn/wiki/resources/Resources-Value.png
   * Low food value
 
 == Fish ==
-  * Harvested by ships equipped with fish nets that pass fish tiles
+  * Harvested by ships equipped with fishing nets that pass fish tiles
   * Consumed by crew and towns for sustenance
   * Medium food value
 
@@ -109,10 +109,6 @@ http://plutocracy.googlecode.com/svn/wiki/resources/Resources-Value.png
   * Luxury consumed by towns for growth
   * Medium luxury value
 
-== Fish Nets ==
-  * Refined from Rope
-  * Equipped by ships
-
 == Sails ==
   * Refined from Textiles, Rope, and Lumber
   * Equipped by ships
@@ -125,6 +121,6 @@ http://plutocracy.googlecode.com/svn/wiki/resources/Resources-Value.png
   * Refined from Steel at Armory
   * Equipped by ships
 
-== Solid, Grapeshot, Chainshot Cannonballs ==
+== Cannonballs (Roundshot, Grapeshot, Chainshot) ==
   * Refined from Iron Ore and Sulfur at Armory
   * Equipped by ships
