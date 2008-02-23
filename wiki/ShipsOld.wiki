@@ -1,0 +1,54 @@
+﻿#summary Outline of how to ship design/building is done.
+
+= Ship Parts =
+Ships are completely customizable. The basic hull for a ship determines the maximum quantities for each of the "equippable" ship components. These components simply need to be placed in the ship's cargo hold and they are automatically equipped up to the limit that the ship's hull can use.
+
+== Crew ==
+Having less than optimal crew scales the sailing and turning speed.
+
+== Cannons ==
+Each cannon fires at a fixed rate from either broadside of the ship. Should correspond 1:1 with cannons on the ship model.
+
+== Armor Plates ==
+Each plate reduces the damage dealt by attacks. Should be visible on the ship broadsides as metal plates.
+
+== Sails ==
+Provide a fixed boost in movement and turning speed. Should correspond 1:1 with sails on the ship model.
+
+= Hulls =
+The numbers here are pulled completely out of thin air.
+
+== Brig ==
+A standard, jack-of-all-trades ship. Can be built at any Dock or Shipyard.
+  * 120 Cargo:
+    * 50 Crew
+    * 30 Cannons
+    * 15 Armor Plates
+    * 10 Sails
+
+== Galleon ==
+A slow, heavy, transport ship. Can only be built at a Shipyard.
+  * 240 Cargo:
+    * 100 Crew
+    * 10 Cannons
+    * 20 Armor Plates
+    * 6 Sails
+
+== Sloop ==
+A fast, lightly-armed ship for chasing. Can only be built at a Shipyard.
+  * 80 Cargo:
+    * 25 Crew
+    * 20 Cannons
+    * 10 Armor Plates
+    * 18 Sails
+
+== Frigate ==
+A slow, heavily armored warship. Can only be built at a Shipyard.
+  * 160 Cargo:
+    * 75 Crew
+    * 40 Cannons
+    * 30 Armor Plates
+    * 8 Sails
+
+= Names =
+The exact ship names are not set in stone, but should follow the Caribbean theme. Names of the British [http://en.wikipedia.org/wiki/Rating_system_of_the_Royal_Navy Royal Navy] are a good starting point and are used in the Pirates! games.
