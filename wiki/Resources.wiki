@@ -30,7 +30,7 @@ http://plutocracy.googlecode.com/svn/wiki/resources/Resources-Value.png
   * Used in building and ship construction
 
 == Fruit ==
-  * Harvested by building Orchards by trees
+  * Harvested from land you own by building Canneries
   * Efficiency depends on tree type:
     * Conifer trees: 25%
     * Deciduous trees: 50%
@@ -66,7 +66,7 @@ http://plutocracy.googlecode.com/svn/wiki/resources/Resources-Value.png
   * Mountain tile must have sulfur
   * Not used directly
 
-== Gemstones ==
+== Gemstone ==
   * Harvested by building Gem Mines next to Mountain tiles
   * Mountain tile must have gemstones
 
@@ -92,7 +92,7 @@ http://plutocracy.googlecode.com/svn/wiki/resources/Resources-Value.png
 
 == Rope ==
   * Refined from Cotton
-  * Not used directly
+  * Used in ship construction
 
 = Refined Commodities =
 

@@ -55,7 +55,7 @@ Field efficiency can be boosted by providing Fertilizer.
   * Will slowly consume mature trees on owner's land
   * Amount of Lumber generated depends on tree type (see [Resources])
 
-=== Orchard ===
+=== Cannery ===
   * Generates Fruit
   * Amount of Fruit generated depends on number of mature trees on owner's land
   * Amount of Fruit generated also depends on tree type (see [Resources])
@@ -63,8 +63,8 @@ Field efficiency can be boosted by providing Fertilizer.
 === Steel Mill ===
   * Generates Steel
 
-=== Furnisher ===
-  * Generates Furniture
+=== Distillery ===
+  * Generates Rum
 
 == Mines ==
 
@@ -94,14 +94,14 @@ Field efficiency can be boosted by providing Fertilizer.
   * Generates Bread
   * Will generate Rations instead of Bread if ingredients are available
 
-=== Distillery ===
-  * Generates Rum
-
 === Weaver ===
   * Generates Textiles
 
-=== Rope Maker ===
-  * Generates Rope
+=== Furnisher ===
+  * Generates Furniture
+
+=== Gem Cutter ===
+  * Generates Jewelry
 
 == Craftsmen ==
 
@@ -116,10 +116,10 @@ Field efficiency can be boosted by providing Fertilizer.
   * Generates Armor Plates
 
 === Sailmaker ===
-  * Generates sails
+  * Generates Sails
 
-=== Gem Cutter ===
-  * Generates Jewelry
+=== Rope Maker ===
+  * Generates Rope
 
 = List of Shallow Water Buildings ==
 These buildings may be constructed on a rented shallow water tile up to 3 tiles away from shore. The owner of the tile may demolish the building and partially recoup construction materials.
