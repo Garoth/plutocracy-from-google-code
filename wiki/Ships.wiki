@@ -10,7 +10,7 @@ Ship construction is done in several stages:
 = 1. Design = 
 The first stage is to design your ship. You will be presented with a simple interface that involves dragging and dropping parts into the middle section, where the parts are compiled into blueprints. After you compile the parts that you desire, you should rename your ship design from the default so that it makes the most sense to you. This name will be later used to pick the ship from the build menu when initiating construction.
 
-(MOCKUP OF DESIGN WINDOW HERE)
+http://plutocracy.googlecode.com/svn/wiki/ui/ShipDesignUI.png
 
 == 1.1. Ship Parts ==
 Ships are considered in dimensions: capacity, cannon slots, speed, and durability. As such, we have the three categories: Hulls, Sails, and Armour.
@@ -39,9 +39,9 @@ Ships are considered in dimensions: capacity, cannon slots, speed, and durabilit
   * The adjustments count towards the overall stats of this ship.
   * This table's source text is 79 columns wide and perfectly aligned when viewed with a monospace font... Please don't break that. 
 
-=== 1.1.2. Sails ===
+=== 1.1.2. Armour ===
 
-=== 1.1.3. Armour ===
+=== 1.1.3. Sails ===
 
 = 2. Build Hull =
 After you have a ship designed, select it from Dock->Shipyard and tell it to start building. The shipyard will only build a basic hull for your ship at first. The shipyard will then dump the partial ship into the water near itself. The partial ship is treated as a critically damaged ship, in that it needs fixing to get it up to proper functioning. For building the hull, the Shipyard will use the wood %AMBIG(Other materials needed?) that is in your warehouses.
