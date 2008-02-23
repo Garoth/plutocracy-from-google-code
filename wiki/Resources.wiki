@@ -66,11 +66,9 @@ http://plutocracy.googlecode.com/svn/wiki/resources/Resources-Value.png
   * Mountain tile must have sulfur
   * Not used directly
 
-== Gemstone ==
+== Gemstones ==
   * Harvested by building Gem Mines next to Mountain tiles
   * Mountain tile must have gemstones
-  * Luxury consumed by towns for growth
-  * High luxury value
 
 = Intermediate Products =
 
@@ -98,6 +96,16 @@ http://plutocracy.googlecode.com/svn/wiki/resources/Resources-Value.png
 
 = Refined Commodities =
 
+== Furniture ==
+  * Refined from Lumber and Steel
+  * Luxury consumed by towns for growth
+  * Medium luxury value
+
+== Jewelry ==
+  * Refined from Gemstones and Steel
+  * Luxury consumed by towns for growth
+  * High luxury value
+
 == Rations ==
   * Refined from Bread, Sugar, Fruit, and Fish
   * Compressed form of sustenance for crew and towns
@@ -105,7 +113,6 @@ http://plutocracy.googlecode.com/svn/wiki/resources/Resources-Value.png
 
 == Rum ==
   * Refined from Grain and Sugar
-  * Consumed by ships to boost efficiency
   * Luxury consumed by towns for growth
   * Medium luxury value
 
@@ -114,13 +121,14 @@ http://plutocracy.googlecode.com/svn/wiki/resources/Resources-Value.png
   * Equipped by ships
 
 == Cannon ==
-  * Refined from Steel at Armory
+  * Refined from Steel at Arsenal
   * Equipped by ships
 
 == Armor Plate ==
-  * Refined from Steel at Armory
+  * Refined from Steel at Arsenal
   * Equipped by ships
 
 == Cannonballs (Roundshot, Grapeshot, Chainshot) ==
-  * Refined from Iron Ore and Sulfur at Armory
+  * Refined from Iron Ore and Sulfur at Arsenal
   * Equipped by ships
+

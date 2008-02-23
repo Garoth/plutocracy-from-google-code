@@ -15,8 +15,11 @@ These buildings must be constructed on a rented ground tile. The owner of the ti
   * If attacked and destroyed by a hostile player, may be rebuilt to change the island government changes to the attacker's affiliation
 
 == Housing ==
-  * Provides living room for island residents
+  * Provides living room for town residents
   * Generates income depending on the number of tenants
+
+== Warehouse ==
+  * Provides large capacity storage for goods
 
 == Fields ==
 Field efficiency can be boosted by providing Fertilizer.
@@ -60,6 +63,9 @@ Field efficiency can be boosted by providing Fertilizer.
 === Steel Mill ===
   * Generates Steel
 
+=== Furnisher ===
+  * Generates Furniture
+
 == Mines ==
 
 === Mine ===
@@ -97,10 +103,10 @@ Field efficiency can be boosted by providing Fertilizer.
 === Rope Maker ===
   * Generates Rope
 
-== Smiths ==
+== Craftsmen ==
 
-=== Blacksmith ===
-  * Generic structure that boosts the efficiency of all Smiths
+=== Craftsman ===
+  * Generic structure that boosts the efficiency of all Craftsmen
 
 === Arsenal ===
   * Generates Cannon, Roundshot, Chainshot, and Grapeshot
@@ -112,16 +118,21 @@ Field efficiency can be boosted by providing Fertilizer.
 === Sailmaker ===
   * Generates sails
 
+=== Gem Cutter ===
+  * Generates Jewelry
+
 = List of Shallow Water Buildings ==
 These buildings may be constructed on a rented shallow water tile up to 3 tiles away from shore. The owner of the tile may demolish the building and partially recoup construction materials.
 
 == Dock ==
   * Allows ships to trade with and transfer goods to land tiles
+  * Provides a small amount of storage capacity for goods
   * Can be raided by hostile ships for a portion of goods on the island
   * Can be upgraded to a Shipyard
 
 == Shipyard ==
   * Can be used to construct and repair ships
+  * Provides a small amount of storage capacity for goods
 
 == Tower ==
   * Stores Roundshot
