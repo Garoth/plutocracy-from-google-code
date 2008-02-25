@@ -102,7 +102,7 @@ Field efficiency can be boosted by providing Fertilizer.
 
 === Guildhall ===
   * Generates a small amount of bread, rum, textiles, and rope
-  * Generic structure that boosts the efficiency of all Mines
+  * Generic structure that boosts the efficiency of all Guildhalls
 
 === Bakery ===
   * Generates Bread
