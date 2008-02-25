@@ -117,10 +117,10 @@ Field efficiency can be boosted by providing Fertilizer.
 === Gem Cutter ===
   * Generates Jewelry
 
-== Craftsmen ==
+== Workshops ==
 
-=== Craftsman ===
-  * Generic structure that boosts the efficiency of all Craftsmen
+=== Workshop ===
+  * Generic structure that boosts the efficiency of all Workshops
 
 === Arsenal ===
   * Generates Cannon, Roundshot, Chainshot, and Grapeshot
