@@ -1,21 +1,8 @@
 #summary High-level game-design document.
 
 = Nations =
-At the start of a game, each player chooses one national (or pirate) affiliation. Each nation has special characteristics that it's citizen merchants benefit from:
-  * *Spain* has been established in the islands longer than other nations and has spread to the most territory, meanwhile its officials have gradually become corrupt.
-    * 300% more starting territory
-    * 25% lower bribe cost
-  * *England* is the birthplace of the Industrial Revolution, merchants have more sway over labor unions.
-    * 25% lower labor cost
-  * *France* is an innovator in ship construction and navigation.
-    * 25% boost to ship speed
-  * *Holland* has the weakest presence in the islands but is the most skilled in the art of war.
-    * 50% less starting territory
-    * 25% boost to cannon damage
-  * *Pirates* pledge no national allegiance and are at war with all.
-    * Hostile to all other players, including other pirates
-    * Can own Town Halls
-    * Pay no rent for land
+At the start of a game, each player chooses one national (or pirate) affiliation. Nations names are configured by the game server and have no nation has special advantages over another.
+
 National affiliation can be changed at any time by any player. The player must pay the minimum fee for citizenship and, if the nation is hostile, must pay for all damages incurred by their ships against that nation. There is no fee for going pirate. All territory rented from and property owned on now hostile territory will be lost without compensation by the change.
 
 When a player begins the game, he or she will receive a lightly armed ship and some gold near a friendly port. The player is then free to find a shore tile to begin renting land or engage in combat.
