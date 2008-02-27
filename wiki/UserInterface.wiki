@@ -13,3 +13,6 @@ http://plutocracy.googlecode.com/svn/wiki/ui/Price-Menu.png
 
 == Price Slider ==
 http://plutocracy.googlecode.com/svn/wiki/ui/Price-Slider.png
+
+= Ship Builder =
+http://plutocracy.googlecode.com/svn/wiki/ui/ShipDesignUI.png
