@@ -1,57 +1,92 @@
 ﻿#summary All one needs to know about ships
 
-= Overview =
-Ship construction is done in several stages:
-  # Design your ship based on which parts go into it.
-  # Build a hull.
-    # Supply the parts.
-  # Selling ships.
+= Design = 
+The first stage is to design your ship. See [UserInterface] for a UI concept.
 
-= 1. Design = 
-The first stage is to design your ship. You will be presented with a simple interface that involves dragging and dropping parts into the middle section, where the parts are compiled into blueprints. After you compile the parts that you desire, you should rename your ship design from the default so that it makes the most sense to you. This name will be later used to pick the ship from the build menu when initiating construction.
+Ships are composed of several component dimensions:
+  * *Type* determines the appearance of the ship
+  * *Cost* is the amount of gold paid to the Shipyard to construct the base hull
+  * *Sails* is the area covered by the ship's sails (minimum amount)
+  * *Hull* is the number of Roundshot hits the ship can take before sinking
+  * *Crew* is the number of crew needed on board for full efficiency
+  * *Cannons* is the maximum number of cannon that can be equipped at a time
+Adding armor and sails will further raise the cost of the ship. Adding more cargo and armor plate to a ship will lower its sailing speed.
 
-http://plutocracy.googlecode.com/svn/wiki/ui/ShipDesignUI.png
+== Hulls ==
+Balance is important, no one hull should be all-around "better".
 
-== 1.1. Ship Parts ==
-Ships are considered in dimensions: capacity, cannon slots, speed, and durability. As such, we have the three categories: Hulls, Sails, and Armour.
+|| *Type*    || *Cost* || *Cargo* || *Sails* || *Hull* || *Crew* || *Cannons* ||
+|| _Sloop_   || 1000   || 60      || *100*   || 40     || 20     || 12        ||
+|| |||||||||||| A fast, maneuverable vessel useful for scouting.              || 
+|| _Brig_    || 2000   || 120     || 80      || 140    || 60     || 18        ||
+|| |||||||||||| A medium-size, jack-of-all-trades vessel.                     ||
+|| _Fluyt_   || 2000   || *240*   || 60      || 100    || 40     || 15        ||
+|| |||||||||||| A spacious but vulnerable merchant ship.                      ||
+|| _Galleon_ || 3000   || 200     || 60      || *200*  || 60     || *40*      ||
+|| |||||||||||| A sturdy, multi-purpose, but slow-moving ship.                ||
+|| _Frigate_ || 5000   || 160     || 90      || 160    || *100*  || *40*      ||
+|| |||||||||||| A large vessel built exclusively for warfare.                 ||
 
-=== 1.1.1. Hulls ===
-|| Type    || Cost || Capacity || Cannon || Speed      || Durability || Crew ||
-||         ||      ||          || Space  || Adjustment || Adjustment ||      ||
-|| Mouse   || 500  || 15       || 4      || -2         || -3         || 7    ||
-|| Sloop   || 1000 || 60       || 30     || -3         || -1         || 30   ||
-|| Frigate || 2000 || 120      || 34     || -4         ||  0         || 45   ||
-|| Fox     || 2600 || 40       || 20     ||  0         || -2         || 30   ||
-|| Galleon || 4000 || 130      || 60     || -4         || +1         || 65   ||
-|| Bear    || 6000 || 140      || 88     || -6         || +4         || 95   ||
+*Speed* is determined by the proportion of the sail area to the weight of the hull, armor, and cargo aboard scaled by efficiency. Additional sails can double the speed of a ship. In order of effective speed (`Sails / (Cargo + Hull)`):
+  # Sloop (1.00)
+  # Brig (0.31)
+  # Frigate (0.28)
+  # Fluyt (0.18)
+  # Galleon (0.15)
 
-*Hull Descriptions*
-  * Mouse:   This is meant to be a quick-ish, small hull ideal for nearby fishing. Its low cost also means that it is able to be built early on. This may prove to be a worthwhile scout and island invasion tool, especially considering that they are fairly expendable.
-  * Sloop:   This is a decent jack of all trades hull. It has decent space, does not cost an arm and a leg, and is decently durable.
-  * Frigate: This hull is decent for transporting goods. It does not carry a tremendous amount of cannons, but it does carry a fair bit of goods. Its speed adjustment is the same as the Galleon, which is convenient for warship/trading ship convoys.
-  * Fox:     This is a hull designed with speed in mind. It has the lowest speed penalty and does not hold too much in the way of cannons not inventory. Useful for getting things to places quickly or for raiding parties.
-  * Galleon: This is a typical large hull. It is able to have both a lot of cannons and goods. It also gets a slight durability bonus.
-  * Bear: This is the heavy, war hull. It has a lot of cannons, and a massive durability bonus because of built-in armouring.
+*Combat potential* depends on how fast a ship deals damage and how much damage it can absorb. Reload time is proportional to the crew size (100 crew fires faster than 60 crew). In order of effective combat potential (`Hull * Crew * Cannons`), normalized by Frigate:
+  # Frigate (1.00)
+  # Galleon (0.75)
+  # Brig (0.24)
+  # Fluyt (0.09)
+  # Sloop (0.02)
 
-*Notes*
-  * Balance is important. I think I did a decent job though. Things are certainly changeable though.
-  * Obviously, there cannot be less crew than there are cannons. Please think about this before changing the cannon space/crew values.
-  * The adjustments count towards the overall stats of this ship.
-  * This table's source text is 79 columns wide and perfectly aligned when viewed with a monospace font... Please don't break that. 
+*Cargo* room is needed for cannonballs, crew, and cannon as well as goods. Each takes one cargo unit but ammo provides 32 shots per unit. In order of free cargo space (`Cargo - Crew - Cannons`):
+  # Fluyt (185)
+  # Galleon (100)
+  # Brig (42)
+  # Sloop (28)
+  # Frigate (20)
 
-=== 1.1.2. Armour ===
+== Variable Components ==
+These components can be added in varying amounts by adjusting a slider and have a per-unit cost:
+  * *Armor Plates* (Armor Plates) can be used to further reinforce the hull up to double the hull strength
+  * *Sails* (Sails) can be adjusted up to double the minimum amount
+  * *Cannons* (Cannons) can be loaded up to the maximum amount
 
-=== 1.1.3. Sails ===
+== Accessories ==
+Each ship may optionally be fitted with up to one of each of the following:
+  * *Fishing Nets* (? Rope) allow the ship to harvest fish
+  * *Crow's Nest* (? Wood) extends the sight radius of the ship by one tile
+  * *Craftsman* (500 Gold) can slowly repair the ship at sea using on-board materials
 
-= 2. Build Hull =
-After you have a ship designed, select it from Dock->Shipyard and tell it to start building. The shipyard will only build a basic hull for your ship at first. The shipyard will then dump the partial ship into the water near itself. The partial ship is treated as a critically damaged ship, in that it needs fixing to get it up to proper functioning. For building the hull, the Shipyard will use the wood %AMBIG(Other materials needed?) that is in your warehouses.
+= Building and Outfitting =
+After you have a ship designed, select the Shipyard and instruct it to build. The Shipyard will only build a basic hull for your ship at first and place it in a nearby tile. The partial ship will then be gradually constructed from the materials you have available in the same way a critically damaged ship is repaired.
 
-== 2.1. Outfit Ship ==
 After the hull is complete, the Shipyard will attempt to outfit your ship with the parts that the design calls for. As before, the parts will be taken from your Warehouses that are on the island. If a Shipyard does not have the parts it needs to build a ship, it informs the player but does nothing else until the parts are in the warehouse.
 
 At any point during the construction, you can cancel the "repairs" and use another of your ships to tow your ship elsewhere, such as another island's shipyard. Of course, transporting half-built ships is risky business if there is fear of attack.
 
-= 3. Selling Ships =
-After one has as ship, he or she is able to sell the ship via the player bidding system. One must simply select the ship one wants to sell, mark it as for sale, and select the price. The game will supply the player with the cost that has been expended to build the ship.
+= Selling Ships =
+After a ship is built, it can be sold by marking it as for sale and setting a fixed price. Another player can then purchase the ship if he or she brings a unit nearby or has land on the nearby island.
 
-The benefit of being able to sell ships is that a particularly wealthy and influential player would be able to go entirely into the ship building industry, and sell his products to the other players. It also lets the other players not have to worry so much about creating all the infrastructure needed to build a ship if they don't want to and do trust their allies.
+The benefit of being able to sell ships is that a particularly wealthy and influential player would be able to go entirely into the ship building industry, and sell his products to the other players. It also lets the other players not have to worry so much about creating all the infrastructure needed to build a ship if they don't want to.
+
+= Combat =
+To engage in combat, two ships must sail within cannon range (varies for ammunition type). Shots can then be exchanged. The amount of reload time is proportional to the crew size and number of cannons.
+
+Damage is dealt per-cannonball in the following manner:
+  * Decide what area of the ship was hit:
+    * Probability depends on ammunition type:
+      * *Roundshot*: 10% sails / 20% crew / 70% hull
+      * *Chainshot*: 70% sails / 10% crew / 20% hull
+      * *Grapeshot*: 20% sails / 70% crew / 10% hull
+  * If sails were hit:
+    * Deal one point of damage to sails and stop here.
+  * If the crew was hit:
+    * Destroy one unit of Crew and stop here.
+  * If the hull was hit:
+    * Decide if an armor plate was hit:
+       * This chance is the number of plates divided by the maximum hull strength.
+       * If an armor plate was hit, destroy one armor plate and stop here.
+    * Otherwise, deal one point of damage to the hull and destroy one random unit of cargo.
