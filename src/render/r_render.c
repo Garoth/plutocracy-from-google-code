@@ -295,6 +295,10 @@ int render_test_globe()
         static float x_rot, y_rot;
         float left[] = { -1.0, 0.0, 0.0, 0.0 };
 
+        static int island_to_show = 1;
+        static int since_island_change = 0;
+        int i;
+
         if (!r_test_globe.value.n)
                 return FALSE;
 
@@ -344,23 +348,21 @@ int render_test_globe()
         glDisableClientState(GL_VERTEX_ARRAY);
         glDisableClientState(GL_NORMAL_ARRAY);
 
-        /* See if neighbors works */
-        int i;
-        c_vec3_t v = test_globe->verts[31];
-
+        /* Show all points on island_to_show */
         glPointSize(5.0);
+        glColor3f(1.0, 0.0, 0.0);
         glBegin(GL_POINTS);
 
-        glColor3f(1.0, 0.0, 0.0);
-        glVertex3f(v.x, v.y, v.z);
-        glColor3f(0.0, 1.0, 1.0);
-        for (i = 0; i < test_globe->neighbors_lists[31].count; i++) {
-                int index;
+        for (i = 0; i < test_globe->nverts; i++)
+                if (test_globe->island_ids[i] == island_to_show) {
+                        c_vec3_t v;
 
-                index = test_globe->neighbors_lists[31].indices[i];
-                v = test_globe->verts[index];
-                glVertex3f(v.x, v.y, v.z);
-        }
+                        v = C_vec3_norm(test_globe->water_verts[i]);
+                        glNormal3f(v.x, v.y, v.z);
+                        v = test_globe->verts[i];
+                        glVertex3f(v.x, v.y, v.z);
+                }
+
         glEnd();
 
         glPopMatrix();
@@ -373,6 +375,12 @@ int render_test_globe()
 
         x_rot += 2 * c_frame_sec;
         y_rot += 20 * c_frame_sec;
+
+        if (250 < (since_island_change += c_frame_msec)) {
+                island_to_show %= test_globe->n_islands;
+                island_to_show++;
+                since_island_change = 0;
+        }
 
         return TRUE;
 }
