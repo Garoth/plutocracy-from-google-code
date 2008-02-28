@@ -119,6 +119,51 @@ static void compute_normals(g_globe_t *g)
 }
 
 /******************************************************************************\
+ Greedily mark all connected land vertices as the specified island.
+\******************************************************************************/
+static void mark_island(g_globe_t *g, unsigned short vert, unsigned short isle)
+{
+        int i;
+
+        if (!g->landp[vert] || g->island_ids[vert] != 0)
+                return;
+
+        g->island_ids[vert] = isle;
+        for (i = 0; i < g->neighbors_lists[vert].count; i++)
+                mark_island(g, g->neighbors_lists[vert].indices[i], isle);
+}
+
+/****************************************************************************** \
+ Determines which vertices are on which islands, and which water tiles "belong"
+ to which islands. Skip water for now.
+\******************************************************************************/
+static void identify_islands(g_globe_t *g)
+{
+        int i;
+        float water_len_sqr;
+
+        g->n_islands = 0;
+        g->landp = C_malloc(g->nverts);
+        g->island_ids = C_malloc(g->nverts * sizeof (unsigned short));
+
+        memset(g->landp, '\0', g->nverts);
+        memset(g->island_ids, '\0', g->nverts * sizeof (unsigned short));
+
+        water_len_sqr = C_vec3_square_len(g->water_verts[0]);
+        for (i = 0; i < g->nverts; i++)
+                if (C_vec3_square_len(g->verts[i]) >= water_len_sqr)
+                        g->landp[i] = 1;
+
+        C_debug("marked land verts");
+
+        for (i = 0; i < g->nverts; i++)
+                if (g->landp[i] && g->island_ids[i] == 0)
+                        mark_island(g, i, ++g->n_islands);
+
+        C_debug("%d islands on globe", g->n_islands);
+}
+
+/****************************************************************************** \
  Generates the globe to be used as the map for the game by tesselating a
  tetrahedron.
 \******************************************************************************/
@@ -519,8 +564,9 @@ g_globe_t *G_globe_alloc(int subdiv_levels, unsigned int seed, float water)
 
         offset_terrain(seed, water, result);
 
-        /* And compute normals */
+        /* And some more stuff */
         compute_normals(result);
+        identify_islands(result);
 
         return result;
 }
@@ -537,5 +583,7 @@ void G_globe_free(g_globe_t *s)
         C_free(s->norms);
         C_free(s->neighbors_lists);
         C_free(s->inds);
+        C_free(s->island_ids);
+        C_free(s->landp);
         C_free(s);
 }
