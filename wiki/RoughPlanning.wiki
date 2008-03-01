@@ -1,6 +1,6 @@
 #summary Rough planning ideas
 
-Elements:
+= Elements: =
 
  - Medium paced strategy. Must avoid slowdowns due to micromanagement. 
    See freeciv. Game should have a balance of fast & relaxing.
@@ -15,7 +15,7 @@ Elements:
  - < Khent> IE make it very very hard to invade an island. But its more 
             possible to blockade their trade routes
 
-AI INDEPENDENCE (Majesty-esque)
+= AI INDEPENDENCE (Majesty-esque) =
  - < Khent> Ship captains & naming your boats for a more personal touch. --  You pick captains for your ships, and give them orders, then the AI goes on their merry way doing what they do best.
 < Khent> But the trick is that a good captain will do what you tell him to
 13:10 < Khent> if you have a scoundrel he might just bend the rules
@@ -35,7 +35,7 @@ AI INDEPENDENCE (Majesty-esque)
                health
 
 
-CUSTOMIZABILITY
+= CUSTOMIZABILITY =
 13:31 < Atom_Eve> A big thing for me is customizability. I like small touches 
                   that make things seem more yours.
 13:31 < Atom_Eve> Even if that's just, y'know, naming ships.
@@ -43,7 +43,7 @@ CUSTOMIZABILITY
 13:31 < Atom_Eve> Little touches like that make games shine for me.
 (customizing ships, naming boats/cities, etc -- optional stuff that can add a personal touch.)
 
-ISLAND SPECIALIZATION
+= ISLAND SPECIALIZATION =
 - Perhaps TCs only have a certain amount of slots for different kinds of upgrades -- weaver, mason, etc -- and nothing else.
 
 CROPS
@@ -53,7 +53,7 @@ CROPS
 15:24 < risujin> your island has 20% tobacco-able tiles so focusing on tobacco 
                  will be inefficient
 
-# Garoth's Mechanics Blah Blah
+= Garoth's Mechanics Blah Blah =
 
 13:38 <@Garoth> Some basics that aren't altogether there:
 13:38 <@Garoth> 1) you rent land only
