@@ -52,3 +52,70 @@ CROPS
 15:21 < risujin> dry/moderate/wet climates?
 15:24 < risujin> your island has 20% tobacco-able tiles so focusing on tobacco 
                  will be inefficient
+
+# Garoth's Mechanics Blah Blah
+
+13:38 <@Garoth> Some basics that aren't altogether there:
+13:38 <@Garoth> 1) you rent land only
+13:38 <@Garoth> 2) You're only a merchant, not a colonizer
+13:39 <@Garoth> 3) You can only rent land adjacent to your land you already 
+                have and adjacent to settler ships
+13:39 <@Garoth> 4) Resources will be kind of all over the place to facilitate 
+                trade
+13:39 <@Garoth> 5) We were probably going to have raft-walls: you can build 
+                long walls on floating rafts in the middle of the sea and tax 
+                people coming through
+13:40 <@Garoth> 6) You can sell to players as well as towns (AI controlled)
+13:40 <@Garoth> 7) Person who makes the most wins
+13:40 <@Garoth> 8) Losing doesn't kick you out, it just makes you restart
+13:40 <@Garoth> (and you lose by running out of money, etc)
+13:41 <@Garoth> 9) You can also choose to become a pirate, but you lose any 
+                land/buildings where you don't control the entire island
+13:41 <@Garoth> That's all kind of vague for now though
+13:42 < Lumoko> also "TC" stands for...
+13:42 <@Garoth> Assets not included, I think. That makes it harder.
+13:42 <@Garoth> Town Centre
+13:42 < Lumoko> ok
+13:42 <@Garoth> Oh, and about war
+13:42 <@Garoth> You don't declare war, you belong to a nation
+13:42 <@Garoth> your nation declares war
+13:42 <@Garoth> (AI)
+13:43 <@Garoth> When you are at war with another nation, you can't trade with 
+                them
+13:43 <@Garoth> and you are forced to attack whatever it is of theirs that 
+                comes near
+13:43 <@Garoth> I think...
+13:43 < Lumoko> when a nation declares war and wins, does all properties on 
+                land become nationalized?
+13:43 <@Garoth> Also, if you attack an island and take out the town centre, the 
+                island falls under your control and you must build a new TC
+13:44 < Lumoko> man my english is terrible today
+13:44 <@Garoth> Well, nations don't "win"
+13:44 <@Garoth> I'm not even sure nations have ships, maybe they do
+13:44 <@Garoth> It's more like "you can attack them now"
+13:44 <@Garoth> Also, you can bribe your gov't to declare a war
+13:44 <@Garoth> (as an influence only, not a certainty)
+13:45 <@Garoth> And, like I said, if you manage to eradicate everything of 
+                someone's or make them run out of money, they simply start 
+                again (with a settler ship)
+13:45 <@Garoth> But yes, in general, buildings aren't destroyed: they are 
+                converted
+13:46 <@Garoth> you can also buy out someone's rented land by bidding on their 
+                tiles
+13:46 <@Garoth> And then whatever is on it becomes yours
+13:46 <@Garoth> You can attack buildings also, but only from the sea (as the 
+                only "units" are ships)
+13:46 <@Garoth> However, chances are, you want to attack the TC to take over 
+                the whole island without crippling it
+13:47 < Lumoko> that's great how the type of tree effects what lumber you get
+13:47 <@Garoth> :)
+13:47 <@Garoth> One thing that we really want to avoid: micromanagement
+13:47 <@Garoth> So you shouldn't have to constantly monitor/interact with 
+                something
+13:47 <@Garoth> avoid presenting ideas that make this the case
+13:48 < Lumoko> what do you mean by efficiency there though? higher quality 
+                tree=higher price, or faster production...?
+13:48 < Lumoko> ok
+13:48 <@Garoth> Example: your selling price. You don't want to constantly 
+                adjust all your selling prices so we have a system where it can 
+                fluctuate based on presets
