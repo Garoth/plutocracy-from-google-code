@@ -32,3 +32,12 @@ Trading is a major gameplay mechanic. [Buildings] harvest or refine [Resources] 
 Player ships capable of combat can only attack enemies of the player's nation. When an island is conquered by a player, the island government is overthrown and a new government, affiliated to the player's nation is established. Because pirates are not affiliated with a government, pirate players can claim entire islands for themselves. Pirates are permanently at war with all other players, including other pirates.
 
 In order to declare war on or make peace with another nation, the players affiliated with that nation must bribe their government by paying money either for 'yes' or 'no' votes when the government considers a war or peace action. Government AI will initiate war or peace votes, and assign votes on its own if no bribes are made.
+
+= Reputation =
+Each nation holds an opinion of every player in the game. This is the player's reputation in that nation. Reputation affects a player's buy/sell prices to that nation's towns by imposing tariffs on despised merchants and discounts to favored merchants. Reputations for a nation are conserved, meaning that if one player's reputation decreases, the other players' reputations increase equivalently.
+
+Reputation can be changed by the following:
+  * War actions against a nation's ships harm your reputation
+  * Nations may be bribed to hate a specific player
+  
+Reputation cannot be increased directly.
