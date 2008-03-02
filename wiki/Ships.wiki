@@ -59,6 +59,7 @@ Each ship may optionally be fitted with up to one of each of the following:
   * *Fishing Nets* (? Rope) allow the ship to harvest fish
   * *Crow's Nest* (? Wood) extends the sight radius of the ship by one tile
   * *Craftsman* (500 Gold) can slowly repair the ship at sea using on-board materials
+  * *Towing Hook* (? Steel) allows the ship to tow other ships
 
 = Building and Outfitting =
 After you have a ship designed, select the Shipyard and instruct it to build. The Shipyard will only build a basic hull for your ship at first and place it in a nearby tile. The partial ship will then be gradually constructed from the materials you have available in the same way a critically damaged ship is repaired.
