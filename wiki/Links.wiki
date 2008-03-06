@@ -29,3 +29,7 @@ Khent suggested some similar games to play:
   * Generate a sphere from any polygon: http://www.neubert.net/PLASpher.html
   * FreeCiv considers buckeyballs: http://freeciv.wikia.com/wiki/Sphere
   * Sphere tessellation methods: http://student.ulb.ac.be/~claugero/sphere/index.html
+
+= Thematic Links =
+Some links to make sure the game stays thematically accurate:
+  * [http://www.cindyvallar.com/havens6.html Pirates and Privateers: The History of Maritime Piracy] (thanks Phail)
