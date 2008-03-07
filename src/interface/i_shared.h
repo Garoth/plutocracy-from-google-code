@@ -10,10 +10,11 @@
  FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
 \******************************************************************************/
 
-/* i_window.c */
+/* i_layout.c */
 void I_cleanup(void);
+void I_dispatch(const SDL_Event *);
 void I_init(void);
-void I_render_windows(void);
+void I_render(void);
 
 /* i_variables.c */
 void I_register_variables(void);

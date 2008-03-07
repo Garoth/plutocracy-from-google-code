@@ -92,19 +92,19 @@ static void main_loop(void)
                 R_start_frame();
                 while (SDL_PollEvent(&ev)) {
                         switch(ev.type) {
+                        case SDL_QUIT:
+                                return;
                         case SDL_KEYDOWN:
                                 if (ev.key.keysym.sym == SDLK_ESCAPE) {
                                         C_debug("Escape key pressed");
                                         return;
                                 }
-                                break;
-                        case SDL_QUIT:
-                                return;
                         default:
+                                I_dispatch(&ev);
                                 break;
                         }
                 }
-                I_render_windows();
+                I_render();
                 render_status();
                 R_finish_frame();
                 C_time_update();

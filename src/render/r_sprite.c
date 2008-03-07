@@ -207,6 +207,7 @@ void R_cleanup_fonts(void)
 static void blit_shadowed(SDL_Surface *dest, SDL_Surface *src,
                           int to_x, int to_y, float alpha)
 {
+        float w1, w2;
         int y, x;
 
         if (SDL_LockSurface(dest) < 0) {
@@ -217,20 +218,43 @@ static void blit_shadowed(SDL_Surface *dest, SDL_Surface *src,
                 C_warning("Failed to lock source surface");
                 return;
         }
+        if (r_pixel_scale.value.f < 1.f) {
+                alpha *= r_pixel_scale.value.f;
+                w1 = alpha;
+        } else
+                w1 = (2.f - r_pixel_scale.value.f) * alpha;
+        w2 = alpha - w1;
         for (y = 0; y < src->h + 1; y++)
                 for (x = 0; x < src->w + 1; x++) {
                         c_color_t dc, sc;
 
                         dc = R_SDL_get_pixel(dest, to_x + x, to_y + y);
+
+                        /* Blit the source image pixel */
                         if (x < src->w && y < src->h) {
                                 sc = R_SDL_get_pixel(src, x, y);
                                 dc = C_color_blend(dc, sc);
+                                if (dc.a >= 1.f) {
+                                        R_SDL_put_pixel(dest, to_x + x,
+                                                        to_y + y, dc);
+                                        continue;
+                                }
                         }
-                        if (dc.a < 1.f && x && y && alpha) {
+
+                        /* Blit the shadow from (x - 1, y - 1) */
+                        if (x && y && w1) {
                                 sc = R_SDL_get_pixel(src, x - 1, y - 1);
-                                sc = C_color(0, 0, 0, sc.a * alpha);
+                                sc = C_color(0, 0, 0, sc.a * w1);
                                 dc = C_color_blend(sc, dc);
                         }
+
+                        /* Blit the shadow from (x - 2, y - 2) */
+                        if (x > 1 && y > 1 && w2) {
+                                sc = R_SDL_get_pixel(src, x - 2, y - 2);
+                                sc = C_color(0, 0, 0, sc.a * w2);
+                                dc = C_color_blend(sc, dc);
+                        }
+
                         R_SDL_put_pixel(dest, to_x + x, to_y + y, dc);
                 }
         SDL_UnlockSurface(dest);
@@ -268,12 +292,12 @@ void R_text_set_text(r_text_t *text, r_font_t font, float wrap, float shadow,
            For some reason, SDL_ttf returns a line skip that is one pixel shy
            of the image height returned by TTF_RenderUTF8_Blended(). The
            width and height also need to be expanded by a pixel to leave room
-           for the shadow. */
+           for the shadow (up to 2 pixels). */
         wrap /= fonts[font].scale;
         last_line = 0;
         last_break = 0;
         width = 0;
-        height = (line_skip = TTF_FontLineSkip(fonts[font].ttf_font)) + 2;
+        height = (line_skip = TTF_FontLineSkip(fonts[font].ttf_font)) + 3;
         line = buf;
         for (i = 0, j = 0; string[i]; i++) {
                 int w, h;
@@ -378,7 +402,7 @@ void R_window_init(r_window_t *window, const char *path)
 void R_window_render(r_window_t *window)
 {
         r_vertex2_t verts[16];
-        c_vec2_t mid_half;
+        c_vec2_t mid_half, mid_uv, corner;
         unsigned short indices[] = { 0,  1,  2,  3,  4,  5,  6,  7,
                                      8,  5,  9,  3,  10, 1,  11,
                                      12, 10, 13, 9,  14, 8,  15 };
@@ -386,45 +410,58 @@ void R_window_render(r_window_t *window)
         if (!window || !sprite_render_start(&window->sprite))
                 return;
 
-        /* Render quad strip */
+        /* If the window dimensions are too small to fit the corners in,
+           we need to trim the corner size a little */
+        corner = window->corner;
+        mid_uv = C_vec2(0.25f, 0.25f);
+        if (window->sprite.size.x <= window->corner.x * 2) {
+                corner.x = window->sprite.size.x / 2;
+                mid_uv.x *= corner.x / window->sprite.size.x;
+        }
+        if (window->sprite.size.y <= window->corner.y * 2) {
+                corner.y = window->sprite.size.y / 2;
+                mid_uv.y *= corner.y / window->sprite.size.y;
+        }
+
         mid_half = C_vec2_invscalef(window->sprite.size, 2.f);
-        mid_half = C_vec2_sub(mid_half, window->corner);
-        verts[0].co = C_vec3(-window->corner.x - mid_half.x,
-                             -window->corner.y - mid_half.y, 0.f);
+        mid_half = C_vec2_sub(mid_half, corner);
+        verts[0].co = C_vec3(-corner.x - mid_half.x,
+                             -corner.y - mid_half.y, 0.f);
         verts[0].uv = C_vec2(0.00f, 0.00f);
-        verts[1].co = C_vec3(-window->corner.x - mid_half.x, -mid_half.y, 0.f);
-        verts[1].uv = C_vec2(0.00f, 0.25f);
-        verts[2].co = C_vec3(-mid_half.x, -window->corner.y - mid_half.y, 0.f);
-        verts[2].uv = C_vec2(0.25f, 0.00f);
+        verts[1].co = C_vec3(-corner.x - mid_half.x, -mid_half.y, 0.f);
+        verts[1].uv = C_vec2(0.00f, mid_uv.y);
+        verts[2].co = C_vec3(-mid_half.x, -corner.y - mid_half.y, 0.f);
+        verts[2].uv = C_vec2(mid_uv.x, 0.00f);
         verts[3].co = C_vec3(-mid_half.x, -mid_half.y, 0.f);
-        verts[3].uv = C_vec2(0.25f, 0.25f);
-        verts[4].co = C_vec3(mid_half.x, -window->corner.y - mid_half.y, 0.f);
-        verts[4].uv = C_vec2(0.75f, 0.00f);
+        verts[3].uv = C_vec2(mid_uv.x, mid_uv.y);
+        verts[4].co = C_vec3(mid_half.x, -corner.y - mid_half.y, 0.f);
+        verts[4].uv = C_vec2(1.f - mid_uv.x, 0.00f);
         verts[5].co = C_vec3(mid_half.x, -mid_half.y, 0.f);
-        verts[5].uv = C_vec2(0.75f, 0.25f);
-        verts[6].co = C_vec3(window->corner.x + mid_half.x,
-                             -window->corner.y - mid_half.y, 0.f);
+        verts[5].uv = C_vec2(1.f - mid_uv.x, mid_uv.y);
+        verts[6].co = C_vec3(corner.x + mid_half.x,
+                             -corner.y - mid_half.y, 0.f);
         verts[6].uv = C_vec2(1.00f, 0.00f);
-        verts[7].co = C_vec3(window->corner.x + mid_half.x, -mid_half.y, 0.f);
-        verts[7].uv = C_vec2(1.00f, 0.25f);
-        verts[8].co = C_vec3(window->corner.x + mid_half.x, mid_half.y, 0.f);
-        verts[8].uv = C_vec2(1.00f, 0.75f);
+        verts[7].co = C_vec3(corner.x + mid_half.x, -mid_half.y, 0.f);
+        verts[7].uv = C_vec2(1.00f, mid_uv.y);
+        verts[8].co = C_vec3(corner.x + mid_half.x, mid_half.y, 0.f);
+        verts[8].uv = C_vec2(1.00f, 1.f - mid_uv.y);
         verts[9].co = C_vec3(mid_half.x, mid_half.y, 0.f);
-        verts[9].uv = C_vec2(0.75f, 0.75f);
+        verts[9].uv = C_vec2(1.f - mid_uv.x, 1.f - mid_uv.y);
         verts[10].co = C_vec3(-mid_half.x, mid_half.y, 0.f);
-        verts[10].uv = C_vec2(0.25f, 0.75f);
-        verts[11].co = C_vec3(-window->corner.x - mid_half.x, mid_half.y, 0.f);
-        verts[11].uv = C_vec2(0.00f, 0.75f);
-        verts[12].co = C_vec3(-window->corner.x - mid_half.x,
-                              window->corner.y + mid_half.y, 0.f);
+        verts[10].uv = C_vec2(mid_uv.x, 1.f - mid_uv.y);
+        verts[11].co = C_vec3(-corner.x - mid_half.x, mid_half.y, 0.f);
+        verts[11].uv = C_vec2(0.00f, 1.f - mid_uv.y);
+        verts[12].co = C_vec3(-corner.x - mid_half.x,
+                              corner.y + mid_half.y, 0.f);
         verts[12].uv = C_vec2(0.00f, 1.00f);
-        verts[13].co = C_vec3(-mid_half.x, window->corner.y + mid_half.y, 0.f);
-        verts[13].uv = C_vec2(0.25f, 1.00f);
-        verts[14].co = C_vec3(mid_half.x, window->corner.y + mid_half.y, 0.f);
-        verts[14].uv = C_vec2(0.75f, 1.00f);
-        verts[15].co = C_vec3(window->corner.x + mid_half.x,
-                              window->corner.y + mid_half.y, 0.f);
+        verts[13].co = C_vec3(-mid_half.x, corner.y + mid_half.y, 0.f);
+        verts[13].uv = C_vec2(mid_uv.x, 1.00f);
+        verts[14].co = C_vec3(mid_half.x, corner.y + mid_half.y, 0.f);
+        verts[14].uv = C_vec2(1.f - mid_uv.x, 1.00f);
+        verts[15].co = C_vec3(corner.x + mid_half.x,
+                              corner.y + mid_half.y, 0.f);
         verts[15].uv = C_vec2(1.00f, 1.00f);
+
         C_count_add(&r_count_faces, 20);
         glInterleavedArrays(R_VERTEX2_FORMAT, 0, verts);
         glDrawElements(GL_QUAD_STRIP, 22, GL_UNSIGNED_SHORT, indices);

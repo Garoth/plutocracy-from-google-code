@@ -150,6 +150,8 @@ typedef struct c_counter {
 /* c_glibc_rand.c */
 long int C_glibc_rand(void);
 void C_glibc_srand(unsigned int);
+#define C_rand() C_glibc_rand()
+#define C_rand_seed(s) C_glibc_srand(s)
 
 /* c_log.c */
 void C_close_log_file(void);
@@ -215,8 +217,6 @@ extern c_var_t c_mem_check;
 void C_noise3_seed(unsigned int seed);
 float C_noise3(float x, float y, float z);
 float C_noise3_fractal(int levels, float x, float y, float z);
-#define C_rand() ((float)rand() / RAND_MAX)
-#define C_rand_seed(s) srand(s)
 
 /* c_string.c */
 void C_file_close(c_file_t *);
