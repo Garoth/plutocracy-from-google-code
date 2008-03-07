@@ -400,7 +400,7 @@ void *C_ref_alloc_full(const char *file, int line, const char *function,
                 *found = FALSE;
 
         /* Allocate a new object */
-        ref = C_calloc(size);
+        ref = C_recalloc_full(file, line, function, NULL, size);
         if (!*root)
                 *root = ref;
         ref->prev = prev;

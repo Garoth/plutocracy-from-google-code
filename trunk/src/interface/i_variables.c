@@ -12,13 +12,14 @@
 
 #include "i_common.h"
 
-c_var_t i_window_bg;
+c_var_t i_border, i_window_bg;
 
 /******************************************************************************\
  Registers interface namespace variables.
 \******************************************************************************/
 void I_register_variables(void)
 {
+        C_register_integer(&i_border, "i_border", 8);
         C_register_string(&i_window_bg, "i_window_bg", "gui/windows/blue.png");
 }
 
