@@ -378,6 +378,30 @@ const char *I_event_string(i_event_t event)
 }
 
 /******************************************************************************\
+ Call on a widget in hover or active state to check if the widget has lost
+ mouse focus this frame. Will generate I_EV_MOUSE_OUT when applicable.
+\******************************************************************************/
+static int check_mouse_out(i_widget_t *widget)
+{
+        if (!widget)
+                return FALSE;
+        if (i_mouse_x >= widget->origin.x &&
+            i_mouse_y >= widget->origin.y &&
+            i_mouse_x < widget->origin.x + widget->size.x &&
+            i_mouse_y < widget->origin.y + widget->size.y)
+                return FALSE;
+        if (widget->state != I_WS_HOVER &&
+            widget->state != I_WS_ACTIVE)
+                return TRUE;
+        if (i_debug.value.n >= 2)
+                C_debug("I_EV_MOUSE_OUT --> %s",
+                        widget->name);
+        widget->event_func(widget, I_EV_MOUSE_OUT);
+        widget->state = I_WS_READY;
+        return TRUE;
+}
+
+/******************************************************************************\
  Dispatches basic widget events and does some checks to see if the event
  applies to this widget. Cleans up resources on I_EV_CLEANUP and propagates
  the event to all child widgets.
@@ -440,20 +464,8 @@ void I_widget_event(i_widget_t *widget, i_event_t event)
         case I_EV_MOUSE_MOVE:
 
                 /* Mouse left the widget area */
-                if (i_mouse_x < widget->origin.x ||
-                    i_mouse_y < widget->origin.y ||
-                    i_mouse_x >= widget->origin.x + widget->size.x ||
-                    i_mouse_y >= widget->origin.y + widget->size.y) {
-                        if (widget->state == I_WS_HOVER ||
-                            widget->state == I_WS_ACTIVE) {
-                                if (i_debug.value.n >= 2)
-                                        C_debug("I_EV_MOUSE_OUT --> %s",
-                                                widget->name);
-                                widget->event_func(widget, I_EV_MOUSE_OUT);
-                                widget->state = I_WS_READY;
-                        }
+                if (check_mouse_out(widget))
                         return;
-                }
 
                 /* Mouse entered the widget area */
                 if (widget->state == I_WS_READY) {
@@ -549,6 +561,7 @@ void I_dispatch(const SDL_Event *ev)
                 if (i_debug.value.n > 0)
                         C_debug("SDL_MOUSEMOTION (%dx%d)",
                                 i_mouse_x, i_mouse_y);
+                check_mouse_out(mouse_focus);
                 break;
         case SDL_MOUSEBUTTONDOWN:
                 if (i_mouse)
@@ -560,6 +573,7 @@ void I_dispatch(const SDL_Event *ev)
                 key_focus = NULL;
                 if (i_debug.value.n > 0)
                         C_debug("SDL_MOUSEBUTTONDOWN (%d)", i_mouse);
+                check_mouse_out(mouse_focus);
                 break;
         case SDL_MOUSEBUTTONUP:
                 if (!i_mouse || i_mouse != ev->button.button)
@@ -570,6 +584,7 @@ void I_dispatch(const SDL_Event *ev)
                 key_focus = NULL;
                 if (i_debug.value.n > 0)
                         C_debug("SDL_MOUSEBUTTONUP");
+                check_mouse_out(mouse_focus);
                 break;
         default:
                 return;
