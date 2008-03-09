@@ -19,9 +19,8 @@
    event at a time. */
 typedef enum {
         I_EV_NONE,              /* Do nothing */
-        I_EV_RENDER,            /* Should render */
         I_EV_CLEANUP,           /* Should free resources */
-        I_EV_CONFIGURE,         /* Initialized, moved, or resized */
+        I_EV_CONFIGURE,         /* Initialized or resized */
         I_EV_KEY_DOWN,          /* In focus and a key is pressed down */
         I_EV_KEY_UP,            /* In focus and a key is released */
         I_EV_MOUSE_IN,          /* Mouse just entered widget area */
@@ -29,6 +28,8 @@ typedef enum {
         I_EV_MOUSE_MOVE,        /* Mouse is moved over widget */
         I_EV_MOUSE_DOWN,        /* A mouse button is pressed on the widget */
         I_EV_MOUSE_UP,          /* A mouse button is released on the widget */
+        I_EV_MOVED,             /* Widget was moved */
+        I_EV_RENDER,            /* Should render */
         I_EVENTS
 } i_event_t;
 
@@ -43,15 +44,25 @@ typedef enum {
 /* Widget input states */
 typedef enum {
         I_WS_DISABLED,
+        I_WS_HIDDEN,
         I_WS_READY,
-        I_WS_ENTRY,
         I_WS_HOVER,
         I_WS_ACTIVE,
         I_WIDGET_STATES
 } i_widget_state_t;
 
-/* Function to handle mouse, keyboard, or other events */
-typedef void (*i_event_f)(void *widget, i_event_t);
+/* Determines how a widget will use any extra space it has been assigned. The
+   window can leave the space as-is, collapse toward its origin, or away from
+   its origin (invert). */
+typedef enum {
+        I_COLLAPSE_NONE,
+        I_COLLAPSE,
+        I_COLLAPSE_INVERT,
+} i_collapse_t;
+
+/* Function to handle mouse, keyboard, or other events. Return FALSE to
+   prevent the automatic propagation of an event to the widget's children. */
+typedef int (*i_event_f)(void *widget, i_event_t);
 
 /* Simple callback for handling widget-specific events */
 typedef void (*i_callback_f)(void *widget);
@@ -73,14 +84,18 @@ typedef struct i_widget {
         i_event_f event_func;
         i_pack_t pack;
         i_widget_state_t state;
-        int configured, heap;
+        float fade;
+        int configured, entry, heap;
 } i_widget_t;
 
-/* Toolbars are horizontally packed containers */
-typedef struct i_toolbar {
+/* Windows are decorated containers */
+typedef struct i_window {
         i_widget_t widget;
         r_window_t window;
-} i_toolbar_t;
+        i_pack_t pack_children;
+        i_collapse_t collapse;
+        int decorated;
+} i_window_t;
 
 /* Buttons can have an icon and/or text */
 typedef struct i_button {
@@ -92,19 +107,28 @@ typedef struct i_button {
         int decorated;
 } i_button_t;
 
+/* Labels only have text */
+typedef struct i_label {
+        i_widget_t widget;
+        r_text_t text;
+} i_label_t;
+
 /* i_variables.c */
 extern c_var_t i_border, i_debug;
 
 /* i_widgets.c */
 void I_button_init(i_button_t *, const char *icon, const char *text, int bg);
+#define I_button_set_text(b, s) C_strncpy_buf((b)->text.string, s)
+void I_label_init(i_label_t *);
+#define I_label_set_text(l, s) C_strncpy_buf((l)->text.string, s)
 const char *I_event_string(i_event_t event);
-void I_toolbar_init(i_toolbar_t *);
 void I_widget_add(i_widget_t *parent, i_widget_t *child);
 #define I_widget_cleanup(w) I_widget_event(w, I_EV_CLEANUP)
 void I_widget_event(i_widget_t *, i_event_t);
-void I_widget_pack(i_widget_t *, i_pack_t);
+void I_widget_pack(i_widget_t *, i_pack_t, i_collapse_t);
 void I_widget_propagate(i_widget_t *, i_event_t);
+void I_window_init(i_window_t *);
 
 extern SDLKey i_key;
-extern int i_mouse_x, i_mouse_y, i_mouse, i_key_shift;
+extern int i_key_shift, i_mouse_x, i_mouse_y, i_mouse;
 

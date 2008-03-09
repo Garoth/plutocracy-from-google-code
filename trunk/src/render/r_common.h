@@ -119,5 +119,5 @@ void R_init_fonts(void);
 
 /* r_variables.c */
 extern c_var_t r_color_bits, r_depth_bits, r_gamma, r_height, r_width, r_vsync,
-               r_windowed, r_pixel_scale;
+               r_windowed;
 
