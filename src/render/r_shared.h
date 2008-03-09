@@ -101,3 +101,5 @@ void R_window_render(r_window_t *);
 /* r_variables.c */
 void R_register_variables(void);
 
+extern c_var_t r_pixel_scale;
+
