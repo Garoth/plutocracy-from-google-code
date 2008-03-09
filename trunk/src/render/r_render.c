@@ -194,7 +194,6 @@ int R_init(void)
         check_gl_extensions();
         set_gl_state();
 
-        R_init_fonts();
         R_load_assets();
         load_test_assets();
         return TRUE;
@@ -206,7 +205,6 @@ int R_init(void)
 void R_cleanup(void)
 {
         R_free_assets();
-        R_cleanup_fonts();
 
         /* Cleanup render testing */
         R_static_mesh_free(test_mesh);

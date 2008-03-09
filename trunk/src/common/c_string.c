@@ -84,9 +84,15 @@ int C_read_file(const char *filename, char *buffer, int size)
         c_file_t *file;
         size_t bytes_read;
 
+        C_assert(buffer);
+        if (!filename || !filename[0]) {
+                buffer[0] = NUL;
+                return -1;
+        }
         file = C_file_open_read(filename);
         if (!file) {
                 C_warning("Failed to open '%s'", filename);
+                buffer[0] = NUL;
                 return -1;
         }
         bytes_read = C_file_read(file, buffer, size);
@@ -222,6 +228,13 @@ size_t C_strncpy(char *dest, const char *src, size_t len)
 {
         size_t src_len;
 
+        if (!dest)
+                return 0;
+        if (!src) {
+                if (len > 0)
+                        dest[0] = NUL;
+                return 0;
+        }
         src_len = strlen(src);
         if (src_len > --len) {
                 C_debug("dest (%d bytes) too short to hold src (%d bytes)",
@@ -247,7 +260,8 @@ void C_file_close(c_file_t *file)
  Allocates new heap memory for and duplicates a string. Doesn't crash if the
  string passed in is NULL.
 \******************************************************************************/
-char *C_strdup(const char *str)
+char *C_strdup_full(const char *file, int line, const char *function,
+                    const char *str)
 {
         char *new_str;
         size_t len;
@@ -255,7 +269,7 @@ char *C_strdup(const char *str)
         if (!str)
                 return NULL;
         len = strlen(str) + 1;
-        new_str = C_malloc(len);
+        new_str = C_realloc_full(file, line, function, NULL, len);
         memcpy(new_str, str, len);
         return new_str;
 }

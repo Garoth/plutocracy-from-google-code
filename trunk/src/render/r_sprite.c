@@ -15,10 +15,7 @@
 
 #include "r_common.h"
 
-static struct {
-        TTF_Font *ttf_font;
-        float scale;
-} fonts[R_FONTS];
+extern r_font_data_t r_fonts[R_FONTS];
 
 /******************************************************************************\
  Initialize a sprite structure. 2D mode textures are expected to be at the
@@ -143,63 +140,6 @@ void R_sprite_render(const r_sprite_t *sprite)
 }
 
 /******************************************************************************\
- Loads the font, properly scaled and generates an error message if something
- goes wrong.
-\******************************************************************************/
-static void load_font(r_font_t font, const char *path, int size)
-{
-        int points;
-
-        points = ceilf(size * r_pixel_scale.value.f);
-        fonts[font].scale = (float)size / points;
-        if (points < R_FONT_SIZE_MIN)
-                points = R_FONT_SIZE_MIN;
-        fonts[font].ttf_font = TTF_OpenFont(path, points);
-        if (!fonts[font].ttf_font)
-                C_error("Failed to load font '%s' (%d)", path, size);
-}
-
-/******************************************************************************\
- Initialize the SDL TTF library and generate font structures.
-\******************************************************************************/
-void R_init_fonts(void)
-{
-        SDL_version compiled;
-        const SDL_version *linked;
-        int i;
-
-        TTF_VERSION(&compiled);
-        C_debug("Compiled with SDL_ttf %d.%d.%d",
-                compiled.major, compiled.minor, compiled.patch);
-        linked = TTF_Linked_Version();
-        if (!linked)
-                C_error("Failed to get SDL_ttf linked version");
-        C_debug("Linked with SDL_ttf %d.%d.%d",
-                linked->major, linked->minor, linked->patch);
-        if (TTF_Init() == -1)
-                C_error("Failed to initialize SDL TTF library: %s",
-                        TTF_GetError());
-
-        /* Load font files */
-        load_font(R_FONT_CONSOLE, "gui/fonts/VeraMoBd.ttf", 12);
-        for (i = 0; i < R_FONTS; i++)
-                if (!fonts[i].ttf_font)
-                        C_error("Forgot to load font %d", i);
-}
-
-/******************************************************************************\
- Cleanup the SDL TTF library.
-\******************************************************************************/
-void R_cleanup_fonts(void)
-{
-        int i;
-
-        for (i = 0; i < R_FONTS; i++)
-                TTF_CloseFont(fonts[i].ttf_font);
-        TTF_Quit();
-}
-
-/******************************************************************************\
  Blits the entire [src] surface to dest at [x], [y] and applies a one-pixel
  shadow of [alpha] opacity. This function could be made more efficient by
  unrolling the loops a bit, but it is not worth the loss in readablitiy.
@@ -285,7 +225,8 @@ void R_text_set_text(r_text_t *text, r_font_t font, float wrap, float shadow,
                 R_sprite_cleanup(&text->sprite);
                 return;
         }
-        C_strncpy_buf(text->string, string);
+        if (text->string != string)
+                C_strncpy_buf(text->string, string);
         R_sprite_cleanup(&text->sprite);
 
         /* Wrap the text and figure out how large the surface needs to be.
@@ -293,16 +234,16 @@ void R_text_set_text(r_text_t *text, r_font_t font, float wrap, float shadow,
            of the image height returned by TTF_RenderUTF8_Blended(). The
            width and height also need to be expanded by a pixel to leave room
            for the shadow (up to 2 pixels). */
-        wrap /= fonts[font].scale;
+        wrap /= r_fonts[font].scale;
         last_line = 0;
         last_break = 0;
         width = 0;
-        height = (line_skip = TTF_FontLineSkip(fonts[font].ttf_font)) + 3;
+        height = (line_skip = TTF_FontLineSkip(r_fonts[font].ttf_font)) + 3;
         line = buf;
         for (i = 0, j = 0; string[i]; i++) {
                 int w, h;
 
-                if (j >= sizeof (buf) - 1) {
+                if (j >= sizeof (buf) - 2) {
                         C_warning("Ran out of buffer space");
                         break;
                 }
@@ -310,7 +251,7 @@ void R_text_set_text(r_text_t *text, r_font_t font, float wrap, float shadow,
                 buf[j] = NUL;
                 if (C_is_space(string[i]))
                         last_break = i;
-                TTF_SizeText(fonts[font].ttf_font, line, &w, &h);
+                TTF_SizeText(r_fonts[font].ttf_font, line, &w, &h);
                 if ((wrap > 0.f && w > wrap) || string[i] == '\n') {
                         if (last_line == last_break)
                                 last_break = last_line >= i - 1 ? i : i - 1;
@@ -344,7 +285,7 @@ void R_text_set_text(r_text_t *text, r_font_t font, float wrap, float shadow,
                         continue;
                 swap = buf[i];
                 buf[i] = NUL;
-                surf = TTF_RenderUTF8_Blended(fonts[font].ttf_font,
+                surf = TTF_RenderUTF8_Blended(r_fonts[font].ttf_font,
                                               buf + last_break, white);
                 if (!surf) {
                         C_warning("TTF_RenderUTF8_Blended() failed: %s",
@@ -364,8 +305,8 @@ void R_text_set_text(r_text_t *text, r_font_t font, float wrap, float shadow,
            the sprite itself can be manipulated as expected */
         R_sprite_init(&text->sprite, NULL);
         text->sprite.texture = tex;
-        text->sprite.size.x = width * fonts[font].scale;
-        text->sprite.size.y = height * fonts[font].scale;
+        text->sprite.size.x = width * r_fonts[font].scale;
+        text->sprite.size.y = height * r_fonts[font].scale;
         text->font = font;
 }
 
@@ -414,13 +355,13 @@ void R_window_render(r_window_t *window)
            we need to trim the corner size a little */
         corner = window->corner;
         mid_uv = C_vec2(0.25f, 0.25f);
-        if (window->sprite.size.x <= window->corner.x * 2) {
+        if (window->sprite.size.x <= corner.x * 2) {
                 corner.x = window->sprite.size.x / 2;
-                mid_uv.x *= corner.x / window->sprite.size.x;
+                mid_uv.x *= corner.x / window->corner.x;
         }
-        if (window->sprite.size.y <= window->corner.y * 2) {
+        if (window->sprite.size.y <= corner.y * 2) {
                 corner.y = window->sprite.size.y / 2;
-                mid_uv.y *= corner.y / window->sprite.size.y;
+                mid_uv.y *= corner.y / window->corner.y;
         }
 
         mid_half = C_vec2_invscalef(window->sprite.size, 2.f);

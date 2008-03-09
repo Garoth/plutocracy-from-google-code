@@ -32,18 +32,48 @@ typedef enum {
         I_EVENTS
 } i_event_t;
 
+/* Widgets can only be packed as lists horizontally or vertically */
+typedef enum {
+        I_PACK_NONE,
+        I_PACK_H,
+        I_PACK_V,
+        I_PACK_TYPES
+} i_pack_t;
+
+/* Widget input states */
+typedef enum {
+        I_WS_DISABLED,
+        I_WS_READY,
+        I_WS_ENTRY,
+        I_WS_HOVER,
+        I_WS_ACTIVE,
+        I_WIDGET_STATES
+} i_widget_state_t;
+
 /* Function to handle mouse, keyboard, or other events */
 typedef void (*i_event_f)(void *widget, i_event_t);
 
-/* The basic properties all interface widgets need to have. This structure
-   should be the first member of any derived interface widget. */
+/* Simple callback for handling widget-specific events */
+typedef void (*i_callback_f)(void *widget);
+
+/* The basic properties all interface widgets need to have. The widget struct
+   should be the first member of any derived widget struct.
+
+   When a widget receives the I_EV_CONFIGURE event it, its parent has set its
+   origin and size to the maximum available space. The widget must then change
+   its size to its actual size.
+
+   The reason for keeping [name] as a buffer rather than a pointer to a
+   statically-allocated string is to assist in memory leak detection. The
+   leak detector thinks the memory is a string and prints the widget name. */
 typedef struct i_widget {
-        c_vec2_t origin, size, req_size;
+        char name[32];
         struct i_widget *parent, *next, *child;
-        const char *class_name;
+        c_vec2_t origin, size;
         i_event_f event_func;
-        int configured;
-        char heap, clickable, focusable, hover;
+        i_pack_t pack;
+        i_widget_state_t state;
+        int configured, heap;
 } i_widget_t;
 
 /* Toolbars are horizontally packed containers */
@@ -52,14 +82,28 @@ typedef struct i_toolbar {
         r_window_t window;
 } i_toolbar_t;
 
-/* i_variables.c */
-extern c_var_t i_border, i_window_bg;
+/* Buttons can have an icon and/or text */
+typedef struct i_button {
+        i_widget_t widget;
+        r_window_t normal, hover, active;
+        r_sprite_t icon;
+        r_text_t text;
+        i_callback_f on_click;
+        int decorated;
+} i_button_t;
 
-/* i_widget.c */
-void I_toolbar_init(i_toolbar_t *toolbar);
+/* i_variables.c */
+extern c_var_t i_border, i_debug;
+
+/* i_widgets.c */
+void I_button_init(i_button_t *, const char *icon, const char *text, int bg);
+const char *I_event_string(i_event_t event);
+void I_toolbar_init(i_toolbar_t *);
 void I_widget_add(i_widget_t *parent, i_widget_t *child);
-#define I_widget_init(w) C_zero(w)
+#define I_widget_cleanup(w) I_widget_event(w, I_EV_CLEANUP)
 void I_widget_event(i_widget_t *, i_event_t);
+void I_widget_pack(i_widget_t *, i_pack_t);
+void I_widget_propagate(i_widget_t *, i_event_t);
 
 extern SDLKey i_key;
 extern int i_mouse_x, i_mouse_y, i_mouse, i_key_shift;

@@ -33,12 +33,12 @@ typedef struct r_vertex2 {
 #pragma pack(pop)
 
 /* Texture class */
-typedef struct r_texture {
+struct r_texture {
         c_ref_t ref;
         SDL_Surface *surface;
         GLuint gl_name;
         int gl_type, gl_format, alpha;
-} r_texture_t;
+};
 
 /* Non-animated mesh */
 typedef struct r_static_mesh {
@@ -76,6 +76,12 @@ typedef enum {
         R_MODE_3D,
         R_MODE_2D,
 } r_mode_t;
+
+/* Font asset */
+typedef struct r_font {
+        TTF_Font *ttf_font;
+        float scale;
+} r_font_data_t;
 
 /* r_assets.c */
 void R_free_assets(void);

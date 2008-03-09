@@ -23,6 +23,10 @@ c_var_t r_gl_errors,
         r_test_sprite_num, r_test_sprite_path,
         r_test_text;
 
+/* Fonts */
+c_var_t r_font_console, r_font_console_pt,
+        r_font_gui, r_font_gui_pt;
+
 /******************************************************************************\
  Registers the render namespace variables.
 \******************************************************************************/
@@ -47,5 +51,13 @@ void R_register_variables(void)
         C_register_integer(&r_test_sprite_num, "r_test_sprites", 0);
         C_register_string(&r_test_sprite_path, "r_test_sprite", "");
         C_register_string(&r_test_text, "r_test_text", "");
+
+        /* Fonts */
+        C_register_string(&r_font_console, "r_font_console",
+                          "gui/fonts/VeraMoBd.ttf");
+        C_register_integer(&r_font_console_pt, "r_font_console_pt", 12);
+        C_register_string(&r_font_gui, "r_font_console",
+                          "gui/fonts/BLKCHCRY.TTF");
+        C_register_integer(&r_font_gui_pt, "r_font_gui_pt", 19);
 }
 

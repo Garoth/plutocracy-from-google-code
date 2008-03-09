@@ -20,14 +20,10 @@ plutocracy_SOURCES = \
         src/interface/i_common.h \
         src/interface/i_shared.h \
         src/interface/i_variables.c \
-        src/interface/i_widget.c \
-        src/interface/i_window.c \
+        src/interface/i_widgets.c \
         src/network/n_client.c \
         src/network/n_common.h \
         src/network/n_shared.h \
-        src/platform/p_posix.c \
-        src/platform/p_shared.h \
-        src/platform/p_win32.c \
         src/render/r_assets.c \
         src/render/r_common.h \
         src/render/r_model.c \

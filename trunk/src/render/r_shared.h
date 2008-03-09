@@ -26,6 +26,9 @@
    so we need to set a minimum (in points). */
 #define R_FONT_SIZE_MIN 10
 
+/* Opaque texture object */
+typedef struct r_texture r_texture_t;
+
 /* Model instance type */
 typedef struct r_model {
         struct r_static_mesh *lerp_meshes;
@@ -38,7 +41,7 @@ typedef struct r_model {
 
 /* 2D textured quad sprite, can only be rendered in 2D mode */
 typedef struct r_sprite {
-        struct r_texture *texture;
+        r_texture_t *texture;
         c_vec2_t origin, size;
         float red, green, blue, alpha, angle;
 } r_sprite_t;
@@ -46,6 +49,7 @@ typedef struct r_sprite {
 /* There is a fixed set of fonts available for the game */
 typedef enum {
         R_FONT_CONSOLE,
+        R_FONT_GUI,
         R_FONTS
 } r_font_t;
 
@@ -88,7 +92,7 @@ void R_text_cleanup(r_text_t *);
 #define R_text_cleanup(t) R_sprite_cleanup(&(t)->sprite)
 #define R_text_init(t) C_zero(t)
 void R_text_set_text(r_text_t *, r_font_t, float wrap, float shadow_alpha,
-                     const char *);
+                     const char *text);
 #define R_text_render(t) R_sprite_render(&(t)->sprite)
 #define R_window_cleanup(w) R_sprite_cleanup(&(w)->sprite)
 void R_window_init(r_window_t *, const char *filename);
