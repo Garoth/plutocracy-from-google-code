@@ -457,8 +457,7 @@ void I_widget_event(i_widget_t *widget, i_event_t event)
                    motion events and should never be propagated. */
                 return;
         case I_EV_MOUSE_DOWN:
-                if (widget->state == I_WS_READY ||
-                    widget->state == I_WS_HOVER)
+                if (widget->state == I_WS_READY || widget->state == I_WS_HOVER)
                         widget->state = I_WS_ACTIVE;
         case I_EV_MOUSE_UP:
         case I_EV_MOUSE_MOVE:
