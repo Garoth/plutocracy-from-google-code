@@ -69,12 +69,19 @@
 
 /* Certain functions should not be used. Files that legitimately use these
    should undefine these replacements */
+#undef calloc
 #define calloc(s) ERROR_use_C_calloc
+#undef fclose
 #define fclose(f) ERROR_use_C_file_close
+#undef free
 #define free(s) ERROR_use_C_free
+#undef malloc
 #define malloc(s) ERROR_use_C_malloc
+#undef realloc
 #define realloc(p, s) ERROR_use_C_realloc
+#undef strdup
 #define strdup(s) ERROR_use_C_strdup
+#undef strncpy
 #define strncpy(d, s, n) ERROR_use_C_strncpy
 
 /* Debug log levels, errors are fatal and will always abort */
