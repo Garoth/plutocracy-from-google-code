@@ -169,6 +169,7 @@ static void cleanup(void)
         R_text_cleanup(&status_text);
         R_cleanup();
         SDL_Quit();
+        C_cleanup_variables();
         C_check_leaks();
         C_debug("Done");
 }

@@ -121,6 +121,7 @@ static void *malloc_checked(const char *file, int line, const char *function,
                 tag->next = mem_root;
         mem_root = tag;
         mem_bytes += size;
+        mem_calls++;
         if (mem_bytes > mem_bytes_max)
                 mem_bytes_max = mem_bytes;
         return tag->data;
@@ -194,12 +195,14 @@ static void *realloc_checked(const char *file, int line, const char *function,
 void *C_realloc_full(const char *file, int line, const char *function,
                      void *ptr, size_t size)
 {
+        c_mem_check.edit = C_VE_LOCKED;
         if (c_mem_check.value.n)
                 return realloc_checked(file, line, function, ptr, size);
         ptr = realloc(ptr, size);
         if (!ptr)
-                C_error("Out of memory, %s() (%s:%d) tried to allocate %d "
-                        "bytes", function, file, line, size );
+                C_error_full(file, line, function,
+                             "Out of memory, tried to allocate %u bytes",
+                             size);
         return ptr;
 }
 
@@ -278,14 +281,29 @@ void C_check_leaks(void)
         if (!c_mem_check.value.n)
                 return;
         tags = 0;
-        tag = mem_root;
-        while (tag) {
+        for (tag = mem_root; tag; tag = tag->next) {
+                int i;
+
                 tags++;
-                if (!tag->freed)
-                        C_warning("%s() leaked %d bytes in %s:%d",
-                                  tag->alloc_func, tag->size, tag->alloc_file,
-                                  tag->alloc_line);
-                tag = tag->next;
+                if (tag->freed)
+                        continue;
+                C_warning("%s() leaked %d bytes in %s:%d",
+                          tag->alloc_func, tag->size, tag->alloc_file,
+                          tag->alloc_line);
+
+                /* If we leaked a string, we can print it */
+                if (tag->size < 1)
+                        continue;
+                for (i = 0; C_is_print(((char *)tag->data)[i]); i++) {
+                        char buf[32];
+
+                        if (i >= tag->size - 1 || i >= sizeof (buf) - 1 ||
+                            !((char *)tag->data)[i + 1]) {
+                                C_strncpy_buf(buf, tag->data);
+                                C_debug("Looks like a string: '%s'", buf);
+                                break;
+                        }
+                }
         }
         C_debug("%d allocation calls, high mark %.1fmb, %d tags",
                 mem_calls, mem_bytes_max / 1048576.f, tags);
@@ -337,6 +355,10 @@ void C_test_mem_check(void)
         case 8: C_debug("Reallocating unallocated memory");
                 ptr = C_realloc((void *)0x12345678, 1024);
                 break;
+        case 9: C_debug("Intentionally leaking string");
+                ptr = C_malloc(1024);
+                C_strncpy(ptr, "This string was leaked", 1024);
+                return;
         default:
                 C_error("Unknown memory check test %d",
                         c_mem_check.value.n);
@@ -401,7 +423,7 @@ void *C_ref_alloc_full(const char *file, int line, const char *function,
 
         /* Allocate a new object */
         ref = C_recalloc_full(file, line, function, NULL, size);
-        if (!*root)
+        if (!*root || *root == next)
                 *root = ref;
         ref->prev = prev;
         if (prev)

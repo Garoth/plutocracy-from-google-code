@@ -89,26 +89,34 @@ typedef enum {
 /* Holds all possible variable types */
 typedef union {
         int n;
-        double f;
+        float f;
         char *s;
 } c_var_value_t;
 
 /* Variable value types */
 typedef enum {
-        C_VAR_UNREGISTERED,
-        C_VAR_INTEGER,
-        C_VAR_FLOAT,
+        C_VT_UNREGISTERED,
+        C_VT_INTEGER,
+        C_VT_FLOAT,
 
         /* Distinguish statically and dynamically allocated strings */
-        C_VAR_STRING,
-        C_VAR_STRING_DYNAMIC,
+        C_VT_STRING,
+        C_VT_STRING_DYNAMIC,
 } c_var_type_t;
+
+/* Variables can be set at different times */
+typedef enum {
+        C_VE_ANYTIME,
+        C_VE_LOCKED,
+        C_VE_LATCHED,
+} c_var_edit_t;
 
 /* Type for configurable variables */
 typedef struct c_var {
         const char *name;
-        c_var_value_t value;
+        c_var_value_t value, latched;
         c_var_type_t type;
+        c_var_edit_t edit;
         struct c_var *next;
 } c_var_t;
 
@@ -135,10 +143,10 @@ typedef void (*c_ref_cleanup_f)(void *data);
 /* Reference-counted linked-list. Memory allocated using the referenced
    memory allocator must have this structure as the first member! */
 typedef struct c_ref {
+        char name[256];
         struct c_ref *prev, *next, **root;
         c_ref_cleanup_f cleanup_func;
         int refs;
-        char name[256];
 } c_ref_t;
 
 /* A counter for counting how often something happens per frame */
@@ -154,6 +162,9 @@ void C_glibc_srand(unsigned int);
 #define C_rand_seed(s) C_glibc_srand(s)
 
 /* c_log.c */
+#define C_assert(s) C_assert_full(__FILE__, __LINE__, __func__, !(s), #s)
+void C_assert_full(const char *file, int line, const char *function,
+                   int boolean, const char *message);
 void C_close_log_file(void);
 #define C_debug(fmt, ...) C_log(C_LOG_DEBUG, __FILE__, __LINE__, \
                                 __func__, fmt, ## __VA_ARGS__)
@@ -219,6 +230,7 @@ float C_noise3(float x, float y, float z);
 float C_noise3_fractal(int levels, float x, float y, float z);
 
 /* c_string.c */
+#define C_bool_string(b) ((b) ? "TRUE" : "FALSE")
 void C_file_close(c_file_t *);
 #define C_file_gets(f, buf) fgets(buf, sizeof (buf), f)
 #define C_file_open_read(name) fopen(name, "r")
@@ -227,6 +239,7 @@ void C_file_close(c_file_t *);
 #define C_file_vprintf(f, fm, v) vfprintf(f, fm, v)
 #define C_file_write(f, buf, len) fwrite(buf, 1, len, f)
 #define C_is_digit(c) (((c) >= '0' && (c) <= '9') || (c) == '.' || (c) == '-')
+#define C_is_print(c) ((c) > 0 && (c) < 0x7f)
 #define C_is_space(c) ((c) && (c) <= ' ')
 int C_read_file(const char *filename, char *buffer, int size);
 char *C_skip_spaces(const char *str);
@@ -236,7 +249,8 @@ void C_token_file_cleanup(c_token_file_t *);
 int C_token_file_init(c_token_file_t *, const char *filename);
 const char *C_token_file_read_full(c_token_file_t *, int *out_quoted);
 #define C_token_file_read(f) C_token_file_read_full(f, NULL)
-char *C_strdup(const char *);
+#define C_strdup(s) C_strdup_full(__FILE__, __LINE__, __func__, s)
+char *C_strdup_full(const char *file, int line, const char *func, const char *);
 char *C_va(const char *fmt, ...);
 char *C_van(int *output_len, const char *fmt, ...);
 char *C_vanv(int *output_len, const char *fmt, va_list);
@@ -256,17 +270,21 @@ extern unsigned int c_time_msec, c_frame_msec, c_frame;
 extern float c_frame_sec;
 
 /* c_variables.c */
+void C_cleanup_variables(void);
 int C_parse_config(const char *string);
 int C_parse_config_file(const char *filename);
 #define C_register_float(var, name, value) \
-        C_register_variable(var, name, C_VAR_FLOAT, (c_var_value_t)(value))
+        C_register_variable(var, name, C_VT_FLOAT, \
+                           (c_var_value_t)(float)(value))
 #define C_register_integer(var, name, value) \
-        C_register_variable(var, name, C_VAR_INTEGER, (c_var_value_t)(value))
+        C_register_variable(var, name, C_VT_INTEGER, \
+                            (c_var_value_t)(int)(value))
 #define C_register_string(var, name, value) \
-        C_register_variable(var, name, C_VAR_STRING, (c_var_value_t)(value))
+        C_register_variable(var, name, C_VT_STRING, \
+                            (c_var_value_t)(char *)(value))
 #define C_register_string_dynamic(var, name, value) \
-        C_register_variable(var, name, C_VAR_STRING_DYNAMIC, \
-                            (c_var_value_t)(value))
+        C_register_variable(var, name, C_VT_STRING_DYNAMIC, \
+                            (c_var_value_t)(char *)(value))
 void C_register_variable(c_var_t *var, const char *name, c_var_type_t type,
                          c_var_value_t value);
 void C_register_variables(void);

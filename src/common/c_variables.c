@@ -48,6 +48,25 @@ void C_register_variables(void)
 }
 
 /******************************************************************************\
+ Frees dynamically allocated string variables so the leak checker will not
+ get angry.
+\******************************************************************************/
+void C_cleanup_variables(void)
+{
+        c_var_t *var;
+
+        var = root;
+        while (var) {
+                if (var->type == C_VT_STRING_DYNAMIC) {
+                        C_free(var->value.s);
+                        var->value.s = "";
+                        var->type = C_VT_STRING;
+                }
+                var = var->next;
+        }
+}
+
+/******************************************************************************\
  This function will register a static configurable variable. The data is stored
  in the c_var_t [var], which is guaranteed to always have the specified
  [type] and can be addressed using [name] from within a configuration string.
@@ -89,33 +108,49 @@ c_var_t *C_resolve_variable(const char *name)
 }
 
 /******************************************************************************\
- Parses and sets a variable's value according to its type. [value] can safely
- be deallocated.
+ Parses and sets a variable's value according to its type. After this function
+ returns [value] can be safely deallocated.
 \******************************************************************************/
 void C_set_variable(c_var_t *var, const char *value)
 {
-        if (var->type == C_VAR_INTEGER) {
-                var->value.n = atoi(value);
+        c_var_value_t *var_value;
+
+        /* Variable editing rules */
+        if (var->edit == C_VE_LOCKED) {
+                C_warning("Cannot set '%s' to '%s', variable is locked",
+                          var->name, value);
+                return;
+        }
+        else if (var->edit == C_VE_LATCHED)
+                var_value = &var->latched;
+        else if (var->edit == C_VE_ANYTIME)
+                var_value = &var->value;
+        else
+                C_error("Variable '%s' is uninitialized", var->name);
+
+        /* Set the variable's value */
+        if (var->type == C_VT_INTEGER) {
+                var_value->n = atoi(value);
                 C_debug("Integer '%s' set to %d ('%s')", var->name,
-                        var->value.n, value);
-        } else if (var->type == C_VAR_FLOAT) {
-                var->value.f = atof(value);
+                        var_value->n, value);
+        } else if (var->type == C_VT_FLOAT) {
+                var_value->f = atof(value);
                 C_debug("Float '%s' set to %g ('%s')", var->name,
-                        var->value.f, value);
-        } else if (var->type == C_VAR_STRING) {
-                var->value.s = C_strdup(value);
-                var->type = C_VAR_STRING_DYNAMIC;
-                C_debug("Static string '%s' set to '%s'", var->name,
-                        var->value.s, value);
-        } else if (var->type == C_VAR_STRING_DYNAMIC) {
+                        var_value->f, value);
+        } else if (var->type == C_VT_STRING) {
+                var_value->s = C_strdup(value);
+                var->type = C_VT_STRING_DYNAMIC;
+                C_debug("Static string '%s' set to '%s'",
+                        var->name, var_value->s);
+        } else if (var->type == C_VT_STRING_DYNAMIC) {
                 C_free(var->value.s);
-                var->value.s = C_strdup(value);
-                var->type = C_VAR_STRING_DYNAMIC;
-                C_debug("Dynamic string '%s' set to '%s'", var->name,
-                        var->value.s, value);
+                var_value->s = C_strdup(value);
+                var->type = C_VT_STRING_DYNAMIC;
+                C_debug("Dynamic string '%s' set to '%s'",
+                        var->name, var_value->s);
         } else
-                C_warning("Variable '%s' has invalid type %d",
-                          var->name, (int)var->type);
+                C_error("Variable '%s' has invalid type %d",
+                        var->name, (int)var->type);
 }
 
 /******************************************************************************\
@@ -135,8 +170,10 @@ static char *skip_unparseable(const char *string)
                                 continue;
                         }
                         if (string[1] == '*') {
-                                while (ch && (ch != '/' || string[-1] != '*'))
+                                do {
                                         ch = *(++string);
+                                } while (ch && (ch != '/' ||
+                                                string[-1] != '*'));
                                 continue;
                         }
                 }

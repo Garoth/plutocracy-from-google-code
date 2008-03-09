@@ -106,3 +106,15 @@ void C_log(c_log_level_t level, const char *file, int line,
                 abort();
 }
 
+/******************************************************************************\
+ If [boolean] is FALSE then generates an error. The error message contains the
+ actual assertion statement and source location information.
+\******************************************************************************/
+void C_assert_full(const char *file, int line, const char *function,
+                   int boolean, const char *message)
+{
+        if (!boolean)
+                return;
+        C_error_full(file, line, function, "Assertion failed: %s", message);
+}
+

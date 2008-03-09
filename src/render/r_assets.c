@@ -16,6 +16,13 @@
 
 #include "r_common.h"
 
+/* Font configuration variables */
+extern c_var_t r_font_console, r_font_console_pt,
+               r_font_gui, r_font_gui_pt;
+
+/* Font asset array */
+r_font_data_t r_fonts[R_FONTS];
+
 /* Texture linked list */
 static c_ref_t *root;
 
@@ -236,6 +243,7 @@ r_texture_t *R_texture_load(const char *filename, int mipmaps)
         surface = IMG_Load(filename);
         if (!surface) {
                 C_warning("Failed to load texture '%s'", filename);
+                C_ref_down(&pt->ref);
                 return NULL;
         }
 
@@ -303,6 +311,53 @@ void R_texture_select(r_texture_t *texture)
 }
 
 /******************************************************************************\
+ Loads the font, properly scaled and generates an error message if something
+ goes wrong.
+\******************************************************************************/
+static void load_font(r_font_t font, const char *path, int size)
+{
+        int points;
+
+        points = ceilf(size * r_pixel_scale.value.f);
+        r_fonts[font].scale = (float)size / points;
+        if (points < R_FONT_SIZE_MIN)
+                points = R_FONT_SIZE_MIN;
+        r_fonts[font].ttf_font = TTF_OpenFont(path, points);
+        if (!r_fonts[font].ttf_font)
+                C_error("Failed to load font '%s' (%d)", path, size);
+}
+
+/******************************************************************************\
+ Initialize the SDL TTF library and generate font structures.
+\******************************************************************************/
+static void init_fonts(void)
+{
+        SDL_version compiled;
+        const SDL_version *linked;
+        int i;
+
+        TTF_VERSION(&compiled);
+        C_debug("Compiled with SDL_ttf %d.%d.%d",
+                compiled.major, compiled.minor, compiled.patch);
+        linked = TTF_Linked_Version();
+        if (!linked)
+                C_error("Failed to get SDL_ttf linked version");
+        C_debug("Linked with SDL_ttf %d.%d.%d",
+                linked->major, linked->minor, linked->patch);
+        if (TTF_Init() == -1)
+                C_error("Failed to initialize SDL TTF library: %s",
+                        TTF_GetError());
+
+        /* Load font files */
+        load_font(R_FONT_CONSOLE, r_font_console.value.s,
+                  r_font_console_pt.value.n);
+        load_font(R_FONT_GUI, r_font_gui.value.s, r_font_gui_pt.value.n);
+        for (i = 0; i < R_FONTS; i++)
+                if (!r_fonts[i].ttf_font)
+                        C_error("Forgot to load font %d", i);
+}
+
+/******************************************************************************\
  Loads render assets.
 \******************************************************************************/
 void R_load_assets(void)
@@ -364,6 +419,9 @@ void R_load_assets(void)
 
                 C_debug("Using 16-bit textures");
         }
+
+        /* Load fonts */
+        init_fonts();
 }
 
 /******************************************************************************\
@@ -371,5 +429,11 @@ void R_load_assets(void)
 \******************************************************************************/
 void R_free_assets(void)
 {
+        int i;
+
+        /* Free fonts and shut down the SDL_ttf library */
+        for (i = 0; i < R_FONTS; i++)
+                TTF_CloseFont(r_fonts[i].ttf_font);
+        TTF_Quit();
 }
 

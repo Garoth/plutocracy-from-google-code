@@ -12,14 +12,31 @@
 
 #include "i_common.h"
 
-c_var_t i_border, i_window_bg;
+c_var_t i_debug;
+
+/* Theme varables */
+c_var_t i_border, i_button, i_button_active, i_button_hover,
+        i_shadow, i_theme, i_window;
 
 /******************************************************************************\
  Registers interface namespace variables.
 \******************************************************************************/
 void I_register_variables(void)
 {
+        C_register_integer(&i_debug, "i_debug", FALSE);
+
+        /* Theme variables */
         C_register_integer(&i_border, "i_border", 8);
-        C_register_string(&i_window_bg, "i_window_bg", "gui/windows/blue.png");
+        C_register_string(&i_button, "i_button",
+                          "gui/themes/default/button.png");
+        C_register_string(&i_button_active, "i_button_active",
+                          "gui/themes/default/button_active.png");
+        C_register_string(&i_button_hover, "i_button_hover",
+                          "gui/themes/default/button_hover.png");
+        C_register_string(&i_theme, "i_theme",
+                          "gui/themes/default/theme.cfg");
+        C_register_float(&i_shadow, "i_shadow", 1.f);
+        C_register_string(&i_window, "i_window",
+                          "gui/themes/default/window.png");
 }
 
