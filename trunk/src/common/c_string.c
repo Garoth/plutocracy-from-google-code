@@ -274,3 +274,67 @@ char *C_strdup_full(const char *file, int line, const char *function,
         return new_str;
 }
 
+/******************************************************************************\
+ Parses an HTML-style hexadecimal color string (#AARRGGBB). It may or may not
+ have a '#' in front.
+ TODO: Parse some common color names.
+ TODO: strtol() is a portability concern (C99).
+\******************************************************************************/
+static struct {
+        const char *name;
+        unsigned int value;
+} colors[] = {
+        { "clear", 0x00000000 },
+
+        /* Full-bright colors */
+        { "white", 0xffffffff },
+        { "black", 0xff000000 },
+        { "red", 0xffff0000 },
+        { "green", 0xff00ff00 },
+        { "blue", 0xff0000ff },
+        { "yellow", 0xffffff00 },
+        { "cyan", 0xff00ffff },
+        { "pink", 0xffff00ff },
+
+        /* Tango colors */
+        { "butter1", 0xfffce94f },
+        { "butter2", 0xffedd400 },
+        { "butter3", 0xffc4a000 },
+        { "orange1", 0xfffcaf3e },
+        { "orange2", 0xfff57900 },
+        { "orange3", 0xffce5c00 },
+        { "chocolate1", 0xffe9b96e },
+        { "chocolate2", 0xffc17d11 },
+        { "chocolate3", 0xff8f5902 },
+        { "chameleon1", 0xff8ae234 },
+        { "chameleon2", 0xff73d216 },
+        { "chameleon3", 0xff4e9a06 },
+        { "skyblue1", 0xff729fcf },
+        { "skyblue2", 0xff3465a4 },
+        { "skyblue3", 0xff204a87 },
+        { "plum1", 0xffad7fa8 },
+        { "plum2", 0xff75507b },
+        { "plum3", 0xff5c3566 },
+        { "scarletred1", 0xffef2929 },
+        { "scarletred2", 0xffcc0000 },
+        { "scarletred3", 0xffa40000 },
+        { "aluminium1", 0xffeeeeec },
+        { "aluminium2", 0xffd3d7cf },
+        { "aluminium3", 0xffbabdb6 },
+        { "aluminium4", 0xff888a85 },
+        { "aluminium5", 0xff555753 },
+        { "aluminium6", 0xff2e3436 },
+};
+
+c_color_t C_color_string(const char *string)
+{
+        int i;
+
+        if (string[0] == '#')
+                string++;
+        for (i = 0; i < sizeof (colors) / sizeof (*colors); i++)
+                if (!strcasecmp(colors[i].name, string))
+                        return C_color_32(colors[i].value);
+        return C_color_32(strtoul(string, NULL, 16));
+}
+

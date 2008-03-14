@@ -114,7 +114,7 @@ typedef struct i_label {
 } i_label_t;
 
 /* i_variables.c */
-extern c_var_t i_border, i_debug;
+extern c_var_t i_border, i_color, i_debug;
 
 /* i_widgets.c */
 void I_button_init(i_button_t *, const char *icon, const char *text, int bg);

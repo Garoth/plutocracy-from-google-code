@@ -56,7 +56,7 @@ void R_register_variables(void)
         C_register_string(&r_font_console, "r_font_console",
                           "gui/fonts/VeraMoBd.ttf");
         C_register_integer(&r_font_console_pt, "r_font_console_pt", 12);
-        C_register_string(&r_font_gui, "r_font_console",
+        C_register_string(&r_font_gui, "r_font_gui",
                           "gui/fonts/BLKCHCRY.TTF");
         C_register_integer(&r_font_gui_pt, "r_font_gui_pt", 19);
 }

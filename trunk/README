@@ -79,4 +79,13 @@ the sale, use or other dealings in this Font Software without prior written
 authorization from the Gnome Foundation or Bitstream Inc., respectively. For
 further information, contact: fonts at gnome dot org.
 
+=== Additional Fonts ===========================================================
+
+The following fonts were obtained from www.dafont.com and are covered by their
+respective licenses. See each font's corresponding text file in the fonts
+folder for more details:
+
+        gui/fonts/BLKCHCRY.TTF (Earl Allen and Doug Miles, Public Domain)
+        gui/fonts/SF ARchery Black.ttf (©2001 ShyFonts Type Foundry)
+
 ================================================================================

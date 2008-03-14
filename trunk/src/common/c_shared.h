@@ -238,6 +238,7 @@ float C_noise3_fractal(int levels, float x, float y, float z);
 
 /* c_string.c */
 #define C_bool_string(b) ((b) ? "TRUE" : "FALSE")
+c_color_t C_color_string(const char *);
 void C_file_close(c_file_t *);
 #define C_file_gets(f, buf) fgets(buf, sizeof (buf), f)
 #define C_file_open_read(name) fopen(name, "r")

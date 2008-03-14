@@ -43,7 +43,8 @@ typedef struct r_model {
 typedef struct r_sprite {
         r_texture_t *texture;
         c_vec2_t origin, size;
-        float red, green, blue, alpha, angle;
+        c_color_t modulate;
+        float angle;
 } r_sprite_t;
 
 /* There is a fixed set of fonts available for the game */

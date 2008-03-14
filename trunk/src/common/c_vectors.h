@@ -192,6 +192,28 @@ static inline c_vec3_t C_vec3_lerp(c_vec3_t a, float lerp, c_vec3_t b)
 }
 
 /******************************************************************************\
+ Truncate vector values down to whole numbers. Negative values are also
+ truncated down (-2.1 is rounded to -3).
+ TODO: This is confusing because it is unrelated to C_color_clamp().
+\******************************************************************************/
+static inline float C_clamp(float value, float unit)
+{
+        if (value < 0)
+                return (int)(value * -unit) / -unit;
+        return (int)(value * unit) / unit;
+}
+
+static inline c_vec2_t C_vec2_clamp(c_vec2_t v, float u)
+{
+        return C_vec2(C_clamp(v.x, u), C_clamp(v.y, u));
+}
+
+static inline c_vec3_t C_vec3_clamp(c_vec3_t v, float u)
+{
+        return C_vec3(C_clamp(v.x, u), C_clamp(v.y, u), C_clamp(v.z, u));
+}
+
+/******************************************************************************\
  Clamp a color to valid range.
 \******************************************************************************/
 static inline c_color_t C_color_clamp(c_color_t c)
@@ -221,9 +243,19 @@ static inline c_color_t C_color_blend(c_color_t dest, c_color_t src)
 /******************************************************************************\
  Construct a color from 0-255 ranged integer values.
 \******************************************************************************/
-static inline c_color_t C_color32(int r, int g, int b, int a)
+static inline c_color_t C_color_rgba(unsigned char r, unsigned char g,
+                                     unsigned char b, unsigned char a)
 {
     c_color_t result = { r, g, b, a };
     return C_color_invscalef(result, 255.f);
+}
+
+/******************************************************************************\
+ Construct a color from a 32-bit ARGB integer.
+\******************************************************************************/
+static inline c_color_t C_color_32(unsigned int v)
+{
+    return C_color_rgba((v & 0xff0000) >> 16, (v & 0xff00) >> 8, v & 0xff,
+                        (v & 0xff000000) >> 24);
 }
 

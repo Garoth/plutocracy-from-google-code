@@ -19,7 +19,7 @@
 
 #define CORRUPT_CHECK_VALUE 1776
 
-extern c_var_t c_max_fps, c_show_fps;
+extern c_var_t c_max_fps, c_show_fps, i_theme;
 
 static c_count_t throttled;
 static r_text_t status_text;
@@ -41,7 +41,7 @@ static void render_status(void)
                            100.f * C_count_per_frame(&throttled) / desired_msec,
                            C_count_per_frame(&r_count_faces));
                 R_text_set_text(&status_text, R_FONT_CONSOLE, 0, 1.f, str);
-                status_text.sprite.origin = C_vec2(5, 5);
+                status_text.sprite.origin = C_vec2(4, 4);
                 C_count_reset(&throttled);
                 C_count_reset(&r_count_faces);
         }
@@ -211,6 +211,7 @@ int main(int argc, char *argv[])
 
         /* Parse configuration scripts and open the log file */
         C_parse_config_file("config/default.cfg");
+        C_parse_config_file(i_theme.value.s);
         parse_config_args(argc, argv);
         C_open_log_file();
 

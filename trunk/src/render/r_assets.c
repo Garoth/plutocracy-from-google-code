@@ -65,7 +65,7 @@ c_color_t R_SDL_get_pixel(const SDL_Surface *surf, int x, int y)
                 C_error("Invalid surface format");
         }
         SDL_GetRGBA(pixel, surf->format, &r, &g, &b, &a);
-        return C_color32(r, g, b, a);
+        return C_color_rgba(r, g, b, a);
 }
 
 /******************************************************************************\
@@ -319,12 +319,12 @@ static void load_font(r_font_t font, const char *path, int size)
         int points;
 
         points = ceilf(size * r_pixel_scale.value.f);
-        r_fonts[font].scale = (float)size / points;
         if (points < R_FONT_SIZE_MIN)
                 points = R_FONT_SIZE_MIN;
         r_fonts[font].ttf_font = TTF_OpenFont(path, points);
         if (!r_fonts[font].ttf_font)
-                C_error("Failed to load font '%s' (%d)", path, size);
+                C_error("Failed to load font '%s' (%d -> %d pt)",
+                        path, size, points);
 }
 
 /******************************************************************************\

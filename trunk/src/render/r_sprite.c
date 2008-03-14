@@ -26,10 +26,7 @@ void R_sprite_init(r_sprite_t *sprite, const char *filename)
         if (!sprite)
                 return;
         C_zero(sprite);
-        sprite->red = 1.f;
-        sprite->green = 1.f;
-        sprite->blue = 1.f;
-        sprite->alpha = 1.f;
+        sprite->modulate = C_color(1., 1., 1., 1.);
         if (!filename || !filename[0])
                 return;
         sprite->texture = R_texture_load(filename, FALSE);
@@ -64,8 +61,9 @@ static int sprite_render_start(const r_sprite_t *sprite)
         R_texture_select(sprite->texture);
 
         /* Modulate color */
-        glColor4f(sprite->red, sprite->green, sprite->blue, sprite->alpha);
-        if (sprite->alpha < 1.f)
+        glColor4f(sprite->modulate.r, sprite->modulate.g,
+                  sprite->modulate.b, sprite->modulate.a);
+        if (sprite->modulate.a < 1.f)
                 glEnable(GL_BLEND);
 
         /* Setup transformation matrix */
@@ -130,7 +128,7 @@ void R_sprite_render(const r_sprite_t *sprite)
 
         /* Draw the edge lines to anti-alias non-alpha quads */
         if (!sprite->texture->alpha && sprite->angle != 0.f &&
-            sprite->alpha == 1.f) {
+            sprite->modulate.a == 1.f) {
                 glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
                 glEnable(GL_BLEND);
                 glDrawElements(GL_LINE_STRIP, 5, GL_UNSIGNED_SHORT, indices);
@@ -234,7 +232,7 @@ void R_text_set_text(r_text_t *text, r_font_t font, float wrap, float shadow,
            of the image height returned by TTF_RenderUTF8_Blended(). The
            width and height also need to be expanded by a pixel to leave room
            for the shadow (up to 2 pixels). */
-        wrap /= r_fonts[font].scale;
+        wrap *= r_pixel_scale.value.f;
         last_line = 0;
         last_break = 0;
         width = 0;
@@ -305,8 +303,8 @@ void R_text_set_text(r_text_t *text, r_font_t font, float wrap, float shadow,
            the sprite itself can be manipulated as expected */
         R_sprite_init(&text->sprite, NULL);
         text->sprite.texture = tex;
-        text->sprite.size.x = width * r_fonts[font].scale;
-        text->sprite.size.y = height * r_fonts[font].scale;
+        text->sprite.size.x = width / r_pixel_scale.value.f;
+        text->sprite.size.y = height / r_pixel_scale.value.f;
         text->font = font;
 }
 
