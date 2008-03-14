@@ -67,9 +67,6 @@ void I_init(void)
 {
         C_status("Initializing interface");
 
-        /* Load theme */
-        C_parse_config_file(i_theme.value.s);
-
         /* Root window */
         C_zero(&root);
         I_widget_set_name(&root, "Root Window");
@@ -138,7 +135,7 @@ static int window_event(i_window_t *window, i_event_t event)
                 break;
         case I_EV_RENDER:
                 if (window->decorated) {
-                        window->window.sprite.alpha = window->widget.fade;
+                        window->window.sprite.modulate.a = window->widget.fade;
                         R_window_render(&window->window);
                 }
                 break;
@@ -221,6 +218,7 @@ static int button_event(i_button_t *button, i_event_t event)
                                 i_shadow.value.f, button->text.string);
                 button->text.sprite.origin = origin;
                 button->text.sprite.origin.y -= button->text.sprite.size.y / 2;
+                button->text.sprite.modulate = C_color_string(i_color.value.s);
 
                 /* If there is some room left, center the icon and label */
                 width = (size.x - button->text.sprite.size.x) / 2.f;
@@ -228,6 +226,11 @@ static int button_event(i_button_t *button, i_event_t event)
                         button->icon.origin.x += width;
                         button->text.sprite.origin.x += width;
                 }
+
+                /* Clamp origins to prevent blurriness */
+                button->text.sprite.origin =
+                        C_vec2_clamp(button->text.sprite.origin,
+                                     r_pixel_scale.value.f);
 
                 break;
         case I_EV_CLEANUP:
@@ -246,20 +249,20 @@ static int button_event(i_button_t *button, i_event_t event)
                         button->on_click(button);
                 break;
         case I_EV_RENDER:
-                button->icon.alpha = button->widget.fade;
-                button->text.sprite.alpha = button->widget.fade;
+                button->icon.modulate.a = button->widget.fade;
+                button->text.sprite.modulate.a = button->widget.fade;
                 R_sprite_render(&button->icon);
-                R_text_render(&button->text);
                 if (button->widget.state == I_WS_HOVER) {
-                        button->hover.sprite.alpha = button->widget.fade;
+                        button->hover.sprite.modulate.a = button->widget.fade;
                         R_window_render(&button->hover);
                 } else if (button->widget.state == I_WS_ACTIVE) {
-                        button->active.sprite.alpha = button->widget.fade;
+                        button->active.sprite.modulate.a = button->widget.fade;
                         R_window_render(&button->active);
                 } else {
-                        button->normal.sprite.alpha = button->widget.fade;
+                        button->normal.sprite.modulate.a = button->widget.fade;
                         R_window_render(&button->normal);
                 }
+                R_text_render(&button->text);
                 break;
         default:
                 break;
@@ -303,14 +306,21 @@ static int label_event(i_label_t *label, i_event_t event)
                 R_text_set_text(&label->text, R_FONT_GUI, label->widget.size.x,
                                 i_shadow.value.f, label->text.string);
                 label->widget.size = label->text.sprite.size;
+                label->text.sprite.modulate = C_color_string(i_color.value.s);
         case I_EV_MOVED:
                 label->text.sprite.origin = label->widget.origin;
+
+                /* Clamp label text position to prevent blurriness */
+                label->text.sprite.origin =
+                        C_vec2_clamp(label->text.sprite.origin,
+                                     r_pixel_scale.value.f);
+
                 break;
         case I_EV_CLEANUP:
                 R_text_cleanup(&label->text);
                 break;
         case I_EV_RENDER:
-                label->text.sprite.alpha = label->widget.fade;
+                label->text.sprite.modulate.a = label->widget.fade;
                 R_text_render(&label->text);
                 break;
         default:

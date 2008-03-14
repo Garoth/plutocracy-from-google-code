@@ -80,7 +80,6 @@ typedef enum {
 /* Font asset */
 typedef struct r_font {
         TTF_Font *ttf_font;
-        float scale;
 } r_font_data_t;
 
 /* r_assets.c */
