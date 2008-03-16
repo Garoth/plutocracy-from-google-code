@@ -36,7 +36,8 @@ typedef struct c_mem_tag {
 } c_mem_tag_t;
 
 static c_mem_tag_t *mem_root;
-static unsigned int mem_bytes, mem_bytes_max, mem_calls;
+static size_t mem_bytes, mem_bytes_max;
+static int mem_calls;
 
 /******************************************************************************\
  Initialize an array.
@@ -165,7 +166,7 @@ static void *realloc_checked(const char *file, int line, const char *function,
                              ptr);
         old_tag = tag;
         real_size = size + sizeof (c_mem_tag_t) + NO_MANS_LAND_SIZE;
-        tag = realloc(ptr - sizeof (c_mem_tag_t), real_size);
+        tag = realloc((char *)ptr - sizeof (c_mem_tag_t), real_size);
         if (!tag)
                 C_error("Out of memory, %s() (%s:%d) tried to allocate %d "
                         "bytes", function, file, line, size );
@@ -282,7 +283,7 @@ void C_check_leaks(void)
                 return;
         tags = 0;
         for (tag = mem_root; tag; tag = tag->next) {
-                int i;
+                unsigned int i;
 
                 tags++;
                 if (tag->freed)

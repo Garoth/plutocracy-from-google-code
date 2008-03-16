@@ -14,7 +14,7 @@
 
 #include "c_shared.h"
 
-unsigned int c_time_msec, c_frame_msec, c_frame;
+int c_time_msec, c_frame_msec, c_frame;
 float c_frame_sec;
 
 /******************************************************************************\

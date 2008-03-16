@@ -37,7 +37,7 @@ struct r_texture {
         c_ref_t ref;
         SDL_Surface *surface;
         GLuint gl_name;
-        int gl_type, gl_format, alpha;
+        int alpha;
 };
 
 /* Non-animated mesh */

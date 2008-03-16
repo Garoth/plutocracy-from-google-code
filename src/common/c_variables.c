@@ -89,6 +89,38 @@ void C_register_variable(c_var_t *var, const char *name, c_var_type_t type,
         root = var;
 }
 
+void C_register_float(c_var_t *var, const char *name, float value_f)
+{
+        c_var_value_t value;
+        
+        value.f = value_f;
+        C_register_variable(var, name, C_VT_FLOAT, value);
+}
+
+void C_register_integer(c_var_t *var, const char *name, int value_n)
+{
+        c_var_value_t value;
+        
+        value.n = value_n;
+        C_register_variable(var, name, C_VT_INTEGER, value);
+}
+
+void C_register_string(c_var_t *var, const char *name, const char *value_s)
+{
+        c_var_value_t value;
+        
+        value.s = (char *)value_s;
+        C_register_variable(var, name, C_VT_STRING, value);
+}
+
+void C_register_string_dynamic(c_var_t *var, const char *name, char *value_s)
+{
+        c_var_value_t value;
+        
+        value.s = value_s;
+        C_register_variable(var, name, C_VT_STRING_DYNAMIC, value);
+}
+
 /******************************************************************************\
  Tries to find variable [name] (case insensitive) in the variable linked list.
  Returns NULL if it fails.
@@ -134,7 +166,7 @@ void C_set_variable(c_var_t *var, const char *value)
                 C_debug("Integer '%s' set to %d ('%s')", var->name,
                         var_value->n, value);
         } else if (var->type == C_VT_FLOAT) {
-                var_value->f = atof(value);
+                var_value->f = (float)atof(value);
                 C_debug("Float '%s' set to %g ('%s')", var->name,
                         var_value->f, value);
         } else if (var->type == C_VT_STRING) {

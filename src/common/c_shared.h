@@ -37,9 +37,6 @@
 /* TODO: PhysicsFS? Do we need it or no? */
 /* #include <physfs.h> */
 
-/* Vectors */
-#include "c_vectors.h"
-
 /* Ensure common definitions */
 #ifndef TRUE
 #define TRUE 1
@@ -83,6 +80,9 @@
 #define strdup(s) ERROR_use_C_strdup
 #undef strncpy
 #define strncpy(d, s, n) ERROR_use_C_strncpy
+
+/* Vectors */
+#include "c_vectors.h"
 
 /* Debug log levels, errors are fatal and will always abort */
 typedef enum {
@@ -165,8 +165,10 @@ typedef struct c_counter {
 /* c_glibc_rand.c */
 long int C_glibc_rand(void);
 void C_glibc_srand(unsigned int);
-#define C_rand() C_glibc_rand()
-#define C_rand_seed(s) C_glibc_srand(s)
+//#define C_rand() C_glibc_rand()
+//#define C_rand_seed(s) C_glibc_srand(s)
+#define C_rand() rand()
+#define C_rand_seed(s) srand(s)
 
 /* c_log.c */
 #define C_assert(s) C_assert_full(__FILE__, __LINE__, __func__, !(s), #s)
@@ -274,25 +276,17 @@ void C_time_init(void);
 void C_time_update(void);
 unsigned int C_timer(void);
 
-extern unsigned int c_time_msec, c_frame_msec, c_frame;
+extern int c_time_msec, c_frame_msec, c_frame;
 extern float c_frame_sec;
 
 /* c_variables.c */
 void C_cleanup_variables(void);
 int C_parse_config(const char *string);
 int C_parse_config_file(const char *filename);
-#define C_register_float(var, name, value) \
-        C_register_variable(var, name, C_VT_FLOAT, \
-                           (c_var_value_t)(float)(value))
-#define C_register_integer(var, name, value) \
-        C_register_variable(var, name, C_VT_INTEGER, \
-                            (c_var_value_t)(int)(value))
-#define C_register_string(var, name, value) \
-        C_register_variable(var, name, C_VT_STRING, \
-                            (c_var_value_t)(char *)(value))
-#define C_register_string_dynamic(var, name, value) \
-        C_register_variable(var, name, C_VT_STRING_DYNAMIC, \
-                            (c_var_value_t)(char *)(value))
+void C_register_float(c_var_t *var, const char *name, float value);
+void C_register_integer(c_var_t *var, const char *name, int value);
+void C_register_string(c_var_t *var, const char *name, const char *value);
+void C_register_string_dynamic(c_var_t *var, const char *name, char *value);
 void C_register_variable(c_var_t *var, const char *name, c_var_type_t type,
                          c_var_value_t value);
 void C_register_variables(void);

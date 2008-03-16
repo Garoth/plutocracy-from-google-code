@@ -103,7 +103,7 @@ static void set_gl_state(void)
            blending to be on to work) */
         glEnable(GL_LINE_SMOOTH);
 
-        glHint(GL_GENERATE_MIPMAP_HINT, GL_NICEST);
+        //glHint(GL_GENERATE_MIPMAP_HINT, GL_NICEST);
         glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);
         glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
 
@@ -151,8 +151,8 @@ static void load_test_assets(void)
                 test_globe = G_globe_alloc(5, seed, 0.1);
         } else if (*r_test_model_path.value.s)
                 R_model_init(&test_model, r_test_model_path.value.s);
-        else if (*r_test_mesh_path.value.s)
-                test_mesh = R_static_mesh_load(r_test_mesh_path.value.s);
+        /*else if (*r_test_mesh_path.value.s)
+                test_mesh = R_static_mesh_load(r_test_mesh_path.value.s);*/
         if (r_test_sprite_num.value.n && r_test_sprite_path.value.s[0]) {
                 int i;
 
