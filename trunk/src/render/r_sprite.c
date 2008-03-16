@@ -15,8 +15,6 @@
 
 #include "r_common.h"
 
-extern r_font_data_t r_fonts[R_FONTS];
-
 /******************************************************************************\
  Initialize a sprite structure. 2D mode textures are expected to be at the
  maximum pixel scale (2x).
@@ -200,15 +198,13 @@ static void blit_shadowed(SDL_Surface *dest, SDL_Surface *src,
 }
 
 /******************************************************************************\
- If the text or font has changed, this function will clean up old resources
- and generate a new SDL surface and texture. This function will setup the
- sprite member of the text structure for rendering. Note that sprite size will
- be reset if it is regenerated. Text can be wrapped (or not, set wrap to 0)
- and a shadow (of variable opacity) can be applied. [string] does need to
- persist after the function call.
+ Setup the sprite for rendering the string. Note that sprite size will be
+ reset if it is regenerated. Text can be wrapped (or not, set wrap to 0) and a
+ shadow (of variable opacity) can be applied. [string] does need to persist
+ after the function call.
 \******************************************************************************/
-void R_text_set_text(r_text_t *text, r_font_t font, float wrap, float shadow,
-                     const char *string)
+void R_sprite_init_text(r_sprite_t *sprite, r_font_t font, float wrap,
+                        float shadow, int invert, const char *string)
 {
         r_texture_t *tex;
         int i, j, y, last_break, last_line, width, height, line_skip;
@@ -216,30 +212,23 @@ void R_text_set_text(r_text_t *text, r_font_t font, float wrap, float shadow,
 
         if (font < 0 || font >= R_FONTS)
                 C_error("Invalid font index %d", font);
-        if (!text || (font == text->font && !strcmp(string, text->string)))
+        if (!sprite)
                 return;
-        if (!string || !string[0]) {
-                text->string[0] = NUL;
-                R_sprite_cleanup(&text->sprite);
+        C_zero(sprite);
+        if (!string || !string[0])
                 return;
-        }
-        if (text->string != string)
-                C_strncpy_buf(text->string, string);
-        R_sprite_cleanup(&text->sprite);
 
-        /* Wrap the text and figure out how large the surface needs to be.
-           For some reason, SDL_ttf returns a line skip that is one pixel shy
-           of the image height returned by TTF_RenderUTF8_Blended(). The
+        /* Wrap the text and figure out how large the surface needs to be. The
            width and height also need to be expanded by a pixel to leave room
            for the shadow (up to 2 pixels). */
         wrap *= r_pixel_scale.value.f;
         last_line = 0;
         last_break = 0;
         width = 0;
-        height = (line_skip = TTF_FontLineSkip(r_fonts[font].ttf_font)) + 3;
+        height = (line_skip = R_font_line_skip(font)) + 2;
         line = buf;
         for (i = 0, j = 0; string[i]; i++) {
-                int w, h;
+                c_vec2_t size;
 
                 if (j >= sizeof (buf) - 2) {
                         C_warning("Ran out of buffer space");
@@ -249,8 +238,8 @@ void R_text_set_text(r_text_t *text, r_font_t font, float wrap, float shadow,
                 buf[j] = NUL;
                 if (C_is_space(string[i]))
                         last_break = i;
-                TTF_SizeText(r_fonts[font].ttf_font, line, &w, &h);
-                if ((wrap > 0.f && w > wrap) || string[i] == '\n') {
+                size = R_font_size(font, line);
+                if ((wrap > 0.f && size.x > wrap) || string[i] == '\n') {
                         if (last_line == last_break)
                                 last_break = last_line >= i - 1 ? i : i - 1;
                         j -= i - last_break + 1;
@@ -263,8 +252,8 @@ void R_text_set_text(r_text_t *text, r_font_t font, float wrap, float shadow,
                         height += line_skip;
                         continue;
                 }
-                if (w > width)
-                        width = w;
+                if (size.x > width)
+                        width = size.x;
         }
         if (++width < 2 || height < 2)
                 return;
@@ -275,7 +264,6 @@ void R_text_set_text(r_text_t *text, r_font_t font, float wrap, float shadow,
            surface and blit to the final surface (in our format). */
         tex = R_texture_alloc(width, height, TRUE);
         for (i = 0, last_break = 0, y = 0; ; i++) {
-                SDL_Color white = { 255, 255, 255, 255 };
                 SDL_Surface *surf;
                 char swap;
 
@@ -283,13 +271,11 @@ void R_text_set_text(r_text_t *text, r_font_t font, float wrap, float shadow,
                         continue;
                 swap = buf[i];
                 buf[i] = NUL;
-                surf = TTF_RenderUTF8_Blended(r_fonts[font].ttf_font,
-                                              buf + last_break, white);
-                if (!surf) {
-                        C_warning("TTF_RenderUTF8_Blended() failed: %s",
-                                  TTF_GetError());
+                surf = R_font_render(font, buf + last_break);
+                if (!surf)
                         break;
-                }
+                if (invert)
+                        R_SDL_invert(surf, FALSE, TRUE);
                 blit_shadowed(tex->surface, surf, 0, y, shadow);
                 SDL_FreeSurface(surf);
                 if (!swap)
@@ -301,11 +287,29 @@ void R_text_set_text(r_text_t *text, r_font_t font, float wrap, float shadow,
 
         /* Text is actually just a sprite and after this function has finished
            the sprite itself can be manipulated as expected */
-        R_sprite_init(&text->sprite, NULL);
-        text->sprite.texture = tex;
-        text->sprite.size.x = width / r_pixel_scale.value.f;
-        text->sprite.size.y = height / r_pixel_scale.value.f;
+        R_sprite_init(sprite, NULL);
+        sprite->texture = tex;
+        sprite->size.x = width / r_pixel_scale.value.f;
+        sprite->size.y = height / r_pixel_scale.value.f;
+}
+
+/******************************************************************************\
+ Wrapper around the sprite text initializer. Avoids re-rendering the texture
+ if the parameters have not changed.
+\******************************************************************************/
+void R_text_configure(r_text_t *text, r_font_t font, float wrap, float shadow,
+                      int invert, const char *string)
+{
+        if (text->font == font && text->wrap == wrap &&
+            text->shadow == shadow && text->invert == invert &&
+            !strcasecmp(string, text->buffer))
+                return;
+        R_sprite_init_text(&text->sprite, font, wrap, shadow, invert, string);
         text->font = font;
+        text->wrap = wrap;
+        text->shadow = shadow;
+        text->invert = invert;
+        C_strncpy_buf(text->buffer, string);
 }
 
 /******************************************************************************\

@@ -14,13 +14,10 @@
 
 i_widget_t *I_console_init(void);
 
-extern c_var_t i_button, i_button_active, i_button_hover,
-               i_fade, i_shadow, i_theme, i_window;
+i_widget_t *i_key_focus;
+int i_key, i_key_shift, i_key_unicode, i_mouse_x, i_mouse_y, i_mouse;
 
-SDLKey i_key;
-int i_key_shift, i_mouse_x, i_mouse_y, i_mouse;
-
-static i_widget_t root, *key_focus, *mouse_focus;
+static i_widget_t root, *mouse_focus;
 static i_window_t left_toolbar;
 static i_button_t console_button;
 static int widgets;
@@ -67,6 +64,12 @@ void I_init(void)
 {
         C_status("Initializing interface");
 
+        /* Enable key repeats so held keys generate key-down events */
+        SDL_EnableKeyRepeat(300, 30);
+
+        /* Enable Unicode so we get Unicode key strokes AND capitals */
+        SDL_EnableUNICODE(TRUE);
+
         /* Root window */
         C_zero(&root);
         I_widget_set_name(&root, "Root Window");
@@ -111,14 +114,13 @@ void I_render(void)
 }
 
 /******************************************************************************\
- Interface window event function.
+ Window widget event function.
 \******************************************************************************/
 static int window_event(i_window_t *window, i_event_t event)
 {
         switch (event) {
         case I_EV_CONFIGURE:
-                if (window->widget.configured)
-                        R_window_cleanup(&window->window);
+                R_window_cleanup(&window->window);
                 I_widget_pack(&window->widget, window->pack_children,
                               window->collapse);
                 if (window->decorated) {
@@ -146,7 +148,7 @@ static int window_event(i_window_t *window, i_event_t event)
 }
 
 /******************************************************************************\
- Initializes an interface window.
+ Initializes an window widget.
 \******************************************************************************/
 void I_window_init(i_window_t *window)
 {
@@ -163,165 +165,28 @@ void I_window_init(i_window_t *window)
 }
 
 /******************************************************************************\
- Button event function.
- FIXME: Make I_EV_MOVED more efficient.
-\******************************************************************************/
-static int button_event(i_button_t *button, i_event_t event)
-{
-        c_vec2_t origin, size;
-        float width;
-
-        switch (event) {
-        case I_EV_CONFIGURE:
-        case I_EV_MOVED:
-                if (button->widget.configured) {
-                        R_window_cleanup(&button->normal);
-                        R_window_cleanup(&button->active);
-                        R_window_cleanup(&button->hover);
-                }
-
-                /* Setup decorations (for each state) to cover full area */
-                origin = button->widget.origin;
-                size = button->widget.size;
-                if (button->decorated) {
-
-                        /* No focus */
-                        R_window_init(&button->normal, i_button.value.s);
-                        button->normal.sprite.origin = origin;
-                        button->normal.sprite.size = size;
-
-                        /* Mouse is hovering over button */
-                        R_window_init(&button->hover, i_button_hover.value.s);
-                        button->hover.sprite.origin = origin;
-                        button->hover.sprite.size = size;
-
-                        /* Mouse is clicking on the button */
-                        R_window_init(&button->active, i_button_active.value.s);
-                        button->active.sprite.origin = origin;
-                        button->active.sprite.size = size;
-                }
-
-                /* Pack the icon left, vertically centered */
-                origin.x += i_border.value.n;
-                origin.y += size.y / 2;
-                size = C_vec2_subf(size, i_border.value.n * 2);
-                if (button->icon.texture) {
-                        button->icon.origin = C_vec2(origin.x, origin.y -
-                                                     button->icon.size.y / 2);
-                        width = button->icon.size.x + i_border.value.n;
-                        origin.x += width;
-                        size.x -= width;
-                }
-
-                /* Wrap the text with available space and pack */
-                R_text_set_text(&button->text, R_FONT_GUI, size.x,
-                                i_shadow.value.f, button->text.string);
-                button->text.sprite.origin = origin;
-                button->text.sprite.origin.y -= button->text.sprite.size.y / 2;
-                button->text.sprite.modulate = C_color_string(i_color.value.s);
-
-                /* If there is some room left, center the icon and label */
-                width = (size.x - button->text.sprite.size.x) / 2.f;
-                if (width > 0.f) {
-                        button->icon.origin.x += width;
-                        button->text.sprite.origin.x += width;
-                }
-
-                /* Clamp origins to prevent blurriness */
-                button->text.sprite.origin =
-                        C_vec2_clamp(button->text.sprite.origin,
-                                     r_pixel_scale.value.f);
-
-                break;
-        case I_EV_CLEANUP:
-                R_window_cleanup(&button->normal);
-                R_window_cleanup(&button->active);
-                R_window_cleanup(&button->hover);
-                R_sprite_cleanup(&button->icon);
-                R_text_cleanup(&button->text);
-                break;
-        case I_EV_MOUSE_DOWN:
-                if (i_mouse == SDL_BUTTON_LEFT)
-                        button->widget.state = I_WS_ACTIVE;
-                break;
-        case I_EV_MOUSE_UP:
-                if (button->widget.state == I_WS_ACTIVE && button->on_click)
-                        button->on_click(button);
-                break;
-        case I_EV_RENDER:
-                button->icon.modulate.a = button->widget.fade;
-                button->text.sprite.modulate.a = button->widget.fade;
-                R_sprite_render(&button->icon);
-                if (button->widget.state == I_WS_HOVER) {
-                        button->hover.sprite.modulate.a = button->widget.fade;
-                        R_window_render(&button->hover);
-                } else if (button->widget.state == I_WS_ACTIVE) {
-                        button->active.sprite.modulate.a = button->widget.fade;
-                        R_window_render(&button->active);
-                } else {
-                        button->normal.sprite.modulate.a = button->widget.fade;
-                        R_window_render(&button->normal);
-                }
-                R_text_render(&button->text);
-                break;
-        default:
-                break;
-        }
-        return TRUE;
-}
-
-/******************************************************************************\
- Initializes a button. The [icon] path and [text] strings can be NULL and do
- not need to persist after calling the function. Call with [bg] set to TRUE to
- decorate the button background.
-\******************************************************************************/
-void I_button_init(i_button_t *button, const char *icon, const char *text,
-                   int bg)
-{
-        C_zero(button);
-        I_widget_set_name(&button->widget, "Button");
-        button->widget.event_func = (i_event_f)button_event;
-        button->widget.state = I_WS_READY;
-        button->on_click = NULL;
-        button->decorated = bg;
-
-        /* We can initialize the icon sprite now */
-        R_sprite_init(&button->icon, icon);
-
-        /* The text depends on our dimensions though, so just cache it in
-           the text structure itself */
-        R_text_init(&button->text);
-        C_strncpy_buf(button->text.string, text);
-
-        I_widget_inited(&button->widget);
-}
-
-/******************************************************************************\
- Label event function.
+ Label widget event function.
 \******************************************************************************/
 static int label_event(i_label_t *label, i_event_t event)
 {
         switch (event) {
         case I_EV_CONFIGURE:
-                R_text_set_text(&label->text, R_FONT_GUI, label->widget.size.x,
-                                i_shadow.value.f, label->text.string);
-                label->widget.size = label->text.sprite.size;
-                label->text.sprite.modulate = C_color_string(i_color.value.s);
+                R_sprite_cleanup(&label->text);
+                R_sprite_init_text(&label->text, R_FONT_GUI,
+                                   label->widget.size.x, i_shadow.value.f,
+                                   FALSE, label->buffer);
+                label->widget.size = label->text.size;
+                label->text.modulate = C_color_string(i_color.value.s);
         case I_EV_MOVED:
-                label->text.sprite.origin = label->widget.origin;
-
-                /* Clamp label text position to prevent blurriness */
-                label->text.sprite.origin =
-                        C_vec2_clamp(label->text.sprite.origin,
-                                     r_pixel_scale.value.f);
-
+                label->text.origin = C_vec2_clamp(label->widget.origin,
+                                                  r_pixel_scale.value.f);
                 break;
         case I_EV_CLEANUP:
-                R_text_cleanup(&label->text);
+                R_sprite_cleanup(&label->text);
                 break;
         case I_EV_RENDER:
-                label->text.sprite.modulate.a = label->widget.fade;
-                R_text_render(&label->text);
+                label->text.modulate.a = label->widget.fade;
+                R_sprite_render(&label->text);
                 break;
         default:
                 break;
@@ -330,9 +195,9 @@ static int label_event(i_label_t *label, i_event_t event)
 }
 
 /******************************************************************************\
- Initializes a label.
+ Initializes a label widget.
 \******************************************************************************/
-void I_label_init(i_label_t *label)
+void I_label_init(i_label_t *label, const char *text)
 {
         if (!label)
                 return;
@@ -340,7 +205,7 @@ void I_label_init(i_label_t *label)
         I_widget_set_name(&label->widget, "Label");
         label->widget.event_func = (i_event_f)label_event;
         label->widget.state = I_WS_READY;
-        R_text_init(&label->text);
+        C_strncpy_buf(label->buffer, text);
         I_widget_inited(&label->widget);
 }
 
@@ -559,11 +424,6 @@ void I_widget_event(i_widget_t *widget, i_event_t event)
                 if (c_mem_check.value.n)
                         C_debug("Configuring %s", widget->name);
                 break;
-        case I_EV_KEY_DOWN:
-        case I_EV_KEY_UP:
-                if (key_focus != widget)
-                        return;
-                break;
         case I_EV_MOUSE_IN:
         case I_EV_MOUSE_OUT:
                 /* These events are generated and handled directly from mouse
@@ -587,7 +447,7 @@ void I_widget_event(i_widget_t *widget, i_event_t event)
                         if (widget->state == I_WS_READY)
                                 widget->state = I_WS_HOVER;
                         if (widget->entry)
-                                key_focus = widget;
+                                i_key_focus = widget;
                 }
 
                 mouse_focus = widget;
@@ -662,24 +522,20 @@ void I_dispatch(const SDL_Event *ev)
         /* Before dispatch */
         switch (ev->type) {
         case SDL_KEYDOWN:
-                if (ev->key.keysym.sym == SDLK_RSHIFT ||
-                    ev->key.keysym.sym == SDLK_LSHIFT || i_key)
-                        return;
                 event = I_EV_KEY_DOWN;
                 i_key = ev->key.keysym.sym;
                 i_key_shift = ev->key.keysym.mod & KMOD_SHIFT;
+                i_key_unicode = ev->key.keysym.unicode;
                 if (i_debug.value.n > 0)
                         C_debug("SDL_KEYDOWN (%s%s)",
                                 (i_key_shift ? "shift + " : ""),
                                 I_key_string(i_key));
                 break;
         case SDL_KEYUP:
-                if (ev->key.keysym.sym == SDLK_RSHIFT ||
-                    ev->key.keysym.sym == SDLK_LSHIFT ||
-                    i_key != ev->key.keysym.sym)
-                        return;
-                event = I_EV_KEY_DOWN;
+                event = I_EV_KEY_UP;
+                i_key = ev->key.keysym.sym;
                 i_key_shift = ev->key.keysym.mod & KMOD_SHIFT;
+                i_key_unicode = ev->key.keysym.unicode;
                 if (i_debug.value.n > 0)
                         C_debug("SDL_KEYUP");
                 break;
@@ -687,31 +543,25 @@ void I_dispatch(const SDL_Event *ev)
                 event = I_EV_MOUSE_MOVE;
                 i_mouse_x = ev->motion.x / r_pixel_scale.value.f + 0.5f;
                 i_mouse_y = ev->motion.y / r_pixel_scale.value.f + 0.5f;
-                key_focus = NULL;
                 if (i_debug.value.n > 0)
                         C_debug("SDL_MOUSEMOTION (%dx%d)",
                                 i_mouse_x, i_mouse_y);
                 check_mouse_out(mouse_focus);
                 break;
         case SDL_MOUSEBUTTONDOWN:
-                if (i_mouse)
-                        return;
                 event = I_EV_MOUSE_DOWN;
                 i_mouse = ev->button.button;
                 i_mouse_x = ev->button.x / r_pixel_scale.value.f + 0.5f;
                 i_mouse_y = ev->button.y / r_pixel_scale.value.f + 0.5f;
-                key_focus = NULL;
                 if (i_debug.value.n > 0)
                         C_debug("SDL_MOUSEBUTTONDOWN (%d)", i_mouse);
                 check_mouse_out(mouse_focus);
                 break;
         case SDL_MOUSEBUTTONUP:
-                if (!i_mouse || i_mouse != ev->button.button)
-                        return;
                 event = I_EV_MOUSE_UP;
+                i_mouse = ev->button.button;
                 i_mouse_x = ev->button.x / r_pixel_scale.value.f + 0.5f;
                 i_mouse_y = ev->button.y / r_pixel_scale.value.f + 0.5f;
-                key_focus = NULL;
                 if (i_debug.value.n > 0)
                         C_debug("SDL_MOUSEBUTTONUP");
                 check_mouse_out(mouse_focus);
@@ -720,7 +570,13 @@ void I_dispatch(const SDL_Event *ev)
                 return;
         }
 
-        I_widget_event(&root, event);
+        /* Normally dispatch up from the root window, but for key events send
+           straight to the focused widget */
+        if (event == I_EV_KEY_DOWN || event == I_EV_KEY_UP) {
+                if (i_key_focus)
+                        I_widget_event(i_key_focus, event);
+        } else
+                I_widget_event(&root, event);
 
         /* After dispatch */
         switch (ev->type) {

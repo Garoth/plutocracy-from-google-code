@@ -14,7 +14,8 @@
 #include "../game/g_shared.h"
 #include <time.h>
 
-extern c_var_t r_gl_errors, r_test_globe, r_test_globe_seed, r_test_model_path,
+extern c_var_t r_clear, r_gl_errors,
+               r_test_globe, r_test_globe_seed, r_test_model_path,
                r_test_mesh_path, r_test_sprite_num, r_test_sprite_path,
                r_test_text;
 
@@ -92,6 +93,8 @@ static void check_gl_extensions(void)
 \******************************************************************************/
 static void set_gl_state(void)
 {
+        c_color_t clear_color;
+
         glEnable(GL_TEXTURE_2D);
         glEnable(GL_COLOR_MATERIAL);
 
@@ -108,7 +111,9 @@ static void set_gl_state(void)
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
         glDepthFunc(GL_LEQUAL);
 
-        glClearColor(0.2, 0.2, 0.2, 1.0);
+        /* Set the background color */
+        clear_color = C_color_string(r_clear.value.s);
+        glClearColor(clear_color.r, clear_color.g, clear_color.b, 1.0);
 
         /* Setting the color parameter will modulate the texture color */
         glColorMaterial(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE);
@@ -166,8 +171,8 @@ static void load_test_assets(void)
         }
         R_text_init(&test_text);
         if (r_test_text.value.s[0]) {
-                R_text_set_text(&test_text, R_FONT_CONSOLE, 100.f, 1.f,
-                                r_test_text.value.s);
+                R_text_configure(&test_text, R_FONT_CONSOLE, 100.f, 1.f,
+                                 TRUE, r_test_text.value.s);
                 test_text.sprite.origin = C_vec2(r_width_2d / 2,
                                                  r_height_2d / 2);
         }
@@ -183,8 +188,7 @@ int R_init(void)
         C_count_reset(&r_count_faces);
 
         /* NVidia drivers respect this environment variable for vsync
-             FIXME: Check if this works. Should it be called before
-                    SDL_Init()? */
+           FIXME: Doesn't work! */
         SDL_putenv(r_vsync.value.n ? "__GL_SYNC_TO_VBLANK=1" :
                                      "__GL_SYNC_TO_VBLANK=0");
 
@@ -447,6 +451,7 @@ void R_set_mode(r_mode_t mode)
                 glDisable(GL_CULL_FACE);
                 glDisable(GL_DEPTH_TEST);
         } else {
+                R_clip_disable();
                 gluPerspective(90.0, (float)r_width.value.n / r_height.value.n,
                                1.f, 10000.f);
                 glEnable(GL_LIGHTING);
@@ -456,6 +461,92 @@ void R_set_mode(r_mode_t mode)
         glMatrixMode(GL_MODELVIEW);
         R_check_errors();
         r_mode = mode;
+}
+
+/******************************************************************************\
+ Disables the clipping planes.
+\******************************************************************************/
+void R_clip_disable(void)
+{
+        glDisable(GL_CLIP_PLANE0);
+        glDisable(GL_CLIP_PLANE1);
+        glDisable(GL_CLIP_PLANE2);
+        glDisable(GL_CLIP_PLANE3);
+}
+
+/******************************************************************************\
+ Clip in a specific direction. This only works in 2D mode. OpenGL takes plane
+ equations as arguments. Points that are visible satisfy the following
+ inequality:
+ a * x + b * y + c * z + d >= 0
+\******************************************************************************/
+void R_clip_left(float dist)
+{
+        GLdouble eqn[4] = { 1.f, 0.f, 0.f, -1.f };
+
+        R_set_mode(R_MODE_2D);
+        glEnable(GL_CLIP_PLANE0);
+        eqn[0] /= dist;
+        glClipPlane(GL_CLIP_PLANE0, eqn);
+}
+
+void R_clip_top(float dist)
+{
+        GLdouble eqn[4] = { 0.f, 1.f, 0.f, -1.f };
+
+        R_set_mode(R_MODE_2D);
+        glEnable(GL_CLIP_PLANE1);
+        eqn[1] /= dist;
+        glClipPlane(GL_CLIP_PLANE1, eqn);
+}
+
+void R_clip_right(float dist)
+{
+        GLdouble eqn[4] = { -1.f, 0.f, 0.f, 1.f };
+
+        R_set_mode(R_MODE_2D);
+        glEnable(GL_CLIP_PLANE2);
+        eqn[0] /= dist;
+        glClipPlane(GL_CLIP_PLANE2, eqn);
+}
+
+void R_clip_bottom(float dist)
+{
+        GLdouble eqn[4] = { 0.f, -1.f, 0.f, 1.f };
+
+        R_set_mode(R_MODE_2D);
+        glEnable(GL_CLIP_PLANE3);
+        eqn[1] /= dist;
+        glClipPlane(GL_CLIP_PLANE3, eqn);
+}
+
+/******************************************************************************\
+ Setup a clipping rectangle. This only works in 2D mode.
+\******************************************************************************/
+void R_clip_rect(c_vec2_t origin, c_vec2_t size)
+{
+        GLdouble eqn[4];
+
+        R_set_mode(R_MODE_2D);
+        glEnable(GL_CLIP_PLANE0);
+        glEnable(GL_CLIP_PLANE1);
+        glEnable(GL_CLIP_PLANE2);
+        glEnable(GL_CLIP_PLANE3);
+        eqn[0] = 1.f / origin.x;
+        eqn[1] = 0.f;
+        eqn[2] = 0.f;
+        eqn[3] = -1.f;
+        glClipPlane(GL_CLIP_PLANE0, eqn);
+        eqn[0] = 0;
+        eqn[1] = 1.f / origin.y;
+        glClipPlane(GL_CLIP_PLANE1, eqn);
+        eqn[0] = -1.f / (origin.x + size.x);
+        eqn[1] = 0;
+        eqn[3] = 1.f;
+        glClipPlane(GL_CLIP_PLANE2, eqn);
+        eqn[0] = 0.f;
+        eqn[1] = 1.f / (origin.y + size.y);
+        glClipPlane(GL_CLIP_PLANE3, eqn);
 }
 
 /******************************************************************************\

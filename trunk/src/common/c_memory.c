@@ -295,7 +295,7 @@ void C_check_leaks(void)
                 if (tag->size < 1)
                         continue;
                 for (i = 0; C_is_print(((char *)tag->data)[i]); i++) {
-                        char buf[32];
+                        char buf[128];
 
                         if (i >= tag->size - 1 || i >= sizeof (buf) - 1 ||
                             !((char *)tag->data)[i + 1]) {
