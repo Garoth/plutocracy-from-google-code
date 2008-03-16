@@ -30,7 +30,7 @@ extern c_var_t r_font_console, r_font_console_pt,
 static c_ref_t *root;
 
 /* SDL/OpenGL variables */
-static SDL_PixelFormat sdl_rgb_fmt, sdl_rgba_fmt;
+static SDL_PixelFormat sdl_rgb_fmt, sdl_format;
 static int gl_rgb_type, gl_rgba_type;
 
 /******************************************************************************\
@@ -144,7 +144,6 @@ r_texture_t *R_texture_alloc_full(const char *file, int line, const char *func,
 {
         static int count;
         SDL_Rect rect;
-        SDL_PixelFormat *format;
         r_texture_t *pt;
         int flags;
 
@@ -159,19 +158,11 @@ r_texture_t *R_texture_alloc_full(const char *file, int line, const char *func,
                                    ++count, func));
         pt->alpha = alpha;
         flags = SDL_HWSURFACE;
-        if (alpha) {
+        if (alpha)
                 flags |= SDL_SRCALPHA;
-                format = &sdl_rgba_fmt;
-                pt->gl_format = GL_RGBA;
-                pt->gl_type = gl_rgba_type;
-        } else {
-                format = &sdl_rgb_fmt;
-                pt->gl_format = r_color_bits.value.n > 16 ? GL_RGBA : GL_RGB;
-                pt->gl_type = gl_rgb_type;
-        }
-        pt->surface = SDL_CreateRGBSurface(flags, w, h, format->BitsPerPixel,
-                                           format->Rmask, format->Gmask,
-                                           format->Bmask, format->Amask);
+        pt->surface = SDL_CreateRGBSurface(flags, w, h, sdl_format.BitsPerPixel,
+                                           sdl_format.Rmask, sdl_format.Gmask,
+                                           sdl_format.Bmask, sdl_format.Amask);
         SDL_SetAlpha(pt->surface, SDL_SRCALPHA, 255);
         rect.x = 0;
         rect.y = 0;
@@ -199,21 +190,30 @@ void R_texture_upload(const r_texture_t *pt, int mipmaps)
         flags = SDL_HWSURFACE;
         if (pt->alpha) {
                 gl_internal = GL_RGBA;
+                if (r_color_bits.value.n == 16)
+                        gl_internal = GL_RGBA4;
+                else if (r_color_bits.value.n == 32)
+                        gl_internal = GL_RGBA8;
                 flags |= SDL_SRCALPHA;
-        } else
+        } else {
                 gl_internal = GL_RGB;
+                if (r_color_bits.value.n == 16)
+                        gl_internal = GL_RGB5;
+                else if (r_color_bits.value.n == 32)
+                        gl_internal = GL_RGB8;
+        }
         glBindTexture(GL_TEXTURE_2D, pt->gl_name);
         if (mipmaps) {
                 gluBuild2DMipmaps(GL_TEXTURE_2D, gl_internal,
                                   pt->surface->w, pt->surface->h,
-                                  pt->gl_format, pt->gl_type,
+                                  GL_RGBA, GL_UNSIGNED_BYTE,
                                   pt->surface->pixels);
                 glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,
                                 GL_LINEAR_MIPMAP_NEAREST);
         } else {
                 glTexImage2D(GL_TEXTURE_2D, 0, gl_internal,
                              pt->surface->w, pt->surface->h, 0,
-                             pt->gl_format, pt->gl_type, pt->surface->pixels);
+                             GL_RGBA, GL_UNSIGNED_BYTE, pt->surface->pixels);
                 glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,
                                 GL_LINEAR);
         }
@@ -229,7 +229,6 @@ void R_texture_upload(const r_texture_t *pt, int mipmaps)
 r_texture_t *R_texture_load(const char *filename, int mipmaps)
 {
         SDL_Surface *surface, *surface_new;
-        SDL_PixelFormat *sdl_format;
         r_texture_t *pt;
         int found, flags;
 
@@ -253,17 +252,9 @@ r_texture_t *R_texture_load(const char *filename, int mipmaps)
         /* Convert to our texture format */
         pt->alpha = surface_uses_alpha(surface);
         flags = SDL_HWSURFACE;
-        if (pt->alpha) {
-                pt->gl_type = gl_rgba_type;
-                pt->gl_format = GL_RGBA;
-                sdl_format = &sdl_rgba_fmt;
+        if (pt->alpha)
                 flags |= SDL_SRCALPHA;
-        } else {
-                pt->gl_format = r_color_bits.value.n > 16 ? GL_RGBA : GL_RGB;
-                pt->gl_type = gl_rgb_type;
-                sdl_format = &sdl_rgb_fmt;
-        }
-        surface_new = SDL_ConvertSurface(surface, sdl_format, flags);
+        surface_new = SDL_ConvertSurface(surface, &sdl_format, flags);
         SDL_FreeSurface(surface);
         if (!surface_new) {
                 C_warning("Failed to convert texture '%s'", filename);
@@ -443,61 +434,16 @@ void R_load_assets(void)
 {
         C_status("Loading render assets");
 
-        /* Setup the texture pixel format, RGBA in 32 or 16 bits */
-        C_zero(&sdl_rgb_fmt);
-        C_zero(&sdl_rgba_fmt);
-        if (r_color_bits.value.n > 16) {
-
-                /* RGBA */
-                sdl_rgba_fmt.BitsPerPixel = 32;
-                sdl_rgba_fmt.BytesPerPixel = 4;
-                sdl_rgba_fmt.Rmask = 0xff000000;
-                sdl_rgba_fmt.Gmask = 0x00ff0000;
-                sdl_rgba_fmt.Bmask = 0x0000ff00;
-                sdl_rgba_fmt.Amask = 0x000000ff;
-                sdl_rgba_fmt.Rshift = 24;
-                sdl_rgba_fmt.Gshift = 16;
-                sdl_rgba_fmt.Bshift = 8;
-                gl_rgba_type = GL_UNSIGNED_INT_8_8_8_8;
-
-                /* FIXME: Just using RGBA format, is there even a plain RGB? */
-                sdl_rgb_fmt = sdl_rgba_fmt;
-                gl_rgb_type = gl_rgba_type;
-
-                C_debug("Using 32-bit textures");
-        } else {
-
-                /* RGB */
-                sdl_rgb_fmt.BitsPerPixel = 16;
-                sdl_rgb_fmt.BytesPerPixel = 2;
-                sdl_rgb_fmt.Rmask = 0xf800;
-                sdl_rgb_fmt.Gmask = 0x07e0;
-                sdl_rgb_fmt.Bmask = 0x001f;
-                sdl_rgb_fmt.Rshift = 11;
-                sdl_rgb_fmt.Gshift = 5;
-                sdl_rgb_fmt.Rloss = 3;
-                sdl_rgb_fmt.Gloss = 2;
-                sdl_rgb_fmt.Bloss = 3;
-                gl_rgb_type = GL_UNSIGNED_SHORT_5_6_5;
-
-                /* RGBA */
-                sdl_rgba_fmt.BitsPerPixel = 16;
-                sdl_rgba_fmt.BytesPerPixel = 2;
-                sdl_rgba_fmt.Rmask = 0xf000;
-                sdl_rgba_fmt.Gmask = 0x0f00;
-                sdl_rgba_fmt.Bmask = 0x00f0;
-                sdl_rgba_fmt.Amask = 0x000f;
-                sdl_rgba_fmt.Rshift = 12;
-                sdl_rgba_fmt.Gshift = 8;
-                sdl_rgba_fmt.Bshift = 4;
-                sdl_rgba_fmt.Rloss = 4;
-                sdl_rgba_fmt.Gloss = 4;
-                sdl_rgba_fmt.Bloss = 4;
-                sdl_rgba_fmt.Aloss = 4;
-                gl_rgba_type = GL_UNSIGNED_SHORT_4_4_4_4;
-
-                C_debug("Using 16-bit textures");
-        }
+        /* Setup the texture pixel format, RGBA in 32 bits */
+        sdl_format.BitsPerPixel = 32;
+        sdl_format.BytesPerPixel = 4;
+        sdl_format.Amask = 0xff000000;
+        sdl_format.Bmask = 0x00ff0000;
+        sdl_format.Gmask = 0x0000ff00;
+        sdl_format.Rmask = 0x000000ff;
+        sdl_format.Ashift = 24;
+        sdl_format.Bshift = 16;
+        sdl_format.Gshift = 8;
 
         /* Load fonts */
         init_fonts();

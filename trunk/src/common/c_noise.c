@@ -28,7 +28,7 @@ static c_vec3_t grad[256];
 \******************************************************************************/
 static inline float noise_rand(void)
 {
-        return C_glibc_rand() / (RAND_MAX + 1.0);
+        return C_rand() / (RAND_MAX + 1.0);
 }
 
 /******************************************************************************\
@@ -39,9 +39,9 @@ static c_vec3_t noise3_rand_vec()
 {
         c_vec3_t vec;
 
-        vec.x = C_glibc_rand();
-        vec.y = C_glibc_rand();
-        vec.z = C_glibc_rand();
+        vec.x = C_rand();
+        vec.y = C_rand();
+        vec.z = C_rand();
         return C_vec3_norm(vec);
 }
 
@@ -53,7 +53,7 @@ void C_noise3_seed(unsigned int seed)
 {
         int i;
 
-        C_glibc_srand(seed);
+        C_rand_seed(seed);
 
         /* Fill mapping sequentially */
         for (i = 0; i < 256; i++)

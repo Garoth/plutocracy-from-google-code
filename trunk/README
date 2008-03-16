@@ -1,16 +1,125 @@
 ================================================================================
+  PLUTOCRACY README
+================================================================================
 
-   Plutocracy
+  1.  Release Information
+ 
+       1.1  Reporting Bugs and Known Issues
+       1.2  Credits and Thanks
+ 
+  2.  Compiling and Installing Plutocracy
+ 
+       2.1  POSIX systems
+       2.2  Windows
+ 
+  3.  Playing Plutocracy
+ 
+  4.  License and Copying
+ 
+       4.1  GPL License
+       4.2  CC License Exceptions
+       4.3  Bitstream Vera Fonts
+       4.4  Additional Fonts
+       4.5  SDL Notice
 
-=== Introduction ===============================================================
+================================================================================
+  1. Release Information
+================================================================================
 
 This is an SVN development version and has not officially been released. There
 is no guarantee of compatibility or that it will even compile!
 
-Please report bugs to the project issue tracker:
+--------------------------------------------------------------------------------
+  1.1  Reporting Bugs and Known Issues
+--------------------------------------------------------------------------------
+
+Please check the project issue tracker before reporting bugs:
 http://plutocracy.googlecode.com/
 
-=== GPL License ================================================================
+If the issue has not been addressed, you can either attempt to contact the
+development team directly over IRC (#plutocracy on FreeNode) or post a new bug
+report.
+
+Please read the Issue Tracker Wiki before creating a new issue:
+http://code.google.com/p/plutocracy/wiki/IssueTracker
+
+--------------------------------------------------------------------------------
+  1.2  Credits and Thanks
+--------------------------------------------------------------------------------
+
+Active team:
+
+    Michael Levin <risujin@risujin.org>
+        Feb 2008 -
+        Programming, UI artwork, game design
+        
+    Andrei Thorpe <garoth@garoth.com>
+        Feb 2008 - 
+        Models, game design, development blog
+    
+Retired:
+
+    Devin Papineau
+        Feb - Mar 2008
+        Additional programming
+
+================================================================================
+  2. Compiling and Installing Plutocracy
+================================================================================
+
+Currently Plutocracy is known to work on the following systems:
+
+--------------------------------------------------------------------------------
+  2.1  POSIX systems
+--------------------------------------------------------------------------------
+
+You will need to install the following development packages:
+
+    libsdl-dev
+    libsdl-image-dev
+    libsdl-ttf-dev
+
+Plutocracy is packaged with autotools. Compile with:
+
+    ./configure && make
+    
+There are no special configure flags currently. Install with:
+
+    make install
+    
+See the INSTALL file for generic instructions for Autotools.
+
+--------------------------------------------------------------------------------
+  2.2  Windows
+--------------------------------------------------------------------------------
+
+Plutocracy cannot compiled for Windows using Autotools or MinGW because the
+supporting SDL libraries are not available for MinGW.
+
+The vc8 directory contains a solution and project file setup for compiling
+Plutocracy with Visual Studio 2005. You will need to download and setup the
+following SDKs:
+
+    SDL         http://libsdl.org/
+    SDL_image   http://www.libsdl.org/projects/SDL_image/
+    SDL_ttf     http://www.libsdl.org/projects/SDL_ttf/
+
+================================================================================
+  3. Playing Plutocracy
+================================================================================
+
+Plutocracy is not yet playable!
+
+================================================================================
+  4. License and Copying
+================================================================================
+ 
+While the large part of Plutocracy is licensed under the GPL, there are some
+exceptions for individual components.
+ 
+--------------------------------------------------------------------------------
+  4.1  GPL License
+--------------------------------------------------------------------------------
 
 Plutocracy (including both source code and media) is licensed under the terms
 of the GNU General Public License (GPL) version 2 or (at your option) any later
@@ -18,7 +127,9 @@ version. There are some exceptions for specific files however (see below).
 
 The full text of the license may be found in the COPYING file.
 
-=== CC License Exceptions ======================================================
+--------------------------------------------------------------------------------
+  4.2  CC License Exceptions
+--------------------------------------------------------------------------------
 
 The following files are licensed under the CREATIVE COMMONS ATTRIBUTION-
 SHAREALIKE 2.5 LICENSE. The full license text is contained in the file named
@@ -32,7 +143,9 @@ Paul 'MoP' Greveson:
         models/blender/granger.blend
         models/test/granger.plum
 
-=== Bitstream Vera Fonts =======================================================
+--------------------------------------------------------------------------------
+  4.3  Bitstream Vera Fonts
+--------------------------------------------------------------------------------
 
 The following files fall under the license from Bitstream, Inc reproduced below:
 
@@ -79,7 +192,9 @@ the sale, use or other dealings in this Font Software without prior written
 authorization from the Gnome Foundation or Bitstream Inc., respectively. For
 further information, contact: fonts at gnome dot org.
 
-=== Additional Fonts ===========================================================
+--------------------------------------------------------------------------------
+  4.4  Additional Fonts
+--------------------------------------------------------------------------------
 
 The following fonts were obtained from www.dafont.com and are covered by their
 respective licenses. See each font's corresponding text file in the fonts
@@ -87,5 +202,17 @@ folder for more details:
 
         gui/fonts/BLKCHCRY.TTF (Earl Allen and Doug Miles, Public Domain)
         gui/fonts/SF ARchery Black.ttf (©2001 ShyFonts Type Foundry)
+
+--------------------------------------------------------------------------------
+  4.5  SDL Notice
+--------------------------------------------------------------------------------
+
+Please include this notice with the SDL runtime environment:
+
+This library is distributed under the terms of the GNU LGPL license:
+http://www.gnu.org/copyleft/lesser.html
+
+The source is available from the libraries page at the SDL website:
+http://www.libsdl.org/
 
 ================================================================================

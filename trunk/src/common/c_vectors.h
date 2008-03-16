@@ -137,7 +137,7 @@ static inline float C_vec2_square_len(c_vec2_t p)
 
 static inline float C_vec2_len(c_vec2_t p)
 {
-    return sqrt(C_vec2_square_len(p));
+    return (float)sqrt(C_vec2_square_len(p));
 }
 
 static inline float C_vec3_square_len(c_vec3_t p)
@@ -147,7 +147,7 @@ static inline float C_vec3_square_len(c_vec3_t p)
 
 static inline float C_vec3_len(c_vec3_t p)
 {
-    return sqrt(C_vec3_square_len(p));
+    return (float)sqrt(C_vec3_square_len(p));
 }
 
 /******************************************************************************\
