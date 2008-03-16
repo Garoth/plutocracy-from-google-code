@@ -1,0 +1,189 @@
+/******************************************************************************\
+ Plutocracy - Copyright (C) 2008 - Michael Levin
+
+ This program is free software; you can redistribute it and/or modify it under
+ the terms of the GNU General Public License as published by the Free Software
+ Foundation; either version 2, or (at your option) any later version.
+
+ This program is distributed in the hope that it will be useful, but WITHOUT
+ ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+ FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+\******************************************************************************/
+
+#include "i_common.h"
+
+/******************************************************************************\
+ Set the entry widget cursor position.
+\******************************************************************************/
+static void entry_set_pos(i_entry_t *entry, int pos)
+{
+        size_t len;
+        char buf[256];
+
+        if (pos < 0)
+                pos = 0;
+        len = strlen(entry->buffer);
+        if (len > sizeof (buf))
+                len = sizeof (buf);
+        if (pos > len)
+                pos = len;
+        buf[0] = entry->buffer[pos];
+        if (buf[0] < ' ')
+                buf[0] = ' ';
+        buf[1] = NUL;
+        R_sprite_cleanup(&entry->cursor);
+        R_sprite_init_text(&entry->cursor, R_FONT_CONSOLE, 0,
+                           i_shadow.value.f, TRUE, buf);
+        entry->cursor.origin = entry->text.origin;
+        if (pos > 0) {
+                c_vec2_t size;
+
+                memcpy(buf, entry->buffer, pos);
+                buf[pos] = NUL;
+                size = R_font_size(R_FONT_CONSOLE, buf);
+                entry->cursor.origin.x += size.x;
+        }
+        entry->pos = pos;
+}
+
+/******************************************************************************\
+ Setup an entry widget text and cursor positions after a move.
+\******************************************************************************/
+static void entry_moved(i_entry_t *entry)
+{
+        c_vec2_t origin;
+
+        origin = entry->widget.origin;
+        entry->window.sprite.origin = origin;
+        origin.x += entry->scroll;
+        origin = C_vec2_clamp(origin, r_pixel_scale.value.f);
+        entry->text.origin = origin;
+        entry_set_pos(entry, entry->pos);
+}
+
+/******************************************************************************\
+ Delete a character from an entry widget buffer.
+\******************************************************************************/
+static void entry_delete(i_entry_t *entry, int pos)
+{
+        size_t len;
+
+        if (pos < 0)
+                return;
+        len = strlen(entry->buffer);
+        if (pos >= len)
+                return;
+        memmove(entry->buffer + pos, entry->buffer + pos + 1, len - pos - 1);
+        entry->buffer[len - 1] = NUL;
+        entry->pos = pos;
+        R_sprite_cleanup(&entry->text);
+        R_sprite_init_text(&entry->text, R_FONT_CONSOLE, 0,
+                           i_shadow.value.f, FALSE, entry->buffer);
+        entry_moved(entry);
+}
+
+/******************************************************************************\
+ Insert a character into an entry widget buffer.
+\******************************************************************************/
+static void entry_insert(i_entry_t *entry, char ch)
+{
+        size_t len;
+
+        len = strlen(entry->buffer);
+        if (len >= sizeof (entry->buffer))
+                return;
+        if (entry->pos < len)
+                memmove(entry->buffer + entry->pos + 1,
+                        entry->buffer + entry->pos, len - entry->pos);
+        entry->buffer[entry->pos++] = ch;
+        R_sprite_cleanup(&entry->text);
+        R_sprite_init_text(&entry->text, R_FONT_CONSOLE, 0,
+                           i_shadow.value.f, FALSE, entry->buffer);
+        entry_moved(entry);
+}
+
+/******************************************************************************\
+ Entry widget event function.
+\******************************************************************************/
+static int entry_event(i_entry_t *entry, i_event_t event)
+{
+        switch (event) {
+        case I_EV_CONFIGURE:
+                R_window_cleanup(&entry->window);
+                R_sprite_cleanup(&entry->text);
+
+                /* Setup text */
+                R_sprite_init_text(&entry->text, R_FONT_CONSOLE, 0,
+                                   i_shadow.value.f, FALSE, entry->buffer);
+                entry->widget.size.y = R_font_line_skip(R_FONT_CONSOLE) + 1;
+                entry->text.modulate = C_color_string(i_color.value.s);
+
+                /* Setup work area window */
+                R_window_init(&entry->window, i_work_area.value.s);
+                entry->window.sprite.size = entry->widget.size;
+
+        case I_EV_MOVED:
+                entry_moved(entry);
+                break;
+        case I_EV_CLEANUP:
+                R_sprite_cleanup(&entry->text);
+                R_sprite_cleanup(&entry->cursor);
+                R_window_cleanup(&entry->window);
+                break;
+        case I_EV_KEY_DOWN:
+                if (i_key == SDLK_LEFT)
+                        entry_set_pos(entry, entry->pos - 1);
+                if (i_key == SDLK_RIGHT)
+                        entry_set_pos(entry, entry->pos + 1);
+                if (i_key == SDLK_HOME)
+                        entry_set_pos(entry, 0);
+                if (i_key == SDLK_END)
+                        entry_set_pos(entry, sizeof (entry->buffer));
+                if (i_key == SDLK_BACKSPACE)
+                        entry_delete(entry, entry->pos - 1);
+                if (i_key == SDLK_DELETE)
+                        entry_delete(entry, entry->pos);
+                if (i_key >= ' ' && i_key < 0x7f)
+                        entry_insert(entry, i_key_unicode);
+                break;
+        case I_EV_RENDER:
+                entry->window.sprite.modulate.a = entry->widget.fade;
+                entry->text.modulate.a = entry->widget.fade;
+                entry->cursor.modulate.a = entry->widget.fade;
+                R_window_render(&entry->window);
+                if (i_key_focus == (i_widget_t *)entry) {
+                        R_clip_left(entry->cursor.origin.x +
+                                    entry->cursor.size.x);
+                        R_sprite_render(&entry->text);
+                        R_clip_disable();
+                        if (entry->pos > 0) {
+                                R_clip_right(entry->cursor.origin.x);
+                                R_sprite_render(&entry->text);
+                                R_clip_disable();
+                        }
+                        R_sprite_render(&entry->cursor);
+                } else
+                        R_sprite_render(&entry->text);
+                break;
+        default:
+                break;
+        }
+        return TRUE;
+}
+
+/******************************************************************************\
+ Initializes an entry widget.
+\******************************************************************************/
+void I_entry_init(i_entry_t *entry, const char *text)
+{
+        if (!entry)
+                return;
+        C_zero(entry);
+        I_widget_set_name(&entry->widget, "Entry");
+        entry->widget.event_func = (i_event_f)entry_event;
+        entry->widget.state = I_WS_READY;
+        entry->widget.entry = TRUE;
+        C_strncpy_buf(entry->buffer, text);
+        I_widget_inited(&entry->widget);
+}
+

@@ -21,8 +21,8 @@ typedef enum {
         I_EV_NONE,              /* Do nothing */
         I_EV_CLEANUP,           /* Should free resources */
         I_EV_CONFIGURE,         /* Initialized or resized */
-        I_EV_KEY_DOWN,          /* In focus and a key is pressed down */
-        I_EV_KEY_UP,            /* In focus and a key is released */
+        I_EV_KEY_DOWN,          /* A key is pressed down or repeated */
+        I_EV_KEY_UP,            /* A key is released */
         I_EV_MOUSE_IN,          /* Mouse just entered widget area */
         I_EV_MOUSE_OUT,         /* Mouse just left widget area */
         I_EV_MOUSE_MOVE,        /* Mouse is moved over widget */
@@ -101,34 +101,47 @@ typedef struct i_window {
 typedef struct i_button {
         i_widget_t widget;
         r_window_t normal, hover, active;
-        r_sprite_t icon;
-        r_text_t text;
+        r_sprite_t icon, text;
         i_callback_f on_click;
         int decorated;
+        char buffer[64];
 } i_button_t;
 
 /* Labels only have text */
 typedef struct i_label {
         i_widget_t widget;
-        r_text_t text;
+        r_sprite_t text;
+        char buffer[256];
 } i_label_t;
 
+/* A one-line text field */
+typedef struct i_entry {
+        i_widget_t widget;
+        r_sprite_t text, cursor;
+        r_window_t window;
+        float scroll;
+        int pos;
+        char buffer[256];
+} i_entry_t;
+
 /* i_variables.c */
-extern c_var_t i_border, i_color, i_debug;
+extern c_var_t i_border, i_color, i_debug, i_fade, i_shadow, i_theme,
+               i_window, i_work_area;
 
 /* i_widgets.c */
 void I_button_init(i_button_t *, const char *icon, const char *text, int bg);
-#define I_button_set_text(b, s) C_strncpy_buf((b)->text.string, s)
-void I_label_init(i_label_t *);
-#define I_label_set_text(l, s) C_strncpy_buf((l)->text.string, s)
+void I_entry_init(i_entry_t *, const char *text);
+void I_label_init(i_label_t *, const char *text);
 const char *I_event_string(i_event_t event);
 void I_widget_add(i_widget_t *parent, i_widget_t *child);
 #define I_widget_cleanup(w) I_widget_event(w, I_EV_CLEANUP)
 void I_widget_event(i_widget_t *, i_event_t);
+void I_widget_inited(const i_widget_t *);
 void I_widget_pack(i_widget_t *, i_pack_t, i_collapse_t);
 void I_widget_propagate(i_widget_t *, i_event_t);
+void I_widget_set_name(i_widget_t *, const char *class_name);
 void I_window_init(i_window_t *);
 
-extern SDLKey i_key;
-extern int i_key_shift, i_mouse_x, i_mouse_y, i_mouse;
+extern i_widget_t *i_key_focus;
+extern int i_key, i_key_shift, i_key_unicode, i_mouse_x, i_mouse_y, i_mouse;
 

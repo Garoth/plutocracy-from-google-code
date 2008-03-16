@@ -14,6 +14,7 @@
 
 static i_label_t label;
 static i_window_t window;
+static i_entry_t entry;
 
 /******************************************************************************\
  Initializes and returns a pointer to the console window.
@@ -29,9 +30,12 @@ i_widget_t *I_console_init(void)
         window.collapse = I_COLLAPSE_INVERT;
 
         /* Label */
-        I_label_init(&label);
-        I_label_set_text(&label, "Console:");
+        I_label_init(&label, "Console:");
         I_widget_add(&window.widget, &label.widget);
+
+        /* Entry */
+        I_entry_init(&entry, "test");
+        I_widget_add(&window.widget, &entry.widget);
 
         return &window.widget;
 }

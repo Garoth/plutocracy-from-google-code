@@ -77,15 +77,12 @@ typedef enum {
         R_MODE_2D,
 } r_mode_t;
 
-/* Font asset */
-typedef struct r_font {
-        TTF_Font *ttf_font;
-} r_font_data_t;
-
 /* r_assets.c */
+SDL_Surface *R_font_render(r_font_t, const char *);
 void R_free_assets(void);
 void R_load_assets(void);
 c_color_t R_SDL_get_pixel(const SDL_Surface *surf, int x, int y);
+void R_SDL_invert(SDL_Surface *surf, int rgb, int alpha);
 void R_SDL_put_pixel(SDL_Surface *surf, int x, int y, c_color_t color);
 #define R_texture_alloc(w, h, a) R_texture_alloc_full(__FILE__, __LINE__, \
                                                       __func__, w, h, a)

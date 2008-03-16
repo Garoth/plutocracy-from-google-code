@@ -18,8 +18,10 @@ plutocracy_SOURCES = \
         src/game/g_common.h \
         src/game/g_shared.h \
         src/game/g_globe.c \
+        src/interface/i_button.c \
         src/interface/i_common.h \
         src/interface/i_console.c \
+        src/interface/i_entry.c \
         src/interface/i_shared.h \
         src/interface/i_variables.c \
         src/interface/i_widgets.c \

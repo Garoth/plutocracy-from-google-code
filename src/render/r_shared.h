@@ -54,12 +54,14 @@ typedef enum {
         R_FONTS
 } r_font_t;
 
-/* Stores an RGBA surface with the text rendered on it. Manipulate the sprite
-   attributes to change where and how the text is rendered. */
+/* Sometimes it is convenient to store the source text for a text sprite in a
+   generic buffer and only re-render it if it has changed */
 typedef struct r_text {
         r_sprite_t sprite;
         r_font_t font;
-        char string[1024];
+        float wrap, shadow;
+        int invert;
+        char buffer[256];
 } r_text_t;
 
 /* A quad strip composed of nine quads that stretch with the size parameter
@@ -70,6 +72,11 @@ typedef struct r_window {
         c_vec2_t corner;
 } r_window_t;
 
+/* r_assets.c */
+int R_font_height(r_font_t);
+int R_font_line_skip(r_font_t);
+c_vec2_t R_font_size(r_font_t, const char *);
+
 /* r_model.c */
 void R_model_cleanup(r_model_t *);
 int R_model_init(r_model_t *, const char *filename);
@@ -78,6 +85,12 @@ void R_model_render(r_model_t *);
 
 /* r_render.c */
 void R_cleanup(void);
+void R_clip_left(float);
+void R_clip_top(float);
+void R_clip_right(float);
+void R_clip_bottom(float);
+void R_clip_rect(c_vec2_t origin, c_vec2_t size);
+void R_clip_disable(void);
 void R_finish_frame(void);
 int R_init(void);
 void R_start_frame(void);
@@ -88,12 +101,13 @@ extern int r_width_2d, r_height_2d;
 /* r_sprite.c */
 void R_sprite_cleanup(r_sprite_t *);
 void R_sprite_init(r_sprite_t *, const char *filename);
+void R_sprite_init_text(r_sprite_t *, r_font_t, float wrap, float shadow,
+                        int invert, const char *text);
 void R_sprite_render(const r_sprite_t *);
-void R_text_cleanup(r_text_t *);
-#define R_text_cleanup(t) R_sprite_cleanup(&(t)->sprite)
 #define R_text_init(t) C_zero(t)
-void R_text_set_text(r_text_t *, r_font_t, float wrap, float shadow_alpha,
-                     const char *text);
+void R_text_configure(r_text_t *, r_font_t, float wrap, float shadow,
+                      int invert, const char *text);
+#define R_text_cleanup(t) R_sprite_cleanup(&(t)->sprite)
 #define R_text_render(t) R_sprite_render(&(t)->sprite)
 #define R_window_cleanup(w) R_sprite_cleanup(&(w)->sprite)
 void R_window_init(r_window_t *, const char *filename);

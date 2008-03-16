@@ -14,7 +14,7 @@
 
 /* Video parameters */
 c_var_t r_width, r_height, r_color_bits, r_depth_bits, r_windowed, r_vsync,
-        r_gamma, r_pixel_scale;
+        r_gamma, r_pixel_scale, r_clear;
 
 /* Render testing */
 c_var_t r_gl_errors,
@@ -41,6 +41,7 @@ void R_register_variables(void)
         C_register_integer(&r_vsync, "r_vsync", TRUE);
         C_register_float(&r_gamma, "r_gamma", 1);
         C_register_float(&r_pixel_scale, "r_pixel_scale", 1);
+        C_register_string(&r_clear, "r_clear", "black");
 
         /* Render testing */
         C_register_integer(&r_gl_errors, "r_gl_errors", 0);

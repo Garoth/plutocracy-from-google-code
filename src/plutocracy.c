@@ -36,11 +36,12 @@ static void render_status(void)
         if (C_count_poll(&throttled, 5000)) {
                 char *str;
 
-                str = C_va("%.1f fps, (%.1f%% throttled), %.1f faces/frame",
+                str = C_va("%.0f fps, (%.0f%% throttled), %.0f faces/frame",
                            C_count_fps(&throttled),
                            100.f * C_count_per_frame(&throttled) / desired_msec,
                            C_count_per_frame(&r_count_faces));
-                R_text_set_text(&status_text, R_FONT_CONSOLE, 0, 1.f, str);
+                R_text_configure(&status_text, R_FONT_CONSOLE,
+                                 0, 1.f, FALSE, str);
                 status_text.sprite.origin = C_vec2(4, 4);
                 C_count_reset(&throttled);
                 C_count_reset(&r_count_faces);

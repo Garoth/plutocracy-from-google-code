@@ -16,12 +16,15 @@
 
 #include "r_common.h"
 
+/* Font asset array */
+static struct {
+        TTF_Font *ttf_font;
+        int line_skip, height;
+} fonts[R_FONTS];
+
 /* Font configuration variables */
 extern c_var_t r_font_console, r_font_console_pt,
                r_font_gui, r_font_gui_pt;
-
-/* Font asset array */
-r_font_data_t r_fonts[R_FONTS];
 
 /* Texture linked list */
 static c_ref_t *root;
@@ -311,8 +314,82 @@ void R_texture_select(r_texture_t *texture)
 }
 
 /******************************************************************************\
+ Returns the height of the tallest glyph in the font.
+\******************************************************************************/
+int R_font_height(r_font_t font)
+{
+        return fonts[font].height;
+}
+
+/******************************************************************************\
+ Returns distance from start of one line to the start of the next.
+\******************************************************************************/
+int R_font_line_skip(r_font_t font)
+{
+        return fonts[font].line_skip;
+}
+
+/******************************************************************************\
+ Returns distance from start of one line to the start of the next.
+\******************************************************************************/
+c_vec2_t R_font_size(r_font_t font, const char *text)
+{
+        int w, h;
+
+        TTF_SizeText(fonts[font].ttf_font, text, &w, &h);
+        return C_vec2(w, h);
+}
+
+/******************************************************************************\
+ Inverts a surface. Surface should not be locked when this is called.
+\******************************************************************************/
+void R_SDL_invert(SDL_Surface *surf, int rgb, int alpha)
+{
+        c_color_t color;
+        int x, y;
+
+        if (SDL_LockSurface(surf) < 0) {
+                C_warning("Failed to lock surface");
+                return;
+        }
+        for (y = 0; y < surf->h; y++)
+                for (x = 0; x < surf->w; x++) {
+                        color = R_SDL_get_pixel(surf, x, y);
+                        if (rgb) {
+                                color.r = 1.f - color.r;
+                                color.g = 1.f - color.g;
+                                color.b = 1.f - color.b;
+                        }
+                        if (alpha)
+                                color.a = 1.f - color.a;
+                        R_SDL_put_pixel(surf, x, y, color);
+                }
+        SDL_UnlockSurface(surf);
+}
+
+/******************************************************************************\
+ Renders a line of text onto a newly-allocated SDL surface. This surface must
+ be freed by the caller.
+\******************************************************************************/
+SDL_Surface *R_font_render(r_font_t font, const char *text)
+{
+        SDL_Surface *surf;
+        SDL_Color white = { 255, 255, 255, 255 };
+
+        surf = TTF_RenderUTF8_Blended(fonts[font].ttf_font, text, white);
+        if (!surf) {
+                C_warning("TTF_RenderUTF8_Blended() failed: %s",
+                          TTF_GetError());
+                return surf;
+        }
+        return surf;
+}
+
+/******************************************************************************\
  Loads the font, properly scaled and generates an error message if something
- goes wrong.
+ goes wrong. For some reason, SDL_ttf returns a line skip that is one pixel shy
+ of the image height returned by TTF_RenderUTF8_Blended() so we account for
+ that here.
 \******************************************************************************/
 static void load_font(r_font_t font, const char *path, int size)
 {
@@ -321,8 +398,10 @@ static void load_font(r_font_t font, const char *path, int size)
         points = ceilf(size * r_pixel_scale.value.f);
         if (points < R_FONT_SIZE_MIN)
                 points = R_FONT_SIZE_MIN;
-        r_fonts[font].ttf_font = TTF_OpenFont(path, points);
-        if (!r_fonts[font].ttf_font)
+        fonts[font].ttf_font = TTF_OpenFont(path, points);
+        fonts[font].height = TTF_FontHeight(fonts[font].ttf_font);
+        fonts[font].line_skip = TTF_FontLineSkip(fonts[font].ttf_font) + 1;
+        if (!fonts[font].ttf_font)
                 C_error("Failed to load font '%s' (%d -> %d pt)",
                         path, size, points);
 }
@@ -353,7 +432,7 @@ static void init_fonts(void)
                   r_font_console_pt.value.n);
         load_font(R_FONT_GUI, r_font_gui.value.s, r_font_gui_pt.value.n);
         for (i = 0; i < R_FONTS; i++)
-                if (!r_fonts[i].ttf_font)
+                if (!fonts[i].ttf_font)
                         C_error("Forgot to load font %d", i);
 }
 
@@ -433,7 +512,7 @@ void R_free_assets(void)
 
         /* Free fonts and shut down the SDL_ttf library */
         for (i = 0; i < R_FONTS; i++)
-                TTF_CloseFont(r_fonts[i].ttf_font);
+                TTF_CloseFont(fonts[i].ttf_font);
         TTF_Quit();
 }
 
