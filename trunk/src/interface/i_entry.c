@@ -104,6 +104,7 @@ static void entry_insert(i_entry_t *entry, char ch)
 
 /******************************************************************************\
  Entry widget event function.
+ FIXME: Unicode input
 \******************************************************************************/
 static int entry_event(i_entry_t *entry, i_event_t event)
 {
