@@ -178,7 +178,7 @@ static int entry_event(i_entry_t *entry, i_event_t event)
                 R_window_render(&entry->window);
                 if (i_key_focus == (i_widget_t *)entry) {
                         R_clip_left(entry->cursor.origin.x +
-                                    entry->cursor.size.x);
+                                    entry->cursor.size.x - 2.f);
                         R_clip_right(entry->widget.origin.x +
                                      entry->widget.size.x);
                         R_sprite_render(&entry->text);
@@ -190,8 +190,13 @@ static int entry_event(i_entry_t *entry, i_event_t event)
                                 R_clip_disable();
                         }
                         R_sprite_render(&entry->cursor);
-                } else
+                } else {
+                        R_clip_left(entry->widget.origin.x);
+                        R_clip_right(entry->widget.origin.x +
+                                     entry->widget.size.x);
                         R_sprite_render(&entry->text);
+                        R_clip_disable();
+                }
                 break;
         default:
                 break;
