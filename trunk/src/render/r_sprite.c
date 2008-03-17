@@ -160,8 +160,8 @@ static void blit_shadowed(SDL_Surface *dest, SDL_Surface *src,
         } else
                 w1 = (2.f - r_pixel_scale.value.f) * alpha;
         w2 = alpha - w1;
-        for (y = 0; y < src->h + 1; y++)
-                for (x = 0; x < src->w + 1; x++) {
+        for (y = 0; y < src->h + 2; y++)
+                for (x = 0; x < src->w + 2; x++) {
                         c_color_t dc, sc;
 
                         dc = R_SDL_get_pixel(dest, to_x + x, to_y + y);
@@ -178,7 +178,7 @@ static void blit_shadowed(SDL_Surface *dest, SDL_Surface *src,
                         }
 
                         /* Blit the shadow from (x - 1, y - 1) */
-                        if (x && y && w1) {
+                        if (x && y && w1 && x <= src->w && y <= src->h) {
                                 sc = R_SDL_get_pixel(src, x - 1, y - 1);
                                 sc = C_color(0, 0, 0, sc.a * w1);
                                 dc = C_color_blend(sc, dc);
@@ -257,6 +257,7 @@ void R_sprite_init_text(r_sprite_t *sprite, r_font_t font, float wrap,
         }
         if (++width < 2 || height < 2)
                 return;
+        width += 2;
 
         /* SDL_ttf will generate a 32-bit RGBA surface with the text printed
            on it in white (we can modulate the color later) but it won't
@@ -304,6 +305,7 @@ void R_text_configure(r_text_t *text, r_font_t font, float wrap, float shadow,
             text->shadow == shadow && text->invert == invert &&
             !strcasecmp(string, text->buffer))
                 return;
+        R_sprite_cleanup(&text->sprite);
         R_sprite_init_text(&text->sprite, font, wrap, shadow, invert, string);
         text->font = font;
         text->wrap = wrap;

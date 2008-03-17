@@ -119,6 +119,7 @@ typedef struct i_entry {
         i_widget_t widget;
         r_sprite_t text, cursor;
         r_window_t window;
+        i_callback_f on_enter;
         float scroll;
         int pos;
         char buffer[256];

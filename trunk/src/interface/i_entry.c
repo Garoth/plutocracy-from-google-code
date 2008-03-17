@@ -18,8 +18,10 @@
 static void entry_set_pos(i_entry_t *entry, int pos)
 {
         size_t len;
+        float diff;
         char buf[256];
 
+        /* Make sure position stays in range */
         if (pos < 0)
                 pos = 0;
         len = strlen(entry->buffer);
@@ -27,6 +29,8 @@ static void entry_set_pos(i_entry_t *entry, int pos)
                 len = sizeof (buf);
         if (pos > len)
                 pos = len;
+
+        /* Render the inverted cursor character */
         buf[0] = entry->buffer[pos];
         if (buf[0] < ' ')
                 buf[0] = ' ';
@@ -40,9 +44,26 @@ static void entry_set_pos(i_entry_t *entry, int pos)
 
                 memcpy(buf, entry->buffer, pos);
                 buf[pos] = NUL;
-                size = R_font_size(R_FONT_CONSOLE, buf);
+                size = C_vec2_invscalef(R_font_size(R_FONT_CONSOLE, buf),
+                                        r_pixel_scale.value.f);
                 entry->cursor.origin.x += size.x;
         }
+
+        /* Check scrolling */
+        diff = entry->cursor.origin.x + entry->cursor.size.x -
+               entry->widget.origin.x - entry->widget.size.x;
+        if (diff > 0) {
+                entry->scroll += diff;
+                entry->cursor.origin.x -= diff;
+                entry->text.origin.x -= diff;
+        }
+        diff = entry->widget.origin.x - entry->cursor.origin.x;
+        if (diff > 0) {
+                entry->scroll -= diff;
+                entry->cursor.origin.x += diff;
+                entry->text.origin.x += diff;
+        }
+
         entry->pos = pos;
 }
 
@@ -55,7 +76,7 @@ static void entry_moved(i_entry_t *entry)
 
         origin = entry->widget.origin;
         entry->window.sprite.origin = origin;
-        origin.x += entry->scroll;
+        origin.x -= entry->scroll;
         origin = C_vec2_clamp(origin, r_pixel_scale.value.f);
         entry->text.origin = origin;
         entry_set_pos(entry, entry->pos);
@@ -110,16 +131,17 @@ static int entry_event(i_entry_t *entry, i_event_t event)
 {
         switch (event) {
         case I_EV_CONFIGURE:
-                R_window_cleanup(&entry->window);
-                R_sprite_cleanup(&entry->text);
 
                 /* Setup text */
+                R_sprite_cleanup(&entry->text);
                 R_sprite_init_text(&entry->text, R_FONT_CONSOLE, 0,
                                    i_shadow.value.f, FALSE, entry->buffer);
-                entry->widget.size.y = R_font_line_skip(R_FONT_CONSOLE) + 1;
+                entry->widget.size.y = R_font_line_skip(R_FONT_CONSOLE) /
+                                       r_pixel_scale.value.f + 1;
                 entry->text.modulate = C_color_string(i_color.value.s);
 
                 /* Setup work area window */
+                R_window_cleanup(&entry->window);
                 R_window_init(&entry->window, i_work_area.value.s);
                 entry->window.sprite.size = entry->widget.size;
 
@@ -144,6 +166,8 @@ static int entry_event(i_entry_t *entry, i_event_t event)
                         entry_delete(entry, entry->pos - 1);
                 if (i_key == SDLK_DELETE)
                         entry_delete(entry, entry->pos);
+                if (i_key == SDLK_RETURN && entry->on_enter)
+                        entry->on_enter(entry);
                 if (i_key >= ' ' && i_key < 0x7f)
                         entry_insert(entry, i_key_unicode);
                 break;
@@ -155,9 +179,12 @@ static int entry_event(i_entry_t *entry, i_event_t event)
                 if (i_key_focus == (i_widget_t *)entry) {
                         R_clip_left(entry->cursor.origin.x +
                                     entry->cursor.size.x);
+                        R_clip_right(entry->widget.origin.x +
+                                     entry->widget.size.x);
                         R_sprite_render(&entry->text);
                         R_clip_disable();
                         if (entry->pos > 0) {
+                                R_clip_left(entry->widget.origin.x);
                                 R_clip_right(entry->cursor.origin.x);
                                 R_sprite_render(&entry->text);
                                 R_clip_disable();

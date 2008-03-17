@@ -77,6 +77,7 @@ void I_init(void)
         root.origin = C_vec2(0.f, 0.f);
         root.size = C_vec2(r_width_2d, r_height_2d);
         root.configured = 1;
+        root.entry = TRUE;
 
         /* Left toolbar */
         I_window_init(&left_toolbar);
@@ -446,8 +447,6 @@ void I_widget_event(i_widget_t *widget, i_event_t event)
                         widget->event_func(widget, I_EV_MOUSE_IN);
                         if (widget->state == I_WS_READY)
                                 widget->state = I_WS_HOVER;
-                        if (widget->entry)
-                                i_key_focus = widget;
                 }
 
                 mouse_focus = widget;
@@ -493,6 +492,10 @@ void I_widget_event(i_widget_t *widget, i_event_t event)
         case I_EV_MOUSE_UP:
                 if (widget->state == I_WS_ACTIVE)
                         widget->state = I_WS_HOVER;
+                break;
+        case I_EV_MOUSE_MOVE:
+                if (widget->entry && mouse_focus == widget)
+                        i_key_focus = widget;
                 break;
         default:
                 break;
@@ -551,8 +554,6 @@ void I_dispatch(const SDL_Event *ev)
         case SDL_MOUSEBUTTONDOWN:
                 event = I_EV_MOUSE_DOWN;
                 i_mouse = ev->button.button;
-                i_mouse_x = ev->button.x / r_pixel_scale.value.f + 0.5f;
-                i_mouse_y = ev->button.y / r_pixel_scale.value.f + 0.5f;
                 if (i_debug.value.n > 0)
                         C_debug("SDL_MOUSEBUTTONDOWN (%d)", i_mouse);
                 check_mouse_out(mouse_focus);
@@ -560,8 +561,6 @@ void I_dispatch(const SDL_Event *ev)
         case SDL_MOUSEBUTTONUP:
                 event = I_EV_MOUSE_UP;
                 i_mouse = ev->button.button;
-                i_mouse_x = ev->button.x / r_pixel_scale.value.f + 0.5f;
-                i_mouse_y = ev->button.y / r_pixel_scale.value.f + 0.5f;
                 if (i_debug.value.n > 0)
                         C_debug("SDL_MOUSEBUTTONUP");
                 check_mouse_out(mouse_focus);

@@ -29,9 +29,8 @@ extern c_var_t r_font_console, r_font_console_pt,
 /* Texture linked list */
 static c_ref_t *root;
 
-/* SDL/OpenGL variables */
-static SDL_PixelFormat sdl_rgb_fmt, sdl_format;
-static int gl_rgb_type, gl_rgba_type;
+/* SDL texture format */
+static SDL_PixelFormat sdl_format;
 
 /******************************************************************************\
  Frees memory associated with a texture.
