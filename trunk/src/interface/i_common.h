@@ -84,7 +84,7 @@ typedef struct i_widget {
         i_event_f event_func;
         i_pack_t pack;
         i_widget_state_t state;
-        float fade;
+        float fade, padding;
         int configured, entry, heap;
 } i_widget_t;
 
@@ -125,6 +125,16 @@ typedef struct i_entry {
         char buffer[256];
 } i_entry_t;
 
+/* A fixed-size, work-area widget that can dynamically add new components
+   vertically and scroll up and down. Widgets will begin to be removed after
+   a specified limit is reached. */
+typedef struct i_scrollback {
+        i_widget_t widget;
+        r_window_t window;
+        float scroll;
+        int limit;
+} i_scrollback_t;
+
 /* i_variables.c */
 extern c_var_t i_border, i_color, i_debug, i_fade, i_shadow, i_theme,
                i_window, i_work_area;
@@ -132,12 +142,14 @@ extern c_var_t i_border, i_color, i_debug, i_fade, i_shadow, i_theme,
 /* i_widgets.c */
 void I_button_init(i_button_t *, const char *icon, const char *text, int bg);
 void I_entry_init(i_entry_t *, const char *text);
+void I_entry_configure(i_entry_t *, const char *);
 void I_label_init(i_label_t *, const char *text);
 const char *I_event_string(i_event_t event);
 void I_widget_add(i_widget_t *parent, i_widget_t *child);
 #define I_widget_cleanup(w) I_widget_event(w, I_EV_CLEANUP)
 void I_widget_event(i_widget_t *, i_event_t);
 void I_widget_inited(const i_widget_t *);
+void I_widget_move(i_widget_t *, c_vec2_t new_origin);
 void I_widget_pack(i_widget_t *, i_pack_t, i_collapse_t);
 void I_widget_propagate(i_widget_t *, i_event_t);
 void I_widget_set_name(i_widget_t *, const char *class_name);

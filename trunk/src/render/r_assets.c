@@ -19,7 +19,7 @@
 /* Font asset array */
 static struct {
         TTF_Font *ttf_font;
-        int line_skip, height;
+        int line_skip, width, height;
 } fonts[R_FONTS];
 
 /* Font configuration variables */
@@ -312,6 +312,14 @@ int R_font_height(r_font_t font)
 }
 
 /******************************************************************************\
+ Returns the width of the widest glyph in the font.
+\******************************************************************************/
+int R_font_width(r_font_t font)
+{
+        return fonts[font].width;
+}
+
+/******************************************************************************\
  Returns distance from start of one line to the start of the next.
 \******************************************************************************/
 int R_font_line_skip(r_font_t font)
@@ -389,11 +397,15 @@ static void load_font(r_font_t font, const char *path, int size)
         if (points < R_FONT_SIZE_MIN)
                 points = R_FONT_SIZE_MIN;
         fonts[font].ttf_font = TTF_OpenFont(path, points);
-        fonts[font].height = TTF_FontHeight(fonts[font].ttf_font);
-        fonts[font].line_skip = TTF_FontLineSkip(fonts[font].ttf_font) + 1;
         if (!fonts[font].ttf_font)
                 C_error("Failed to load font '%s' (%d -> %d pt)",
                         path, size, points);
+        fonts[font].height = TTF_FontHeight(fonts[font].ttf_font);
+        fonts[font].line_skip = TTF_FontLineSkip(fonts[font].ttf_font) + 1;
+
+        /* SDL_ttf won't tell us the width of the widest glyph directly so we
+           assume it is the width of 'W' */
+        fonts[font].width = R_font_size(font, "W").x;
 }
 
 /******************************************************************************\

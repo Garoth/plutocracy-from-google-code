@@ -117,10 +117,24 @@ static void entry_insert(i_entry_t *entry, char ch)
                 memmove(entry->buffer + entry->pos + 1,
                         entry->buffer + entry->pos, len - entry->pos);
         entry->buffer[entry->pos++] = ch;
+        if (entry->pos > len)
+                entry->buffer[entry->pos] = NUL;
         R_sprite_cleanup(&entry->text);
         R_sprite_init_text(&entry->text, R_FONT_CONSOLE, 0,
                            i_shadow.value.f, FALSE, entry->buffer);
         entry_moved(entry);
+}
+
+/******************************************************************************\
+ Sets the entry field text and resets the cursor position. [string] does
+ not need to persist after this function is called.
+\******************************************************************************/
+void I_entry_configure(i_entry_t *entry, const char *string)
+{
+        C_strncpy_buf(entry->buffer, string);
+        entry->pos = 0;
+        entry->scroll = 0.f;
+        I_widget_event(&entry->widget, I_EV_CONFIGURE);
 }
 
 /******************************************************************************\

@@ -14,6 +14,9 @@
 #include "../game/g_shared.h"
 #include <time.h>
 
+/* Height limit of the clipping stack */
+#define CLIP_STACK 32
+
 extern c_var_t r_clear, r_gl_errors,
                r_test_globe, r_test_globe_seed, r_test_model_path,
                r_test_mesh_path, r_test_sprite_num, r_test_sprite_path,
@@ -32,6 +35,10 @@ static r_model_t test_model;
 static r_sprite_t *test_sprites;
 static r_text_t test_text;
 static g_globe_t *test_globe;
+
+/* Clipping stack */
+static int clip_stack;
+static float clip_values[CLIP_STACK * 4];
 
 /******************************************************************************\
  Sets the video mode. SDL creates a window in windowed mode.
@@ -464,89 +471,145 @@ void R_set_mode(r_mode_t mode)
 }
 
 /******************************************************************************\
- Disables the clipping planes.
+ Sets the OpenGL clipping planes to the strictest clipping in each direction.
+ This only works in 2D mode. OpenGL takes plane equations as arguments. Points
+ that are visible satisfy the following inequality:
+ a * x + b * y + c * z + d >= 0
 \******************************************************************************/
-void R_clip_disable(void)
+static void set_clipping(void)
 {
-        glDisable(GL_CLIP_PLANE0);
-        glDisable(GL_CLIP_PLANE1);
-        glDisable(GL_CLIP_PLANE2);
-        glDisable(GL_CLIP_PLANE3);
+        GLdouble eqn[4];
+        float left, top, right, bottom;;
+        int i;
+
+        R_set_mode(R_MODE_2D);
+
+        /* Find the most restrictive clipping values in each direction */
+        left = clip_values[0];
+        top = clip_values[1];
+        right = clip_values[2];
+        bottom = clip_values[3];
+        for (i = 1; i < clip_stack; i++) {
+                if (clip_values[4 * i] > left)
+                        left = clip_values[4 * i];
+                if (clip_values[4 * i + 1] > top)
+                        top = clip_values[4 * i + 1];
+                if (clip_values[4 * i + 2] < right)
+                        right = clip_values[4 * i + 2];
+                if (clip_values[4 * i + 3] < bottom)
+                        bottom = clip_values[4 * i + 3];
+        }
+
+        /* Clip left */
+        eqn[2] = 0.f;
+        eqn[3] = -1.f;
+        if (left > 0.f) {
+                glEnable(GL_CLIP_PLANE0);
+                eqn[0] = 1.f / left;
+                eqn[1] = 0.f;
+                glClipPlane(GL_CLIP_PLANE0, eqn);
+        } else
+                glDisable(GL_CLIP_PLANE0);
+
+        /* Clip top */
+        if (top > 0.f) {
+                glEnable(GL_CLIP_PLANE1);
+                eqn[0] = 0.f;
+                eqn[1] = 1.f / top;
+                glClipPlane(GL_CLIP_PLANE1, eqn);
+        } else
+                glDisable(GL_CLIP_PLANE1);
+
+        /* Clip right */
+        eqn[3] = 1.f;
+        if (right > 0.f) {
+                glEnable(GL_CLIP_PLANE2);
+                eqn[0] = -1.f / right;
+                eqn[1] = 0.f;
+                glClipPlane(GL_CLIP_PLANE2, eqn);
+        } else
+                glDisable(GL_CLIP_PLANE2);
+
+        /* Clip bottom */
+        if (bottom > 0.f) {
+                glEnable(GL_CLIP_PLANE3);
+                eqn[0] = 0.f;
+                eqn[2] = -1.f / bottom;
+                glClipPlane(GL_CLIP_PLANE3, eqn);
+        } else
+                glDisable(GL_CLIP_PLANE3);
 }
 
 /******************************************************************************\
- Clip in a specific direction. This only works in 2D mode. OpenGL takes plane
- equations as arguments. Points that are visible satisfy the following
- inequality:
- a * x + b * y + c * z + d >= 0
+ Disables the clipping at the current stack level.
+\******************************************************************************/
+void R_clip_disable(void)
+{
+        clip_values[4 * clip_stack] = 0.f;
+        clip_values[4 * clip_stack + 1] = 0.f;
+        clip_values[4 * clip_stack + 2] = 0.f;
+        clip_values[4 * clip_stack + 3] = 0.f;
+        set_clipping();
+}
+
+/******************************************************************************\
+ Adjust the clip stack.
+\******************************************************************************/
+void R_clip_push(void)
+{
+        clip_stack++;
+        if (clip_stack >= CLIP_STACK)
+                C_error("Clip stack overflow");
+        clip_values[4 * clip_stack] = 0.f;
+        clip_values[4 * clip_stack + 1] = 0.f;
+        clip_values[4 * clip_stack + 2] = 0.f;
+        clip_values[4 * clip_stack + 3] = 0.f;
+}
+
+void R_clip_pop(void)
+{
+        clip_stack--;
+        if (clip_stack < 0)
+                C_error("Clip stack underflow");
+        set_clipping();
+}
+
+/******************************************************************************\
+ Clip in a specific direction.
 \******************************************************************************/
 void R_clip_left(float dist)
 {
-        GLdouble eqn[4] = { 1.f, 0.f, 0.f, -1.f };
-
-        R_set_mode(R_MODE_2D);
-        glEnable(GL_CLIP_PLANE0);
-        eqn[0] /= dist;
-        glClipPlane(GL_CLIP_PLANE0, eqn);
+        clip_values[4 * clip_stack] = dist;
+        set_clipping();
 }
 
 void R_clip_top(float dist)
 {
-        GLdouble eqn[4] = { 0.f, 1.f, 0.f, -1.f };
-
-        R_set_mode(R_MODE_2D);
-        glEnable(GL_CLIP_PLANE1);
-        eqn[1] /= dist;
-        glClipPlane(GL_CLIP_PLANE1, eqn);
+        clip_values[4 * clip_stack + 1] = dist;
+        set_clipping();
 }
 
 void R_clip_right(float dist)
 {
-        GLdouble eqn[4] = { -1.f, 0.f, 0.f, 1.f };
-
-        R_set_mode(R_MODE_2D);
-        glEnable(GL_CLIP_PLANE2);
-        eqn[0] /= dist;
-        glClipPlane(GL_CLIP_PLANE2, eqn);
+        clip_values[4 * clip_stack + 2] = dist;
+        set_clipping();
 }
 
 void R_clip_bottom(float dist)
 {
-        GLdouble eqn[4] = { 0.f, -1.f, 0.f, 1.f };
-
-        R_set_mode(R_MODE_2D);
-        glEnable(GL_CLIP_PLANE3);
-        eqn[1] /= dist;
-        glClipPlane(GL_CLIP_PLANE3, eqn);
+        clip_values[4 * clip_stack + 3] = dist;
+        set_clipping();
 }
 
 /******************************************************************************\
- Setup a clipping rectangle. This only works in 2D mode.
+ Setup a clipping rectangle.
 \******************************************************************************/
 void R_clip_rect(c_vec2_t origin, c_vec2_t size)
 {
-        GLdouble eqn[4];
-
-        R_set_mode(R_MODE_2D);
-        glEnable(GL_CLIP_PLANE0);
-        glEnable(GL_CLIP_PLANE1);
-        glEnable(GL_CLIP_PLANE2);
-        glEnable(GL_CLIP_PLANE3);
-        eqn[0] = 1.f / origin.x;
-        eqn[1] = 0.f;
-        eqn[2] = 0.f;
-        eqn[3] = -1.f;
-        glClipPlane(GL_CLIP_PLANE0, eqn);
-        eqn[0] = 0;
-        eqn[1] = 1.f / origin.y;
-        glClipPlane(GL_CLIP_PLANE1, eqn);
-        eqn[0] = -1.f / (origin.x + size.x);
-        eqn[1] = 0;
-        eqn[3] = 1.f;
-        glClipPlane(GL_CLIP_PLANE2, eqn);
-        eqn[0] = 0.f;
-        eqn[1] = 1.f / (origin.y + size.y);
-        glClipPlane(GL_CLIP_PLANE3, eqn);
+        clip_values[4 * clip_stack] = origin.x;
+        clip_values[4 * clip_stack + 1] = origin.y;
+        clip_values[4 * clip_stack + 2] = origin.x + size.x - 1;
+        clip_values[4 * clip_stack + 3] = origin.y + size.y - 1;
 }
 
 /******************************************************************************\

@@ -76,6 +76,7 @@ typedef struct r_window {
 int R_font_height(r_font_t);
 int R_font_line_skip(r_font_t);
 c_vec2_t R_font_size(r_font_t, const char *);
+int R_font_width(r_font_t);
 
 /* r_model.c */
 void R_model_cleanup(r_model_t *);
@@ -89,6 +90,8 @@ void R_clip_left(float);
 void R_clip_top(float);
 void R_clip_right(float);
 void R_clip_bottom(float);
+void R_clip_push(void);
+void R_clip_pop(void);
 void R_clip_rect(c_vec2_t origin, c_vec2_t size);
 void R_clip_disable(void);
 void R_finish_frame(void);
