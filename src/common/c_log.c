@@ -16,6 +16,8 @@
 
 extern c_var_t c_log_level, c_log_file;
 
+c_log_event_f c_log_func;
+
 static FILE *log_file;
 
 /******************************************************************************\
@@ -45,6 +47,55 @@ void C_open_log_file(void)
 }
 
 /******************************************************************************\
+ Wraps log-formatted text. [margin] amount of padding is added to each line
+ following the first. If [plen] is not NULL, it is set to the length of the
+ returned string.
+\******************************************************************************/
+const char *C_wrap_log(const char *src, size_t margin, int wrap, size_t *plen)
+{
+        static char dest[320];
+        int i, j, k, last_break, last_line, cols;
+
+        if (wrap < 20)
+                wrap = 20;
+        if (margin > wrap / 2)
+                margin = wrap / 2;
+        for (j = i = 0; src[i] == '\n'; i++)
+                dest[j++] = '\n';
+        for (last_break = last_line = cols = 0; src[i]; i++) {
+                cols++;
+                dest[j++] = src[i];
+                if (j >= sizeof (dest) - 2)
+                        break;
+                if (src[i] == ' ' || src[i] == '\t' || src[i] == '-' ||
+                    src[i] == '/' || src[i] == '\\')
+                        last_break = i;
+                if (src[i] == '\n') {
+                        last_break = i;
+                        j--;
+                }
+                if (cols >= wrap || src[i] == '\n') {
+                        if (last_break == last_line)
+                                last_break = i;
+                        j -= i - last_break;
+                        i = last_break;
+                        if (j >= sizeof (dest) - margin - 1)
+                                break;
+                        dest[j++] = '\n';
+                        dest[j++] = ':';
+                        for (k = 0; k < margin - 1; k++)
+                                dest[j++] = ' ';
+                        cols = margin;
+                }
+        }
+        dest[j++] = '\n';
+        dest[j++] = NUL;
+        if (plen)
+                *plen = j;
+        return dest;
+}
+
+/******************************************************************************\
  Prints a string to the log file or to standard output. The output detail
  can be controlled using [c_log_level]. Debug calls without any text are
  considered traces.
@@ -52,7 +103,9 @@ void C_open_log_file(void)
 void C_log(c_log_level_t level, const char *file, int line,
            const char *function, const char *fmt, ...)
 {
-        char fmt2[128];
+        size_t margin, len;
+        const char *wrapped;
+        char fmt2[128], buffer[320];
         va_list va;
 
         if (level >= C_LOG_DEBUG && (!fmt || !fmt[0]))
@@ -61,49 +114,75 @@ void C_log(c_log_level_t level, const char *file, int line,
                 return;
         va_start(va, fmt);
         if (c_log_level.value.n <= C_LOG_STATUS) {
-                if (level >= C_LOG_STATUS)
-                        snprintf(fmt2, sizeof(fmt2), "%s\n", fmt);
-                else if (level == C_LOG_WARNING)
-                        snprintf(fmt2, sizeof(fmt2), "* %s\n", fmt);
-                else
-                        snprintf(fmt2, sizeof(fmt2), "*** %s\n", fmt);
+                if (level >= C_LOG_STATUS) {
+                        snprintf(fmt2, sizeof(fmt2), "%s", fmt);
+                        margin = 0;
+                } else if (level == C_LOG_WARNING) {
+                        snprintf(fmt2, sizeof(fmt2), "* %s", fmt);
+                        margin = 2;
+                } else {
+                        snprintf(fmt2, sizeof(fmt2), "*** %s", fmt);
+                        margin = 4;
+                }
         } else if (c_log_level.value.n == C_LOG_DEBUG) {
-                if (level >= C_LOG_DEBUG)
-                        snprintf(fmt2, sizeof(fmt2), "| %s(): %s\n",
+                if (level >= C_LOG_DEBUG) {
+                        snprintf(fmt2, sizeof(fmt2), "| %s(): %s",
                                  function, fmt);
-                else if (level == C_LOG_STATUS)
-                        snprintf(fmt2, sizeof(fmt2), "\n%s(): %s --\n",
+                        margin = 6 + strlen(function);
+                } else if (level == C_LOG_STATUS) {
+                        snprintf(fmt2, sizeof(fmt2), "\n%s(): %s --",
                                  function, fmt);
-                else if (level == C_LOG_WARNING)
-                        snprintf(fmt2, sizeof(fmt2), "* %s(): %s\n",
+                        margin = 4 + strlen(function);
+                } else if (level == C_LOG_WARNING) {
+                        snprintf(fmt2, sizeof(fmt2), "* %s(): %s",
                                  function, fmt);
-                else
-                        snprintf(fmt2, sizeof(fmt2), "*** %s(): %s\n",
+                        margin = 6 + strlen(function);
+                } else {
+                        snprintf(fmt2, sizeof(fmt2), "*** %s(): %s",
                                  function, fmt);
+                        margin = 8 + strlen(function);
+                }
         } else if (c_log_level.value.n >= C_LOG_TRACE) {
-                if (level >= C_LOG_TRACE)
-                        snprintf(fmt2, sizeof(fmt2), ": %s:%d, %s()\n",
+                margin = 1;
+                if (line > 1000)
+                        margin = 4;
+                else if (line > 100)
+                        margin = 3;
+                else if (line > 10)
+                        margin = 2;
+                if (level >= C_LOG_TRACE) {
+                        snprintf(fmt2, sizeof(fmt2), "| %s:%d, %s()",
                                  file, line, function);
-                else if (level == C_LOG_DEBUG)
-                        snprintf(fmt2, sizeof(fmt2), "| %s:%d, %s(): %s\n",
+                        margin = 2;
+                } else if (level == C_LOG_DEBUG) {
+                        snprintf(fmt2, sizeof(fmt2), "| %s:%d, %s(): %s",
                                  file, line, function, fmt);
-                else if (level == C_LOG_STATUS)
-                        snprintf(fmt2, sizeof(fmt2), "\n%s:%d, %s(): %s --\n",
+                        margin += 9 + strlen(file) + strlen(function);
+                } else if (level == C_LOG_STATUS) {
+                        snprintf(fmt2, sizeof(fmt2), "\n%s:%d, %s(): %s --",
                                  file, line, function, fmt);
-                else if (level == C_LOG_WARNING)
-                        snprintf(fmt2, sizeof(fmt2), "* %s:%d, %s(): %s\n",
+                        margin += 7 + strlen(file) + strlen(function);
+                } else if (level == C_LOG_WARNING) {
+                        snprintf(fmt2, sizeof(fmt2), "* %s:%d, %s(): %s",
                                  file, line, function, fmt);
-                else
-                        snprintf(fmt2, sizeof(fmt2), "*** %s:%d, %s(): %s\n",
+                        margin += 9 + strlen(file) + strlen(function);
+                } else {
+                        snprintf(fmt2, sizeof(fmt2), "*** %s:%d, %s(): %s",
                                  file, line, function, fmt);
+                        margin += 11 + strlen(file) + strlen(function);
+                }
         }
-        if (log_file)
-                C_file_vprintf(log_file, fmt2, va);
-        else
-                vfprintf(stderr, fmt2, va);
+        vsprintf(buffer, fmt2, va);
         va_end(va);
+        wrapped = C_wrap_log(buffer, margin, C_LOG_WRAP_COLS, &len);
+        if (log_file)
+                C_file_write(log_file, wrapped, len);
+        else
+                fputs(wrapped, stderr);
         if (level == C_LOG_ERROR)
                 abort();
+        if (c_log_func)
+                c_log_func(level, buffer);
 }
 
 /******************************************************************************\

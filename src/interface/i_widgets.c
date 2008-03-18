@@ -81,6 +81,7 @@ void I_init(void)
 
         /* Left toolbar */
         I_window_init(&left_toolbar);
+        left_toolbar.pack_children = I_PACK_H;
         left_toolbar.widget.size = C_vec2(128.f, 48.f);
         left_toolbar.widget.origin = C_vec2(i_border.value.n, r_height_2d -
                                             left_toolbar.widget.size.y -
@@ -277,11 +278,11 @@ void I_widget_pack(i_widget_t *widget, i_pack_t pack, i_collapse_t collapse)
                 child->pack = pack;
                 I_widget_event(child, I_EV_CONFIGURE);
                 if (pack == I_PACK_H) {
-                        origin.x += child->size.x;
-                        size.x -= child->size.x;
+                        origin.x += child->size.x + child->padding;
+                        size.x -= child->size.x + child->padding;
                 } else if (pack == I_PACK_V) {
-                        origin.y += child->size.y;
-                        size.y -= child->size.y;
+                        origin.y += child->size.y + child->padding;
+                        size.y -= child->size.y + child->padding;
                 }
                 child = child->next;
         }

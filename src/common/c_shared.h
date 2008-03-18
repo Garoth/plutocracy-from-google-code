@@ -84,6 +84,9 @@
 /* Vectors */
 #include "c_vectors.h"
 
+/* Log files are wrapped to this many columns */
+#define C_LOG_WRAP_COLS 80
+
 /* Debug log levels, errors are fatal and will always abort */
 typedef enum {
         C_LOG_ERROR,
@@ -92,6 +95,9 @@ typedef enum {
         C_LOG_DEBUG,
         C_LOG_TRACE,
 } c_log_level_t;
+
+/* Callback for GUI log handler */
+typedef void (*c_log_event_f)(c_log_level_t, const char *);
 
 /* Holds all possible variable types */
 typedef union {
@@ -197,6 +203,9 @@ void C_open_log_file(void);
                                   __func__, fmt, ## __VA_ARGS__)
 #define C_warning_full(f, l, fn, fmt, ...) C_log(C_LOG_TRACE, f, l, fn, \
                                                  fmt, ## __VA_ARGS__)
+const char *C_wrap_log(const char *, size_t margin, int wrap, size_t *plen);
+
+extern c_log_event_f c_log_func;
 
 /* c_memory.c */
 void C_array_append(c_array_t *ary, void *item);
