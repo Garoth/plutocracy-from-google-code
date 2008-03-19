@@ -34,9 +34,6 @@
 #include <SDL_image.h>
 #include <SDL_ttf.h>
 
-/* TODO: PhysicsFS? Do we need it or no? */
-/* #include <physfs.h> */
-
 /* Ensure common definitions */
 #ifndef TRUE
 #define TRUE 1
@@ -96,23 +93,19 @@ typedef enum {
         C_LOG_TRACE,
 } c_log_level_t;
 
-/* Callback for GUI log handler */
-typedef void (*c_log_event_f)(c_log_level_t, const char *);
+/* Log modes */
+typedef enum {
+        C_LM_NORMAL,
+        C_LM_HANDLER,
+        C_LM_CLEANUP,
+} c_log_mode_t;
 
-/* Holds all possible variable types */
-typedef union {
-        int n;
-        float f;
-        char *s;
-} c_var_value_t;
-
-/* Variable value types */
+/* Variable value types. Note that there is a difference between statically and
+   dynamically allocated strings. */
 typedef enum {
         C_VT_UNREGISTERED,
         C_VT_INTEGER,
         C_VT_FLOAT,
-
-        /* Distinguish statically and dynamically allocated strings */
         C_VT_STRING,
         C_VT_STRING_DYNAMIC,
 } c_var_type_t;
@@ -122,16 +115,39 @@ typedef enum {
         C_VE_ANYTIME,
         C_VE_LOCKED,
         C_VE_LATCHED,
+        C_VE_FUNCTION,
 } c_var_edit_t;
 
+/* Wrap the standard library file I/O */
+typedef FILE c_file_t;
+
+/* Holds all possible variable types */
+typedef union {
+        int n;
+        float f;
+        char *s;
+} c_var_value_t;
+
+/* Callback for GUI log handler */
+typedef void (*c_log_event_f)(c_log_level_t, int margin, const char *);
+
+/* Callback for cleaning up referenced memory */
+typedef void (*c_ref_cleanup_f)(void *data);
+
+/* Callback for modified variables. Return TRUE to set the value. */
+typedef struct c_var c_var_t;
+typedef int (*c_var_update_f)(c_var_t *, c_var_value_t);
+
 /* Type for configurable variables */
-typedef struct c_var {
+struct c_var {
         const char *name;
+        struct c_var *next;
         c_var_value_t value, latched;
         c_var_type_t type;
         c_var_edit_t edit;
-        struct c_var *next;
-} c_var_t;
+        c_var_update_f update;
+        char has_latched;
+};
 
 /* Resizing arrays */
 typedef struct c_array {
@@ -141,17 +157,11 @@ typedef struct c_array {
         void *elems;
 } c_array_t;
 
-/* Wrap the standard library file I/O */
-typedef FILE c_file_t;
-
 /* A structure to hold the data for a file that is being read in tokens */
 typedef struct c_token_file {
         c_file_t *file;
         char *pos, *token, swap, filename[32], buffer[4000];
 } c_token_file_t;
-
-/* Callback for cleaning up referenced memory */
-typedef void (*c_ref_cleanup_f)(void *data);
 
 /* Reference-counted linked-list. Memory allocated using the referenced
    memory allocator must have this structure as the first member! */
@@ -171,8 +181,9 @@ typedef struct c_counter {
 /* c_glibc_rand.c */
 long int C_glibc_rand(void);
 void C_glibc_srand(unsigned int);
-//#define C_rand() C_glibc_rand()
-//#define C_rand_seed(s) C_glibc_srand(s)
+/* FIXME: Windows-compatible, deterministic random number generator */
+/* #define C_rand() C_glibc_rand()
+   #define C_rand_seed(s) C_glibc_srand(s) */
 #define C_rand() rand()
 #define C_rand_seed(s) srand(s)
 
@@ -196,16 +207,18 @@ void C_open_log_file(void);
                                  __func__, fmt, ## __VA_ARGS__)
 #define C_status_full(f, l, fn, fmt, ...) C_log(C_LOG_STATUS, f, l, \
                                                 fn, fmt, ## __VA_ARGS__)
-#define C_trace() C_log(C_LOG_TRACE, __FILE__, __LINE__, __func__, NULL)
+#define C_trace(fmt, ...) C_log(C_LOG_TRACE, __FILE__, __LINE__, \
+                                __func__, fmt, ## __VA_ARGS__)
 #define C_trace_full(f, l, fn, fmt, ...) C_log(C_LOG_TRACE, f, l, \
                                                fn, fmt, ## __VA_ARGS__)
 #define C_warning(fmt, ...) C_log(C_LOG_WARNING, __FILE__, __LINE__, \
                                   __func__, fmt, ## __VA_ARGS__)
 #define C_warning_full(f, l, fn, fmt, ...) C_log(C_LOG_TRACE, f, l, fn, \
                                                  fmt, ## __VA_ARGS__)
-const char *C_wrap_log(const char *, size_t margin, int wrap, size_t *plen);
+char *C_wrap_log(const char *, int margin, int wrap, int *plen);
 
 extern c_log_event_f c_log_func;
+extern c_log_mode_t c_log_mode;
 
 /* c_memory.c */
 void C_array_append(c_array_t *ary, void *item);
@@ -262,7 +275,8 @@ void C_file_close(c_file_t *);
 #define C_is_space(c) ((c) && (c) <= ' ')
 int C_read_file(const char *filename, char *buffer, int size);
 char *C_skip_spaces(const char *str);
-size_t C_strncpy(char *dest, const char *src, size_t len);
+int C_strlen(const char *);
+int C_strncpy(char *dest, const char *src, int len);
 #define C_strncpy_buf(d, s) C_strncpy(d, s, sizeof (d))
 void C_token_file_cleanup(c_token_file_t *);
 int C_token_file_init(c_token_file_t *, const char *filename);
@@ -292,12 +306,17 @@ extern float c_frame_sec;
 void C_cleanup_variables(void);
 int C_parse_config(const char *string);
 int C_parse_config_file(const char *filename);
-void C_register_float(c_var_t *var, const char *name, float value);
-void C_register_integer(c_var_t *var, const char *name, int value);
-void C_register_string(c_var_t *var, const char *name, const char *value);
-void C_register_string_dynamic(c_var_t *var, const char *name, char *value);
-void C_register_variable(c_var_t *var, const char *name, c_var_type_t type,
-                         c_var_value_t value);
+void C_register_float(c_var_t *, const char *name, float value,
+                      c_var_edit_t);
+void C_register_integer(c_var_t *, const char *name, int value,
+                        c_var_edit_t);
+void C_register_string(c_var_t *, const char *name, const char *value,
+                       c_var_edit_t);
+void C_register_string_dynamic(c_var_t *, const char *name, char *value,
+                               c_var_edit_t);
+void C_register_variable(c_var_t *, const char *name, c_var_type_t,
+                         c_var_value_t, c_var_edit_t);
 void C_register_variables(void);
-void C_set_variable(c_var_t *var, const char *value);
+void C_var_set(c_var_t *, const char *value);
+void C_var_unlatch(c_var_t *);
 

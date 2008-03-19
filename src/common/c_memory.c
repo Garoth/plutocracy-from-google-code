@@ -404,9 +404,9 @@ void *C_ref_alloc_full(const char *file, int line, const char *function,
                 if (!cmp) {
                         ref->refs++;
                         if (c_mem_check.value.n)
-                                C_debug_full(file, line, function,
-                                             "Loading '%s', cache hit "
-                                             "(%d refs)", name, ref->refs);
+                                C_trace_full(file, line, function,
+                                             "Loading '%s', %d refs",
+                                             name, ref->refs);
                         if (found)
                                 *found = TRUE;
                         return ref;
@@ -437,8 +437,8 @@ void *C_ref_alloc_full(const char *file, int line, const char *function,
         ref->root = root;
         C_strncpy_buf(ref->name, name);
         if (c_mem_check.value.n)
-                C_debug_full(file, line, function,
-                             "Loading '%s', allocated new", name);
+                C_trace_full(file, line, function,
+                             "Loading '%s', allocated", name);
         return ref;
 }
 
@@ -455,7 +455,7 @@ void C_ref_up_full(const char *file, int line, const char *function,
                              "Invalid reference structure");
         ref->refs++;
         if (c_mem_check.value.n)
-                C_debug_full(file, line, function,
+                C_trace_full(file, line, function,
                              "Referenced '%s' (%d refs)", ref->name, ref->refs);
 }
 
@@ -474,7 +474,7 @@ void C_ref_down_full(const char *file, int line, const char *function,
         ref->refs--;
         if (ref->refs > 0) {
                 if (c_mem_check.value.n)
-                        C_debug_full(file, line, function,
+                        C_trace_full(file, line, function,
                                      "Dereferenced '%s' (%d refs)",
                                      ref->name, ref->refs);
                 return;
@@ -488,7 +488,7 @@ void C_ref_down_full(const char *file, int line, const char *function,
                         ref->next->prev = ref->prev;
         }
         if (c_mem_check.value.n)
-                C_debug_full(file, line, function, "Freed '%s'",
+                C_trace_full(file, line, function, "Freed '%s'",
                              ref->name, ref->refs);
         if (ref->cleanup_func)
                 ref->cleanup_func(ref);

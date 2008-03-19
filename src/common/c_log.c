@@ -17,6 +17,7 @@
 extern c_var_t c_log_level, c_log_file;
 
 c_log_event_f c_log_func;
+c_log_mode_t c_log_mode;
 
 static FILE *log_file;
 
@@ -36,6 +37,7 @@ void C_close_log_file(void)
 \******************************************************************************/
 void C_open_log_file(void)
 {
+        C_var_unlatch(&c_log_file);
         if (!c_log_file.value.s[0])
                 return;
         log_file = C_file_open_write(c_log_file.value.s);
@@ -51,7 +53,7 @@ void C_open_log_file(void)
  following the first. If [plen] is not NULL, it is set to the length of the
  returned string.
 \******************************************************************************/
-const char *C_wrap_log(const char *src, size_t margin, int wrap, size_t *plen)
+char *C_wrap_log(const char *src, int margin, int wrap, int *plen)
 {
         static char dest[320];
         int i, j, k, last_break, last_line, cols;
@@ -89,7 +91,7 @@ const char *C_wrap_log(const char *src, size_t margin, int wrap, size_t *plen)
                 }
         }
         dest[j++] = '\n';
-        dest[j++] = NUL;
+        dest[j] = NUL;
         if (plen)
                 *plen = j;
         return dest;
@@ -103,8 +105,8 @@ const char *C_wrap_log(const char *src, size_t margin, int wrap, size_t *plen)
 void C_log(c_log_level_t level, const char *file, int line,
            const char *function, const char *fmt, ...)
 {
-        size_t margin, len;
         const char *wrapped;
+        int margin, len;
         char fmt2[128], buffer[320];
         va_list va;
 
@@ -143,34 +145,22 @@ void C_log(c_log_level_t level, const char *file, int line,
                         margin = 8 + strlen(function);
                 }
         } else if (c_log_level.value.n >= C_LOG_TRACE) {
-                margin = 1;
-                if (line > 1000)
-                        margin = 4;
-                else if (line > 100)
-                        margin = 3;
-                else if (line > 10)
-                        margin = 2;
-                if (level >= C_LOG_TRACE) {
-                        snprintf(fmt2, sizeof(fmt2), "| %s:%d, %s()",
-                                 file, line, function);
-                        margin = 2;
-                } else if (level == C_LOG_DEBUG) {
-                        snprintf(fmt2, sizeof(fmt2), "| %s:%d, %s(): %s",
+                margin = 8;
+                if (level >= C_LOG_TRACE)
+                        snprintf(fmt2, sizeof(fmt2), "! %s:%d, %s():\n%s",
                                  file, line, function, fmt);
-                        margin += 9 + strlen(file) + strlen(function);
-                } else if (level == C_LOG_STATUS) {
-                        snprintf(fmt2, sizeof(fmt2), "\n%s:%d, %s(): %s --",
+                else if (level == C_LOG_DEBUG)
+                        snprintf(fmt2, sizeof(fmt2), "| %s:%d, %s():\n%s",
                                  file, line, function, fmt);
-                        margin += 7 + strlen(file) + strlen(function);
-                } else if (level == C_LOG_WARNING) {
-                        snprintf(fmt2, sizeof(fmt2), "* %s:%d, %s(): %s",
+                else if (level == C_LOG_STATUS)
+                        snprintf(fmt2, sizeof(fmt2), "\n%s:%d, %s():\n%s --",
                                  file, line, function, fmt);
-                        margin += 9 + strlen(file) + strlen(function);
-                } else {
-                        snprintf(fmt2, sizeof(fmt2), "*** %s:%d, %s(): %s",
+                else if (level == C_LOG_WARNING)
+                        snprintf(fmt2, sizeof(fmt2), "* %s:%d, %s():\n%s",
                                  file, line, function, fmt);
-                        margin += 11 + strlen(file) + strlen(function);
-                }
+                else
+                        snprintf(fmt2, sizeof(fmt2), "*** %s:%d, %s():\n%s",
+                                 file, line, function, fmt);
         }
         vsprintf(buffer, fmt2, va);
         va_end(va);
@@ -181,8 +171,13 @@ void C_log(c_log_level_t level, const char *file, int line,
                 fputs(wrapped, stderr);
         if (level == C_LOG_ERROR)
                 abort();
+        if (c_log_mode != C_LM_NORMAL)
+                return;
+        c_log_mode = C_LM_HANDLER;
         if (c_log_func)
-                c_log_func(level, buffer);
+                c_log_func(level, margin, buffer);
+        if (c_log_mode == C_LM_HANDLER)
+                c_log_mode = C_LM_NORMAL;
 }
 
 /******************************************************************************\

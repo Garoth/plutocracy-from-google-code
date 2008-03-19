@@ -19,6 +19,8 @@
 
 #define CORRUPT_CHECK_VALUE 1776
 
+void I_parse_config(void);
+
 extern c_var_t c_max_fps, c_show_fps, i_theme;
 
 static c_count_t throttled;
@@ -157,6 +159,9 @@ static void cleanup(void)
 {
         static int ran_once;
 
+        /* Disable the log event handler */
+        c_log_mode = C_LM_CLEANUP;
+
         /* It is possible that this function will get called multiple times
            for certain kinds of exits, do not clean-up twice! */
         if (ran_once) {
@@ -212,7 +217,7 @@ int main(int argc, char *argv[])
 
         /* Parse configuration scripts and open the log file */
         C_parse_config_file("config/default.cfg");
-        C_parse_config_file(i_theme.value.s);
+        I_parse_config();
         parse_config_args(argc, argv);
         C_open_log_file();
 
@@ -231,6 +236,4 @@ int main(int argc, char *argv[])
 
         return 0;
 }
-
-
 

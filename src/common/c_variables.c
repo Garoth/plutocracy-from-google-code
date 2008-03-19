@@ -36,15 +36,16 @@ static c_var_t *root;
 void C_register_variables(void)
 {
         /* Message logging */
-        C_register_integer(&c_log_level, "c_log_level", C_LOG_WARNING);
-        C_register_string(&c_log_file, "c_log_file", "");
+        C_register_integer(&c_log_level, "c_log_level", C_LOG_WARNING,
+                           C_VE_ANYTIME);
+        C_register_string(&c_log_file, "c_log_file", "", C_VE_LATCHED);
 
         /* FPS cap */
-        C_register_integer(&c_max_fps, "c_max_fps", 120);
-        C_register_integer(&c_show_fps, "c_show_fps", FALSE);
+        C_register_integer(&c_max_fps, "c_max_fps", 120, C_VE_ANYTIME);
+        C_register_integer(&c_show_fps, "c_show_fps", FALSE, C_VE_ANYTIME);
 
         /* Memory checking */
-        C_register_integer(&c_mem_check, "c_mem_check", FALSE);
+        C_register_integer(&c_mem_check, "c_mem_check", FALSE, C_VE_ANYTIME);
 }
 
 /******************************************************************************\
@@ -76,8 +77,8 @@ void C_cleanup_variables(void)
  These variables cannot be deallocated or have any member other than the value
  modified. The variables are tracked as a linked list.
 \******************************************************************************/
-void C_register_variable(c_var_t *var, const char *name, c_var_type_t type,
-                         c_var_value_t value)
+void C_var_register(c_var_t *var, const char *name, c_var_type_t type,
+                    c_var_value_t value, c_var_edit_t edit)
 {
         if (var->type)
                 C_error("Attempted to re-register '%s' with '%s'",
@@ -86,46 +87,52 @@ void C_register_variable(c_var_t *var, const char *name, c_var_type_t type,
         var->type = type;
         var->name = name;
         var->value = value;
+        var->latched = value;
+        var->edit = edit;
         root = var;
 }
 
-void C_register_float(c_var_t *var, const char *name, float value_f)
+void C_register_float(c_var_t *var, const char *name, float value_f,
+                      c_var_edit_t edit)
 {
         c_var_value_t value;
-        
+
         value.f = value_f;
-        C_register_variable(var, name, C_VT_FLOAT, value);
+        C_var_register(var, name, C_VT_FLOAT, value, edit);
 }
 
-void C_register_integer(c_var_t *var, const char *name, int value_n)
+void C_register_integer(c_var_t *var, const char *name, int value_n,
+                        c_var_edit_t edit)
 {
         c_var_value_t value;
-        
+
         value.n = value_n;
-        C_register_variable(var, name, C_VT_INTEGER, value);
+        C_var_register(var, name, C_VT_INTEGER, value, edit);
 }
 
-void C_register_string(c_var_t *var, const char *name, const char *value_s)
+void C_register_string(c_var_t *var, const char *name, const char *value_s,
+                       c_var_edit_t edit)
 {
         c_var_value_t value;
-        
+
         value.s = (char *)value_s;
-        C_register_variable(var, name, C_VT_STRING, value);
+        C_var_register(var, name, C_VT_STRING, value, edit);
 }
 
-void C_register_string_dynamic(c_var_t *var, const char *name, char *value_s)
+void C_register_string_dynamic(c_var_t *var, const char *name, char *value_s,
+                               c_var_edit_t edit)
 {
         c_var_value_t value;
-        
+
         value.s = value_s;
-        C_register_variable(var, name, C_VT_STRING_DYNAMIC, value);
+        C_var_register(var, name, C_VT_STRING_DYNAMIC, value, edit);
 }
 
 /******************************************************************************\
  Tries to find variable [name] (case insensitive) in the variable linked list.
  Returns NULL if it fails.
 \******************************************************************************/
-c_var_t *C_resolve_variable(const char *name)
+c_var_t *C_resolve_var(const char *name)
 {
         c_var_t *var;
 
@@ -143,46 +150,95 @@ c_var_t *C_resolve_variable(const char *name)
  Parses and sets a variable's value according to its type. After this function
  returns [value] can be safely deallocated.
 \******************************************************************************/
-void C_set_variable(c_var_t *var, const char *value)
+void C_var_set(c_var_t *var, const char *string)
 {
-        c_var_value_t *var_value;
+        c_var_value_t *var_value, new_value;
+        const char *set_string;
 
         /* Variable editing rules */
         if (var->edit == C_VE_LOCKED) {
                 C_warning("Cannot set '%s' to '%s', variable is locked",
-                          var->name, value);
+                          var->name, string);
                 return;
         }
-        else if (var->edit == C_VE_LATCHED)
+        var_value = &var->value;
+        if (var->edit == C_VE_LATCHED)
                 var_value = &var->latched;
-        else if (var->edit == C_VE_ANYTIME)
-                var_value = &var->value;
-        else
+
+        /* Get the new value and see if it changed */
+        switch (var->type) {
+        case C_VT_INTEGER:
+                new_value.n = atoi(string);
+                if (new_value.n == var_value->n)
+                        return;
+                break;
+        case C_VT_FLOAT:
+                new_value.f = (float)atof(string);
+                if (new_value.f == var_value->f)
+                        return;
+                break;
+        case C_VT_STRING:
+        case C_VT_STRING_DYNAMIC:
+                new_value.s = (char *)string;
+                if (!strcmp(var_value->s, string))
+                        return;
+                break;
+        default:
                 C_error("Variable '%s' is uninitialized", var->name);
+        }
+
+        /* If this variable is controlled by an update function, call it now */
+        if (var->edit == C_VE_FUNCTION) {
+                if (!var->update)
+                        C_error("Update function not set for '%s'", var->name);
+                if (!var->update(var, new_value))
+                        return;
+        }
 
         /* Set the variable's value */
-        if (var->type == C_VT_INTEGER) {
-                var_value->n = atoi(value);
-                C_debug("Integer '%s' set to %d ('%s')", var->name,
-                        var_value->n, value);
-        } else if (var->type == C_VT_FLOAT) {
-                var_value->f = (float)atof(value);
-                C_debug("Float '%s' set to %g ('%s')", var->name,
-                        var_value->f, value);
-        } else if (var->type == C_VT_STRING) {
-                var_value->s = C_strdup(value);
+        set_string = "set to";
+        if (var->edit == C_VE_LATCHED) {
+                var->has_latched = TRUE;
+                set_string = "latched";
+                if (var->type == C_VT_STRING && var->value.s != var->latched.s)
+                        C_free(var->latched.s);
+        }
+        switch (var->type) {
+        case C_VT_INTEGER:
+                *var_value = new_value;
+                C_debug("Integer '%s' %s %d", var->name,
+                        set_string, new_value.n);
+                break;
+        case C_VT_FLOAT:
+                *var_value = new_value;
+                C_debug("Float '%s' %s %g", var->name,
+                        set_string, new_value.f);
+                break;
+        case C_VT_STRING_DYNAMIC:
+                C_free(var_value->s);
+        case C_VT_STRING:
+                new_value.s = C_strdup(string);
+                if (var->edit != C_VE_LATCHED)
+                        var->type = C_VT_STRING_DYNAMIC;
+                *var_value = new_value;
+                C_debug("String '%s' %s '%s'", var->name,
+                        set_string, new_value.s);
+        default:
+                break;
+        }
+}
+
+/******************************************************************************\
+ If the variable has a latched value.
+\******************************************************************************/
+void C_var_unlatch(c_var_t *var)
+{
+        if (!var->has_latched || var->edit != C_VE_LATCHED)
+                return;
+        var->value = var->latched;
+        var->has_latched = FALSE;
+        if (var->type == C_VT_STRING)
                 var->type = C_VT_STRING_DYNAMIC;
-                C_debug("Static string '%s' set to '%s'",
-                        var->name, var_value->s);
-        } else if (var->type == C_VT_STRING_DYNAMIC) {
-                C_free(var->value.s);
-                var_value->s = C_strdup(value);
-                var->type = C_VT_STRING_DYNAMIC;
-                C_debug("Dynamic string '%s' set to '%s'",
-                        var->name, var_value->s);
-        } else
-                C_error("Variable '%s' has invalid type %d",
-                        var->name, (int)var->type);
 }
 
 /******************************************************************************\
@@ -298,9 +354,9 @@ int C_parse_config(const char *string)
                                 parsing_name = TRUE;
 
                                 /* Set the variable */
-                                var = C_resolve_variable(name);
+                                var = C_resolve_var(name);
                                 if (var)
-                                        C_set_variable(var, value);
+                                        C_var_set(var, value);
                                 else
                                         C_warning("variable '%s' not found",
                                                   name);

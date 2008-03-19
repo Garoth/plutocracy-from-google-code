@@ -1,5 +1,5 @@
 /******************************************************************************\
- Plutocracy - Copyright (C) 2008 - Devin Papineau
+ Plutocracy - Copyright (C) 2008 - Michael Levin
 
  This program is free software; you can redistribute it and/or modify it under
  the terms of the GNU General Public License as published by the Free Software
@@ -23,7 +23,6 @@ typedef struct {
         float x, y, z;
 } c_vec3_t;
 
-/* TODO: Are four-member vectors always colors? Quaternions anyone? */
 typedef struct c_color {
         float r, g, b, a;
 } c_color_t;
@@ -194,7 +193,6 @@ static inline c_vec3_t C_vec3_lerp(c_vec3_t a, float lerp, c_vec3_t b)
 /******************************************************************************\
  Truncate vector values down to whole numbers. Negative values are also
  truncated down (-2.1 is rounded to -3).
- TODO: This is confusing because it is unrelated to C_color_clamp().
 \******************************************************************************/
 static inline float C_clamp(float value, float unit)
 {
@@ -214,9 +212,19 @@ static inline c_vec3_t C_vec3_clamp(c_vec3_t v, float u)
 }
 
 /******************************************************************************\
- Clamp a color to valid range.
+ Returns TRUE if the two rectangles intersect.
 \******************************************************************************/
-static inline c_color_t C_color_clamp(c_color_t c)
+static inline int C_rect_intersect(c_vec2_t o1, c_vec2_t s1,
+                                   c_vec2_t o2, c_vec2_t s2)
+{
+        return o1.x <= o2.x + s2.x && o1.y <= o2.y + s2.y &&
+               o1.x + s1.x >= o2.x && o1.y + s2.y >= o2.y;
+}
+
+/******************************************************************************\
+ Limit a color to valid range.
+\******************************************************************************/
+static inline c_color_t C_color_limit(c_color_t c)
 {
         int i;
 

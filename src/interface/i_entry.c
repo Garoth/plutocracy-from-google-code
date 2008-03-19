@@ -38,6 +38,7 @@ static void entry_set_pos(i_entry_t *entry, int pos)
         R_sprite_cleanup(&entry->cursor);
         R_sprite_init_text(&entry->cursor, R_FONT_CONSOLE, 0,
                            i_shadow.value.f, TRUE, buf);
+        entry->cursor.modulate = i_colors[I_COLOR];
         entry->cursor.origin = entry->text.origin;
         if (pos > 0) {
                 c_vec2_t size;
@@ -100,6 +101,7 @@ static void entry_delete(i_entry_t *entry, int pos)
         R_sprite_cleanup(&entry->text);
         R_sprite_init_text(&entry->text, R_FONT_CONSOLE, 0,
                            i_shadow.value.f, FALSE, entry->buffer);
+        entry->text.modulate = i_colors[I_COLOR];
         entry_moved(entry);
 }
 
@@ -122,6 +124,7 @@ static void entry_insert(i_entry_t *entry, char ch)
         R_sprite_cleanup(&entry->text);
         R_sprite_init_text(&entry->text, R_FONT_CONSOLE, 0,
                            i_shadow.value.f, FALSE, entry->buffer);
+        entry->text.modulate = i_colors[I_COLOR];
         entry_moved(entry);
 }
 
@@ -132,16 +135,53 @@ static void entry_insert(i_entry_t *entry, char ch)
 void I_entry_configure(i_entry_t *entry, const char *string)
 {
         C_strncpy_buf(entry->buffer, string);
-        entry->pos = 0;
+        entry->pos = C_strlen(string);
         entry->scroll = 0.f;
         I_widget_event(&entry->widget, I_EV_CONFIGURE);
 }
 
 /******************************************************************************\
+ Cycle through the entry widget's input history.
+\******************************************************************************/
+static void entry_history_go(i_entry_t *entry, int change)
+{
+        int new_pos;
+
+        new_pos = entry->history_pos + change;
+        if (new_pos < 0)
+                new_pos = 0;
+        if (new_pos >= entry->history_size)
+                new_pos = entry->history_size;
+        if (entry->history_pos == new_pos)
+                return;
+        if (entry->history_pos == 0)
+                C_strncpy_buf(entry->history[0], entry->buffer);
+        entry->history_pos = new_pos;
+        I_entry_configure(entry, entry->history[new_pos]);
+}
+
+/******************************************************************************\
+ Save current input in a new history entry.
+\******************************************************************************/
+static void entry_history_save(i_entry_t *entry)
+{
+        if (entry->history_size) {
+                if (entry->history_size > I_ENTRY_HISTORY - 2)
+                        entry->history_size = I_ENTRY_HISTORY - 2;
+                memmove(entry->history + 2, entry->history + 1,
+                        sizeof (entry->history[0]) * entry->history_size);
+        }
+        C_strncpy_buf(entry->history[1], entry->buffer);
+        entry->history_size++;
+        entry->history_pos = 0;
+}
+
+/******************************************************************************\
  Entry widget event function.
  FIXME: Unicode input
+ TODO: Horizontal packing
 \******************************************************************************/
-static int entry_event(i_entry_t *entry, i_event_t event)
+int I_entry_event(i_entry_t *entry, i_event_t event)
 {
         switch (event) {
         case I_EV_CONFIGURE:
@@ -152,7 +192,7 @@ static int entry_event(i_entry_t *entry, i_event_t event)
                                    i_shadow.value.f, FALSE, entry->buffer);
                 entry->widget.size.y = R_font_line_skip(R_FONT_CONSOLE) /
                                        r_pixel_scale.value.f + 1;
-                entry->text.modulate = C_color_string(i_color.value.s);
+                entry->text.modulate = i_colors[I_COLOR];
 
                 /* Setup work area window */
                 R_window_cleanup(&entry->window);
@@ -168,6 +208,10 @@ static int entry_event(i_entry_t *entry, i_event_t event)
                 R_window_cleanup(&entry->window);
                 break;
         case I_EV_KEY_DOWN:
+                if (i_key == SDLK_UP)
+                        entry_history_go(entry, 1);
+                if (i_key == SDLK_DOWN)
+                        entry_history_go(entry, -1);
                 if (i_key == SDLK_LEFT)
                         entry_set_pos(entry, entry->pos - 1);
                 if (i_key == SDLK_RIGHT)
@@ -180,8 +224,10 @@ static int entry_event(i_entry_t *entry, i_event_t event)
                         entry_delete(entry, entry->pos - 1);
                 if (i_key == SDLK_DELETE)
                         entry_delete(entry, entry->pos);
-                if (i_key == SDLK_RETURN && entry->on_enter)
+                if (i_key == SDLK_RETURN && entry->on_enter) {
+                        entry_history_save(entry);
                         entry->on_enter(entry);
+                }
                 if (i_key >= ' ' && i_key < 0x7f)
                         entry_insert(entry, i_key_unicode);
                 break;
@@ -227,7 +273,7 @@ void I_entry_init(i_entry_t *entry, const char *text)
                 return;
         C_zero(entry);
         I_widget_set_name(&entry->widget, "Entry");
-        entry->widget.event_func = (i_event_f)entry_event;
+        entry->widget.event_func = (i_event_f)I_entry_event;
         entry->widget.state = I_WS_READY;
         entry->widget.entry = TRUE;
         C_strncpy_buf(entry->buffer, text);

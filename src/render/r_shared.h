@@ -77,6 +77,8 @@ int R_font_height(r_font_t);
 int R_font_line_skip(r_font_t);
 c_vec2_t R_font_size(r_font_t, const char *);
 int R_font_width(r_font_t);
+void R_free_fonts(void);
+void R_load_fonts(void);
 
 /* r_model.c */
 void R_model_cleanup(r_model_t *);

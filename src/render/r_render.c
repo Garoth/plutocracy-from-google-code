@@ -1,5 +1,5 @@
 /******************************************************************************\
- Plutocracy - Copyright (C) 2008 - Devin Papineau
+ Plutocracy - Copyright (C) 2008 - Michael Levin, Devin Papineau
 
  This program is free software; you can redistribute it and/or modify it under
  the terms of the GNU General Public License as published by the Free Software
@@ -48,6 +48,12 @@ static int set_video_mode(void)
         SDL_Surface *screen;
         int flags;
 
+        C_var_unlatch(&r_vsync);
+        C_var_unlatch(&r_depth_bits);
+        C_var_unlatch(&r_color_bits);
+        C_var_unlatch(&r_windowed);
+        C_var_unlatch(&r_width);
+        C_var_unlatch(&r_height);
         SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
         SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 8);
         SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, r_depth_bits.value.n);
@@ -72,6 +78,7 @@ static int set_video_mode(void)
         }
 
         /* The 2D dimensions are scaled */
+        C_var_unlatch(&r_pixel_scale);
         if (r_pixel_scale.value.f < R_PIXEL_SCALE_MIN)
                 r_pixel_scale.value.f = R_PIXEL_SCALE_MIN;
         if (r_pixel_scale.value.f > R_PIXEL_SCALE_MAX)
@@ -89,10 +96,10 @@ static int set_video_mode(void)
 
 /******************************************************************************\
  Outputs debug strings and checks supported extensions.
+ TODO: Use some extensions.
 \******************************************************************************/
 static void check_gl_extensions(void)
 {
-
 }
 
 /******************************************************************************\
@@ -110,7 +117,6 @@ static void set_gl_state(void)
            blending to be on to work) */
         glEnable(GL_LINE_SMOOTH);
 
-        //glHint(GL_GENERATE_MIPMAP_HINT, GL_NICEST);
         glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);
         glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
 
@@ -119,6 +125,7 @@ static void set_gl_state(void)
         glDepthFunc(GL_LEQUAL);
 
         /* Set the background color */
+        C_var_unlatch(&r_clear);
         clear_color = C_color_string(r_clear.value.s);
         glClearColor(clear_color.r, clear_color.g, clear_color.b, 1.0);
 
@@ -136,6 +143,7 @@ static void set_gl_state(void)
         glShadeModel(GL_SMOOTH);
 
         /* Set the OpenGL gamma ramp using SDL */
+        C_var_unlatch(&r_gamma);
         SDL_SetGamma(r_gamma.value.f, r_gamma.value.f, r_gamma.value.f);
 
         /* Not configured to a render mode intially */
@@ -149,6 +157,10 @@ static void set_gl_state(void)
 \******************************************************************************/
 static void load_test_assets(void)
 {
+        /* Test globe and model */
+        C_var_unlatch(&r_test_globe);
+        C_var_unlatch(&r_test_globe_seed);
+        C_var_unlatch(&r_test_model_path);
         if (r_test_globe.value.n) {
                 unsigned int seed;
 
@@ -158,8 +170,10 @@ static void load_test_assets(void)
                 test_globe = G_globe_alloc(5, seed, 0.1);
         } else if (*r_test_model_path.value.s)
                 R_model_init(&test_model, r_test_model_path.value.s);
-        /*else if (*r_test_mesh_path.value.s)
-                test_mesh = R_static_mesh_load(r_test_mesh_path.value.s);*/
+
+        /* Spinning sprites */
+        C_var_unlatch(&r_test_sprite_num);
+        C_var_unlatch(&r_test_sprite_path);
         if (r_test_sprite_num.value.n && r_test_sprite_path.value.s[0]) {
                 int i;
 
@@ -176,6 +190,9 @@ static void load_test_assets(void)
                         test_sprites[i].angle = C_rand();
                 }
         }
+
+        /* Spinning text */
+        C_var_unlatch(&r_test_text);
         R_text_init(&test_text);
         if (r_test_text.value.s[0]) {
                 R_text_configure(&test_text, R_FONT_CONSOLE, 100.f, 1.f,
@@ -204,6 +221,7 @@ int R_init(void)
                 return FALSE;
         check_gl_extensions();
         set_gl_state();
+        R_clip_disable();
 
         R_load_assets();
         load_test_assets();
@@ -504,37 +522,37 @@ static void set_clipping(void)
         eqn[2] = 0.f;
         eqn[3] = -1.f;
         if (left > 0.f) {
-                glEnable(GL_CLIP_PLANE0);
                 eqn[0] = 1.f / left;
                 eqn[1] = 0.f;
+                glEnable(GL_CLIP_PLANE0);
                 glClipPlane(GL_CLIP_PLANE0, eqn);
         } else
                 glDisable(GL_CLIP_PLANE0);
 
         /* Clip top */
         if (top > 0.f) {
-                glEnable(GL_CLIP_PLANE1);
                 eqn[0] = 0.f;
                 eqn[1] = 1.f / top;
+                glEnable(GL_CLIP_PLANE1);
                 glClipPlane(GL_CLIP_PLANE1, eqn);
         } else
                 glDisable(GL_CLIP_PLANE1);
 
         /* Clip right */
         eqn[3] = 1.f;
-        if (right > 0.f) {
-                glEnable(GL_CLIP_PLANE2);
+        if (right < r_width_2d - 1) {
                 eqn[0] = -1.f / right;
                 eqn[1] = 0.f;
+                glEnable(GL_CLIP_PLANE2);
                 glClipPlane(GL_CLIP_PLANE2, eqn);
         } else
                 glDisable(GL_CLIP_PLANE2);
 
         /* Clip bottom */
-        if (bottom > 0.f) {
-                glEnable(GL_CLIP_PLANE3);
+        if (bottom < r_height_2d - 1) {
                 eqn[0] = 0.f;
-                eqn[2] = -1.f / bottom;
+                eqn[1] = -1.f / bottom;
+                glEnable(GL_CLIP_PLANE3);
                 glClipPlane(GL_CLIP_PLANE3, eqn);
         } else
                 glDisable(GL_CLIP_PLANE3);
@@ -547,8 +565,8 @@ void R_clip_disable(void)
 {
         clip_values[4 * clip_stack] = 0.f;
         clip_values[4 * clip_stack + 1] = 0.f;
-        clip_values[4 * clip_stack + 2] = 0.f;
-        clip_values[4 * clip_stack + 3] = 0.f;
+        clip_values[4 * clip_stack + 2] = INFINITY;
+        clip_values[4 * clip_stack + 3] = INFINITY;
         set_clipping();
 }
 
@@ -610,6 +628,7 @@ void R_clip_rect(c_vec2_t origin, c_vec2_t size)
         clip_values[4 * clip_stack + 1] = origin.y;
         clip_values[4 * clip_stack + 2] = origin.x + size.x - 1;
         clip_values[4 * clip_stack + 3] = origin.y + size.y - 1;
+        set_clipping();
 }
 
 /******************************************************************************\
