@@ -12,8 +12,6 @@
 
 #include "i_common.h"
 
-extern c_var_t i_button, i_button_active, i_button_hover;
-
 /******************************************************************************\
  Button widget event function.
 \******************************************************************************/
@@ -24,6 +22,8 @@ static int button_event(i_button_t *button, i_event_t event)
 
         switch (event) {
         case I_EV_CONFIGURE:
+
+                /* Setup decorations */
                 R_window_cleanup(&button->normal);
                 R_window_cleanup(&button->active);
                 R_window_cleanup(&button->hover);
@@ -32,10 +32,25 @@ static int button_event(i_button_t *button, i_event_t event)
                         R_window_init(&button->hover, i_button_hover.value.s);
                         R_window_init(&button->active, i_button_active.value.s);
                 }
+
+                /* Setup text */
                 R_sprite_cleanup(&button->text);
                 R_sprite_init_text(&button->text, R_FONT_GUI, 0.f,
                                    i_shadow.value.f, FALSE, button->buffer);
-                button->text.modulate = C_color_string(i_color.value.s);
+                button->text.modulate = i_colors[I_COLOR];
+
+                /* Size requisition */
+                if (!button->widget.size.y)
+                        button->widget.size.y = button->text.size.y +
+                                                i_border.value.n * 2;
+                if (!button->widget.size.x) {
+                        button->widget.size.x = button->text.size.x +
+                                                i_border.value.n * 2;
+                        if (button->icon.texture)
+                                button->widget.size.x += button->icon.size.x +
+                                                         i_border.value.n;
+                }
+
         case I_EV_MOVED:
 
                 /* Setup decorations (for each state) to cover full area */

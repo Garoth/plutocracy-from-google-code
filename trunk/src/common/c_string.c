@@ -224,7 +224,7 @@ const char *C_token_file_read_full(c_token_file_t *tf, int *quoted)
  a NUL terminator. Sometimes known as "strncpyz". Can copy overlapped strings.
  Returns the length of the source string.
 \******************************************************************************/
-size_t C_strncpy(char *dest, const char *src, size_t len)
+int C_strncpy(char *dest, const char *src, int len)
 {
         size_t src_len;
 
@@ -244,6 +244,17 @@ size_t C_strncpy(char *dest, const char *src, size_t len)
         memmove(dest, src, src_len);
         dest[src_len] = NUL;
         return src_len;
+}
+
+/******************************************************************************\
+ Equivalent to the standard library strlen but returns zero if the string is
+ NULL.
+\******************************************************************************/
+int C_strlen(const char *string)
+{
+        if (!string)
+                return 0;
+        return strlen(string);
 }
 
 /******************************************************************************\
@@ -277,8 +288,6 @@ char *C_strdup_full(const char *file, int line, const char *function,
 /******************************************************************************\
  Parses an HTML-style hexadecimal color string (#AARRGGBB). It may or may not
  have a '#' in front.
- TODO: Parse some common color names.
- TODO: strtol() is a portability concern (C99).
 \******************************************************************************/
 static struct {
         const char *name;

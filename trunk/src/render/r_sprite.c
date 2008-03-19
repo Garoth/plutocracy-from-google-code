@@ -271,14 +271,16 @@ void R_sprite_init_text(r_sprite_t *sprite, r_font_t font, float wrap,
                 if (buf[i] != '\n' && buf[i])
                         continue;
                 swap = buf[i];
-                buf[i] = NUL;
-                surf = R_font_render(font, buf + last_break);
-                if (!surf)
-                        break;
-                if (invert)
-                        R_SDL_invert(surf, FALSE, TRUE);
-                blit_shadowed(tex->surface, surf, 0, y, shadow);
-                SDL_FreeSurface(surf);
+                if (last_break < i) {
+                        buf[i] = NUL;
+                        surf = R_font_render(font, buf + last_break);
+                        if (!surf)
+                                break;
+                        if (invert)
+                                R_SDL_invert(surf, FALSE, TRUE);
+                        blit_shadowed(tex->surface, surf, 0, y, shadow);
+                        SDL_FreeSurface(surf);
+                }
                 if (!swap)
                         break;
                 last_break = i + 1;
