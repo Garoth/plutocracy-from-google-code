@@ -52,10 +52,11 @@ am_plutocracy_OBJECTS = c_glibc_rand.$(OBJEXT) c_log.$(OBJEXT) \
 	c_memory.$(OBJEXT) c_noise.$(OBJEXT) c_string.$(OBJEXT) \
 	c_time.$(OBJEXT) c_variables.$(OBJEXT) g_globe.$(OBJEXT) \
 	i_button.$(OBJEXT) i_console.$(OBJEXT) i_entry.$(OBJEXT) \
-	i_variables.$(OBJEXT) i_widgets.$(OBJEXT) n_client.$(OBJEXT) \
-	r_assets.$(OBJEXT) r_model.$(OBJEXT) r_render.$(OBJEXT) \
-	r_sprite.$(OBJEXT) r_static_mesh.$(OBJEXT) \
-	r_variables.$(OBJEXT) plutocracy.$(OBJEXT)
+	i_game.$(OBJEXT) i_layout.$(OBJEXT) i_variables.$(OBJEXT) \
+	i_widgets.$(OBJEXT) n_client.$(OBJEXT) r_assets.$(OBJEXT) \
+	r_model.$(OBJEXT) r_render.$(OBJEXT) r_sprite.$(OBJEXT) \
+	r_static_mesh.$(OBJEXT) r_variables.$(OBJEXT) \
+	plutocracy.$(OBJEXT)
 plutocracy_OBJECTS = $(am_plutocracy_OBJECTS)
 plutocracy_LDADD = $(LDADD)
 plutocracy_DEPENDENCIES =
@@ -190,6 +191,8 @@ plutocracy_SOURCES = \
         src/interface/i_common.h \
         src/interface/i_console.c \
         src/interface/i_entry.c \
+        src/interface/i_game.c \
+        src/interface/i_layout.c \
         src/interface/i_shared.h \
         src/interface/i_variables.c \
         src/interface/i_widgets.c \
@@ -309,6 +312,8 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/i_button.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/i_console.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/i_entry.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/i_game.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/i_layout.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/i_variables.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/i_widgets.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/n_client.Po@am__quote@
@@ -487,6 +492,34 @@ i_entry.obj: src/interface/i_entry.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	source='src/interface/i_entry.c' object='i_entry.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o i_entry.obj `if test -f 'src/interface/i_entry.c'; then $(CYGPATH_W) 'src/interface/i_entry.c'; else $(CYGPATH_W) '$(srcdir)/src/interface/i_entry.c'; fi`
+
+i_game.o: src/interface/i_game.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT i_game.o -MD -MP -MF $(DEPDIR)/i_game.Tpo -c -o i_game.o `test -f 'src/interface/i_game.c' || echo '$(srcdir)/'`src/interface/i_game.c
+@am__fastdepCC_TRUE@	mv -f $(DEPDIR)/i_game.Tpo $(DEPDIR)/i_game.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='src/interface/i_game.c' object='i_game.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o i_game.o `test -f 'src/interface/i_game.c' || echo '$(srcdir)/'`src/interface/i_game.c
+
+i_game.obj: src/interface/i_game.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT i_game.obj -MD -MP -MF $(DEPDIR)/i_game.Tpo -c -o i_game.obj `if test -f 'src/interface/i_game.c'; then $(CYGPATH_W) 'src/interface/i_game.c'; else $(CYGPATH_W) '$(srcdir)/src/interface/i_game.c'; fi`
+@am__fastdepCC_TRUE@	mv -f $(DEPDIR)/i_game.Tpo $(DEPDIR)/i_game.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='src/interface/i_game.c' object='i_game.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o i_game.obj `if test -f 'src/interface/i_game.c'; then $(CYGPATH_W) 'src/interface/i_game.c'; else $(CYGPATH_W) '$(srcdir)/src/interface/i_game.c'; fi`
+
+i_layout.o: src/interface/i_layout.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT i_layout.o -MD -MP -MF $(DEPDIR)/i_layout.Tpo -c -o i_layout.o `test -f 'src/interface/i_layout.c' || echo '$(srcdir)/'`src/interface/i_layout.c
+@am__fastdepCC_TRUE@	mv -f $(DEPDIR)/i_layout.Tpo $(DEPDIR)/i_layout.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='src/interface/i_layout.c' object='i_layout.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o i_layout.o `test -f 'src/interface/i_layout.c' || echo '$(srcdir)/'`src/interface/i_layout.c
+
+i_layout.obj: src/interface/i_layout.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT i_layout.obj -MD -MP -MF $(DEPDIR)/i_layout.Tpo -c -o i_layout.obj `if test -f 'src/interface/i_layout.c'; then $(CYGPATH_W) 'src/interface/i_layout.c'; else $(CYGPATH_W) '$(srcdir)/src/interface/i_layout.c'; fi`
+@am__fastdepCC_TRUE@	mv -f $(DEPDIR)/i_layout.Tpo $(DEPDIR)/i_layout.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='src/interface/i_layout.c' object='i_layout.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o i_layout.obj `if test -f 'src/interface/i_layout.c'; then $(CYGPATH_W) 'src/interface/i_layout.c'; else $(CYGPATH_W) '$(srcdir)/src/interface/i_layout.c'; fi`
 
 i_variables.o: src/interface/i_variables.c
 @am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT i_variables.o -MD -MP -MF $(DEPDIR)/i_variables.Tpo -c -o i_variables.o `test -f 'src/interface/i_variables.c' || echo '$(srcdir)/'`src/interface/i_variables.c

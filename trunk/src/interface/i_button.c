@@ -15,7 +15,7 @@
 /******************************************************************************\
  Button widget event function.
 \******************************************************************************/
-static int button_event(i_button_t *button, i_event_t event)
+int I_button_event(i_button_t *button, i_event_t event)
 {
         c_vec2_t origin, size;
         float width;
@@ -27,10 +27,16 @@ static int button_event(i_button_t *button, i_event_t event)
                 R_window_cleanup(&button->normal);
                 R_window_cleanup(&button->active);
                 R_window_cleanup(&button->hover);
+                R_sprite_cleanup(&button->light);
+                R_sprite_cleanup(&button->prelight);
                 if (button->decorated) {
                         R_window_init(&button->normal, i_button.value.s);
                         R_window_init(&button->hover, i_button_hover.value.s);
                         R_window_init(&button->active, i_button_active.value.s);
+                } else {
+                        R_sprite_init(&button->light, i_button_light.value.s);
+                        R_sprite_init(&button->prelight,
+                                      i_button_prelight.value.s);
                 }
 
                 /* Setup text */
@@ -40,15 +46,21 @@ static int button_event(i_button_t *button, i_event_t event)
                 button->text.modulate = i_colors[I_COLOR];
 
                 /* Size requisition */
-                if (!button->widget.size.y)
-                        button->widget.size.y = button->text.size.y +
-                                                i_border.value.n * 2;
+                if (!button->widget.size.y) {
+                        button->widget.size.y = button->text.size.y;
+                        if (button->icon.texture &&
+                            button->icon.size.y > button->widget.size.y)
+                                button->widget.size.y = button->icon.size.y;
+                        if (button->decorated)
+                                button->widget.size.y += i_border.value.n * 2;
+                }
                 if (!button->widget.size.x) {
                         button->widget.size.x = button->text.size.x +
-                                                i_border.value.n * 2;
-                        if (button->icon.texture)
-                                button->widget.size.x += button->icon.size.x +
-                                                         i_border.value.n;
+                                                button->icon.size.x;
+                        if (button->decorated)
+                                button->widget.size.x += i_border.value.n * 2;
+                        if (button->icon.texture && button->buffer[0])
+                                button->widget.size.x += i_border.value.n;
                 }
 
         case I_EV_MOVED:
@@ -63,12 +75,23 @@ static int button_event(i_button_t *button, i_event_t event)
                         button->hover.sprite.size = size;
                         button->active.sprite.origin = origin;
                         button->active.sprite.size = size;
+                } else {
+                        c_vec2_t origin2, size2;
+
+                        origin2 = C_vec2_subf(origin, i_border.value.n);
+                        size2 = C_vec2_addf(size, i_border.value.n * 2);
+                        button->light.origin = origin2;
+                        button->light.size = size2;
+                        button->prelight.origin = origin2;
+                        button->prelight.size = size2;
                 }
 
                 /* Pack the icon left, vertically centered */
-                origin.x += i_border.value.n;
                 origin.y += size.y / 2;
-                size = C_vec2_subf(size, i_border.value.n * 2);
+                if (button->decorated) {
+                        origin.x += i_border.value.n;
+                        size = C_vec2_subf(size, i_border.value.n * 2);
+                }
                 if (button->icon.texture) {
                         button->icon.origin = C_vec2(origin.x, origin.y -
                                                      button->icon.size.y / 2);
@@ -97,6 +120,8 @@ static int button_event(i_button_t *button, i_event_t event)
                 R_window_cleanup(&button->normal);
                 R_window_cleanup(&button->active);
                 R_window_cleanup(&button->hover);
+                R_sprite_cleanup(&button->light);
+                R_sprite_cleanup(&button->prelight);
                 R_sprite_cleanup(&button->icon);
                 R_sprite_cleanup(&button->text);
                 break;
@@ -111,18 +136,22 @@ static int button_event(i_button_t *button, i_event_t event)
         case I_EV_RENDER:
                 button->icon.modulate.a = button->widget.fade;
                 button->text.modulate.a = button->widget.fade;
-                R_sprite_render(&button->icon);
                 if (button->widget.state == I_WS_HOVER) {
                         button->hover.sprite.modulate.a = button->widget.fade;
                         R_window_render(&button->hover);
+                        button->prelight.modulate.a = button->widget.fade;
+                        R_sprite_render(&button->prelight);
                 } else if (button->widget.state == I_WS_ACTIVE) {
                         button->active.sprite.modulate.a = button->widget.fade;
                         R_window_render(&button->active);
+                        button->light.modulate.a = button->widget.fade;
+                        R_sprite_render(&button->light);
                 } else {
                         button->normal.sprite.modulate.a = button->widget.fade;
                         R_window_render(&button->normal);
                 }
                 R_clip_rect(button->widget.origin, button->widget.size);
+                R_sprite_render(&button->icon);
                 R_sprite_render(&button->text);
                 R_clip_disable();
                 break;
@@ -142,7 +171,7 @@ void I_button_init(i_button_t *button, const char *icon, const char *text,
 {
         C_zero(button);
         I_widget_set_name(&button->widget, "Button");
-        button->widget.event_func = (i_event_f)button_event;
+        button->widget.event_func = (i_event_f)I_button_event;
         button->widget.state = I_WS_READY;
         button->on_click = NULL;
         button->decorated = bg;

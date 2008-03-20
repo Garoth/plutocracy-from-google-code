@@ -22,6 +22,8 @@ plutocracy_SOURCES = \
         src/interface/i_common.h \
         src/interface/i_console.c \
         src/interface/i_entry.c \
+        src/interface/i_game.c \
+        src/interface/i_layout.c \
         src/interface/i_shared.h \
         src/interface/i_variables.c \
         src/interface/i_widgets.c \
