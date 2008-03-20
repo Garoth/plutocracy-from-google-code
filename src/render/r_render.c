@@ -626,8 +626,8 @@ void R_clip_rect(c_vec2_t origin, c_vec2_t size)
 {
         clip_values[4 * clip_stack] = origin.x;
         clip_values[4 * clip_stack + 1] = origin.y;
-        clip_values[4 * clip_stack + 2] = origin.x + size.x - 1;
-        clip_values[4 * clip_stack + 3] = origin.y + size.y - 1;
+        clip_values[4 * clip_stack + 2] = origin.x + size.x;
+        clip_values[4 * clip_stack + 3] = origin.y + size.y;
         set_clipping();
 }
 

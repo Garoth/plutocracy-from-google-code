@@ -12,15 +12,13 @@
 
 #include "i_common.h"
 
-void I_console_init(i_window_t *window);
+extern i_widget_t i_root;
 
 c_color_t i_colors[I_COLORS];
 i_widget_t *i_key_focus, *i_child;
 int i_key, i_key_shift, i_key_unicode, i_mouse_x, i_mouse_y, i_mouse;
 
-static i_widget_t root, *mouse_focus;
-static i_window_t left_toolbar, console_window;
-static i_button_t console_button;
+static i_widget_t *mouse_focus;
 static int widgets;
 
 /******************************************************************************\
@@ -49,134 +47,6 @@ void I_widget_inited(const i_widget_t *widget)
 }
 
 /******************************************************************************\
- Root window event function.
- TODO: Stuff like rotating the globe and other interactions will happen here
-       because this is the catch all for mouse/keyboard events that don't get
-       handled.
-\******************************************************************************/
-static int root_event(i_widget_t *root, i_event_t event)
-{
-        if (event == I_EV_CONFIGURE) {
-                i_colors[I_COLOR] = C_color_string(i_color.value.s);
-                i_colors[I_COLOR_ALT] = C_color_string(i_color2.value.s);
-        }
-        return TRUE;
-}
-
-/******************************************************************************\
- Parses the theme configuration file. This is called before the initialization
- functions in case there are font changes in the theme.
-\******************************************************************************/
-void I_parse_config(void)
-{
-        C_var_unlatch(&i_theme);
-        C_parse_config_file(i_theme.value.s);
-}
-
-/******************************************************************************\
- Updates after a theme change.
-\******************************************************************************/
-static void theme_configure(void)
-{
-        C_var_unlatch(&i_border);
-        C_var_unlatch(&i_button);
-        C_var_unlatch(&i_button_active);
-        C_var_unlatch(&i_button_hover);
-        C_var_unlatch(&i_color);
-        C_var_unlatch(&i_color2);
-        C_var_unlatch(&i_shadow);
-        C_var_unlatch(&i_window);
-        C_var_unlatch(&i_work_area);
-
-        /* Root window */
-        root.size = C_vec2(r_width_2d, r_height_2d);
-
-        /* Left toolbar */
-        left_toolbar.widget.size = C_vec2(128.f, 48.f);
-        left_toolbar.widget.origin = C_vec2(i_border.value.n, r_height_2d -
-                                            left_toolbar.widget.size.y -
-                                            i_border.value.n);
-
-        /* Console window */
-        console_window.widget.size = C_vec2(480.f, 240.f);
-        console_window.widget.origin = C_vec2(i_border.value.n, r_height_2d -
-                                              console_window.widget.size.y -
-                                              left_toolbar.widget.size.y -
-                                              i_border.value.n * 2);
-}
-
-/******************************************************************************\
- Update function for i_theme. Will also reload fonts.
-\******************************************************************************/
-static int theme_update(c_var_t *var, c_var_value_t value)
-{
-        if (!C_parse_config_file(value.s))
-                return FALSE;
-        theme_configure();
-        R_free_fonts();
-        R_load_fonts();
-        I_widget_event(&root, I_EV_CONFIGURE);
-        return TRUE;
-}
-
-/******************************************************************************\
- Loads interface assets and initializes windows.
-\******************************************************************************/
-void I_init(void)
-{
-        C_status("Initializing interface");
-
-        /* Enable key repeats so held keys generate key-down events */
-        SDL_EnableKeyRepeat(300, 30);
-
-        /* Enable Unicode so we get Unicode key strokes AND capitals */
-        SDL_EnableUNICODE(TRUE);
-
-        /* Root window */
-        C_zero(&root);
-        I_widget_set_name(&root, "Root Window");
-        root.event_func = (i_event_f)root_event;
-        root.configured = 1;
-        root.entry = TRUE;
-
-        /* Left toolbar */
-        I_window_init(&left_toolbar);
-        left_toolbar.pack_children = I_PACK_H;
-        I_widget_add(&root, &left_toolbar.widget);
-
-        /* Console button */
-        I_button_init(&console_button, NULL, "Test Button", TRUE);
-        I_widget_add(&left_toolbar.widget, &console_button.widget);
-
-        /* Console window */
-        I_window_init(&console_window);
-        I_console_init(&console_window);
-        I_widget_add(&root, &console_window.widget);
-
-        /* Theme can now be modified dynamically */
-        theme_configure();
-        I_widget_event(&root, I_EV_CONFIGURE);
-        i_theme.update = (c_var_update_f)theme_update;
-        i_theme.edit = C_VE_FUNCTION;
-}
-
-/******************************************************************************\
- Free interface assets.
-\******************************************************************************/
-void I_cleanup(void)
-{
-        I_widget_event(&root, I_EV_CLEANUP);
-}
-
-/******************************************************************************\
- Render all visible windows.
-\******************************************************************************/
-void I_render(void)
-{
-        I_widget_event(&root, I_EV_RENDER);
-}
-
-/******************************************************************************\
  Window widget event function.
 \******************************************************************************/
 static int window_event(i_window_t *window, i_event_t event)
@@ -190,16 +60,30 @@ static int window_event(i_window_t *window, i_event_t event)
                         R_window_init(&window->window, i_window.value.s);
                         window->window.sprite.origin = window->widget.origin;
                         window->window.sprite.size = window->widget.size;
+                        R_sprite_cleanup(&window->hanger);
+                        R_sprite_init(&window->hanger, i_hanger.value.s);
+                        window->hanger.origin.y = window->widget.origin.y +
+                                                  window->widget.size.y;
+                        window->hanger.size.y = i_border.value.n;
                 }
                 return FALSE;
+        case I_EV_MOUSE_IN:
+                i_key_focus = NULL;
+                I_widget_propagate(&window->widget, I_EV_GRAB_FOCUS);
+                break;
         case I_EV_MOVED:
                 window->window.sprite.origin = window->widget.origin;
                 break;
         case I_EV_CLEANUP:
                 R_window_cleanup(&window->window);
+                R_sprite_cleanup(&window->hanger);
                 break;
         case I_EV_RENDER:
                 if (window->decorated) {
+                        if (window->hanger.origin.x) {
+                                window->hanger.modulate.a = window->widget.fade;
+                                R_sprite_render(&window->hanger);
+                        }
                         window->window.sprite.modulate.a = window->widget.fade;
                         R_window_render(&window->window);
                 }
@@ -208,6 +92,19 @@ static int window_event(i_window_t *window, i_event_t event)
                 break;
         }
         return TRUE;
+}
+
+/******************************************************************************\
+ Configure a window widget's hanger sprite.
+\******************************************************************************/
+void I_window_hanger(i_window_t *window, i_widget_t *widget, int shown)
+{
+        if (!shown) {
+                window->hanger.origin.x = 0.f;
+                return;
+        }
+        window->hanger.origin.x = widget->origin.x + widget->size.x / 2 -
+                                  window->hanger.size.x / 2;
 }
 
 /******************************************************************************\
@@ -325,8 +222,6 @@ void I_widget_remove(i_widget_t *widget)
 {
         if (!widget)
                 return;
-        if (widget == &root)
-                C_error("Tried to remove root window");
         if (widget->parent) {
                 i_widget_t *prev;
 
@@ -370,6 +265,20 @@ void I_widget_move(i_widget_t *widget, c_vec2_t origin)
 }
 
 /******************************************************************************\
+ Show or hide a widget and all of its children. Will not generate events if
+ the visibility status did not change.
+\******************************************************************************/
+void I_widget_show(i_widget_t *widget, int show)
+{
+        if (widget->shown == show)
+                return;
+        if (show)
+                I_widget_event(widget, I_EV_SHOW);
+        else
+                I_widget_event(widget, I_EV_HIDE);
+}
+
+/******************************************************************************\
  Gives extra space to expanding child widgets.
 \******************************************************************************/
 static void expand_children(i_widget_t *widget, c_vec2_t size, int expanders)
@@ -409,17 +318,20 @@ void I_widget_pack(i_widget_t *widget, i_pack_t pack, i_fit_t fit)
         expanders = 0;
         child = widget->child;
         while (child) {
+                float padding;
+
                 child->origin = origin;
+                padding = child->padding * i_border.value.n;
                 if (pack == I_PACK_H) {
                         child->size = C_vec2(0.f, size.y);
                         I_widget_event(child, I_EV_CONFIGURE);
-                        origin.x += child->size.x + child->padding;
-                        size.x -= child->size.x + child->padding;
+                        origin.x += child->size.x + padding;
+                        size.x -= child->size.x + padding;
                 } else if (pack == I_PACK_V) {
                         child->size = C_vec2(size.x, 0.f);
                         I_widget_event(child, I_EV_CONFIGURE);
-                        origin.y += child->size.y + child->padding;
-                        size.y -= child->size.y + child->padding;
+                        origin.y += child->size.y + padding;
+                        size.y -= child->size.y + padding;
                 }
                 if (child->expand)
                         expanders++;
@@ -439,15 +351,15 @@ void I_widget_pack(i_widget_t *widget, i_pack_t pack, i_fit_t fit)
                 return;
         }
 
-        /* This is a collapsing widget so fit the widget to its contents */
-        if (pack == I_PACK_H) {
+        /* This is a fitting widget so fit the widget to its contents */
+        if (pack == I_PACK_H && size.x < 0.f) {
                 widget->size.x -= size.x;
                 if (fit == I_FIT_TOP) {
                         origin = widget->origin;
                         origin.x += size.x;
                         I_widget_move(widget, origin);
                 }
-        } else if (pack == I_PACK_V) {
+        } else if (pack == I_PACK_V && size.y < 0.f) {
                 widget->size.y -= size.y;
                 if (fit == I_FIT_TOP) {
                         origin = widget->origin;
@@ -482,8 +394,8 @@ const char *I_event_string(i_event_t event)
         switch (event) {
         case I_EV_NONE:
                 return "I_EV_NONE";
-        case I_EV_RENDER:
-                return "I_EV_RENDER";
+        case I_EV_ADD_CHILD:
+                return "I_EV_ADD_CHILD";
         case I_EV_CLEANUP:
                 return "I_EV_CLEANUP";
         case I_EV_CONFIGURE:
@@ -502,23 +414,30 @@ const char *I_event_string(i_event_t event)
                 return "I_EV_MOUSE_DOWN";
         case I_EV_MOUSE_UP:
                 return "I_EV_MOUSE_UP";
+        case I_EV_RENDER:
+                return "I_EV_RENDER";
         default:
+                if (event >= 0 && event < I_EVENTS)
+                        C_warning("Forgot I_event_string() entry for event %d",
+                                  event);
                 return "I_EV_INVALID";
         }
 }
 
 /******************************************************************************\
  Call on a widget in hover or active state to check if the widget has lost
- mouse focus this frame. Will generate I_EV_MOUSE_OUT when applicable.
+ mouse focus this frame. Will generate I_EV_MOUSE_OUT when applicable. Returns
+ TRUE if the widget has lost mouse focus.
 \******************************************************************************/
 static int check_mouse_out(i_widget_t *widget)
 {
         if (!widget)
-                return FALSE;
+                return TRUE;
         if (i_mouse_x >= widget->origin.x &&
             i_mouse_y >= widget->origin.y &&
             i_mouse_x < widget->origin.x + widget->size.x &&
-            i_mouse_y < widget->origin.y + widget->size.y)
+            i_mouse_y < widget->origin.y + widget->size.y &&
+            widget->shown && widget->state != I_WS_DISABLED)
                 return FALSE;
         if (widget->state != I_WS_HOVER && widget->state != I_WS_ACTIVE)
                 return TRUE;
@@ -554,8 +473,8 @@ void I_widget_event(i_widget_t *widget, i_event_t event)
 
         /* The only event an unconfigured widget can handle is I_EV_CONFIGURE */
         if (widget->configured < 1 && event != I_EV_CONFIGURE)
-                C_error("Propagated non-configure event to unconfigured %s",
-                        widget->name);
+                C_error("Propagated %s to unconfigured %s",
+                        I_event_string(event), widget->name);
 
         /* Print out the event in debug mode */
         if (i_debug.value.n >= 2)
@@ -578,6 +497,16 @@ void I_widget_event(i_widget_t *widget, i_event_t event)
         case I_EV_CONFIGURE:
                 if (c_mem_check.value.n)
                         C_trace("Configuring %s", widget->name);
+                break;
+        case I_EV_GRAB_FOCUS:
+                if (widget->entry && widget->shown &&
+                    widget->state != I_WS_DISABLED)
+                        i_key_focus = widget;
+                break;
+        case I_EV_HIDE:
+                widget->shown = FALSE;
+                if (i_key_focus == widget)
+                        i_key_focus = NULL;
                 break;
         case I_EV_MOUSE_IN:
         case I_EV_MOUSE_OUT:
@@ -614,17 +543,20 @@ void I_widget_event(i_widget_t *widget, i_event_t event)
                                       widget->parent->origin,
                                       widget->parent->size))
                         return;
-                if (widget->state == I_WS_HIDDEN) {
+                if (widget->shown) {
+                        widget->fade += i_fade.value.f * c_frame_sec;
+                        if (widget->fade > 1.f)
+                                widget->fade = 1.f;
+                } else {
                         widget->fade -= i_fade.value.f * c_frame_sec;
                         if (widget->fade < 0.f) {
                                 widget->fade = 0.f;
                                 return;
                         }
-                } else {
-                        widget->fade += i_fade.value.f * c_frame_sec;
-                        if (widget->fade > 1.f)
-                                widget->fade = 1.f;
                 }
+                break;
+        case I_EV_SHOW:
+                widget->shown = TRUE;
                 break;
         default:
                 break;
@@ -731,10 +663,11 @@ void I_dispatch(const SDL_Event *ev)
         /* Normally dispatch up from the root window, but for key events send
            straight to the focused widget */
         if (event == I_EV_KEY_DOWN || event == I_EV_KEY_UP) {
-                if (i_key_focus && i_key_focus->event_func)
+                if (i_key_focus && i_key_focus->event_func &&
+                    i_key_focus->shown && i_key_focus->state != I_WS_DISABLED)
                         i_key_focus->event_func(i_key_focus, event);
         } else
-                I_widget_event(&root, event);
+                I_widget_event(&i_root, event);
 
         /* After dispatch */
         switch (ev->type) {

@@ -15,9 +15,9 @@
 c_var_t i_debug;
 
 /* Theme varables */
-c_var_t i_border, i_button, i_button_active, i_button_hover,
-        i_color, i_color2, i_fade, i_shadow, i_theme,
-        i_window, i_work_area;
+c_var_t i_border, i_button, i_button_active, i_button_hover, i_button_light,
+        i_button_prelight, i_color, i_color2, i_fade, i_hanger, i_shadow,
+        i_theme, i_window, i_work_area;
 
 /******************************************************************************\
  Registers interface namespace variables.
@@ -34,9 +34,16 @@ void I_register_variables(void)
                           "gui/themes/default/button_active.png", C_VE_LATCHED);
         C_register_string(&i_button_hover, "i_button_hover",
                           "gui/themes/default/button_hover.png", C_VE_LATCHED);
+        C_register_string(&i_button_prelight, "i_button_prelight",
+                          "gui/themes/default/button_prelight.png",
+                          C_VE_LATCHED);
+        C_register_string(&i_button_light, "i_button_light",
+                          "gui/themes/default/button_light.png", C_VE_LATCHED);
         C_register_string(&i_color, "i_color", "aluminium1", C_VE_LATCHED);
         C_register_string(&i_color2, "i_color2", "aluminium3", C_VE_LATCHED);
-        C_register_float(&i_fade, "i_fade", 2.f, C_VE_ANYTIME);
+        C_register_float(&i_fade, "i_fade", 4.f, C_VE_ANYTIME);
+        C_register_string(&i_hanger, "i_hanger",
+                          "gui/themes/default/hanger.png", C_VE_LATCHED);
         C_register_string(&i_theme, "i_theme",
                           "gui/themes/default/theme.cfg", C_VE_LATCHED);
         C_register_float(&i_shadow, "i_shadow", 1.f, C_VE_LATCHED);

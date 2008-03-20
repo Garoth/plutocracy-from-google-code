@@ -99,6 +99,7 @@ int I_scrollback_event(i_scrollback_t *sb, i_event_t event)
                 R_window_cleanup(&sb->window);
                 break;
         case I_EV_RENDER:
+                sb->window.sprite.modulate.a = sb->widget.fade;
                 R_window_render(&sb->window);
                 R_clip_rect(sb->widget.origin, sb->widget.size);
                 R_clip_push();
@@ -144,6 +145,7 @@ static void I_console_print(i_color_t color, const char *string)
         label->font = R_FONT_CONSOLE;
         label->color = color;
         I_widget_add(&scrollback.widget, &label->widget);
+        I_widget_show(&label->widget, TRUE);
         locked = FALSE;
 }
 
@@ -205,7 +207,7 @@ static void log_handler(c_log_level_t level, int margin, const char *string)
 }
 
 /******************************************************************************\
- Initializes console widgets on the given window.
+ Initializes console window widgets on the given window.
 \******************************************************************************/
 void I_console_init(i_window_t *window)
 {
@@ -219,7 +221,7 @@ void I_console_init(i_window_t *window)
         /* Scrollback area */
         I_scrollback_init(&scrollback);
         scrollback.widget.event_func = (i_event_f)scrollback_event;
-        scrollback.widget.padding = i_border.value.n / 2;
+        scrollback.widget.padding = 0.5f;
         I_widget_add(&window->widget, &scrollback.widget);
 
         /* Entry */

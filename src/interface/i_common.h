@@ -28,6 +28,8 @@ typedef enum {
         I_EV_ADD_CHILD,         /* A child widget was added */
         I_EV_CLEANUP,           /* Should free resources */
         I_EV_CONFIGURE,         /* Initialized or resized */
+        I_EV_GRAB_FOCUS,        /* Entry widgets should take key focus */
+        I_EV_HIDE,              /* Widget is being hidden */
         I_EV_KEY_DOWN,          /* A key is pressed down or repeated */
         I_EV_KEY_UP,            /* A key is released */
         I_EV_MOUSE_IN,          /* Mouse just entered widget area */
@@ -37,6 +39,7 @@ typedef enum {
         I_EV_MOUSE_UP,          /* A mouse button is released on the widget */
         I_EV_MOVED,             /* Widget was moved */
         I_EV_RENDER,            /* Should render */
+        I_EV_SHOW,              /* Widget is being shown */
         I_EVENTS
 } i_event_t;
 
@@ -51,7 +54,6 @@ typedef enum {
 /* Widget input states */
 typedef enum {
         I_WS_DISABLED,
-        I_WS_HIDDEN,
         I_WS_READY,
         I_WS_HOVER,
         I_WS_ACTIVE,
@@ -89,7 +91,7 @@ typedef struct i_widget {
         i_event_f event_func;
         i_widget_state_t state;
         float fade, padding;
-        int configured, entry, expand, heap;
+        int configured, entry, expand, shown, heap;
 } i_widget_t;
 
 /* Windows are decorated containers */
@@ -98,14 +100,17 @@ typedef struct i_window {
         r_window_t window;
         i_pack_t pack_children;
         i_fit_t fit;
-        int decorated;
+        r_sprite_t hanger;
+        i_widget_t *key_focus;
+        float hanger_x;
+        int hanger_shown, decorated;
 } i_window_t;
 
 /* Buttons can have an icon and/or text */
 typedef struct i_button {
         i_widget_t widget;
         r_window_t normal, hover, active;
-        r_sprite_t icon, text;
+        r_sprite_t icon, text, light, prelight;
         i_callback_f on_click;
         int decorated;
         char buffer[64];
@@ -152,8 +157,9 @@ typedef struct i_scrollback {
 void I_unlatch(void);
 
 extern c_var_t i_border, i_button, i_button_active, i_button_hover,
-               i_color, i_color2, i_debug, i_fade, i_shadow,
-               i_theme, i_window, i_work_area;
+               i_button_light, i_button_prelight, i_color, i_color2,
+               i_debug, i_fade, i_hanger, i_shadow, i_theme, i_window,
+               i_work_area;
 
 /* i_widgets.c */
 void I_button_init(i_button_t *, const char *icon, const char *text, int bg);
@@ -172,7 +178,9 @@ void I_widget_pack(i_widget_t *, i_pack_t, i_fit_t);
 void I_widget_propagate(i_widget_t *, i_event_t);
 void I_widget_remove(i_widget_t *);
 void I_widget_set_name(i_widget_t *, const char *class_name);
+void I_widget_show(i_widget_t *, int show);
 void I_window_init(i_window_t *);
+void I_window_hanger(i_window_t *, i_widget_t *align, int shown);
 
 extern c_color_t i_colors[I_COLORS];
 extern i_widget_t *i_key_focus, *i_child;
