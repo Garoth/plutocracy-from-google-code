@@ -50,7 +50,7 @@ ${srcdir}/src/common/c_shared.h.gch: ${srcdir}/src/common/c_shared.h \
 CLEANFILES = src/common/c_shared.h.gch
 
 # Distribute extra files with the tarball
-EXTRA_DIST = gui models blender config
+EXTRA_DIST = gui models blender config vc8 gendoc
 
 # We don't want to distrubute SVN cache, delete it out of the packaging
 # directories before creating the tarball
