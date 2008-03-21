@@ -168,7 +168,8 @@ static void on_enter(i_entry_t *entry)
 static int scrollback_event(i_scrollback_t *sb, i_event_t event)
 {
         if (event == I_EV_CONFIGURE)
-                cols_max = sb->widget.size.x / R_font_width(R_FONT_CONSOLE);
+                cols_max = sb->widget.size.x / R_font_width(R_FONT_CONSOLE) *
+                           r_pixel_scale.value.f;
         return I_scrollback_event(sb, event);
 }
 
