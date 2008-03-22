@@ -1,5 +1,5 @@
 /******************************************************************************\
- Plutocracy - Copyright (C) 2008 - Michael Levin, Devin Papineau
+ Plutocracy - Copyright (C) 2008 - Michael Levin
 
  This program is free software; you can redistribute it and/or modify it under
  the terms of the GNU General Public License as published by the Free Software
@@ -49,6 +49,11 @@ typedef struct g_vert_neighbors {
     int count;
     unsigned short indices[6]; /* Never more than 6 neighbours. */
 } g_vert_neighbors_t;
+
+struct test_struct {
+        int a;
+};
+
 
 /* A comment */
 #define macro_function()
