@@ -173,7 +173,7 @@ typedef struct c_ref {
 } c_ref_t;
 
 /* A counter for counting how often something happens per frame */
-typedef struct c_counter {
+typedef struct c_count {
         int start_frame, start_time, last_time;
         float value;
 } c_count_t;
@@ -182,8 +182,6 @@ typedef struct c_counter {
 long int C_glibc_rand(void);
 void C_glibc_srand(unsigned int);
 /* FIXME: Windows-compatible, deterministic random number generator */
-/* #define C_rand() C_glibc_rand()
-   #define C_rand_seed(s) C_glibc_srand(s) */
 #define C_rand() rand()
 #define C_rand_seed(s) srand(s)
 

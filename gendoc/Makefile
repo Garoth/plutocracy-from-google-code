@@ -10,7 +10,6 @@
 # FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
 ################################################################################
 
-CFLAGS=-g -Wall -Werror
 GAME_SHARED=../src/game/g_shared.h
 INTERFACE_SHARED=../src/interface/i_shared.h ../src/interface/*.c
 INTERFACE_FILES=../src/interface/i_common.h $(INTERFACE_SHARED)
@@ -18,6 +17,9 @@ RENDER_SHARED=../src/render/r_shared.h ../src/render/*.c
 RENDER_FILES=../src/render/r_common.h $(RENDER_SHARED)
 SHARED_FILES=../src/common/c_shared.h $(RENDER_SHARED) $(INTERFACE_SHARED)
 TEST_FILES=test/test.h test/test.c
+
+CFLAGS=-g -Wall
+SOURCES=gendoc.c gendoc_entry.c gendoc_parse.c
 
 all: gendoc
 # test/test.html
@@ -40,6 +42,6 @@ docs/interface.html: gendoc $(INTERFACE_FILES)
 docs/render.html: gendoc
 	./gendoc docs/render.html $(RENDER_FILES)
 
-gendoc: gendoc.c
-	$(CC) $(CFLAGS) $(LDFLAGS) gendoc.c -o gendoc
+gendoc: $(SOURCES) gendoc.h
+	$(CC) $(CFLAGS) $(LDFLAGS) $(SOURCES) -o gendoc
 

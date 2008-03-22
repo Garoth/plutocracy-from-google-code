@@ -212,7 +212,7 @@ plutocracy_SOURCES = \
 CLEANFILES = src/common/c_shared.h.gch
 
 # Distribute extra files with the tarball
-EXTRA_DIST = gui models blender config
+EXTRA_DIST = gui models blender config vc8 gendoc
 all: config.h
 	$(MAKE) $(AM_MAKEFLAGS) all-am
 
