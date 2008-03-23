@@ -134,7 +134,8 @@ static int parse_file(const char *filename)
         size_t len;
 
         if (!D_parse_open(filename)) {
-                printf("    Failed to open for reading!\n");
+                fprintf(stderr, "gendoc: Failed to open '%s' for reading!\n",
+                        filename);
                 return 1;
         }
         len = strlen(filename);
@@ -144,7 +145,8 @@ static int parse_file(const char *filename)
                  filename[len - 1] == 'c')
                 parse_source(filename);
         else {
-                printf("    Unrecognized extension.\n");
+                fprintf(stderr, "gendoc: Unrecognized extension in '%s'.\n",
+                        filename);
                 return 1;
         }
         D_parse_close();
@@ -231,7 +233,6 @@ int main(int argc, char *argv[])
                         continue;
                 }
 
-                fprintf(stderr, "%s\n", argv[i]);
                 if (parse_file(argv[i]))
                         return 1;
         }
