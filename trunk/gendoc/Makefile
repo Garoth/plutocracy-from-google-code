@@ -15,33 +15,48 @@ INTERFACE_SHARED=../src/interface/i_shared.h ../src/interface/*.c
 INTERFACE_FILES=../src/interface/i_common.h $(INTERFACE_SHARED)
 RENDER_SHARED=../src/render/r_shared.h ../src/render/*.c
 RENDER_FILES=../src/render/r_common.h $(RENDER_SHARED)
-SHARED_FILES=../src/common/c_shared.h $(RENDER_SHARED) $(INTERFACE_SHARED)
-TEST_FILES=test/test.h test/test.c
+GAME_SHARED=../src/game/g_shared.h ../src/game/*.c
+GAME_FILES=../src/game/g_common.h $(GAME_SHARED)
+NETWORK_SHARED=../src/network/n_shared.h ../src/network/*.c
+NETWORK_FILES=../src/network/n_common.h $(NETWORK_SHARED)
+COMMON_FILES=../src/common/c_shared.h ../src/common/*.c
+SHARED_FILES=$(COMMON_FILES) $(RENDER_SHARED) $(INTERFACE_SHARED) $(GAME_SHARED)
+GENDOC_FILES=gendoc.h gendoc*.c
 
 CFLAGS=-g -Wall
 SOURCES=gendoc.c gendoc_entry.c gendoc_parse.c
 
-all: gendoc
-# test/test.html
-# docs/shared.html docs/interface.html docs/render.html
+all: docs/gendoc.html docs/shared.html docs/interface.html docs/render.html \
+     docs/game.html docs/network.html
 
 clean:
 	rm -f gendoc
 
 .PHONY: clean
 
-test/test.html: gendoc $(TEST_FILES)
-	./gendoc test/test.html $(TEST_FILES)
+docs/gendoc.html: gendoc $(GENDOC_FILES) Makefile
+	./gendoc $(GENDOC_FILES) > docs/gendoc.html
 
-docs/shared.html: gendoc $(SHARED_FILES)
-	./gendoc docs/shared.html $(SHARED_FILES)
+docs/shared.html: gendoc $(SHARED_FILES) Makefile
+	./gendoc --title "Plutocracy Shared Namespace" \
+	         $(SHARED_FILES) > docs/shared.html
 
-docs/interface.html: gendoc $(INTERFACE_FILES)
-	./gendoc docs/interface.html $(INTERFACE_FILES)
+docs/interface.html: gendoc $(INTERFACE_FILES) Makefile
+	./gendoc --title "Plutocracy Interface Namespace" \
+	         $(INTERFACE_FILES) > docs/interface.html
 
-docs/render.html: gendoc
-	./gendoc docs/render.html $(RENDER_FILES)
+docs/render.html: gendoc $(RENDER_FILES) Makefile
+	./gendoc --title "Plutocracy Render Namespace" \
+	         $(RENDER_FILES) > docs/render.html
 
-gendoc: $(SOURCES) gendoc.h
+docs/game.html: gendoc $(GAME_FILES) Makefile
+	./gendoc --title "Plutocracy Game Namespace" \
+	         $(GAME_FILES) > docs/game.html
+
+docs/network.html: gendoc $(NETWORK_FILES) Makefile
+	./gendoc --title "Plutocracy Network Namespace" \
+	         $(NETWORK_FILES) > docs/network.html
+
+gendoc: $(SOURCES) gendoc.h Makefile
 	$(CC) $(CFLAGS) $(LDFLAGS) $(SOURCES) -o gendoc
 

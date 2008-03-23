@@ -460,8 +460,8 @@ void C_ref_up_full(const char *file, int line, const char *function,
 }
 
 /******************************************************************************\
- Decreases the reference count. If there are no references left, the
- cleanup function is called on the data and the memory is freed.
+ Decreases the reference count. If there are no references left, the cleanup
+ function is called on the data and the memory is freed.
 \******************************************************************************/
 void C_ref_down_full(const char *file, int line, const char *function,
                      c_ref_t *ref)
