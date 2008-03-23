@@ -26,16 +26,12 @@
 #define NUL '\0'
 #endif
 
-/* Largest sizes that will get parsed */
-#define D_DEF_SIZE 32000
-#define D_COMMENT_SIZE 4096
-
 /* Copies string to a fixed-size buffer */
 #define D_strncpy_buf(b, s) D_strncpy(b, s, sizeof (b))
 
 /* List entry */
 typedef struct entry {
-        char name[80], def[D_DEF_SIZE], comment[D_COMMENT_SIZE], file[64];
+        char name[80], def[4000], comment[4000], file[64];
         struct entry *next;
 } entry_t;
 

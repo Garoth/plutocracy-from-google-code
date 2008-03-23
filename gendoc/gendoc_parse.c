@@ -19,8 +19,7 @@ int d_num_tokens;
 
 static FILE *file;
 static int last_nl, token_space[TOKENS];
-static char last_ch, cur_ch, def[D_DEF_SIZE], comment[D_COMMENT_SIZE],
-            tokens[TOKENS][64];
+static char last_ch, cur_ch, def[32000], comment[4000], tokens[TOKENS][64];
 
 /******************************************************************************\
  A string copy function that isn't retarded.
