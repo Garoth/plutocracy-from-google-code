@@ -105,13 +105,8 @@ extern r_mode_t r_mode;
 void R_static_mesh_cleanup(r_static_mesh_t *);
 unsigned short R_static_mesh_find_vert(const r_static_mesh_t *mesh,
                                        const r_vertex3_t *vert);
-r_static_mesh_t *R_static_mesh_load(const char *filename);
 void R_static_mesh_render(r_static_mesh_t *, r_texture_t *);
 void R_static_mesh_free(r_static_mesh_t *);
-
-/* r_sprite.c */
-void R_cleanup_fonts(void);
-void R_init_fonts(void);
 
 /* r_variables.c */
 extern c_var_t r_color_bits, r_depth_bits, r_gamma, r_height, r_width, r_vsync,

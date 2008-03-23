@@ -26,27 +26,38 @@
 #define NUL '\0'
 #endif
 
+/* Largest sizes that will get parsed */
+#define D_DEF_SIZE 32000
+#define D_COMMENT_SIZE 4096
+
 /* Copies string to a fixed-size buffer */
-#define D_strncpy_buf(b, s) strncpy(b, s, sizeof (b))
+#define D_strncpy_buf(b, s) D_strncpy(b, s, sizeof (b))
 
 /* List entry */
 typedef struct entry {
-        char name[80], def[1024], comment[4096];
+        char name[80], def[D_DEF_SIZE], comment[D_COMMENT_SIZE], file[64];
         struct entry *next;
 } entry_t;
+
+/* gendoc.c */
+extern entry_t *d_types;
 
 /* gendoc_entry.c */
 void D_entry_add(const entry_t *, entry_t **root);
 entry_t *D_entry_find(entry_t *root, const char *name);
-void D_output_entries(FILE *, entry_t *root);
+void D_output_entries(entry_t *root);
 
 /* gendoc_parse.c */
 const char *D_comment(void);
 const char *D_def(void);
+int D_is_keyword(const char *, entry_t **out);
+int D_is_operator(char ch);
 void D_parse_close(void);
 int D_parse_def(void);
 int D_parse_open(const char *filename);
+void D_strncpy(char *dest, const char *src, size_t);
 const char *D_token(int n);
+int D_token_space(int n);
 
 extern int d_num_tokens;
 

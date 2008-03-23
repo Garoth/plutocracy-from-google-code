@@ -13,12 +13,28 @@
 #include "gendoc.h"
 
 #define END_BRACE_MARK -2
+#define TOKENS 32
 
 int d_num_tokens;
 
 static FILE *file;
-static int last_nl;
-static char last_ch, cur_ch, def[8192], comment[4096], tokens[32][64];
+static int last_nl, token_space[TOKENS];
+static char last_ch, cur_ch, def[D_DEF_SIZE], comment[D_COMMENT_SIZE],
+            tokens[TOKENS][64];
+
+/******************************************************************************\
+ A string copy function that isn't retarded.
+\******************************************************************************/
+void D_strncpy(char *dest, const char *src, size_t size)
+{
+        size_t len;
+
+        len = strlen(src) + 1;
+        if (len > size - 1)
+                len = size - 1;
+        memmove(dest, src, len);
+        dest[size - 1] = NUL;
+}
 
 /******************************************************************************\
  Just returns the definition.
@@ -39,10 +55,46 @@ const char *D_comment(void)
 /******************************************************************************\
  Returns TRUE if the character is an operator.
 \******************************************************************************/
-static int is_operator(char ch)
+int D_is_operator(char ch)
 {
         return (ch >= '!' && ch <= '/') || (ch >= ':' && ch <= '@') ||
                (ch >= '{' && ch <= '~') || (ch >= '[' && ch <= '^');
+}
+
+/******************************************************************************\
+ Returns TRUE if the first token of [buf] is an operator.
+\******************************************************************************/
+int D_is_keyword(const char *buf, entry_t **entry)
+{
+        const char *keywords[] = {
+                "#define", "char", "const", "double", "enum", "float", "int",
+                "long", "short", "signed", "single", "sizeof", "size_t",
+                "struct", "typedef", "unsigned", "void",
+        };
+        int i, j;
+        char keyword[64];
+
+        i = 0;
+        if (buf[i] == '#')
+                i++;
+        for (; buf[i] && buf[i] > ' ' && !D_is_operator(buf[i]); i++);
+        if (i <= 0 || i > sizeof (keyword))
+                return 0;
+        memcpy(keyword, buf, i);
+        keyword[i] = NUL;
+
+        /* Common C keywords */
+        *entry = NULL;
+        for (j = 0; j < sizeof (keywords) / sizeof (keywords[0]); j++)
+                if (!strcmp(keyword, keywords[j]))
+                        return i;
+
+        /* Types we already know */
+        *entry = D_entry_find(d_types, keyword);
+        if (*entry)
+                return i;
+
+        return 0;
 }
 
 /******************************************************************************\
@@ -57,7 +109,8 @@ static int tokenize_def_from(int i)
                 return i;
 
         /* Skip space */
-        for (; def[i] <= ' '; i++);
+        for (; def[i] <= ' '; i++)
+                token_space[d_num_tokens]++;
 
         /* C comments */
         if (def[i] == '/' && def[i + 1] == '*') {
@@ -74,11 +127,11 @@ static int tokenize_def_from(int i)
         /* Blocks count as a single token */
         if (def[i] == '{') {
                 for (j = 0; def[i] && def[i] != END_BRACE_MARK; i++) {
-                        if (j < sizeof (tokens[0]))
+                        if (j < sizeof (tokens[0]) - 1)
                                 tokens[d_num_tokens][j++] = def[i];
                 }
                 def[i] = '}';
-                d_num_tokens++;
+                tokens[d_num_tokens++][j] = NUL;
                 return i + 1;
         }
 
@@ -99,7 +152,7 @@ static int tokenize_def_from(int i)
         }
 
         /* Operator */
-        if (is_operator(def[i])) {
+        if (D_is_operator(def[i])) {
                 tokens[d_num_tokens][0] = def[i];
                 tokens[d_num_tokens][1] = NUL;
                 d_num_tokens++;
@@ -108,7 +161,7 @@ static int tokenize_def_from(int i)
 
         /* Identifier or constant */
         for (j = 0; j < sizeof (tokens[0]) - 1; j++) {
-                if (is_operator(def[i]) || def[i] <= ' ')
+                if (D_is_operator(def[i]) || def[i] <= ' ')
                         break;
                 tokens[d_num_tokens][j] = def[i++];
         }
@@ -123,9 +176,9 @@ static void tokenize_def(void)
 {
         int pos, new_pos;
 
+        memset(token_space, 0, sizeof (token_space));
         memset(tokens, 0, sizeof (tokens));
-        for (d_num_tokens = 0, pos = 0;
-             d_num_tokens < sizeof (tokens) / sizeof (tokens[0]); ) {
+        for (d_num_tokens = 0, pos = 0; d_num_tokens < TOKENS; ) {
                 new_pos = tokenize_def_from(pos);
                 if (new_pos == pos)
                         break;
@@ -138,9 +191,19 @@ static void tokenize_def(void)
 \******************************************************************************/
 const char *D_token(int n)
 {
-        if (n < 0 || n > sizeof (tokens) / sizeof (tokens[0]))
+        if (n < 0 || n > TOKENS)
                 return "";
         return tokens[n];
+}
+
+/******************************************************************************\
+ Returns the amount of empty space before the nth token.
+\******************************************************************************/
+int D_token_space(int n)
+{
+        if (n < 0 || n > TOKENS)
+                return 0;
+        return token_space[n];
 }
 
 /******************************************************************************\
@@ -201,17 +264,24 @@ static int parse_comment(void)
 }
 
 /******************************************************************************\
- Read in a special section of the definition. [match_last] and [not_last] can
- be NUL to disable.
+ Read in a special section of the definition. [match_last] can be NUL to
+ disable.
 \******************************************************************************/
 static int parse_def_section(int i, char match_cur, char match_last,
-                             char not_last)
+                             int slashable)
 {
         do {
                 def[i++] = cur_ch;
                 read_ch();
-        } while (cur_ch != EOF && i < sizeof (def) &&
-                 (cur_ch != match_cur || last_ch == not_last ||
+                if (last_ch == '\\' && slashable && cur_ch) {
+                        def[i++] = cur_ch;
+                        read_ch();
+                        continue;
+                }
+                if (cur_ch == EOF)
+                        return i;
+        } while (i < sizeof (def) - 1 &&
+                 (cur_ch != match_cur ||
                   (match_last && last_ch != match_last)));
         def[i] = cur_ch;
         read_ch();
@@ -247,13 +317,13 @@ int D_parse_def(void)
 
                 /* Skip strings */
                 if (cur_ch == '"') {
-                        i = parse_def_section(i, '"', NUL, '\\');
+                        i = parse_def_section(i, '"', NUL, TRUE);
                         continue;
                 }
 
                 /* Skip character constants */
                 if (cur_ch == '\'') {
-                        i = parse_def_section(i, '\'', NUL, '\\');
+                        i = parse_def_section(i, '\'', NUL, TRUE);
                         continue;
                 }
 
@@ -265,7 +335,7 @@ int D_parse_def(void)
 
                 /* Skip C++ comments */
                 if (cur_ch == '/' && last_ch == '/') {
-                        i = parse_def_section(i, '\n', NUL, '\\');
+                        i = parse_def_section(i, '\n', NUL, TRUE);
                         continue;
                 }
 

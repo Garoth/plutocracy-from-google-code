@@ -62,7 +62,7 @@
 #define C_deg_to_rad(a) ((a) * M_PI / 180)
 
 /* Certain functions should not be used. Files that legitimately use these
-   should undefine these replacements */
+   should undefine these replacements. */
 #undef calloc
 #define calloc(s) ERROR_use_C_calloc
 #undef fclose
@@ -312,8 +312,6 @@ void C_register_string(c_var_t *, const char *name, const char *value,
                        c_var_edit_t);
 void C_register_string_dynamic(c_var_t *, const char *name, char *value,
                                c_var_edit_t);
-void C_register_variable(c_var_t *, const char *name, c_var_type_t,
-                         c_var_value_t, c_var_edit_t);
 void C_register_variables(void);
 void C_var_set(c_var_t *, const char *value);
 void C_var_unlatch(c_var_t *);
