@@ -506,8 +506,8 @@ void R_clip_rect(c_vec2_t origin, c_vec2_t size)
 void R_start_frame(void)
 {
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        render_test_model();
         R_render_globe();
+        render_test_model();
 }
 
 /******************************************************************************\

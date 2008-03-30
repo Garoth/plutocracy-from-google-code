@@ -488,6 +488,7 @@ void R_free_fonts(void)
 \******************************************************************************/
 void R_free_assets(void)
 {
+        R_cleanup_globe();
         R_free_fonts();
         TTF_Quit();
 }

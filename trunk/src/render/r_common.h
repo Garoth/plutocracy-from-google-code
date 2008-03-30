@@ -95,6 +95,7 @@ void R_texture_select(r_texture_t *);
 void R_texture_upload(const r_texture_t *, int mipmaps);
 
 /* r_globe.c */
+void R_cleanup_globe(void);
 void R_render_globe(void);
 
 /* r_render.c */
