@@ -156,8 +156,8 @@ typedef struct i_scrollback {
 /* i_variables.c */
 extern c_var_t i_border, i_button, i_button_active, i_button_hover,
                i_button_light, i_button_prelight, i_color, i_color2,
-               i_debug, i_fade, i_hanger, i_shadow, i_theme, i_window,
-               i_work_area;
+               i_debug, i_fade, i_hanger, i_scroll_speed, i_shadow, i_theme,
+               i_window, i_work_area;
 
 /* i_widgets.c */
 void I_button_init(i_button_t *, const char *icon, const char *text, int bg);

@@ -1,7 +1,7 @@
 <html>
 <head>
 <link rel=StyleSheet href="gendoc.css" type="text/css">
-<title>Plutocracy Render Namespace</title>
+<title>Plutocracy Render</title>
 </head>
 <script>
          function toggle(n) {
@@ -14,11 +14,12 @@
 </script>
 <body>
 <div class="menu">
-<a href="#Definitions">Definitions</a> | 
-<a href="#Types">Types</a> | 
-<a href="#Functions">Functions</a>
+<a href="#Definitions">Definitions</a> |
+<a href="#Types">Types</a> |
+<a href="#Functions">Functions</a> |
+<a href="#Variables">Variables</a>
 </div>
-<h1>Plutocracy Render Namespace</h1>
+<h1>Plutocracy Render</h1>
 <a name="Definitions"></a>
 <h2>Definitions</h2>
 <a name="R_FONT_SIZE_MIN" href="javascript:toggle(0)">
@@ -559,8 +560,7 @@ R_set_mode <span class="file">(r_render.c)</span></div>
 <div class="entry_body" id="52_body" style="display:none">
 <pre><b class="keyword0">void</b> R_set_mode<span class="def_op">(<a href="#r_mode_t">r_mode_t</a>);</span></pre>
 <p class="comment">
- Sets up OpenGL to render 2D or 3D polygons.<br>
-   <code>TODO</code>: Work a camera into the model view matrix.</p>
+ Sets up OpenGL to render 2D or 3D polygons.</p>
 </div>
 <a name="R_sprite_cleanup" href="javascript:toggle(53)">
 <div class="entry" id="53">
@@ -814,6 +814,119 @@ R_window_render <span class="file">(r_sprite.c)</span></div>
 <br>
  Note that unlike normal sprites, no edge anti-aliasing is done as it is
  assumed that all windows will make use of alpha transparency.</p>
+</div>
+<a name="Variables"></a>
+<h2>Variables</h2>
+<a name="r_camera" href="javascript:toggle(76)">
+<div class="entry" id="76">
+r_camera <span class="file">(r_common.h)</span></div>
+</a>
+<div class="entry_body" id="76_body" style="display:none">
+<pre><b class="keyword0">extern</b> c_vec3_t r_camera<span class="def_op">;</span></pre>
+<p class="comment"> r_render.c</p>
+</div>
+<a name="r_color_bits" href="javascript:toggle(77)">
+<div class="entry" id="77">
+r_color_bits <span class="file">(r_common.h)</span></div>
+</a>
+<div class="entry_body" id="77_body" style="display:none">
+<pre><b class="keyword0">extern</b> c_var_t r_color_bits<span class="def_op">,</span> r_depth_bits<span class="def_op">,</span> r_gamma<span class="def_op">,</span> r_height<span class="def_op">,</span> r_width<span class="def_op">,</span> r_vsync<span class="def_op">,</span>
+               r_windowed<span class="def_op">;</span></pre>
+<p class="comment"> r_variables.c</p>
+</div>
+<a name="r_count_faces" href="javascript:toggle(78)">
+<div class="entry" id="78">
+r_count_faces <span class="file">(r_shared.h)</span></div>
+</a>
+<div class="entry_body" id="78_body" style="display:none">
+<pre><b class="keyword0">extern</b> c_count_t r_count_faces<span class="def_op">;</span></pre>
+<p class="comment"> r_render.c</p>
+</div>
+<a name="r_depth_bits" href="javascript:toggle(79)">
+<div class="entry" id="79">
+r_depth_bits <span class="file">(r_common.h)</span></div>
+</a>
+<div class="entry_body" id="79_body" style="display:none">
+<pre><b class="keyword0">extern</b> c_var_t r_color_bits<span class="def_op">,</span> r_depth_bits<span class="def_op">,</span> r_gamma<span class="def_op">,</span> r_height<span class="def_op">,</span> r_width<span class="def_op">,</span> r_vsync<span class="def_op">,</span>
+               r_windowed<span class="def_op">;</span></pre>
+<p class="comment"> r_variables.c</p>
+</div>
+<a name="r_gamma" href="javascript:toggle(80)">
+<div class="entry" id="80">
+r_gamma <span class="file">(r_common.h)</span></div>
+</a>
+<div class="entry_body" id="80_body" style="display:none">
+<pre><b class="keyword0">extern</b> c_var_t r_color_bits<span class="def_op">,</span> r_depth_bits<span class="def_op">,</span> r_gamma<span class="def_op">,</span> r_height<span class="def_op">,</span> r_width<span class="def_op">,</span> r_vsync<span class="def_op">,</span>
+               r_windowed<span class="def_op">;</span></pre>
+<p class="comment"> r_variables.c</p>
+</div>
+<a name="r_height" href="javascript:toggle(81)">
+<div class="entry" id="81">
+r_height <span class="file">(r_common.h)</span></div>
+</a>
+<div class="entry_body" id="81_body" style="display:none">
+<pre><b class="keyword0">extern</b> c_var_t r_color_bits<span class="def_op">,</span> r_depth_bits<span class="def_op">,</span> r_gamma<span class="def_op">,</span> r_height<span class="def_op">,</span> r_width<span class="def_op">,</span> r_vsync<span class="def_op">,</span>
+               r_windowed<span class="def_op">;</span></pre>
+<p class="comment"> r_variables.c</p>
+</div>
+<a name="r_height_2d" href="javascript:toggle(82)">
+<div class="entry" id="82">
+r_height_2d <span class="file">(r_shared.h)</span></div>
+</a>
+<div class="entry_body" id="82_body" style="display:none">
+<pre><b class="keyword0">extern</b> <b class="keyword0">int</b> r_width_2d<span class="def_op">,</span> r_height_2d<span class="def_op">;</span></pre>
+<p class="comment"> r_render.c</p>
+</div>
+<a name="r_mode" href="javascript:toggle(83)">
+<div class="entry" id="83">
+r_mode <span class="file">(r_common.h)</span></div>
+</a>
+<div class="entry_body" id="83_body" style="display:none">
+<pre><b class="keyword0">extern</b> <a href="#r_mode_t">r_mode_t</a> r_mode<span class="def_op">;</span></pre>
+<p class="comment"> r_render.c</p>
+</div>
+<a name="r_pixel_scale" href="javascript:toggle(84)">
+<div class="entry" id="84">
+r_pixel_scale <span class="file">(r_shared.h)</span></div>
+</a>
+<div class="entry_body" id="84_body" style="display:none">
+<pre><b class="keyword0">extern</b> c_var_t r_pixel_scale<span class="def_op">;</span></pre>
+<p class="comment"> r_variables.c</p>
+</div>
+<a name="r_vsync" href="javascript:toggle(85)">
+<div class="entry" id="85">
+r_vsync <span class="file">(r_common.h)</span></div>
+</a>
+<div class="entry_body" id="85_body" style="display:none">
+<pre><b class="keyword0">extern</b> c_var_t r_color_bits<span class="def_op">,</span> r_depth_bits<span class="def_op">,</span> r_gamma<span class="def_op">,</span> r_height<span class="def_op">,</span> r_width<span class="def_op">,</span> r_vsync<span class="def_op">,</span>
+               r_windowed<span class="def_op">;</span></pre>
+<p class="comment"> r_variables.c</p>
+</div>
+<a name="r_width" href="javascript:toggle(86)">
+<div class="entry" id="86">
+r_width <span class="file">(r_common.h)</span></div>
+</a>
+<div class="entry_body" id="86_body" style="display:none">
+<pre><b class="keyword0">extern</b> c_var_t r_color_bits<span class="def_op">,</span> r_depth_bits<span class="def_op">,</span> r_gamma<span class="def_op">,</span> r_height<span class="def_op">,</span> r_width<span class="def_op">,</span> r_vsync<span class="def_op">,</span>
+               r_windowed<span class="def_op">;</span></pre>
+<p class="comment"> r_variables.c</p>
+</div>
+<a name="r_width_2d" href="javascript:toggle(87)">
+<div class="entry" id="87">
+r_width_2d <span class="file">(r_shared.h)</span></div>
+</a>
+<div class="entry_body" id="87_body" style="display:none">
+<pre><b class="keyword0">extern</b> <b class="keyword0">int</b> r_width_2d<span class="def_op">,</span> r_height_2d<span class="def_op">;</span></pre>
+<p class="comment"> r_render.c</p>
+</div>
+<a name="r_windowed" href="javascript:toggle(88)">
+<div class="entry" id="88">
+r_windowed <span class="file">(r_common.h)</span></div>
+</a>
+<div class="entry_body" id="88_body" style="display:none">
+<pre><b class="keyword0">extern</b> c_var_t r_color_bits<span class="def_op">,</span> r_depth_bits<span class="def_op">,</span> r_gamma<span class="def_op">,</span> r_height<span class="def_op">,</span> r_width<span class="def_op">,</span> r_vsync<span class="def_op">,</span>
+               r_windowed<span class="def_op">;</span></pre>
+<p class="comment"> r_variables.c</p>
 </div>
 </body>
 </html>

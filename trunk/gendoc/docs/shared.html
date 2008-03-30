@@ -1,7 +1,7 @@
 <html>
 <head>
 <link rel=StyleSheet href="gendoc.css" type="text/css">
-<title>Plutocracy Shared Namespace</title>
+<title>Plutocracy Shared</title>
 </head>
 <script>
          function toggle(n) {
@@ -14,11 +14,12 @@
 </script>
 <body>
 <div class="menu">
-<a href="#Definitions">Definitions</a> | 
-<a href="#Types">Types</a> | 
-<a href="#Functions">Functions</a>
+<a href="#Definitions">Definitions</a> |
+<a href="#Types">Types</a> |
+<a href="#Functions">Functions</a> |
+<a href="#Variables">Variables</a>
 </div>
-<h1>Plutocracy Shared Namespace</h1>
+<h1>Plutocracy Shared</h1>
 <a name="Definitions"></a>
 <h2>Definitions</h2>
 <a name="C_LOG_WRAP_COLS" href="javascript:toggle(0)">
@@ -1554,7 +1555,7 @@ C_vec2_len <span class="file">(c_vectors.h)</span></div>
 <div class="entry_body" id="144_body" style="display:none">
 <pre><b class="keyword0">static</b> <b class="keyword0">inline</b> <b class="keyword0">float</b> C_vec2_len<span class="def_op">(<a href="#c_vec2_t">c_vec2_t</a></span> p<span class="def_op">)</span>
 <span class="def_op">{</span>
-    <b class="keyword1">return</b> <span class="def_op">(<b class="keyword0">float</b>)</span>sqrt<span class="def_op">(</span>C_vec2_square_len<span class="def_op">(</span>p<span class="def_op">));</span>
+    <b class="keyword1">return</b> <span class="def_op">(<b class="keyword0">float</b>)</span>sqrt<span class="def_op">(</span>C_vec2_square<span class="def_op">(</span>p<span class="def_op">));</span>
 <span class="def_op">}</span></pre>
 <p class="comment">
  Vector magnitude/length.</p>
@@ -1607,17 +1608,18 @@ C_vec2_scalef <span class="file">(c_vectors.h)</span></div>
 <p class="comment">
  Binary operators with a scalar.</p>
 </div>
-<a name="C_vec2_square_len" href="javascript:toggle(149)">
+<a name="C_vec2_square" href="javascript:toggle(149)">
 <div class="entry" id="149">
-C_vec2_square_len <span class="file">(c_vectors.h)</span></div>
+C_vec2_square <span class="file">(c_vectors.h)</span></div>
 </a>
 <div class="entry_body" id="149_body" style="display:none">
-<pre><b class="keyword0">static</b> <b class="keyword0">inline</b> <b class="keyword0">float</b> C_vec2_square_len<span class="def_op">(<a href="#c_vec2_t">c_vec2_t</a></span> p<span class="def_op">)</span>
+<pre><b class="keyword0">static</b> <b class="keyword0">inline</b> <b class="keyword0">float</b> C_vec2_square<span class="def_op">(<a href="#c_vec2_t">c_vec2_t</a></span> p<span class="def_op">)</span>
 <span class="def_op">{</span>
     <b class="keyword1">return</b> p<span class="def_op">.</span>x <span class="def_op">*</span> p<span class="def_op">.</span>x <span class="def_op">+</span> p<span class="def_op">.</span>y <span class="def_op">*</span> p<span class="def_op">.</span>y<span class="def_op">;</span>
 <span class="def_op">}</span></pre>
 <p class="comment">
- Vector magnitude/length.</p>
+ Vector dimensions squared and summed. That is, magnitude without the square
+ root operation.</p>
 </div>
 <a name="C_vec2_sub" href="javascript:toggle(150)">
 <div class="entry" id="150">
@@ -1762,7 +1764,7 @@ C_vec3_len <span class="file">(c_vectors.h)</span></div>
 <div class="entry_body" id="161_body" style="display:none">
 <pre><b class="keyword0">static</b> <b class="keyword0">inline</b> <b class="keyword0">float</b> C_vec3_len<span class="def_op">(<a href="#c_vec3_t">c_vec3_t</a></span> p<span class="def_op">)</span>
 <span class="def_op">{</span>
-    <b class="keyword1">return</b> <span class="def_op">(<b class="keyword0">float</b>)</span>sqrt<span class="def_op">(</span>C_vec3_square_len<span class="def_op">(</span>p<span class="def_op">));</span>
+    <b class="keyword1">return</b> <span class="def_op">(<b class="keyword0">float</b>)</span>sqrt<span class="def_op">(</span>C_vec3_square<span class="def_op">(</span>p<span class="def_op">));</span>
 <span class="def_op">}</span></pre>
 <p class="comment">
  Vector magnitude/length.</p>
@@ -1798,317 +1800,399 @@ C_vec3_norm <span class="file">(c_vectors.h)</span></div>
 C_vec3_scale <span class="file">(c_vectors.h)</span></div>
 </a>
 <div class="entry_body" id="164_body" style="display:none">
-<pre><b class="keyword0">static</b> <b class="keyword0">inline</b> <a href="#c_vec3_t">c_vec3_t</a> C_vec3_scale<span class="def_op">(<a href="#c_vec3_t">c_vec3_t</a></span> a<span class="def_op">,</span> <b class="keyword0">float</b> f<span class="def_op">)</span>
+<pre><b class="keyword0">static</b> <b class="keyword0">inline</b> <a href="#c_vec3_t">c_vec3_t</a> C_vec3_scale<span class="def_op">(<a href="#c_vec3_t">c_vec3_t</a></span> a<span class="def_op">,</span> <a href="#c_vec3_t">c_vec3_t</a> b<span class="def_op">)</span>
+<span class="def_op">{</span>
+        <b class="keyword1">return</b> C_vec3<span class="def_op">(</span>a<span class="def_op">.</span>x <span class="def_op">*</span> b<span class="def_op">.</span>x<span class="def_op">,</span> a<span class="def_op">.</span>y <span class="def_op">*</span> b<span class="def_op">.</span>y<span class="def_op">,</span> a<span class="def_op">.</span>z <span class="def_op">*</span> b<span class="def_op">.</span>z<span class="def_op">);</span>
+<span class="def_op">}</span></pre>
+<p class="comment">
+ Component-wise binary operators with another vector.</p>
+</div>
+<a name="C_vec3_scalef" href="javascript:toggle(165)">
+<div class="entry" id="165">
+C_vec3_scalef <span class="file">(c_vectors.h)</span></div>
+</a>
+<div class="entry_body" id="165_body" style="display:none">
+<pre><b class="keyword0">static</b> <b class="keyword0">inline</b> <a href="#c_vec3_t">c_vec3_t</a> C_vec3_scalef<span class="def_op">(<a href="#c_vec3_t">c_vec3_t</a></span> a<span class="def_op">,</span> <b class="keyword0">float</b> f<span class="def_op">)</span>
 <span class="def_op">{</span>
         <b class="keyword1">return</b> C_vec3<span class="def_op">(</span>a<span class="def_op">.</span>x <span class="def_op">*</span> f<span class="def_op">,</span> a<span class="def_op">.</span>y <span class="def_op">*</span> f<span class="def_op">,</span> a<span class="def_op">.</span>z <span class="def_op">*</span> f<span class="def_op">);</span>
 <span class="def_op">}</span></pre>
 <p class="comment">
  Binary operators with a scalar.</p>
 </div>
-<a name="C_vec3_square_len" href="javascript:toggle(165)">
-<div class="entry" id="165">
-C_vec3_square_len <span class="file">(c_vectors.h)</span></div>
+<a name="C_vec3_square" href="javascript:toggle(166)">
+<div class="entry" id="166">
+C_vec3_square <span class="file">(c_vectors.h)</span></div>
 </a>
-<div class="entry_body" id="165_body" style="display:none">
-<pre><b class="keyword0">static</b> <b class="keyword0">inline</b> <b class="keyword0">float</b> C_vec3_square_len<span class="def_op">(<a href="#c_vec3_t">c_vec3_t</a></span> p<span class="def_op">)</span>
+<div class="entry_body" id="166_body" style="display:none">
+<pre><b class="keyword0">static</b> <b class="keyword0">inline</b> <b class="keyword0">float</b> C_vec3_square<span class="def_op">(<a href="#c_vec3_t">c_vec3_t</a></span> p<span class="def_op">)</span>
 <span class="def_op">{</span>
     <b class="keyword1">return</b> p<span class="def_op">.</span>x <span class="def_op">*</span> p<span class="def_op">.</span>x <span class="def_op">+</span> p<span class="def_op">.</span>y <span class="def_op">*</span> p<span class="def_op">.</span>y <span class="def_op">+</span> p<span class="def_op">.</span>z <span class="def_op">*</span> p<span class="def_op">.</span>z<span class="def_op">;</span>
 <span class="def_op">}</span></pre>
 <p class="comment">
- Vector magnitude/length.</p>
+ Vector dimensions squared and summed. That is, magnitude without the square
+ root operation.</p>
 </div>
-<a name="G_generate_globe" href="javascript:toggle(166)">
-<div class="entry" id="166">
+<a name="C_vec3_sub" href="javascript:toggle(167)">
+<div class="entry" id="167">
+C_vec3_sub <span class="file">(c_vectors.h)</span></div>
+</a>
+<div class="entry_body" id="167_body" style="display:none">
+<pre><b class="keyword0">static</b> <b class="keyword0">inline</b> <a href="#c_vec3_t">c_vec3_t</a> C_vec3_sub<span class="def_op">(<a href="#c_vec3_t">c_vec3_t</a></span> a<span class="def_op">,</span> <a href="#c_vec3_t">c_vec3_t</a> b<span class="def_op">)</span>
+<span class="def_op">{</span>
+        <b class="keyword1">return</b> C_vec3<span class="def_op">(</span>a<span class="def_op">.</span>x <span class="def_op">-</span> b<span class="def_op">.</span>x<span class="def_op">,</span> a<span class="def_op">.</span>y <span class="def_op">-</span> b<span class="def_op">.</span>y<span class="def_op">,</span> a<span class="def_op">.</span>z <span class="def_op">-</span> b<span class="def_op">.</span>z<span class="def_op">);</span>
+<span class="def_op">}</span></pre>
+<p class="comment">
+ Component-wise binary operators with another vector.</p>
+</div>
+<a name="C_vec3_subf" href="javascript:toggle(168)">
+<div class="entry" id="168">
+C_vec3_subf <span class="file">(c_vectors.h)</span></div>
+</a>
+<div class="entry_body" id="168_body" style="display:none">
+<pre><b class="keyword0">static</b> <b class="keyword0">inline</b> <a href="#c_vec3_t">c_vec3_t</a> C_vec3_subf<span class="def_op">(<a href="#c_vec3_t">c_vec3_t</a></span> a<span class="def_op">,</span> <b class="keyword0">float</b> f<span class="def_op">)</span>
+<span class="def_op">{</span>
+        <b class="keyword1">return</b> C_vec3<span class="def_op">(</span>a<span class="def_op">.</span>x <span class="def_op">-</span> f<span class="def_op">,</span> a<span class="def_op">.</span>y <span class="def_op">-</span> f<span class="def_op">,</span> a<span class="def_op">.</span>z <span class="def_op">-</span> f<span class="def_op">);</span>
+<span class="def_op">}</span></pre>
+<p class="comment">
+ Binary operators with a scalar.</p>
+</div>
+<a name="C_warning" href="javascript:toggle(169)">
+<div class="entry" id="169">
+C_warning <span class="file">(c_shared.h)</span></div>
+</a>
+<div class="entry_body" id="169_body" style="display:none">
+<pre><b class="keyword2">#define</b> C_warning<span class="def_op">(</span>fmt<span class="def_op">,</span> <span class="def_op">...)</span> C_log<span class="def_op">(</span>C_LOG_WARNING<span class="def_op">,</span> __FILE__<span class="def_op">,</span> __LINE__<span class="def_op">,</span> <span class="def_op">\</span>
+                                  __func__<span class="def_op">,</span> fmt<span class="def_op">,</span> <span class="def_op">##</span> __VA_ARGS__<span class="def_op">)</span></pre>
+<p class="comment"> c_log.c</p>
+</div>
+<a name="C_warning_full" href="javascript:toggle(170)">
+<div class="entry" id="170">
+C_warning_full <span class="file">(c_shared.h)</span></div>
+</a>
+<div class="entry_body" id="170_body" style="display:none">
+<pre><b class="keyword2">#define</b> C_warning_full<span class="def_op">(</span>f<span class="def_op">,</span> l<span class="def_op">,</span> fn<span class="def_op">,</span> fmt<span class="def_op">,</span> <span class="def_op">...)</span> C_log<span class="def_op">(</span>C_LOG_TRACE<span class="def_op">,</span> f<span class="def_op">,</span> l<span class="def_op">,</span> fn<span class="def_op">,</span> <span class="def_op">\</span>
+                                                 fmt<span class="def_op">,</span> <span class="def_op">##</span> __VA_ARGS__<span class="def_op">)</span></pre>
+<p class="comment"> c_log.c</p>
+</div>
+<a name="C_wrap_log" href="javascript:toggle(171)">
+<div class="entry" id="171">
+C_wrap_log <span class="file">(c_log.c)</span></div>
+</a>
+<div class="entry_body" id="171_body" style="display:none">
+<pre><b class="keyword0">char</b> <span class="def_op">*</span>C_wrap_log<span class="def_op">(<b class="keyword0">const</b></span> <b class="keyword0">char</b> <span class="def_op">*,</span> <b class="keyword0">int</b> margin<span class="def_op">,</span> <b class="keyword0">int</b> wrap<span class="def_op">,</span> <b class="keyword0">int</b> <span class="def_op">*</span>plen<span class="def_op">);</span></pre>
+<p class="comment">
+ Wraps log-formatted text. <code>margin</code> amount of padding is added to each line
+ following the first. If <code>plen</code> is not <code>NULL</code>, it is set to the length of the
+ returned string.</p>
+</div>
+<a name="C_zero" href="javascript:toggle(172)">
+<div class="entry" id="172">
+C_zero <span class="file">(c_shared.h)</span></div>
+</a>
+<div class="entry_body" id="172_body" style="display:none">
+<pre><b class="keyword2">#define</b> C_zero<span class="def_op">(</span>s<span class="def_op">)</span> memset<span class="def_op">(</span>s<span class="def_op">,</span> <span class="def_const">0</span><span class="def_op">,</span> <b class="keyword1">sizeof</b> <span class="def_op">(*(</span>s<span class="def_op">)))</span></pre>
+<p class="comment"> c_memory.c</p>
+</div>
+<a name="C_zero_buf" href="javascript:toggle(173)">
+<div class="entry" id="173">
+C_zero_buf <span class="file">(c_shared.h)</span></div>
+</a>
+<div class="entry_body" id="173_body" style="display:none">
+<pre><b class="keyword2">#define</b> C_zero_buf<span class="def_op">(</span>s<span class="def_op">)</span> memset<span class="def_op">(</span>s<span class="def_op">,</span> <span class="def_const">0</span><span class="def_op">,</span> <b class="keyword1">sizeof</b> <span class="def_op">(</span>s<span class="def_op">))</span></pre>
+<p class="comment"> c_memory.c</p>
+</div>
+<a name="G_generate_globe" href="javascript:toggle(174)">
+<div class="entry" id="174">
 G_generate_globe <span class="file">(g_globe.c)</span></div>
 </a>
-<div class="entry_body" id="166_body" style="display:none">
+<div class="entry_body" id="174_body" style="display:none">
 <pre><b class="keyword0">void</b> G_generate_globe<span class="def_op">(<b class="keyword0">int</b></span> seed<span class="def_op">,</span> <b class="keyword0">int</b> subdiv<span class="def_op">);</span></pre>
 <p class="comment">
  Generate a new icosahedral sphere globe.</p>
 </div>
-<a name="I_cleanup" href="javascript:toggle(167)">
-<div class="entry" id="167">
+<a name="I_cleanup" href="javascript:toggle(175)">
+<div class="entry" id="175">
 I_cleanup <span class="file">(i_layout.c)</span></div>
 </a>
-<div class="entry_body" id="167_body" style="display:none">
+<div class="entry_body" id="175_body" style="display:none">
 <pre><b class="keyword0">void</b> I_cleanup<span class="def_op">(<b class="keyword0">void</b>);</span></pre>
 <p class="comment">
  Free interface assets.</p>
 </div>
-<a name="I_dispatch" href="javascript:toggle(168)">
-<div class="entry" id="168">
+<a name="I_dispatch" href="javascript:toggle(176)">
+<div class="entry" id="176">
 I_dispatch <span class="file">(i_widgets.c)</span></div>
 </a>
-<div class="entry_body" id="168_body" style="display:none">
+<div class="entry_body" id="176_body" style="display:none">
 <pre><b class="keyword0">void</b> I_dispatch<span class="def_op">(<b class="keyword0">const</b></span> SDL_Event <span class="def_op">*);</span></pre>
 <p class="comment">
  Handle an <code>SDL</code> event. Does not allow multiple keys or mouse buttons to be
  pressed at the same time.</p>
 </div>
-<a name="I_init" href="javascript:toggle(169)">
-<div class="entry" id="169">
+<a name="I_init" href="javascript:toggle(177)">
+<div class="entry" id="177">
 I_init <span class="file">(i_layout.c)</span></div>
 </a>
-<div class="entry_body" id="169_body" style="display:none">
+<div class="entry_body" id="177_body" style="display:none">
 <pre><b class="keyword0">void</b> I_init<span class="def_op">(<b class="keyword0">void</b>);</span></pre>
 <p class="comment">
  Loads interface assets and initializes windows.</p>
 </div>
-<a name="I_register_variables" href="javascript:toggle(170)">
-<div class="entry" id="170">
+<a name="I_register_variables" href="javascript:toggle(178)">
+<div class="entry" id="178">
 I_register_variables <span class="file">(i_variables.c)</span></div>
 </a>
-<div class="entry_body" id="170_body" style="display:none">
+<div class="entry_body" id="178_body" style="display:none">
 <pre><b class="keyword0">void</b> I_register_variables<span class="def_op">(<b class="keyword0">void</b>);</span></pre>
 <p class="comment">
  Registers interface namespace variables.</p>
 </div>
-<a name="I_render" href="javascript:toggle(171)">
-<div class="entry" id="171">
+<a name="I_render" href="javascript:toggle(179)">
+<div class="entry" id="179">
 I_render <span class="file">(i_layout.c)</span></div>
 </a>
-<div class="entry_body" id="171_body" style="display:none">
+<div class="entry_body" id="179_body" style="display:none">
 <pre><b class="keyword0">void</b> I_render<span class="def_op">(<b class="keyword0">void</b>);</span></pre>
 <p class="comment">
  Render all visible windows.</p>
 </div>
-<a name="R_cleanup" href="javascript:toggle(172)">
-<div class="entry" id="172">
+<a name="R_cleanup" href="javascript:toggle(180)">
+<div class="entry" id="180">
 R_cleanup <span class="file">(r_render.c)</span></div>
 </a>
-<div class="entry_body" id="172_body" style="display:none">
+<div class="entry_body" id="180_body" style="display:none">
 <pre><b class="keyword0">void</b> R_cleanup<span class="def_op">(<b class="keyword0">void</b>);</span></pre>
 <p class="comment">
  Cleanup the OpenGL mess.</p>
 </div>
-<a name="R_clip_bottom" href="javascript:toggle(173)">
-<div class="entry" id="173">
+<a name="R_clip_bottom" href="javascript:toggle(181)">
+<div class="entry" id="181">
 R_clip_bottom <span class="file">(r_render.c)</span></div>
 </a>
-<div class="entry_body" id="173_body" style="display:none">
+<div class="entry_body" id="181_body" style="display:none">
 <pre><b class="keyword0">void</b> R_clip_bottom<span class="def_op">(<b class="keyword0">float</b>);</span></pre>
 <p class="comment">
  Clip in a specific direction.</p>
 </div>
-<a name="R_clip_disable" href="javascript:toggle(174)">
-<div class="entry" id="174">
+<a name="R_clip_disable" href="javascript:toggle(182)">
+<div class="entry" id="182">
 R_clip_disable <span class="file">(r_render.c)</span></div>
 </a>
-<div class="entry_body" id="174_body" style="display:none">
+<div class="entry_body" id="182_body" style="display:none">
 <pre><b class="keyword0">void</b> R_clip_disable<span class="def_op">(<b class="keyword0">void</b>);</span></pre>
 <p class="comment">
  Disables the clipping at the current stack level.</p>
 </div>
-<a name="R_clip_left" href="javascript:toggle(175)">
-<div class="entry" id="175">
+<a name="R_clip_left" href="javascript:toggle(183)">
+<div class="entry" id="183">
 R_clip_left <span class="file">(r_render.c)</span></div>
 </a>
-<div class="entry_body" id="175_body" style="display:none">
+<div class="entry_body" id="183_body" style="display:none">
 <pre><b class="keyword0">void</b> R_clip_left<span class="def_op">(<b class="keyword0">float</b>);</span></pre>
 <p class="comment">
  Clip in a specific direction.</p>
 </div>
-<a name="R_clip_pop" href="javascript:toggle(176)">
-<div class="entry" id="176">
+<a name="R_clip_pop" href="javascript:toggle(184)">
+<div class="entry" id="184">
 R_clip_pop <span class="file">(r_render.c)</span></div>
 </a>
-<div class="entry_body" id="176_body" style="display:none">
+<div class="entry_body" id="184_body" style="display:none">
 <pre><b class="keyword0">void</b> R_clip_pop<span class="def_op">(<b class="keyword0">void</b>);</span></pre>
 <p class="comment">
  Adjust the clip stack.</p>
 </div>
-<a name="R_clip_push" href="javascript:toggle(177)">
-<div class="entry" id="177">
+<a name="R_clip_push" href="javascript:toggle(185)">
+<div class="entry" id="185">
 R_clip_push <span class="file">(r_render.c)</span></div>
 </a>
-<div class="entry_body" id="177_body" style="display:none">
+<div class="entry_body" id="185_body" style="display:none">
 <pre><b class="keyword0">void</b> R_clip_push<span class="def_op">(<b class="keyword0">void</b>);</span></pre>
 <p class="comment">
  Adjust the clip stack.</p>
 </div>
-<a name="R_clip_rect" href="javascript:toggle(178)">
-<div class="entry" id="178">
+<a name="R_clip_rect" href="javascript:toggle(186)">
+<div class="entry" id="186">
 R_clip_rect <span class="file">(r_render.c)</span></div>
 </a>
-<div class="entry_body" id="178_body" style="display:none">
+<div class="entry_body" id="186_body" style="display:none">
 <pre><b class="keyword0">void</b> R_clip_rect<span class="def_op">(<a href="#c_vec2_t">c_vec2_t</a></span> origin<span class="def_op">,</span> <a href="#c_vec2_t">c_vec2_t</a> size<span class="def_op">);</span></pre>
 <p class="comment">
  Setup a clipping rectangle.</p>
 </div>
-<a name="R_clip_right" href="javascript:toggle(179)">
-<div class="entry" id="179">
+<a name="R_clip_right" href="javascript:toggle(187)">
+<div class="entry" id="187">
 R_clip_right <span class="file">(r_render.c)</span></div>
 </a>
-<div class="entry_body" id="179_body" style="display:none">
+<div class="entry_body" id="187_body" style="display:none">
 <pre><b class="keyword0">void</b> R_clip_right<span class="def_op">(<b class="keyword0">float</b>);</span></pre>
 <p class="comment">
  Clip in a specific direction.</p>
 </div>
-<a name="R_clip_top" href="javascript:toggle(180)">
-<div class="entry" id="180">
+<a name="R_clip_top" href="javascript:toggle(188)">
+<div class="entry" id="188">
 R_clip_top <span class="file">(r_render.c)</span></div>
 </a>
-<div class="entry_body" id="180_body" style="display:none">
+<div class="entry_body" id="188_body" style="display:none">
 <pre><b class="keyword0">void</b> R_clip_top<span class="def_op">(<b class="keyword0">float</b>);</span></pre>
 <p class="comment">
  Clip in a specific direction.</p>
 </div>
-<a name="R_finish_frame" href="javascript:toggle(181)">
-<div class="entry" id="181">
+<a name="R_finish_frame" href="javascript:toggle(189)">
+<div class="entry" id="189">
 R_finish_frame <span class="file">(r_render.c)</span></div>
 </a>
-<div class="entry_body" id="181_body" style="display:none">
+<div class="entry_body" id="189_body" style="display:none">
 <pre><b class="keyword0">void</b> R_finish_frame<span class="def_op">(<b class="keyword0">void</b>);</span></pre>
 <p class="comment">
  Finishes rendering the scene and flips the buffer.</p>
 </div>
-<a name="R_font_height" href="javascript:toggle(182)">
-<div class="entry" id="182">
+<a name="R_font_height" href="javascript:toggle(190)">
+<div class="entry" id="190">
 R_font_height <span class="file">(r_assets.c)</span></div>
 </a>
-<div class="entry_body" id="182_body" style="display:none">
+<div class="entry_body" id="190_body" style="display:none">
 <pre><b class="keyword0">int</b> R_font_height<span class="def_op">(<a href="#r_font_t">r_font_t</a>);</span></pre>
 <p class="comment">
  Returns the height of the tallest glyph in the font.</p>
 </div>
-<a name="R_font_line_skip" href="javascript:toggle(183)">
-<div class="entry" id="183">
+<a name="R_font_line_skip" href="javascript:toggle(191)">
+<div class="entry" id="191">
 R_font_line_skip <span class="file">(r_assets.c)</span></div>
 </a>
-<div class="entry_body" id="183_body" style="display:none">
+<div class="entry_body" id="191_body" style="display:none">
 <pre><b class="keyword0">int</b> R_font_line_skip<span class="def_op">(<a href="#r_font_t">r_font_t</a>);</span></pre>
 <p class="comment">
  Returns distance from start of one line to the start of the next.</p>
 </div>
-<a name="R_font_size" href="javascript:toggle(184)">
-<div class="entry" id="184">
+<a name="R_font_size" href="javascript:toggle(192)">
+<div class="entry" id="192">
 R_font_size <span class="file">(r_assets.c)</span></div>
 </a>
-<div class="entry_body" id="184_body" style="display:none">
+<div class="entry_body" id="192_body" style="display:none">
 <pre><a href="#c_vec2_t">c_vec2_t</a> R_font_size<span class="def_op">(<a href="#r_font_t">r_font_t</a>,</span> <b class="keyword0">const</b> <b class="keyword0">char</b> <span class="def_op">*);</span></pre>
 <p class="comment">
  Returns distance from start of one line to the start of the next.</p>
 </div>
-<a name="R_font_width" href="javascript:toggle(185)">
-<div class="entry" id="185">
+<a name="R_font_width" href="javascript:toggle(193)">
+<div class="entry" id="193">
 R_font_width <span class="file">(r_assets.c)</span></div>
 </a>
-<div class="entry_body" id="185_body" style="display:none">
+<div class="entry_body" id="193_body" style="display:none">
 <pre><b class="keyword0">int</b> R_font_width<span class="def_op">(<a href="#r_font_t">r_font_t</a>);</span></pre>
 <p class="comment">
  Returns the width of the widest glyph in the font.</p>
 </div>
-<a name="R_free_fonts" href="javascript:toggle(186)">
-<div class="entry" id="186">
+<a name="R_free_fonts" href="javascript:toggle(194)">
+<div class="entry" id="194">
 R_free_fonts <span class="file">(r_assets.c)</span></div>
 </a>
-<div class="entry_body" id="186_body" style="display:none">
+<div class="entry_body" id="194_body" style="display:none">
 <pre><b class="keyword0">void</b> R_free_fonts<span class="def_op">(<b class="keyword0">void</b>);</span></pre>
 <p class="comment">
  Cleans up fonts.</p>
 </div>
-<a name="R_generate_globe" href="javascript:toggle(187)">
-<div class="entry" id="187">
+<a name="R_generate_globe" href="javascript:toggle(195)">
+<div class="entry" id="195">
 R_generate_globe <span class="file">(r_globe.c)</span></div>
 </a>
-<div class="entry_body" id="187_body" style="display:none">
+<div class="entry_body" id="195_body" style="display:none">
 <pre><b class="keyword0">void</b> R_generate_globe<span class="def_op">(<b class="keyword0">int</b></span> seed<span class="def_op">,</span> <b class="keyword0">int</b> subdivs<span class="def_op">);</span></pre>
 <p class="comment">
  Generates the globe by subdividing an icosahedron and spacing the vertices
  out at the sphere's surface.</p>
 </div>
-<a name="R_init" href="javascript:toggle(188)">
-<div class="entry" id="188">
+<a name="R_init" href="javascript:toggle(196)">
+<div class="entry" id="196">
 R_init <span class="file">(r_render.c)</span></div>
 </a>
-<div class="entry_body" id="188_body" style="display:none">
+<div class="entry_body" id="196_body" style="display:none">
 <pre><b class="keyword0">int</b> R_init<span class="def_op">(<b class="keyword0">void</b>);</span></pre>
 <p class="comment">
  Creates the client window. Initializes OpenGL settings such view matrices,
  culling, and depth testing. Returns <code>TRUE</code> on success.</p>
 </div>
-<a name="R_load_fonts" href="javascript:toggle(189)">
-<div class="entry" id="189">
+<a name="R_load_fonts" href="javascript:toggle(197)">
+<div class="entry" id="197">
 R_load_fonts <span class="file">(r_assets.c)</span></div>
 </a>
-<div class="entry_body" id="189_body" style="display:none">
+<div class="entry_body" id="197_body" style="display:none">
 <pre><b class="keyword0">void</b> R_load_fonts<span class="def_op">(<b class="keyword0">void</b>);</span></pre>
 <p class="comment">
  Initialize the <code>SDL</code> <code>TTF</code> library and generate font structures.</p>
 </div>
-<a name="R_model_cleanup" href="javascript:toggle(190)">
-<div class="entry" id="190">
+<a name="R_model_cleanup" href="javascript:toggle(198)">
+<div class="entry" id="198">
 R_model_cleanup <span class="file">(r_model.c)</span></div>
 </a>
-<div class="entry_body" id="190_body" style="display:none">
+<div class="entry_body" id="198_body" style="display:none">
 <pre><b class="keyword0">void</b> R_model_cleanup<span class="def_op">(<a href="#r_model_t">r_model_t</a></span> <span class="def_op">*);</span></pre>
 <p class="comment">
  Decrease reference counts to resources used by a model and free those
  resources if they have no references left.</p>
 </div>
-<a name="R_model_init" href="javascript:toggle(191)">
-<div class="entry" id="191">
+<a name="R_model_init" href="javascript:toggle(199)">
+<div class="entry" id="199">
 R_model_init <span class="file">(r_model.c)</span></div>
 </a>
-<div class="entry_body" id="191_body" style="display:none">
+<div class="entry_body" id="199_body" style="display:none">
 <pre><b class="keyword0">int</b> R_model_init<span class="def_op">(<a href="#r_model_t">r_model_t</a></span> <span class="def_op">*,</span> <b class="keyword0">const</b> <b class="keyword0">char</b> <span class="def_op">*</span>filename<span class="def_op">);</span></pre>
 <p class="comment">
  Initialize a model instance. Model data is loaded if it is not already in
  memory. Returns <code>FALSE</code> and invalidates the model instance if the model data
  failed to load.</p>
 </div>
-<a name="R_model_play" href="javascript:toggle(192)">
-<div class="entry" id="192">
+<a name="R_model_play" href="javascript:toggle(200)">
+<div class="entry" id="200">
 R_model_play <span class="file">(r_model.c)</span></div>
 </a>
-<div class="entry_body" id="192_body" style="display:none">
+<div class="entry_body" id="200_body" style="display:none">
 <pre><b class="keyword0">void</b> R_model_play<span class="def_op">(<a href="#r_model_t">r_model_t</a></span> <span class="def_op">*,</span> <b class="keyword0">const</b> <b class="keyword0">char</b> <span class="def_op">*</span>anim_name<span class="def_op">);</span></pre>
 <p class="comment">
  Set a model animation to play.</p>
 </div>
-<a name="R_model_render" href="javascript:toggle(193)">
-<div class="entry" id="193">
+<a name="R_model_render" href="javascript:toggle(201)">
+<div class="entry" id="201">
 R_model_render <span class="file">(r_model.c)</span></div>
 </a>
-<div class="entry_body" id="193_body" style="display:none">
+<div class="entry_body" id="201_body" style="display:none">
 <pre><b class="keyword0">void</b> R_model_render<span class="def_op">(<a href="#r_model_t">r_model_t</a></span> <span class="def_op">*);</span></pre>
 <p class="comment">
  Render and advance the animation of a model. Applies the model's translation,
  rotation, and scale.</p>
 </div>
-<a name="R_register_variables" href="javascript:toggle(194)">
-<div class="entry" id="194">
+<a name="R_register_variables" href="javascript:toggle(202)">
+<div class="entry" id="202">
 R_register_variables <span class="file">(r_variables.c)</span></div>
 </a>
-<div class="entry_body" id="194_body" style="display:none">
+<div class="entry_body" id="202_body" style="display:none">
 <pre><b class="keyword0">void</b> R_register_variables<span class="def_op">(<b class="keyword0">void</b>);</span></pre>
 <p class="comment">
  Registers the render namespace variables.</p>
 </div>
-<a name="R_sprite_cleanup" href="javascript:toggle(195)">
-<div class="entry" id="195">
+<a name="R_sprite_cleanup" href="javascript:toggle(203)">
+<div class="entry" id="203">
 R_sprite_cleanup <span class="file">(r_sprite.c)</span></div>
 </a>
-<div class="entry_body" id="195_body" style="display:none">
+<div class="entry_body" id="203_body" style="display:none">
 <pre><b class="keyword0">void</b> R_sprite_cleanup<span class="def_op">(<a href="#r_sprite_t">r_sprite_t</a></span> <span class="def_op">*);</span></pre>
 <p class="comment">
  Initialize a sprite structure.</p>
 </div>
-<a name="R_sprite_init" href="javascript:toggle(196)">
-<div class="entry" id="196">
+<a name="R_sprite_init" href="javascript:toggle(204)">
+<div class="entry" id="204">
 R_sprite_init <span class="file">(r_sprite.c)</span></div>
 </a>
-<div class="entry_body" id="196_body" style="display:none">
+<div class="entry_body" id="204_body" style="display:none">
 <pre><b class="keyword0">void</b> R_sprite_init<span class="def_op">(<a href="#r_sprite_t">r_sprite_t</a></span> <span class="def_op">*,</span> <b class="keyword0">const</b> <b class="keyword0">char</b> <span class="def_op">*</span>filename<span class="def_op">);</span></pre>
 <p class="comment">
  Initialize a sprite structure. 2D mode textures are expected to be at the
  maximum pixel scale (2x).</p>
 </div>
-<a name="R_sprite_init_text" href="javascript:toggle(197)">
-<div class="entry" id="197">
+<a name="R_sprite_init_text" href="javascript:toggle(205)">
+<div class="entry" id="205">
 R_sprite_init_text <span class="file">(r_sprite.c)</span></div>
 </a>
-<div class="entry_body" id="197_body" style="display:none">
+<div class="entry_body" id="205_body" style="display:none">
 <pre><b class="keyword0">void</b> R_sprite_init_text<span class="def_op">(<a href="#r_sprite_t">r_sprite_t</a></span> <span class="def_op">*,</span> <a href="#r_font_t">r_font_t</a><span class="def_op">,</span> <b class="keyword0">float</b> wrap<span class="def_op">,</span> <b class="keyword0">float</b> shadow<span class="def_op">,</span>
                         <b class="keyword0">int</b> invert<span class="def_op">,</span> <b class="keyword0">const</b> <b class="keyword0">char</b> <span class="def_op">*</span>text<span class="def_op">);</span></pre>
 <p class="comment">
@@ -2117,11 +2201,11 @@ R_sprite_init_text <span class="file">(r_sprite.c)</span></div>
  shadow (of variable opacity) can be applied. <code>string</code> does need to persist
  after the function call.</p>
 </div>
-<a name="R_sprite_render" href="javascript:toggle(198)">
-<div class="entry" id="198">
+<a name="R_sprite_render" href="javascript:toggle(206)">
+<div class="entry" id="206">
 R_sprite_render <span class="file">(r_sprite.c)</span></div>
 </a>
-<div class="entry_body" id="198_body" style="display:none">
+<div class="entry_body" id="206_body" style="display:none">
 <pre><b class="keyword0">void</b> R_sprite_render<span class="def_op">(<b class="keyword0">const</b></span> <a href="#r_sprite_t">r_sprite_t</a> <span class="def_op">*);</span></pre>
 <p class="comment">
  Renders a 2D textured quad on screen. If we are rendering a rotated sprite
@@ -2139,72 +2223,72 @@ R_sprite_render <span class="file">(r_sprite.c)</span></div>
    <code>FIXME</code>: There is a slight overlap between the antialiased edge line and the
           polygon which should probably be fixed if possible.</p>
 </div>
-<a name="R_start_frame" href="javascript:toggle(199)">
-<div class="entry" id="199">
+<a name="R_start_frame" href="javascript:toggle(207)">
+<div class="entry" id="207">
 R_start_frame <span class="file">(r_render.c)</span></div>
 </a>
-<div class="entry_body" id="199_body" style="display:none">
+<div class="entry_body" id="207_body" style="display:none">
 <pre><b class="keyword0">void</b> R_start_frame<span class="def_op">(<b class="keyword0">void</b>);</span></pre>
 <p class="comment">
  Clears the buffer and starts rendering the scene.</p>
 </div>
-<a name="R_text_cleanup" href="javascript:toggle(200)">
-<div class="entry" id="200">
+<a name="R_text_cleanup" href="javascript:toggle(208)">
+<div class="entry" id="208">
 R_text_cleanup <span class="file">(r_shared.h)</span></div>
 </a>
-<div class="entry_body" id="200_body" style="display:none">
+<div class="entry_body" id="208_body" style="display:none">
 <pre><b class="keyword2">#define</b> R_text_cleanup<span class="def_op">(</span>t<span class="def_op">)</span> R_sprite_cleanup<span class="def_op">(&(</span>t<span class="def_op">)-></span>sprite<span class="def_op">)</span></pre>
 <p class="comment"> r_sprite.c</p>
 </div>
-<a name="R_text_configure" href="javascript:toggle(201)">
-<div class="entry" id="201">
+<a name="R_text_configure" href="javascript:toggle(209)">
+<div class="entry" id="209">
 R_text_configure <span class="file">(r_sprite.c)</span></div>
 </a>
-<div class="entry_body" id="201_body" style="display:none">
+<div class="entry_body" id="209_body" style="display:none">
 <pre><b class="keyword0">void</b> R_text_configure<span class="def_op">(<a href="#r_text_t">r_text_t</a></span> <span class="def_op">*,</span> <a href="#r_font_t">r_font_t</a><span class="def_op">,</span> <b class="keyword0">float</b> wrap<span class="def_op">,</span> <b class="keyword0">float</b> shadow<span class="def_op">,</span>
                       <b class="keyword0">int</b> invert<span class="def_op">,</span> <b class="keyword0">const</b> <b class="keyword0">char</b> <span class="def_op">*</span>text<span class="def_op">);</span></pre>
 <p class="comment">
  Wrapper around the sprite text initializer. Avoids re-rendering the texture
  if the parameters have not changed.</p>
 </div>
-<a name="R_text_init" href="javascript:toggle(202)">
-<div class="entry" id="202">
+<a name="R_text_init" href="javascript:toggle(210)">
+<div class="entry" id="210">
 R_text_init <span class="file">(r_shared.h)</span></div>
 </a>
-<div class="entry_body" id="202_body" style="display:none">
+<div class="entry_body" id="210_body" style="display:none">
 <pre><b class="keyword2">#define</b> R_text_init<span class="def_op">(</span>t<span class="def_op">)</span> C_zero<span class="def_op">(</span>t<span class="def_op">)</span></pre>
 <p class="comment"> r_sprite.c</p>
 </div>
-<a name="R_text_render" href="javascript:toggle(203)">
-<div class="entry" id="203">
+<a name="R_text_render" href="javascript:toggle(211)">
+<div class="entry" id="211">
 R_text_render <span class="file">(r_shared.h)</span></div>
 </a>
-<div class="entry_body" id="203_body" style="display:none">
+<div class="entry_body" id="211_body" style="display:none">
 <pre><b class="keyword2">#define</b> R_text_render<span class="def_op">(</span>t<span class="def_op">)</span> R_sprite_render<span class="def_op">(&(</span>t<span class="def_op">)-></span>sprite<span class="def_op">)</span></pre>
 <p class="comment"> r_sprite.c</p>
 </div>
-<a name="R_window_cleanup" href="javascript:toggle(204)">
-<div class="entry" id="204">
+<a name="R_window_cleanup" href="javascript:toggle(212)">
+<div class="entry" id="212">
 R_window_cleanup <span class="file">(r_shared.h)</span></div>
 </a>
-<div class="entry_body" id="204_body" style="display:none">
+<div class="entry_body" id="212_body" style="display:none">
 <pre><b class="keyword2">#define</b> R_window_cleanup<span class="def_op">(</span>w<span class="def_op">)</span> R_sprite_cleanup<span class="def_op">(&(</span>w<span class="def_op">)-></span>sprite<span class="def_op">)</span></pre>
 <p class="comment"> r_sprite.c</p>
 </div>
-<a name="R_window_init" href="javascript:toggle(205)">
-<div class="entry" id="205">
+<a name="R_window_init" href="javascript:toggle(213)">
+<div class="entry" id="213">
 R_window_init <span class="file">(r_sprite.c)</span></div>
 </a>
-<div class="entry_body" id="205_body" style="display:none">
+<div class="entry_body" id="213_body" style="display:none">
 <pre><b class="keyword0">void</b> R_window_init<span class="def_op">(<a href="#r_window_t">r_window_t</a></span> <span class="def_op">*,</span> <b class="keyword0">const</b> <b class="keyword0">char</b> <span class="def_op">*</span>filename<span class="def_op">);</span></pre>
 <p class="comment">
  Initializes a window sprite.</p>
 </div>
-<a name="R_window_render" href="javascript:toggle(206)">
-<div class="entry" id="206">
+<a name="R_window_render" href="javascript:toggle(214)">
+<div class="entry" id="214">
 R_window_render <span class="file">(r_sprite.c)</span></div>
 </a>
-<div class="entry_body" id="206_body" style="display:none">
+<div class="entry_body" id="214_body" style="display:none">
 <pre><b class="keyword0">void</b> R_window_render<span class="def_op">(<a href="#r_window_t">r_window_t</a></span> <span class="def_op">*);</span></pre>
 <p class="comment">
  Renders a window sprite. A window sprite is composed of a grid of nine quads
@@ -2224,6 +2308,159 @@ R_window_render <span class="file">(r_sprite.c)</span></div>
 <br>
  Note that unlike normal sprites, no edge anti-aliasing is done as it is
  assumed that all windows will make use of alpha transparency.</p>
+</div>
+<a name="calloc" href="javascript:toggle(215)">
+<div class="entry" id="215">
+calloc <span class="file">(c_shared.h)</span></div>
+</a>
+<div class="entry_body" id="215_body" style="display:none">
+<pre><b class="keyword2">#define</b> calloc<span class="def_op">(</span>s<span class="def_op">)</span> ERROR_use_C_calloc</pre>
+<p class="comment"> Certain functions should not be used. Files that legitimately use these
+   should undefine these replacements.</p>
+</div>
+<a name="fclose" href="javascript:toggle(216)">
+<div class="entry" id="216">
+fclose <span class="file">(c_shared.h)</span></div>
+</a>
+<div class="entry_body" id="216_body" style="display:none">
+<pre><b class="keyword2">#define</b> fclose<span class="def_op">(</span>f<span class="def_op">)</span> ERROR_use_C_file_close</pre>
+<p class="comment"> Certain functions should not be used. Files that legitimately use these
+   should undefine these replacements.</p>
+</div>
+<a name="free" href="javascript:toggle(217)">
+<div class="entry" id="217">
+free <span class="file">(c_shared.h)</span></div>
+</a>
+<div class="entry_body" id="217_body" style="display:none">
+<pre><b class="keyword2">#define</b> free<span class="def_op">(</span>s<span class="def_op">)</span> ERROR_use_C_free</pre>
+<p class="comment"> Certain functions should not be used. Files that legitimately use these
+   should undefine these replacements.</p>
+</div>
+<a name="malloc" href="javascript:toggle(218)">
+<div class="entry" id="218">
+malloc <span class="file">(c_shared.h)</span></div>
+</a>
+<div class="entry_body" id="218_body" style="display:none">
+<pre><b class="keyword2">#define</b> malloc<span class="def_op">(</span>s<span class="def_op">)</span> ERROR_use_C_malloc</pre>
+<p class="comment"> Certain functions should not be used. Files that legitimately use these
+   should undefine these replacements.</p>
+</div>
+<a name="realloc" href="javascript:toggle(219)">
+<div class="entry" id="219">
+realloc <span class="file">(c_shared.h)</span></div>
+</a>
+<div class="entry_body" id="219_body" style="display:none">
+<pre><b class="keyword2">#define</b> realloc<span class="def_op">(</span>p<span class="def_op">,</span> s<span class="def_op">)</span> ERROR_use_C_realloc</pre>
+<p class="comment"> Certain functions should not be used. Files that legitimately use these
+   should undefine these replacements.</p>
+</div>
+<a name="strdup" href="javascript:toggle(220)">
+<div class="entry" id="220">
+strdup <span class="file">(c_shared.h)</span></div>
+</a>
+<div class="entry_body" id="220_body" style="display:none">
+<pre><b class="keyword2">#define</b> strdup<span class="def_op">(</span>s<span class="def_op">)</span> ERROR_use_C_strdup</pre>
+<p class="comment"> Certain functions should not be used. Files that legitimately use these
+   should undefine these replacements.</p>
+</div>
+<a name="strncpy" href="javascript:toggle(221)">
+<div class="entry" id="221">
+strncpy <span class="file">(c_shared.h)</span></div>
+</a>
+<div class="entry_body" id="221_body" style="display:none">
+<pre><b class="keyword2">#define</b> strncpy<span class="def_op">(</span>d<span class="def_op">,</span> s<span class="def_op">,</span> n<span class="def_op">)</span> ERROR_use_C_strncpy</pre>
+<p class="comment"> Certain functions should not be used. Files that legitimately use these
+   should undefine these replacements.</p>
+</div>
+<a name="Variables"></a>
+<h2>Variables</h2>
+<a name="c_frame" href="javascript:toggle(222)">
+<div class="entry" id="222">
+c_frame <span class="file">(c_shared.h)</span></div>
+</a>
+<div class="entry_body" id="222_body" style="display:none">
+<pre><b class="keyword0">extern</b> <b class="keyword0">int</b> c_time_msec<span class="def_op">,</span> c_frame_msec<span class="def_op">,</span> c_frame<span class="def_op">;</span></pre>
+<p class="comment"> c_time.c</p>
+</div>
+<a name="c_frame_msec" href="javascript:toggle(223)">
+<div class="entry" id="223">
+c_frame_msec <span class="file">(c_shared.h)</span></div>
+</a>
+<div class="entry_body" id="223_body" style="display:none">
+<pre><b class="keyword0">extern</b> <b class="keyword0">int</b> c_time_msec<span class="def_op">,</span> c_frame_msec<span class="def_op">,</span> c_frame<span class="def_op">;</span></pre>
+<p class="comment"> c_time.c</p>
+</div>
+<a name="c_frame_sec" href="javascript:toggle(224)">
+<div class="entry" id="224">
+c_frame_sec <span class="file">(c_shared.h)</span></div>
+</a>
+<div class="entry_body" id="224_body" style="display:none">
+<pre><b class="keyword0">extern</b> <b class="keyword0">float</b> c_frame_sec<span class="def_op">;</span></pre>
+<p class="comment"> c_time.c</p>
+</div>
+<a name="c_log_func" href="javascript:toggle(225)">
+<div class="entry" id="225">
+c_log_func <span class="file">(c_shared.h)</span></div>
+</a>
+<div class="entry_body" id="225_body" style="display:none">
+<pre><b class="keyword0">extern</b> <a href="#c_log_event_f">c_log_event_f</a> c_log_func<span class="def_op">;</span></pre>
+<p class="comment"> c_log.c</p>
+</div>
+<a name="c_log_mode" href="javascript:toggle(226)">
+<div class="entry" id="226">
+c_log_mode <span class="file">(c_shared.h)</span></div>
+</a>
+<div class="entry_body" id="226_body" style="display:none">
+<pre><b class="keyword0">extern</b> <a href="#c_log_mode_t">c_log_mode_t</a> c_log_mode<span class="def_op">;</span></pre>
+<p class="comment"> c_log.c</p>
+</div>
+<a name="c_mem_check" href="javascript:toggle(227)">
+<div class="entry" id="227">
+c_mem_check <span class="file">(c_shared.h)</span></div>
+</a>
+<div class="entry_body" id="227_body" style="display:none">
+<pre><b class="keyword0">extern</b> <a href="#c_var_t">c_var_t</a> c_mem_check<span class="def_op">;</span></pre>
+<p class="comment"> c_memory.c</p>
+</div>
+<a name="c_time_msec" href="javascript:toggle(228)">
+<div class="entry" id="228">
+c_time_msec <span class="file">(c_shared.h)</span></div>
+</a>
+<div class="entry_body" id="228_body" style="display:none">
+<pre><b class="keyword0">extern</b> <b class="keyword0">int</b> c_time_msec<span class="def_op">,</span> c_frame_msec<span class="def_op">,</span> c_frame<span class="def_op">;</span></pre>
+<p class="comment"> c_time.c</p>
+</div>
+<a name="r_count_faces" href="javascript:toggle(229)">
+<div class="entry" id="229">
+r_count_faces <span class="file">(r_shared.h)</span></div>
+</a>
+<div class="entry_body" id="229_body" style="display:none">
+<pre><b class="keyword0">extern</b> <a href="#c_count_t">c_count_t</a> r_count_faces<span class="def_op">;</span></pre>
+<p class="comment"> r_render.c</p>
+</div>
+<a name="r_height_2d" href="javascript:toggle(230)">
+<div class="entry" id="230">
+r_height_2d <span class="file">(r_shared.h)</span></div>
+</a>
+<div class="entry_body" id="230_body" style="display:none">
+<pre><b class="keyword0">extern</b> <b class="keyword0">int</b> r_width_2d<span class="def_op">,</span> r_height_2d<span class="def_op">;</span></pre>
+<p class="comment"> r_render.c</p>
+</div>
+<a name="r_pixel_scale" href="javascript:toggle(231)">
+<div class="entry" id="231">
+r_pixel_scale <span class="file">(r_shared.h)</span></div>
+</a>
+<div class="entry_body" id="231_body" style="display:none">
+<pre><b class="keyword0">extern</b> <a href="#c_var_t">c_var_t</a> r_pixel_scale<span class="def_op">;</span></pre>
+<p class="comment"> r_variables.c</p>
+</div>
+<a name="r_width_2d" href="javascript:toggle(232)">
+<div class="entry" id="232">
+r_width_2d <span class="file">(r_shared.h)</span></div>
+</a>
+<div class="entry_body" id="232_body" style="display:none">
+<pre><b class="keyword0">extern</b> <b class="keyword0">int</b> r_width_2d<span class="def_op">,</span> r_height_2d<span class="def_op">;</span></pre>
+<p class="comment"> r_render.c</p>
 </div>
 </body>
 </html>

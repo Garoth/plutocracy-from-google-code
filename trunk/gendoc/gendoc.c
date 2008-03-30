@@ -14,7 +14,7 @@
 
 entry_t *d_types;
 
-static entry_t *functions, *defines;
+static entry_t *functions, *defines, *variables;
 
 /******************************************************************************\
  Parse a C header file for declarations.
@@ -26,6 +26,28 @@ static void parse_header(const char *filename)
 
         while (D_parse_def()) {
                 memset(&current, 0, sizeof (current));
+
+                /* extern variables */
+                if (!strcmp(D_token(0), "extern") &&
+                    D_token(d_num_tokens - 2)[0] != ')') {
+                        D_strncpy_buf(current.file, filename);
+                        D_strncpy_buf(current.def, D_def());
+                        D_strncpy_buf(current.comment, D_comment());
+                        for (i = 2; i < d_num_tokens - 1; i++) {
+                                if (D_token(i)[0] == '*' ||
+                                    D_token(i)[0] == ',')
+                                        continue;
+                                if (D_token(i)[0] == '[') {
+                                        for (; i < d_num_tokens - 1; i++)
+                                                if (D_token(i)[0] == ']')
+                                                        break;
+                                        continue;
+                                }
+                                D_strncpy_buf(current.name, D_token(i));
+                                D_entry_add(&current, &variables);
+                        }
+                        continue;
+                }
 
                 /* #define and macro functions */
                 if (D_token(0)[0] == '#' && !strcmp(D_token(1), "define")) {
@@ -179,9 +201,10 @@ static void output_html(const char *title)
                "</script>\n"
                "<body>\n"
                "<div class=\"menu\">\n"
-               "<a href=\"#Definitions\">Definitions</a> | \n"
-               "<a href=\"#Types\">Types</a> | \n"
-               "<a href=\"#Functions\">Functions</a>\n"
+               "<a href=\"#Definitions\">Definitions</a> |\n"
+               "<a href=\"#Types\">Types</a> |\n"
+               "<a href=\"#Functions\">Functions</a> |\n"
+               "<a href=\"#Variables\">Variables</a>\n"
                "</div>\n"
                "<h1>%s</h1>\n", title, title);
 
@@ -199,6 +222,11 @@ static void output_html(const char *title)
         printf("<a name=\"Functions\"></a>\n"
                "<h2>Functions</h2>\n");
         D_output_entries(functions);
+
+        /* Write variables */
+        printf("<a name=\"Variables\"></a>\n"
+               "<h2>Variables</h2>\n");
+        D_output_entries(variables);
 
         /* Footer */
         printf("</body>\n</html>\n");

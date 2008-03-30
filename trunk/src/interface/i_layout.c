@@ -17,6 +17,7 @@ void I_game_init(i_window_t *);
 
 i_widget_t i_root;
 
+static c_vec2_t root_scroll;
 static i_window_t left_toolbar, console_window, game_window, *open_window;
 static i_button_t console_button, game_button;
 
@@ -29,6 +30,24 @@ static i_button_t console_button, game_button;
 static int root_event(i_widget_t *root, i_event_t event)
 {
         switch (event) {
+        case I_EV_KEY_DOWN:
+                if (i_key == SDLK_RIGHT && root_scroll.x > -1.f)
+                        root_scroll.x = -1.f;
+                if (i_key == SDLK_LEFT && root_scroll.x < 1.f)
+                        root_scroll.x = 1.f;
+                if (i_key == SDLK_DOWN && root_scroll.y > -1.f)
+                        root_scroll.y = -1.f;
+                if (i_key == SDLK_UP && root_scroll.y < 1.f)
+                        root_scroll.y = 1.f;
+                break;
+        case I_EV_KEY_UP:
+                if ((i_key == SDLK_RIGHT && root_scroll.x < 0.f) ||
+                    (i_key == SDLK_LEFT && root_scroll.x > 0.f))
+                        root_scroll.x = 0.f;
+                if ((i_key == SDLK_DOWN && root_scroll.y < 0.f) ||
+                    (i_key == SDLK_UP && root_scroll.y > 0.f))
+                        root_scroll.y = 0.f;
+                break;
         case I_EV_CONFIGURE:
                 i_colors[I_COLOR] = C_color_string(i_color.value.s);
                 i_colors[I_COLOR_ALT] = C_color_string(i_color2.value.s);
@@ -39,9 +58,16 @@ static int root_event(i_widget_t *root, i_event_t event)
                 I_window_hanger(&console_window, &console_button.widget, TRUE);
 
                 return FALSE;
+        case I_EV_RENDER:
+                r_camera.x += root_scroll.y * c_frame_sec *
+                              i_scroll_speed.value.f;
+                r_camera.y += root_scroll.x * c_frame_sec *
+                              i_scroll_speed.value.f;
+                break;
         default:
-                return TRUE;
+                break;
         }
+        return TRUE;
 }
 
 /******************************************************************************\
