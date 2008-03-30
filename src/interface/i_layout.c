@@ -32,13 +32,13 @@ static int root_event(i_widget_t *root, i_event_t event)
         switch (event) {
         case I_EV_KEY_DOWN:
                 if (i_key == SDLK_RIGHT && root_scroll.x > -1.f)
-                        root_scroll.x = -1.f;
+                        root_scroll.x = -i_scroll_speed.value.f;
                 if (i_key == SDLK_LEFT && root_scroll.x < 1.f)
-                        root_scroll.x = 1.f;
+                        root_scroll.x = i_scroll_speed.value.f;
                 if (i_key == SDLK_DOWN && root_scroll.y > -1.f)
-                        root_scroll.y = -1.f;
+                        root_scroll.y = -i_scroll_speed.value.f;
                 if (i_key == SDLK_UP && root_scroll.y < 1.f)
-                        root_scroll.y = 1.f;
+                        root_scroll.y = i_scroll_speed.value.f;
                 break;
         case I_EV_KEY_UP:
                 if ((i_key == SDLK_RIGHT && root_scroll.x < 0.f) ||
@@ -59,10 +59,7 @@ static int root_event(i_widget_t *root, i_event_t event)
 
                 return FALSE;
         case I_EV_RENDER:
-                r_camera.x += root_scroll.y * c_frame_sec *
-                              i_scroll_speed.value.f;
-                r_camera.y += root_scroll.x * c_frame_sec *
-                              i_scroll_speed.value.f;
+                R_move_camera_by(C_vec2_scalef(root_scroll, c_frame_sec));
                 break;
         default:
                 break;

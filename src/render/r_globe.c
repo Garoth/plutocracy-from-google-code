@@ -210,7 +210,7 @@ void R_generate_globe(int seed, int subdiv4)
         R_texture_free(texture);
         texture = R_texture_load("models/globe/test.png", TRUE);
 
-        r_camera.z = radius * 2.f;
+        r_cam_dist = radius * 2.f;
 }
 
 /******************************************************************************\
