@@ -163,7 +163,7 @@ static void generate_icosahedron(void)
         vertices[58]    = vertices[30];
         vertices[59]    = vertices[38];
         tiles = 20;
-        radius = C_TAU;
+        radius = 2000.f; //C_TAU;
 }
 
 /******************************************************************************\
@@ -210,7 +210,7 @@ void R_generate_globe(int seed, int subdiv4)
         R_texture_free(texture);
         texture = R_texture_load("models/globe/test.png", TRUE);
 
-        r_cam_dist = radius * 2.f;
+        r_cam_dist = radius + 500.f;
 }
 
 /******************************************************************************\
