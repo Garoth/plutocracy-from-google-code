@@ -421,9 +421,7 @@ void R_model_render(r_model_t *model)
 
         if (!model || !model->data)
                 return;
-        glMatrixMode(GL_MODELVIEW);
         glPushMatrix();
-        glLoadIdentity();
         glScalef(model->scale, model->scale, model->scale);
         glTranslatef(model->origin.x, model->origin.y, model->origin.z);
         glRotatef(C_rad_to_deg(model->angles.x), 1.0, 0.0, 0.0);

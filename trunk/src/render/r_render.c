@@ -27,7 +27,9 @@ r_mode_t r_mode;
 int r_width_2d, r_height_2d;
 
 /* Camera rotation and zoom */
-c_vec3_t r_camera;
+float r_cam_dist;
+static c_vec2_t cam_diff;
+static GLfloat cam_matrix[16];
 
 /* Testing assets */
 static r_model_t test_model;
@@ -147,6 +149,13 @@ static void set_gl_state(void)
         /* Not configured to a render mode intially */
         r_mode = R_MODE_NONE;
 
+        /* Initialize camera to identity */
+        memset(cam_matrix, 0, sizeof (cam_matrix));
+        cam_matrix[0] = 1.f;
+        cam_matrix[5] = 1.f;
+        cam_matrix[10] = 1.f;
+        cam_matrix[15] = 1.f;
+
         R_check_errors();
 }
 
@@ -212,9 +221,11 @@ int R_init(void)
         set_gl_state();
         R_clip_disable();
 
+        /* Everything should be ready to load assets now */
         R_load_assets();
         load_test_assets();
         R_generate_globe(0, 4);
+
         return TRUE;
 }
 
@@ -247,7 +258,6 @@ static void render_test_model(void)
         if (!test_model.data)
                 return;
         glClear(GL_DEPTH_BUFFER_BIT);
-
         R_set_mode(R_MODE_3D);
 
         /* Setup a white light to the left */
@@ -313,19 +323,44 @@ void R_check_errors_full(const char *file, int line, const char *func)
 }
 
 /******************************************************************************\
- Sets up the camera in 3D mode.
+ Load the camera matrix.
 \******************************************************************************/
-static void set_camera(void)
+static void load_camera(void)
 {
-        glMatrixMode(GL_MODELVIEW);
         glLoadIdentity();
-        glTranslatef(0, 0, -r_camera.z);
-        glRotatef(r_camera.x, 1.0, 0.0, 0.0);
-        glRotatef(r_camera.y, 0.0, 1.0, 0.0);
+        glTranslatef(0, 0, -r_cam_dist);
+        glMultMatrixf(cam_matrix);
 }
 
 /******************************************************************************\
- Sets up OpenGL to render 2D or 3D polygons.
+ Calculates a new camera rotation matrix and reloads the modelview matrix.
+\******************************************************************************/
+static void update_camera(void)
+{
+        c_vec3_t x_axis, y_axis;
+
+        R_set_mode(R_MODE_3D);
+        glMatrixMode(GL_MODELVIEW);
+        glLoadMatrixf(cam_matrix);
+        x_axis = C_vec3(cam_matrix[0], cam_matrix[4], cam_matrix[8]);
+        y_axis = C_vec3(cam_matrix[1], cam_matrix[5], cam_matrix[9]);
+        glRotatef(C_rad_to_deg(cam_diff.y), x_axis.x, x_axis.y, x_axis.z);
+        glRotatef(C_rad_to_deg(cam_diff.x), y_axis.x, y_axis.y, y_axis.z);
+        cam_diff = C_vec2(0.f, 0.f);
+        glGetFloatv(GL_MODELVIEW_MATRIX, cam_matrix);
+        load_camera();
+}
+
+/******************************************************************************\
+ Move the camera incrementally relative to the current orientation.
+\******************************************************************************/
+void R_move_camera_by(c_vec2_t angle)
+{
+        cam_diff = C_vec2_add(cam_diff, angle);
+}
+
+/******************************************************************************\
+ Sets up OpenGL to render 3D polygons in world space.
 \******************************************************************************/
 void R_set_mode(r_mode_t mode)
 {
@@ -350,9 +385,9 @@ void R_set_mode(r_mode_t mode)
                 glDisable(GL_CLIP_PLANE1);
                 glDisable(GL_CLIP_PLANE2);
                 glDisable(GL_CLIP_PLANE3);
-                set_camera();
-        } else
-                C_error("Unknown render mode %d", mode);
+                glMatrixMode(GL_MODELVIEW);
+                load_camera();
+        }
         R_check_errors();
         r_mode = mode;
 }
@@ -506,6 +541,7 @@ void R_clip_rect(c_vec2_t origin, c_vec2_t size)
 void R_start_frame(void)
 {
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        update_camera();
         R_render_globe();
         render_test_model();
 }

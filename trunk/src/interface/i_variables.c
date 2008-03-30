@@ -56,6 +56,6 @@ void I_register_variables(void)
                           "gui/themes/default/work_area.png", C_VE_LATCHED);
 
         /* Interface usability variables */
-        C_register_float(&i_scroll_speed, "i_scroll_speed", 50.f, C_VE_ANYTIME);
+        C_register_float(&i_scroll_speed, "i_scroll_speed", 1.f, C_VE_ANYTIME);
 }
 

@@ -101,10 +101,10 @@ void R_clip_rect(c_vec2_t origin, c_vec2_t size);
 void R_clip_disable(void);
 void R_finish_frame(void);
 int R_init(void);
+void R_move_camera_by(c_vec2_t);
 void R_start_frame(void);
 
 extern c_count_t r_count_faces;
-extern c_vec3_t r_camera;
 extern int r_width_2d, r_height_2d;
 
 /* r_sprite.c */
