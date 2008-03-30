@@ -286,7 +286,7 @@ static void expand_children(i_widget_t *widget, c_vec2_t size, int expanders)
         c_vec2_t offset;
         i_widget_t *child;
 
-        size = C_vec2_invscalef(size, expanders);
+        size = C_vec2_divf(size, expanders);
         offset = C_vec2(0.f, 0.f);
         child = widget->child;
         while (child) {

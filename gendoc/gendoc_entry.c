@@ -152,15 +152,15 @@ static void output_def(const char *name, const char *buf)
                 /* Keywords and known types */
                 if (start_token) {
                         entry_t *entry;
-                        int next_i;
+                        int next_i, type;
 
-                        next_i = D_is_keyword(buf + i, &entry);
+                        next_i = D_is_keyword(buf + i, &entry, &type);
                         if (next_i && (!entry || strcmp(entry->name, name))) {
                                 next_i += i;
                                 if (entry)
                                         printf("<a href=\"#%s\">", entry->name);
                                 else
-                                        printf("<b>");
+                                        printf("<b class=\"keyword%d\">", type);
                                 while (i < next_i)
                                         putchar(buf[i++]);
                                 printf(entry ? "</a>" : "</b>");

@@ -45,8 +45,8 @@ static void entry_set_pos(i_entry_t *entry, int pos)
 
                 memcpy(buf, entry->buffer, pos);
                 buf[pos] = NUL;
-                size = C_vec2_invscalef(R_font_size(R_FONT_CONSOLE, buf),
-                                        r_pixel_scale.value.f);
+                size = C_vec2_divf(R_font_size(R_FONT_CONSOLE, buf),
+                                   r_pixel_scale.value.f);
                 entry->cursor.origin.x += size.x;
         }
 

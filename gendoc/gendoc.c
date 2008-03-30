@@ -27,10 +27,6 @@ static void parse_header(const char *filename)
         while (D_parse_def()) {
                 memset(&current, 0, sizeof (current));
 
-                /* No statics */
-                if (!strcmp(D_token(0), "static"))
-                        continue;
-
                 /* #define and macro functions */
                 if (D_token(0)[0] == '#' && !strcmp(D_token(1), "define")) {
                         entry_t **root;
@@ -83,7 +79,15 @@ static void parse_header(const char *filename)
                                         break;
                         if (i >= d_num_tokens)
                                 continue;
-                        current.file[0] = -1;
+
+                        /* Unless this is an inline function, we need to find it
+                           in a source file for the full comment */
+                        if (strcmp(D_token(0), "static") &&
+                            strcmp(D_token(0), "inline"))
+                                current.file[0] = -1;
+                        else
+                                D_strncpy_buf(current.file, filename);
+
                         D_strncpy_buf(current.name, D_token(i - 1));
                         D_strncpy_buf(current.def, D_def());
                         D_strncpy_buf(current.comment, D_comment());

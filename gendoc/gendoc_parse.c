@@ -63,16 +63,46 @@ int D_is_operator(char ch)
 /******************************************************************************\
  Returns TRUE if the first token of [buf] is an operator.
 \******************************************************************************/
-int D_is_keyword(const char *buf, entry_t **entry)
+int D_is_keyword(const char *buf, entry_t **entry, int *type)
 {
-        const char *keywords[] = {
-                "#define", "char", "const", "double", "enum", "float", "int",
-                "long", "short", "signed", "single", "sizeof", "size_t",
-                "struct", "typedef", "unsigned", "void",
+        struct {
+                const char *string;
+                int type;
+        } keywords[] = {
+                { "#define",    2 },
+                { "break",      1 },
+                { "char",       0 },
+                { "case",       1 },
+                { "const",      0 },
+                { "do",         1 },
+                { "double",     0 },
+                { "for",        1 },
+                { "else",       1 },
+                { "enum",       1 },
+                { "float",      0 },
+                { "goto",       1 },
+                { "if",         1 },
+                { "inline",     0 },
+                { "int",        0 },
+                { "long",       0 },
+                { "return",     1 },
+                { "short",      0 },
+                { "signed",     0 },
+                { "single",     0 },
+                { "sizeof",     1 },
+                { "size_t",     0 },
+                { "static",     0 },
+                { "struct",     1 },
+                { "switch",     1 },
+                { "typedef",    1 },
+                { "unsigned",   0 },
+                { "void",       0 },
+                { "while",      1 },
         };
         int i, j;
         char keyword[64];
 
+        *type = -1;
         i = 0;
         if (buf[i] == '#')
                 i++;
@@ -85,8 +115,10 @@ int D_is_keyword(const char *buf, entry_t **entry)
         /* Common C keywords */
         *entry = NULL;
         for (j = 0; j < sizeof (keywords) / sizeof (keywords[0]); j++)
-                if (!strcmp(keyword, keywords[j]))
+                if (!strcmp(keyword, keywords[j].string)) {
+                        *type = keywords[j].type;
                         return i;
+                }
 
         /* Types we already know */
         *entry = D_entry_find(d_types, keyword);

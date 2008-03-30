@@ -60,6 +60,14 @@ b {
         color: #8ae234;
 }
 
+b.keyword1 {
+        color: #fcaf3e;
+}
+
+b.keyword2 {
+        color: #ad7fa8;
+}
+
 pre {
         color: #eeeeec;
 }

@@ -13,3 +13,9 @@
 #include "../common/c_shared.h"
 #include "g_shared.h"
 
+/* A tile on the globe */
+typedef struct g_tile {
+        c_vec3_t corners[3];
+        struct g_tile *neighbors[6];
+} g_tile_t;
+

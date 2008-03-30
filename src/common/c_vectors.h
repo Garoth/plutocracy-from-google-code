@@ -54,52 +54,130 @@ static inline c_color_t C_color(float r, float g, float b, float a)
 }
 
 /******************************************************************************\
- Binary operators with another vector.
+ Component-wise binary operators with another vector.
 \******************************************************************************/
-#define OPFUNC(name, op) \
-    static inline c_vec2_t C_vec2_##name(c_vec2_t a, c_vec2_t b) \
-    { \
-        return C_vec2(a.x op b.x, a.y op b.y); \
-    } \
-    static inline c_vec3_t C_vec3_##name(c_vec3_t a, c_vec3_t b) \
-    { \
-        return C_vec3(a.x op b.x, a.y op b.y, a.z op b.z); \
-    } \
-    static inline c_color_t C_color_##name(c_color_t a, c_color_t b) \
-    { \
-        return C_color(a.r op b.r, a.g op b.g, a.b op b.b, a.a op b.a); \
-    }
+static inline c_vec2_t C_vec2_add(c_vec2_t a, c_vec2_t b)
+{
+        return C_vec2(a.x + b.x, a.y + b.y);
+}
 
-OPFUNC(add, +);
-OPFUNC(sub, -);
-OPFUNC(scale, *);
-OPFUNC(invscale, /);
+static inline c_vec2_t C_vec2_sub(c_vec2_t a, c_vec2_t b)
+{
+        return C_vec2(a.x - b.x, a.y - b.y);
+}
 
-#undef OPFUNC
+static inline c_vec2_t C_vec2_scale(c_vec2_t a, c_vec2_t b)
+{
+        return C_vec2(a.x * b.x, a.y * b.y);
+}
+
+static inline c_vec2_t C_vec2_div(c_vec2_t a, c_vec2_t b)
+{
+        return C_vec2(a.x / b.x, a.y / b.y);
+}
+
+static inline c_vec3_t C_vec3_add(c_vec3_t a, c_vec3_t b)
+{
+        return C_vec3(a.x + b.x, a.y + b.y, a.z + b.z);
+}
+
+static inline c_vec3_t C_vec3_sub(c_vec3_t a, c_vec3_t b)
+{
+        return C_vec3(a.x - b.x, a.y - b.y, a.z - b.z);
+}
+
+static inline c_vec3_t C_vec3_scale(c_vec3_t a, c_vec3_t b)
+{
+        return C_vec3(a.x * b.x, a.y * b.y, a.z * b.z);
+}
+
+static inline c_vec3_t C_vec3_div(c_vec3_t a, c_vec3_t b)
+{
+        return C_vec3(a.x / b.x, a.y / b.y, a.z / b.z);
+}
+
+static inline c_color_t C_color_add(c_color_t a, c_color_t b)
+{
+        return C_color(a.r + b.r, a.g + b.g, a.b + b.b, a.a + b.a);
+}
+
+static inline c_color_t C_color_sub(c_color_t a, c_color_t b)
+{
+        return C_color(a.r - b.r, a.g - b.g, a.b - b.b, a.a - b.a);
+}
+
+static inline c_color_t C_color_scale(c_color_t a, c_color_t b)
+{
+        return C_color(a.r * b.r, a.g * b.g, a.b * b.b, a.a * b.a);
+}
+
+static inline c_color_t C_color_div(c_color_t a, c_color_t b)
+{
+        return C_color(a.r / b.r, a.g / b.g, a.b / b.b, a.a / b.a);
+}
 
 /******************************************************************************\
  Binary operators with a scalar.
 \******************************************************************************/
-#define OPFUNCF(name, op) \
-    static inline c_vec2_t C_vec2_##name(c_vec2_t a, float f) \
-    { \
-        return C_vec2(a.x op f, a.y op f); \
-    } \
-    static inline c_vec3_t C_vec3_##name(c_vec3_t a, float f) \
-    { \
-        return C_vec3(a.x op f, a.y op f, a.z op f); \
-    } \
-    static inline c_color_t C_color_##name(c_color_t a, float f) \
-    { \
-        return C_color(a.r op f, a.g op f, a.b op f, a.a op f); \
-    }
+static inline c_vec2_t C_vec2_addf(c_vec2_t a, float f)
+{
+        return C_vec2(a.x + f, a.y + f);
+}
 
-OPFUNCF(addf, +);
-OPFUNCF(subf, -);
-OPFUNCF(scalef, *);
-OPFUNCF(invscalef, /);
+static inline c_vec2_t C_vec2_subf(c_vec2_t a, float f)
+{
+        return C_vec2(a.x - f, a.y - f);
+}
 
-#undef OPFUNCF
+static inline c_vec2_t C_vec2_scalef(c_vec2_t a, float f)
+{
+        return C_vec2(a.x * f, a.y * f);
+}
+
+static inline c_vec2_t C_vec2_divf(c_vec2_t a, float f)
+{
+        return C_vec2(a.x / f, a.y / f);
+}
+
+static inline c_vec3_t C_vec3_addf(c_vec3_t a, float f)
+{
+        return C_vec3(a.x + f, a.y + f, a.z + f);
+}
+
+static inline c_vec3_t C_vec3_subf(c_vec3_t a, float f)
+{
+        return C_vec3(a.x - f, a.y - f, a.z - f);
+}
+
+static inline c_vec3_t C_vec3_scalef(c_vec3_t a, float f)
+{
+        return C_vec3(a.x * f, a.y * f, a.z * f);
+}
+
+static inline c_vec3_t C_vec3_divf(c_vec3_t a, float f)
+{
+        return C_vec3(a.x / f, a.y / f, a.z / f);
+}
+
+static inline c_color_t C_color_addf(c_color_t a, float f)
+{
+        return C_color(a.r + f, a.g + f, a.b + f, a.a + f);
+}
+
+static inline c_color_t C_color_subf(c_color_t a, float f)
+{
+        return C_color(a.r - f, a.g - f, a.b - f, a.a - f);
+}
+
+static inline c_color_t C_color_scalef(c_color_t a, float f)
+{
+        return C_color(a.r * f, a.g * f, a.b * f, a.a * f);
+}
+
+static inline c_color_t C_color_divf(c_color_t a, float f)
+{
+        return C_color(a.r / f, a.g / f, a.b / f, a.a / f);
+}
 
 /******************************************************************************\
  Vector dot and cross products.
@@ -127,26 +205,30 @@ static inline c_vec3_t C_vec3_cross(c_vec3_t a, c_vec3_t b)
 }
 
 /******************************************************************************\
- Vector magnitude/length.
+ Vector dimensions squared and summed. That is, magnitude without the square
+ root operation.
 \******************************************************************************/
-static inline float C_vec2_square_len(c_vec2_t p)
+static inline float C_vec2_square(c_vec2_t p)
 {
     return p.x * p.x + p.y * p.y;
 }
 
-static inline float C_vec2_len(c_vec2_t p)
-{
-    return (float)sqrt(C_vec2_square_len(p));
-}
-
-static inline float C_vec3_square_len(c_vec3_t p)
+static inline float C_vec3_square(c_vec3_t p)
 {
     return p.x * p.x + p.y * p.y + p.z * p.z;
 }
 
+/******************************************************************************\
+ Vector magnitude/length.
+\******************************************************************************/
+static inline float C_vec2_len(c_vec2_t p)
+{
+    return (float)sqrt(C_vec2_square(p));
+}
+
 static inline float C_vec3_len(c_vec3_t p)
 {
-    return (float)sqrt(C_vec3_square_len(p));
+    return (float)sqrt(C_vec3_square(p));
 }
 
 /******************************************************************************\
@@ -154,12 +236,12 @@ static inline float C_vec3_len(c_vec3_t p)
 \******************************************************************************/
 static inline c_vec2_t C_vec2_norm(c_vec2_t p)
 {
-    return C_vec2_invscalef(p, C_vec2_len(p));
+    return C_vec2_divf(p, C_vec2_len(p));
 }
 
 static inline c_vec3_t C_vec3_norm(c_vec3_t p)
 {
-    return C_vec3_invscalef(p, C_vec3_len(p));
+    return C_vec3_divf(p, C_vec3_len(p));
 }
 
 /******************************************************************************\
@@ -255,7 +337,7 @@ static inline c_color_t C_color_rgba(unsigned char r, unsigned char g,
                                      unsigned char b, unsigned char a)
 {
     c_color_t result = { r, g, b, a };
-    return C_color_invscalef(result, 255.f);
+    return C_color_divf(result, 255.f);
 }
 
 /******************************************************************************\

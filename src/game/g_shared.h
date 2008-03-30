@@ -1,5 +1,5 @@
 /******************************************************************************\
- Plutocracy - Copyright (C) 2008 - Michael Levin, Devin Papineau
+ Plutocracy - Copyright (C) 2008 - Michael Levin
 
  This program is free software; you can redistribute it and/or modify it under
  the terms of the GNU General Public License as published by the Free Software
@@ -10,24 +10,6 @@
  FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
 \******************************************************************************/
 
-/* Type to hold neighbours of a vertex */
-typedef struct g_vert_neighbors {
-    int count;
-    unsigned short indices[6]; /* Never more than 6 neighbours. */
-} g_vert_neighbors_t;
-
-/* Type to hold the spherical map */
-typedef struct g_globe {
-    int nverts;
-    int ninds;
-    int n_islands;
-    c_vec3_t *verts, *water_verts, *norms;
-    g_vert_neighbors_t *neighbors_lists;
-    unsigned short *island_ids;
-    unsigned char *landp;
-    unsigned short *inds; /* triangles if you want 'em */
-} g_globe_t;
-
 /* g_globe.c */
-g_globe_t *G_globe_alloc(int subdiv_levels, unsigned int seed, float water);
-void G_globe_free(g_globe_t *s);
+void G_generate_globe(int seed, int subdiv);
+

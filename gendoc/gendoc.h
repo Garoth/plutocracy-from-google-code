@@ -46,7 +46,7 @@ void D_output_entries(entry_t *root);
 /* gendoc_parse.c */
 const char *D_comment(void);
 const char *D_def(void);
-int D_is_keyword(const char *, entry_t **out);
+int D_is_keyword(const char *, entry_t **out, int *type);
 int D_is_operator(char ch);
 void D_parse_close(void);
 int D_parse_def(void);

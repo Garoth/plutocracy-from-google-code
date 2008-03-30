@@ -94,6 +94,9 @@ r_texture_t *R_texture_load(const char *filename, int mipmaps);
 void R_texture_select(r_texture_t *);
 void R_texture_upload(const r_texture_t *, int mipmaps);
 
+/* r_globe.c */
+void R_render_globe(void);
+
 /* r_render.c */
 #define R_check_errors() R_check_errors_full(__FILE__, __LINE__, __func__);
 void R_check_errors_full(const char *file, int line, const char *func);

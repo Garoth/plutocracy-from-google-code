@@ -24,6 +24,7 @@
 #ifdef HAVE_STRINGS_H
 #include <strings.h>
 #endif
+#include <time.h>
 
 /* OpenGL */
 #include <GL/gl.h>
@@ -47,6 +48,9 @@
 #ifndef NUL
 #define NUL '\0'
 #endif
+
+/* Golden ratio */
+#define C_TAU 1.61803398874989
 
 /* If you are going to use the C_va* functions, keep in mind that after calling
    any of those functions [C_VA_BUFFERS] times, you will begin overwriting
@@ -77,6 +81,10 @@
 #define strdup(s) ERROR_use_C_strdup
 #undef strncpy
 #define strncpy(d, s, n) ERROR_use_C_strncpy
+
+/* FIXME: Windows-compatible, deterministic random number generator */
+#define C_rand() rand()
+#define C_rand_seed(s) srand(s)
 
 /* Vectors */
 #include "c_vectors.h"
@@ -178,13 +186,6 @@ typedef struct c_count {
         float value;
 } c_count_t;
 
-/* c_glibc_rand.c */
-long int C_glibc_rand(void);
-void C_glibc_srand(unsigned int);
-/* FIXME: Windows-compatible, deterministic random number generator */
-#define C_rand() rand()
-#define C_rand_seed(s) srand(s)
-
 /* c_log.c */
 #define C_assert(s) C_assert_full(__FILE__, __LINE__, __func__, !(s), #s)
 void C_assert_full(const char *file, int line, const char *function,
@@ -252,11 +253,6 @@ void C_test_mem_check(void);
 #define C_zero_buf(s) memset(s, 0, sizeof (s))
 
 extern c_var_t c_mem_check;
-
-/* c_noise.c */
-void C_noise3_seed(unsigned int seed);
-float C_noise3(float x, float y, float z);
-float C_noise3_fractal(int levels, float x, float y, float z);
 
 /* c_string.c */
 #define C_bool_string(b) ((b) ? "TRUE" : "FALSE")
