@@ -208,7 +208,7 @@ void R_texture_upload(const r_texture_t *pt, int mipmaps)
                                   GL_RGBA, GL_UNSIGNED_BYTE,
                                   pt->surface->pixels);
                 glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,
-                                GL_LINEAR_MIPMAP_NEAREST);
+                                GL_LINEAR_MIPMAP_LINEAR);
         } else {
                 glTexImage2D(GL_TEXTURE_2D, 0, gl_internal,
                              pt->surface->w, pt->surface->h, 0,

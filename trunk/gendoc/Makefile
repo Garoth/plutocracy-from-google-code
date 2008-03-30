@@ -19,7 +19,7 @@ GAME_SHARED=../src/game/g_shared.h ../src/game/*.c
 GAME_FILES=../src/game/g_common.h $(GAME_SHARED)
 NETWORK_SHARED=../src/network/n_shared.h ../src/network/*.c
 NETWORK_FILES=../src/network/n_common.h $(NETWORK_SHARED)
-COMMON_FILES=../src/common/c_shared.h ../src/common/*.c
+COMMON_FILES=../src/common/c_*.h ../src/common/*.c
 SHARED_FILES=$(COMMON_FILES) $(RENDER_SHARED) $(INTERFACE_SHARED) $(GAME_SHARED)
 GENDOC_FILES=gendoc.h gendoc*.c
 

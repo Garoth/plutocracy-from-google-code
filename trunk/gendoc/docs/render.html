@@ -1,0 +1,819 @@
+<html>
+<head>
+<link rel=StyleSheet href="gendoc.css" type="text/css">
+<title>Plutocracy Render Namespace</title>
+</head>
+<script>
+         function toggle(n) {
+                 body = document.getElementById(n + '_body');
+                 if (body.style.display == 'block')
+                         body.style.display = 'none';
+                 else
+                         body.style.display = 'block';
+         }
+</script>
+<body>
+<div class="menu">
+<a href="#Definitions">Definitions</a> | 
+<a href="#Types">Types</a> | 
+<a href="#Functions">Functions</a>
+</div>
+<h1>Plutocracy Render Namespace</h1>
+<a name="Definitions"></a>
+<h2>Definitions</h2>
+<a name="R_FONT_SIZE_MIN" href="javascript:toggle(0)">
+<div class="entry" id="0">
+R_FONT_SIZE_MIN <span class="file">(r_shared.h)</span></div>
+</a>
+<div class="entry_body" id="0_body" style="display:none">
+<pre><b class="keyword2">#define</b> R_FONT_SIZE_MIN <span class="def_const">10</span></pre>
+<p class="comment"> The wide range of 2D scaling can shrink fonts too small to be viewable,
+   so we need to set a minimum (in points).</p>
+</div>
+<a name="R_MODEL_ANIM_FPS" href="javascript:toggle(1)">
+<div class="entry" id="1">
+R_MODEL_ANIM_FPS <span class="file">(r_shared.h)</span></div>
+</a>
+<div class="entry_body" id="1_body" style="display:none">
+<pre><b class="keyword2">#define</b> R_MODEL_ANIM_FPS <span class="def_const">30</span></pre>
+<p class="comment"> This is the minimum <code>FPS</code> that model animations must maintain. If they are
+   slower than this, frames are interpolated.</p>
+</div>
+<a name="R_PIXEL_SCALE_MAX" href="javascript:toggle(2)">
+<div class="entry" id="2">
+R_PIXEL_SCALE_MAX <span class="file">(r_shared.h)</span></div>
+</a>
+<div class="entry_body" id="2_body" style="display:none">
+<pre><b class="keyword2">#define</b> R_PIXEL_SCALE_MAX <span class="def_const">2.0</span></pre>
+<p class="comment"> This is the largest value that pixels can be stretched. This means that all
+   <code>GUI</code> textures need to be created this many times larger than normal. The
+   largest supported resoluton is <code>WQXGA</code> 2560x1600 (nVidia Geforce 8800GT)
+   which requires a pixel scale of 2 to have a 2D display area of approximately
+   1280x800.</p>
+</div>
+<a name="R_PIXEL_SCALE_MIN" href="javascript:toggle(3)">
+<div class="entry" id="3">
+R_PIXEL_SCALE_MIN <span class="file">(r_shared.h)</span></div>
+</a>
+<div class="entry_body" id="3_body" style="display:none">
+<pre><b class="keyword2">#define</b> R_PIXEL_SCALE_MIN <span class="def_const">0.5</span></pre>
+<p class="comment"> This is the largest value that pixels can be stretched. This means that all
+   <code>GUI</code> textures need to be created this many times larger than normal. The
+   largest supported resoluton is <code>WQXGA</code> 2560x1600 (nVidia Geforce 8800GT)
+   which requires a pixel scale of 2 to have a 2D display area of approximately
+   1280x800.</p>
+</div>
+<a name="R_VERTEX2_FORMAT" href="javascript:toggle(4)">
+<div class="entry" id="4">
+R_VERTEX2_FORMAT <span class="file">(r_common.h)</span></div>
+</a>
+<div class="entry_body" id="4_body" style="display:none">
+<pre><b class="keyword2">#define</b> R_VERTEX2_FORMAT GL_T2F_V3F</pre>
+<p class="comment"> Vertex type for sprites</p>
+</div>
+<a name="R_VERTEX3_FORMAT" href="javascript:toggle(5)">
+<div class="entry" id="5">
+R_VERTEX3_FORMAT <span class="file">(r_common.h)</span></div>
+</a>
+<div class="entry_body" id="5_body" style="display:none">
+<pre><b class="keyword2">#define</b> R_VERTEX3_FORMAT GL_T2F_N3F_V3F</pre>
+<p class="comment"> Vertex type for meshes</p>
+</div>
+<a name="Types"></a>
+<h2>Types</h2>
+<a name="r_font_t" href="javascript:toggle(6)">
+<div class="entry" id="6">
+r_font_t <span class="file">(r_shared.h)</span></div>
+</a>
+<div class="entry_body" id="6_body" style="display:none">
+<pre><b class="keyword1">typedef</b> <b class="keyword1">enum</b> <span class="def_op">{</span>
+        R_FONT_CONSOLE<span class="def_op">,</span>
+        R_FONT_GUI<span class="def_op">,</span>
+        R_FONTS
+<span class="def_op">}</span> r_font_t<span class="def_op">;</span></pre>
+<p class="comment"> There is a fixed set of fonts available for the game</p>
+</div>
+<a name="r_mode_t" href="javascript:toggle(7)">
+<div class="entry" id="7">
+r_mode_t <span class="file">(r_common.h)</span></div>
+</a>
+<div class="entry_body" id="7_body" style="display:none">
+<pre><b class="keyword1">typedef</b> <b class="keyword1">enum</b> <span class="def_op">{</span>
+        R_MODE_NONE<span class="def_op">,</span>
+        R_MODE_3D<span class="def_op">,</span>
+        R_MODE_2D<span class="def_op">,</span>
+<span class="def_op">}</span> r_mode_t<span class="def_op">;</span></pre>
+<p class="comment"> Render modes</p>
+</div>
+<a name="r_model_anim_t" href="javascript:toggle(8)">
+<div class="entry" id="8">
+r_model_anim_t <span class="file">(r_common.h)</span></div>
+</a>
+<div class="entry_body" id="8_body" style="display:none">
+<pre><b class="keyword1">typedef</b> <b class="keyword1">struct</b> r_model_anim <span class="def_op">{</span>
+        <b class="keyword0">int</b> from<span class="def_op">,</span> to<span class="def_op">,</span> delay<span class="def_op">;</span>
+        <b class="keyword0">char</b> name<span class="def_op">[</span><span class="def_const">64</span><span class="def_op">],</span> end_anim<span class="def_op">[</span><span class="def_const">64</span><span class="def_op">];</span>
+<span class="def_op">}</span> r_model_anim_t<span class="def_op">;</span></pre>
+<p class="comment"> Model animation type</p>
+</div>
+<a name="r_model_data_t" href="javascript:toggle(9)">
+<div class="entry" id="9">
+r_model_data_t <span class="file">(r_common.h)</span></div>
+</a>
+<div class="entry_body" id="9_body" style="display:none">
+<pre><b class="keyword1">typedef</b> <b class="keyword1">struct</b> r_model_data <span class="def_op">{</span>
+        c_ref_t ref<span class="def_op">;</span>
+        <a href="#r_static_mesh_t">r_static_mesh_t</a> <span class="def_op">*</span>matrix<span class="def_op">;</span>
+        <a href="#r_model_anim_t">r_model_anim_t</a> <span class="def_op">*</span>anims<span class="def_op">;</span>
+        <a href="#r_model_object_t">r_model_object_t</a> <span class="def_op">*</span>objects<span class="def_op">;</span>
+        <b class="keyword0">int</b> anims_len<span class="def_op">,</span> objects_len<span class="def_op">,</span> frames<span class="def_op">;</span>
+<span class="def_op">}</span> r_model_data_t<span class="def_op">;</span></pre>
+<p class="comment"> Animated, textured, multi-mesh model. The matrix contains enough room to
+   store every object's static mesh for every frame, it is indexed by frame
+   then by object.</p>
+</div>
+<a name="r_model_object_t" href="javascript:toggle(10)">
+<div class="entry" id="10">
+r_model_object_t <span class="file">(r_common.h)</span></div>
+</a>
+<div class="entry_body" id="10_body" style="display:none">
+<pre><b class="keyword1">typedef</b> <b class="keyword1">struct</b> r_model_object <span class="def_op">{</span>
+        <a href="#r_texture_t">r_texture_t</a> <span class="def_op">*</span>texture<span class="def_op">;</span>
+        <b class="keyword0">char</b> name<span class="def_op">[</span><span class="def_const">64</span><span class="def_op">];</span>
+<span class="def_op">}</span> r_model_object_t<span class="def_op">;</span></pre>
+<p class="comment"> Model object type</p>
+</div>
+<a name="r_model_t" href="javascript:toggle(11)">
+<div class="entry" id="11">
+r_model_t <span class="file">(r_shared.h)</span></div>
+</a>
+<div class="entry_body" id="11_body" style="display:none">
+<pre><b class="keyword1">typedef</b> <b class="keyword1">struct</b> r_model <span class="def_op">{</span>
+        <b class="keyword1">struct</b> r_static_mesh <span class="def_op">*</span>lerp_meshes<span class="def_op">;</span>
+        c_vec3_t origin<span class="def_op">,</span> angles<span class="def_op">;</span>
+        <b class="keyword1">struct</b> r_model_data <span class="def_op">*</span>data<span class="def_op">;</span>
+        <b class="keyword0">float</b> scale<span class="def_op">;</span>
+        <b class="keyword0">int</b> anim<span class="def_op">,</span> frame<span class="def_op">,</span> last_frame<span class="def_op">,</span> last_frame_time<span class="def_op">,</span> time_left<span class="def_op">,</span>
+            use_lerp_meshes<span class="def_op">;</span>
+<span class="def_op">}</span> r_model_t<span class="def_op">;</span></pre>
+<p class="comment"> Model instance type</p>
+</div>
+<a name="r_sprite_t" href="javascript:toggle(12)">
+<div class="entry" id="12">
+r_sprite_t <span class="file">(r_shared.h)</span></div>
+</a>
+<div class="entry_body" id="12_body" style="display:none">
+<pre><b class="keyword1">typedef</b> <b class="keyword1">struct</b> r_sprite <span class="def_op">{</span>
+        <a href="#r_texture_t">r_texture_t</a> <span class="def_op">*</span>texture<span class="def_op">;</span>
+        c_vec2_t origin<span class="def_op">,</span> size<span class="def_op">;</span>
+        c_color_t modulate<span class="def_op">;</span>
+        <b class="keyword0">float</b> angle<span class="def_op">;</span>
+<span class="def_op">}</span> r_sprite_t<span class="def_op">;</span></pre>
+<p class="comment"> 2D textured quad sprite, can only be rendered in 2D mode</p>
+</div>
+<a name="r_static_mesh_t" href="javascript:toggle(13)">
+<div class="entry" id="13">
+r_static_mesh_t <span class="file">(r_common.h)</span></div>
+</a>
+<div class="entry_body" id="13_body" style="display:none">
+<pre><b class="keyword1">typedef</b> <b class="keyword1">struct</b> r_static_mesh <span class="def_op">{</span>
+        <a href="#r_vertex3_t">r_vertex3_t</a> <span class="def_op">*</span>verts<span class="def_op">;</span>
+        <b class="keyword0">unsigned</b> <b class="keyword0">short</b> <span class="def_op">*</span>indices<span class="def_op">;</span>
+        <b class="keyword0">int</b> verts_len<span class="def_op">,</span> indices_len<span class="def_op">;</span>
+<span class="def_op">}</span> r_static_mesh_t<span class="def_op">;</span></pre>
+<p class="comment"> Non-animated mesh</p>
+</div>
+<a name="r_text_t" href="javascript:toggle(14)">
+<div class="entry" id="14">
+r_text_t <span class="file">(r_shared.h)</span></div>
+</a>
+<div class="entry_body" id="14_body" style="display:none">
+<pre><b class="keyword1">typedef</b> <b class="keyword1">struct</b> r_text <span class="def_op">{</span>
+        <a href="#r_sprite_t">r_sprite_t</a> sprite<span class="def_op">;</span>
+        <a href="#r_font_t">r_font_t</a> font<span class="def_op">;</span>
+        <b class="keyword0">float</b> wrap<span class="def_op">,</span> shadow<span class="def_op">;</span>
+        <b class="keyword0">int</b> invert<span class="def_op">;</span>
+        <b class="keyword0">char</b> buffer<span class="def_op">[</span><span class="def_const">256</span><span class="def_op">];</span>
+<span class="def_op">}</span> r_text_t<span class="def_op">;</span></pre>
+<p class="comment"> Sometimes it is convenient to store the source text for a text sprite in a
+   generic buffer and only re-render it if it has changed</p>
+</div>
+<a name="r_texture" href="javascript:toggle(15)">
+<div class="entry" id="15">
+r_texture <span class="file">(r_common.h)</span></div>
+</a>
+<div class="entry_body" id="15_body" style="display:none">
+<pre><b class="keyword1">struct</b> r_texture <span class="def_op">{</span>
+        c_ref_t ref<span class="def_op">;</span>
+        SDL_Surface <span class="def_op">*</span>surface<span class="def_op">;</span>
+        GLuint gl_name<span class="def_op">;</span>
+        <b class="keyword0">int</b> alpha<span class="def_op">;</span>
+<span class="def_op">};</span></pre>
+<p class="comment"> Texture class</p>
+</div>
+<a name="r_texture_t" href="javascript:toggle(16)">
+<div class="entry" id="16">
+r_texture_t <span class="file">(r_shared.h)</span></div>
+</a>
+<div class="entry_body" id="16_body" style="display:none">
+<pre><b class="keyword1">typedef</b> <b class="keyword1">struct</b> <a href="#r_texture">r_texture</a> r_texture_t<span class="def_op">;</span></pre>
+<p class="comment"> Opaque texture object</p>
+</div>
+<a name="r_vertex2_t" href="javascript:toggle(17)">
+<div class="entry" id="17">
+r_vertex2_t <span class="file">(r_common.h)</span></div>
+</a>
+<div class="entry_body" id="17_body" style="display:none">
+<pre><b class="keyword1">typedef</b> <b class="keyword1">struct</b> r_vertex2 <span class="def_op">{</span>
+        c_vec2_t uv<span class="def_op">;</span>
+        c_vec3_t co<span class="def_op">;</span>
+<span class="def_op">}</span> r_vertex2_t<span class="def_op">;</span></pre>
+<p class="comment"> Vertex type for sprites</p>
+</div>
+<a name="r_vertex3_t" href="javascript:toggle(18)">
+<div class="entry" id="18">
+r_vertex3_t <span class="file">(r_common.h)</span></div>
+</a>
+<div class="entry_body" id="18_body" style="display:none">
+<pre><b class="keyword1">typedef</b> <b class="keyword1">struct</b> r_vertex3 <span class="def_op">{</span>
+        c_vec2_t uv<span class="def_op">;</span>
+        c_vec3_t no<span class="def_op">;</span>
+        c_vec3_t co<span class="def_op">;</span>
+<span class="def_op">}</span> r_vertex3_t<span class="def_op">;</span></pre>
+<p class="comment"> Vertex type for meshes</p>
+</div>
+<a name="r_window_t" href="javascript:toggle(19)">
+<div class="entry" id="19">
+r_window_t <span class="file">(r_shared.h)</span></div>
+</a>
+<div class="entry_body" id="19_body" style="display:none">
+<pre><b class="keyword1">typedef</b> <b class="keyword1">struct</b> r_window <span class="def_op">{</span>
+        <a href="#r_sprite_t">r_sprite_t</a> sprite<span class="def_op">;</span>
+        c_vec2_t corner<span class="def_op">;</span>
+<span class="def_op">}</span> r_window_t<span class="def_op">;</span></pre>
+<p class="comment"> A quad strip composed of nine quads that stretch with the size parameter
+   of the sprite. Adjust sprite parameters to change how the window is
+   displayed.</p>
+</div>
+<a name="Functions"></a>
+<h2>Functions</h2>
+<a name="R_SDL_get_pixel" href="javascript:toggle(20)">
+<div class="entry" id="20">
+R_SDL_get_pixel <span class="file">(r_assets.c)</span></div>
+</a>
+<div class="entry_body" id="20_body" style="display:none">
+<pre>c_color_t R_SDL_get_pixel<span class="def_op">(<b class="keyword0">const</b></span> SDL_Surface <span class="def_op">*</span>surf<span class="def_op">,</span> <b class="keyword0">int</b> x<span class="def_op">,</span> <b class="keyword0">int</b> y<span class="def_op">);</span></pre>
+<p class="comment">
+ Gets a pixel from an <code>SDL</code> surface. Lock the surface before calling this!</p>
+</div>
+<a name="R_SDL_invert" href="javascript:toggle(21)">
+<div class="entry" id="21">
+R_SDL_invert <span class="file">(r_assets.c)</span></div>
+</a>
+<div class="entry_body" id="21_body" style="display:none">
+<pre><b class="keyword0">void</b> R_SDL_invert<span class="def_op">(</span>SDL_Surface <span class="def_op">*</span>surf<span class="def_op">,</span> <b class="keyword0">int</b> rgb<span class="def_op">,</span> <b class="keyword0">int</b> alpha<span class="def_op">);</span></pre>
+<p class="comment">
+ Inverts a surface. Surface should not be locked when this is called.</p>
+</div>
+<a name="R_SDL_put_pixel" href="javascript:toggle(22)">
+<div class="entry" id="22">
+R_SDL_put_pixel <span class="file">(r_assets.c)</span></div>
+</a>
+<div class="entry_body" id="22_body" style="display:none">
+<pre><b class="keyword0">void</b> R_SDL_put_pixel<span class="def_op">(</span>SDL_Surface <span class="def_op">*</span>surf<span class="def_op">,</span> <b class="keyword0">int</b> x<span class="def_op">,</span> <b class="keyword0">int</b> y<span class="def_op">,</span> c_color_t color<span class="def_op">);</span></pre>
+<p class="comment">
+ Sets the color of a pixel on an <code>SDL</code> surface. Lock the surface before
+ calling this!</p>
+</div>
+<a name="R_check_errors" href="javascript:toggle(23)">
+<div class="entry" id="23">
+R_check_errors <span class="file">(r_common.h)</span></div>
+</a>
+<div class="entry_body" id="23_body" style="display:none">
+<pre><b class="keyword2">#define</b> R_check_errors<span class="def_op">()</span> R_check_errors_full<span class="def_op">(</span>__FILE__<span class="def_op">,</span> __LINE__<span class="def_op">,</span> __func__<span class="def_op">);</span></pre>
+<p class="comment"> r_render.c</p>
+</div>
+<a name="R_check_errors_full" href="javascript:toggle(24)">
+<div class="entry" id="24">
+R_check_errors_full <span class="file">(r_render.c)</span></div>
+</a>
+<div class="entry_body" id="24_body" style="display:none">
+<pre><b class="keyword0">void</b> R_check_errors_full<span class="def_op">(<b class="keyword0">const</b></span> <b class="keyword0">char</b> <span class="def_op">*</span>file<span class="def_op">,</span> <b class="keyword0">int</b> line<span class="def_op">,</span> <b class="keyword0">const</b> <b class="keyword0">char</b> <span class="def_op">*</span>func<span class="def_op">);</span></pre>
+<p class="comment">
+ See if there were any OpenGL errors.</p>
+</div>
+<a name="R_cleanup" href="javascript:toggle(25)">
+<div class="entry" id="25">
+R_cleanup <span class="file">(r_render.c)</span></div>
+</a>
+<div class="entry_body" id="25_body" style="display:none">
+<pre><b class="keyword0">void</b> R_cleanup<span class="def_op">(<b class="keyword0">void</b>);</span></pre>
+<p class="comment">
+ Cleanup the OpenGL mess.</p>
+</div>
+<a name="R_clip_bottom" href="javascript:toggle(26)">
+<div class="entry" id="26">
+R_clip_bottom <span class="file">(r_render.c)</span></div>
+</a>
+<div class="entry_body" id="26_body" style="display:none">
+<pre><b class="keyword0">void</b> R_clip_bottom<span class="def_op">(<b class="keyword0">float</b>);</span></pre>
+<p class="comment">
+ Clip in a specific direction.</p>
+</div>
+<a name="R_clip_disable" href="javascript:toggle(27)">
+<div class="entry" id="27">
+R_clip_disable <span class="file">(r_render.c)</span></div>
+</a>
+<div class="entry_body" id="27_body" style="display:none">
+<pre><b class="keyword0">void</b> R_clip_disable<span class="def_op">(<b class="keyword0">void</b>);</span></pre>
+<p class="comment">
+ Disables the clipping at the current stack level.</p>
+</div>
+<a name="R_clip_left" href="javascript:toggle(28)">
+<div class="entry" id="28">
+R_clip_left <span class="file">(r_render.c)</span></div>
+</a>
+<div class="entry_body" id="28_body" style="display:none">
+<pre><b class="keyword0">void</b> R_clip_left<span class="def_op">(<b class="keyword0">float</b>);</span></pre>
+<p class="comment">
+ Clip in a specific direction.</p>
+</div>
+<a name="R_clip_pop" href="javascript:toggle(29)">
+<div class="entry" id="29">
+R_clip_pop <span class="file">(r_render.c)</span></div>
+</a>
+<div class="entry_body" id="29_body" style="display:none">
+<pre><b class="keyword0">void</b> R_clip_pop<span class="def_op">(<b class="keyword0">void</b>);</span></pre>
+<p class="comment">
+ Adjust the clip stack.</p>
+</div>
+<a name="R_clip_push" href="javascript:toggle(30)">
+<div class="entry" id="30">
+R_clip_push <span class="file">(r_render.c)</span></div>
+</a>
+<div class="entry_body" id="30_body" style="display:none">
+<pre><b class="keyword0">void</b> R_clip_push<span class="def_op">(<b class="keyword0">void</b>);</span></pre>
+<p class="comment">
+ Adjust the clip stack.</p>
+</div>
+<a name="R_clip_rect" href="javascript:toggle(31)">
+<div class="entry" id="31">
+R_clip_rect <span class="file">(r_render.c)</span></div>
+</a>
+<div class="entry_body" id="31_body" style="display:none">
+<pre><b class="keyword0">void</b> R_clip_rect<span class="def_op">(</span>c_vec2_t origin<span class="def_op">,</span> c_vec2_t size<span class="def_op">);</span></pre>
+<p class="comment">
+ Setup a clipping rectangle.</p>
+</div>
+<a name="R_clip_right" href="javascript:toggle(32)">
+<div class="entry" id="32">
+R_clip_right <span class="file">(r_render.c)</span></div>
+</a>
+<div class="entry_body" id="32_body" style="display:none">
+<pre><b class="keyword0">void</b> R_clip_right<span class="def_op">(<b class="keyword0">float</b>);</span></pre>
+<p class="comment">
+ Clip in a specific direction.</p>
+</div>
+<a name="R_clip_top" href="javascript:toggle(33)">
+<div class="entry" id="33">
+R_clip_top <span class="file">(r_render.c)</span></div>
+</a>
+<div class="entry_body" id="33_body" style="display:none">
+<pre><b class="keyword0">void</b> R_clip_top<span class="def_op">(<b class="keyword0">float</b>);</span></pre>
+<p class="comment">
+ Clip in a specific direction.</p>
+</div>
+<a name="R_finish_frame" href="javascript:toggle(34)">
+<div class="entry" id="34">
+R_finish_frame <span class="file">(r_render.c)</span></div>
+</a>
+<div class="entry_body" id="34_body" style="display:none">
+<pre><b class="keyword0">void</b> R_finish_frame<span class="def_op">(<b class="keyword0">void</b>);</span></pre>
+<p class="comment">
+ Finishes rendering the scene and flips the buffer.</p>
+</div>
+<a name="R_font_height" href="javascript:toggle(35)">
+<div class="entry" id="35">
+R_font_height <span class="file">(r_assets.c)</span></div>
+</a>
+<div class="entry_body" id="35_body" style="display:none">
+<pre><b class="keyword0">int</b> R_font_height<span class="def_op">(<a href="#r_font_t">r_font_t</a>);</span></pre>
+<p class="comment">
+ Returns the height of the tallest glyph in the font.</p>
+</div>
+<a name="R_font_line_skip" href="javascript:toggle(36)">
+<div class="entry" id="36">
+R_font_line_skip <span class="file">(r_assets.c)</span></div>
+</a>
+<div class="entry_body" id="36_body" style="display:none">
+<pre><b class="keyword0">int</b> R_font_line_skip<span class="def_op">(<a href="#r_font_t">r_font_t</a>);</span></pre>
+<p class="comment">
+ Returns distance from start of one line to the start of the next.</p>
+</div>
+<a name="R_font_render" href="javascript:toggle(37)">
+<div class="entry" id="37">
+R_font_render <span class="file">(r_assets.c)</span></div>
+</a>
+<div class="entry_body" id="37_body" style="display:none">
+<pre>SDL_Surface <span class="def_op">*</span>R_font_render<span class="def_op">(<a href="#r_font_t">r_font_t</a>,</span> <b class="keyword0">const</b> <b class="keyword0">char</b> <span class="def_op">*);</span></pre>
+<p class="comment">
+ Renders a line of text onto a newly-allocated <code>SDL</code> surface. This surface must
+ be freed by the caller.</p>
+</div>
+<a name="R_font_size" href="javascript:toggle(38)">
+<div class="entry" id="38">
+R_font_size <span class="file">(r_assets.c)</span></div>
+</a>
+<div class="entry_body" id="38_body" style="display:none">
+<pre>c_vec2_t R_font_size<span class="def_op">(<a href="#r_font_t">r_font_t</a>,</span> <b class="keyword0">const</b> <b class="keyword0">char</b> <span class="def_op">*);</span></pre>
+<p class="comment">
+ Returns distance from start of one line to the start of the next.</p>
+</div>
+<a name="R_font_width" href="javascript:toggle(39)">
+<div class="entry" id="39">
+R_font_width <span class="file">(r_assets.c)</span></div>
+</a>
+<div class="entry_body" id="39_body" style="display:none">
+<pre><b class="keyword0">int</b> R_font_width<span class="def_op">(<a href="#r_font_t">r_font_t</a>);</span></pre>
+<p class="comment">
+ Returns the width of the widest glyph in the font.</p>
+</div>
+<a name="R_free_assets" href="javascript:toggle(40)">
+<div class="entry" id="40">
+R_free_assets <span class="file">(r_assets.c)</span></div>
+</a>
+<div class="entry_body" id="40_body" style="display:none">
+<pre><b class="keyword0">void</b> R_free_assets<span class="def_op">(<b class="keyword0">void</b>);</span></pre>
+<p class="comment">
+ Cleans up the asset resources. Shuts down the <code>SDL_</code>ttf library.</p>
+</div>
+<a name="R_free_fonts" href="javascript:toggle(41)">
+<div class="entry" id="41">
+R_free_fonts <span class="file">(r_assets.c)</span></div>
+</a>
+<div class="entry_body" id="41_body" style="display:none">
+<pre><b class="keyword0">void</b> R_free_fonts<span class="def_op">(<b class="keyword0">void</b>);</span></pre>
+<p class="comment">
+ Cleans up fonts.</p>
+</div>
+<a name="R_generate_globe" href="javascript:toggle(42)">
+<div class="entry" id="42">
+R_generate_globe <span class="file">(r_globe.c)</span></div>
+</a>
+<div class="entry_body" id="42_body" style="display:none">
+<pre><b class="keyword0">void</b> R_generate_globe<span class="def_op">(<b class="keyword0">int</b></span> seed<span class="def_op">,</span> <b class="keyword0">int</b> subdivs<span class="def_op">);</span></pre>
+<p class="comment">
+ Generates the globe by subdividing an icosahedron and spacing the vertices
+ out at the sphere's surface.</p>
+</div>
+<a name="R_init" href="javascript:toggle(43)">
+<div class="entry" id="43">
+R_init <span class="file">(r_render.c)</span></div>
+</a>
+<div class="entry_body" id="43_body" style="display:none">
+<pre><b class="keyword0">int</b> R_init<span class="def_op">(<b class="keyword0">void</b>);</span></pre>
+<p class="comment">
+ Creates the client window. Initializes OpenGL settings such view matrices,
+ culling, and depth testing. Returns <code>TRUE</code> on success.</p>
+</div>
+<a name="R_load_assets" href="javascript:toggle(44)">
+<div class="entry" id="44">
+R_load_assets <span class="file">(r_assets.c)</span></div>
+</a>
+<div class="entry_body" id="44_body" style="display:none">
+<pre><b class="keyword0">void</b> R_load_assets<span class="def_op">(<b class="keyword0">void</b>);</span></pre>
+<p class="comment">
+ Loads render assets.</p>
+</div>
+<a name="R_load_fonts" href="javascript:toggle(45)">
+<div class="entry" id="45">
+R_load_fonts <span class="file">(r_assets.c)</span></div>
+</a>
+<div class="entry_body" id="45_body" style="display:none">
+<pre><b class="keyword0">void</b> R_load_fonts<span class="def_op">(<b class="keyword0">void</b>);</span></pre>
+<p class="comment">
+ Initialize the <code>SDL</code> <code>TTF</code> library and generate font structures.</p>
+</div>
+<a name="R_model_cleanup" href="javascript:toggle(46)">
+<div class="entry" id="46">
+R_model_cleanup <span class="file">(r_model.c)</span></div>
+</a>
+<div class="entry_body" id="46_body" style="display:none">
+<pre><b class="keyword0">void</b> R_model_cleanup<span class="def_op">(<a href="#r_model_t">r_model_t</a></span> <span class="def_op">*);</span></pre>
+<p class="comment">
+ Decrease reference counts to resources used by a model and free those
+ resources if they have no references left.</p>
+</div>
+<a name="R_model_init" href="javascript:toggle(47)">
+<div class="entry" id="47">
+R_model_init <span class="file">(r_model.c)</span></div>
+</a>
+<div class="entry_body" id="47_body" style="display:none">
+<pre><b class="keyword0">int</b> R_model_init<span class="def_op">(<a href="#r_model_t">r_model_t</a></span> <span class="def_op">*,</span> <b class="keyword0">const</b> <b class="keyword0">char</b> <span class="def_op">*</span>filename<span class="def_op">);</span></pre>
+<p class="comment">
+ Initialize a model instance. Model data is loaded if it is not already in
+ memory. Returns <code>FALSE</code> and invalidates the model instance if the model data
+ failed to load.</p>
+</div>
+<a name="R_model_play" href="javascript:toggle(48)">
+<div class="entry" id="48">
+R_model_play <span class="file">(r_model.c)</span></div>
+</a>
+<div class="entry_body" id="48_body" style="display:none">
+<pre><b class="keyword0">void</b> R_model_play<span class="def_op">(<a href="#r_model_t">r_model_t</a></span> <span class="def_op">*,</span> <b class="keyword0">const</b> <b class="keyword0">char</b> <span class="def_op">*</span>anim_name<span class="def_op">);</span></pre>
+<p class="comment">
+ Set a model animation to play.</p>
+</div>
+<a name="R_model_render" href="javascript:toggle(49)">
+<div class="entry" id="49">
+R_model_render <span class="file">(r_model.c)</span></div>
+</a>
+<div class="entry_body" id="49_body" style="display:none">
+<pre><b class="keyword0">void</b> R_model_render<span class="def_op">(<a href="#r_model_t">r_model_t</a></span> <span class="def_op">*);</span></pre>
+<p class="comment">
+ Render and advance the animation of a model. Applies the model's translation,
+ rotation, and scale.</p>
+</div>
+<a name="R_register_variables" href="javascript:toggle(50)">
+<div class="entry" id="50">
+R_register_variables <span class="file">(r_variables.c)</span></div>
+</a>
+<div class="entry_body" id="50_body" style="display:none">
+<pre><b class="keyword0">void</b> R_register_variables<span class="def_op">(<b class="keyword0">void</b>);</span></pre>
+<p class="comment">
+ Registers the render namespace variables.</p>
+</div>
+<a name="R_render_globe" href="javascript:toggle(51)">
+<div class="entry" id="51">
+R_render_globe <span class="file">(r_globe.c)</span></div>
+</a>
+<div class="entry_body" id="51_body" style="display:none">
+<pre><b class="keyword0">void</b> R_render_globe<span class="def_op">(<b class="keyword0">void</b>);</span></pre>
+<p class="comment">
+ Renders the entire globe.</p>
+</div>
+<a name="R_set_mode" href="javascript:toggle(52)">
+<div class="entry" id="52">
+R_set_mode <span class="file">(r_render.c)</span></div>
+</a>
+<div class="entry_body" id="52_body" style="display:none">
+<pre><b class="keyword0">void</b> R_set_mode<span class="def_op">(<a href="#r_mode_t">r_mode_t</a>);</span></pre>
+<p class="comment">
+ Sets up OpenGL to render 2D or 3D polygons.<br>
+   <code>TODO</code>: Work a camera into the model view matrix.</p>
+</div>
+<a name="R_sprite_cleanup" href="javascript:toggle(53)">
+<div class="entry" id="53">
+R_sprite_cleanup <span class="file">(r_sprite.c)</span></div>
+</a>
+<div class="entry_body" id="53_body" style="display:none">
+<pre><b class="keyword0">void</b> R_sprite_cleanup<span class="def_op">(<a href="#r_sprite_t">r_sprite_t</a></span> <span class="def_op">*);</span></pre>
+<p class="comment">
+ Initialize a sprite structure.</p>
+</div>
+<a name="R_sprite_init" href="javascript:toggle(54)">
+<div class="entry" id="54">
+R_sprite_init <span class="file">(r_sprite.c)</span></div>
+</a>
+<div class="entry_body" id="54_body" style="display:none">
+<pre><b class="keyword0">void</b> R_sprite_init<span class="def_op">(<a href="#r_sprite_t">r_sprite_t</a></span> <span class="def_op">*,</span> <b class="keyword0">const</b> <b class="keyword0">char</b> <span class="def_op">*</span>filename<span class="def_op">);</span></pre>
+<p class="comment">
+ Initialize a sprite structure. 2D mode textures are expected to be at the
+ maximum pixel scale (2x).</p>
+</div>
+<a name="R_sprite_init_text" href="javascript:toggle(55)">
+<div class="entry" id="55">
+R_sprite_init_text <span class="file">(r_sprite.c)</span></div>
+</a>
+<div class="entry_body" id="55_body" style="display:none">
+<pre><b class="keyword0">void</b> R_sprite_init_text<span class="def_op">(<a href="#r_sprite_t">r_sprite_t</a></span> <span class="def_op">*,</span> <a href="#r_font_t">r_font_t</a><span class="def_op">,</span> <b class="keyword0">float</b> wrap<span class="def_op">,</span> <b class="keyword0">float</b> shadow<span class="def_op">,</span>
+                        <b class="keyword0">int</b> invert<span class="def_op">,</span> <b class="keyword0">const</b> <b class="keyword0">char</b> <span class="def_op">*</span>text<span class="def_op">);</span></pre>
+<p class="comment">
+ Setup the sprite for rendering the string. Note that sprite size will be
+ reset if it is regenerated. Text can be wrapped (or not, set wrap to 0) and a
+ shadow (of variable opacity) can be applied. <code>string</code> does need to persist
+ after the function call.</p>
+</div>
+<a name="R_sprite_render" href="javascript:toggle(56)">
+<div class="entry" id="56">
+R_sprite_render <span class="file">(r_sprite.c)</span></div>
+</a>
+<div class="entry_body" id="56_body" style="display:none">
+<pre><b class="keyword0">void</b> R_sprite_render<span class="def_op">(<b class="keyword0">const</b></span> <a href="#r_sprite_t">r_sprite_t</a> <span class="def_op">*);</span></pre>
+<p class="comment">
+ Renders a 2D textured quad on screen. If we are rendering a rotated sprite
+ that doesn't use alpha, this function will draw an anti-aliased border for it.
+ The coordinates work here like you would expect for 2D, the origin is in the
+ upper left of the sprite and y decreases down the screen.<br>
+<br>
+ The vertices are arranged in the following order:<br>
+<br>
+   0---3<br>
+   |   |<br>
+   1---2<br>
+<br>
+   <code>TODO</code>: Disable anti-aliasing here if <code>FSAA</code> is on.<br>
+   <code>FIXME</code>: There is a slight overlap between the antialiased edge line and the
+          polygon which should probably be fixed if possible.</p>
+</div>
+<a name="R_start_frame" href="javascript:toggle(57)">
+<div class="entry" id="57">
+R_start_frame <span class="file">(r_render.c)</span></div>
+</a>
+<div class="entry_body" id="57_body" style="display:none">
+<pre><b class="keyword0">void</b> R_start_frame<span class="def_op">(<b class="keyword0">void</b>);</span></pre>
+<p class="comment">
+ Clears the buffer and starts rendering the scene.</p>
+</div>
+<a name="R_static_mesh_cleanup" href="javascript:toggle(58)">
+<div class="entry" id="58">
+R_static_mesh_cleanup <span class="file">(r_static_mesh.c)</span></div>
+</a>
+<div class="entry_body" id="58_body" style="display:none">
+<pre><b class="keyword0">void</b> R_static_mesh_cleanup<span class="def_op">(<a href="#r_static_mesh_t">r_static_mesh_t</a></span> <span class="def_op">*);</span></pre>
+<p class="comment">
+ Release the resources for a mesh.</p>
+</div>
+<a name="R_static_mesh_find_vert" href="javascript:toggle(59)">
+<div class="entry" id="59">
+R_static_mesh_find_vert <span class="file">(r_static_mesh.c)</span></div>
+</a>
+<div class="entry_body" id="59_body" style="display:none">
+<pre><b class="keyword0">unsigned</b> <b class="keyword0">short</b> R_static_mesh_find_vert<span class="def_op">(<b class="keyword0">const</b></span> <a href="#r_static_mesh_t">r_static_mesh_t</a> <span class="def_op">*</span>mesh<span class="def_op">,</span>
+                                       <b class="keyword0">const</b> <a href="#r_vertex3_t">r_vertex3_t</a> <span class="def_op">*</span>vert<span class="def_op">);</span></pre>
+<p class="comment">
+ Find a vertex in a static mesh vertex array. Returns the length of the array
+ if a matching vertex is not found.</p>
+</div>
+<a name="R_static_mesh_free" href="javascript:toggle(60)">
+<div class="entry" id="60">
+R_static_mesh_free <span class="file">(r_static_mesh.c)</span></div>
+</a>
+<div class="entry_body" id="60_body" style="display:none">
+<pre><b class="keyword0">void</b> R_static_mesh_free<span class="def_op">(<a href="#r_static_mesh_t">r_static_mesh_t</a></span> <span class="def_op">*);</span></pre>
+<p class="comment">
+ Release the resources for and free an allocated mesh.</p>
+</div>
+<a name="R_static_mesh_render" href="javascript:toggle(61)">
+<div class="entry" id="61">
+R_static_mesh_render <span class="file">(r_static_mesh.c)</span></div>
+</a>
+<div class="entry_body" id="61_body" style="display:none">
+<pre><b class="keyword0">void</b> R_static_mesh_render<span class="def_op">(<a href="#r_static_mesh_t">r_static_mesh_t</a></span> <span class="def_op">*,</span> <a href="#r_texture_t">r_texture_t</a> <span class="def_op">*);</span></pre>
+<p class="comment">
+ Render a mesh.</p>
+</div>
+<a name="R_text_cleanup" href="javascript:toggle(62)">
+<div class="entry" id="62">
+R_text_cleanup <span class="file">(r_shared.h)</span></div>
+</a>
+<div class="entry_body" id="62_body" style="display:none">
+<pre><b class="keyword2">#define</b> R_text_cleanup<span class="def_op">(</span>t<span class="def_op">)</span> R_sprite_cleanup<span class="def_op">(&(</span>t<span class="def_op">)-></span>sprite<span class="def_op">)</span></pre>
+<p class="comment"> r_sprite.c</p>
+</div>
+<a name="R_text_configure" href="javascript:toggle(63)">
+<div class="entry" id="63">
+R_text_configure <span class="file">(r_sprite.c)</span></div>
+</a>
+<div class="entry_body" id="63_body" style="display:none">
+<pre><b class="keyword0">void</b> R_text_configure<span class="def_op">(<a href="#r_text_t">r_text_t</a></span> <span class="def_op">*,</span> <a href="#r_font_t">r_font_t</a><span class="def_op">,</span> <b class="keyword0">float</b> wrap<span class="def_op">,</span> <b class="keyword0">float</b> shadow<span class="def_op">,</span>
+                      <b class="keyword0">int</b> invert<span class="def_op">,</span> <b class="keyword0">const</b> <b class="keyword0">char</b> <span class="def_op">*</span>text<span class="def_op">);</span></pre>
+<p class="comment">
+ Wrapper around the sprite text initializer. Avoids re-rendering the texture
+ if the parameters have not changed.</p>
+</div>
+<a name="R_text_init" href="javascript:toggle(64)">
+<div class="entry" id="64">
+R_text_init <span class="file">(r_shared.h)</span></div>
+</a>
+<div class="entry_body" id="64_body" style="display:none">
+<pre><b class="keyword2">#define</b> R_text_init<span class="def_op">(</span>t<span class="def_op">)</span> C_zero<span class="def_op">(</span>t<span class="def_op">)</span></pre>
+<p class="comment"> r_sprite.c</p>
+</div>
+<a name="R_text_render" href="javascript:toggle(65)">
+<div class="entry" id="65">
+R_text_render <span class="file">(r_shared.h)</span></div>
+</a>
+<div class="entry_body" id="65_body" style="display:none">
+<pre><b class="keyword2">#define</b> R_text_render<span class="def_op">(</span>t<span class="def_op">)</span> R_sprite_render<span class="def_op">(&(</span>t<span class="def_op">)-></span>sprite<span class="def_op">)</span></pre>
+<p class="comment"> r_sprite.c</p>
+</div>
+<a name="R_texture_alloc" href="javascript:toggle(66)">
+<div class="entry" id="66">
+R_texture_alloc <span class="file">(r_common.h)</span></div>
+</a>
+<div class="entry_body" id="66_body" style="display:none">
+<pre><b class="keyword2">#define</b> R_texture_alloc<span class="def_op">(</span>w<span class="def_op">,</span> h<span class="def_op">,</span> a<span class="def_op">)</span> R_texture_alloc_full<span class="def_op">(</span>__FILE__<span class="def_op">,</span> __LINE__<span class="def_op">,</span> <span class="def_op">\</span>
+                                                      __func__<span class="def_op">,</span> w<span class="def_op">,</span> h<span class="def_op">,</span> a<span class="def_op">)</span></pre>
+<p class="comment"> r_assets.c</p>
+</div>
+<a name="R_texture_alloc_full" href="javascript:toggle(67)">
+<div class="entry" id="67">
+R_texture_alloc_full <span class="file">(r_assets.c)</span></div>
+</a>
+<div class="entry_body" id="67_body" style="display:none">
+<pre><a href="#r_texture_t">r_texture_t</a> <span class="def_op">*</span>R_texture_alloc_full<span class="def_op">(<b class="keyword0">const</b></span> <b class="keyword0">char</b> <span class="def_op">*</span>file<span class="def_op">,</span> <b class="keyword0">int</b> line<span class="def_op">,</span> <b class="keyword0">const</b> <b class="keyword0">char</b> <span class="def_op">*</span>func<span class="def_op">,</span>
+                                  <b class="keyword0">int</b> width<span class="def_op">,</span> <b class="keyword0">int</b> height<span class="def_op">,</span> <b class="keyword0">int</b> alpha<span class="def_op">);</span></pre>
+<p class="comment">
+ Just allocate a texture object and cleared w by h <code>SDL</code> surface. Does not load
+ anything or add the texture to the texture linked list. The texture needs to
+ be uploaded after you are done editing it. Don't forget to lock the surface!
+<br>
+ Mip-maps are disabled by default for allocated textures, if you are going to
+ use the texture on a 3D object, you will want to enable them for that
+ texture.</p>
+</div>
+<a name="R_texture_free" href="javascript:toggle(68)">
+<div class="entry" id="68">
+R_texture_free <span class="file">(r_common.h)</span></div>
+</a>
+<div class="entry_body" id="68_body" style="display:none">
+<pre><b class="keyword2">#define</b> R_texture_free<span class="def_op">(</span>t<span class="def_op">)</span> C_ref_down<span class="def_op">((</span>c_ref_t <span class="def_op">*)(</span>t<span class="def_op">))</span></pre>
+<p class="comment"> r_assets.c</p>
+</div>
+<a name="R_texture_load" href="javascript:toggle(69)">
+<div class="entry" id="69">
+R_texture_load <span class="file">(r_assets.c)</span></div>
+</a>
+<div class="entry_body" id="69_body" style="display:none">
+<pre><a href="#r_texture_t">r_texture_t</a> <span class="def_op">*</span>R_texture_load<span class="def_op">(<b class="keyword0">const</b></span> <b class="keyword0">char</b> <span class="def_op">*</span>filename<span class="def_op">,</span> <b class="keyword0">int</b> mipmaps<span class="def_op">);</span></pre>
+<p class="comment">
+ Loads a texture using <code>SDL_</code>image. If the texture has already been loaded,
+ just ups the reference count and returns the loaded surface.<br>
+   <code>TODO</code>: Support loading from sources other than files.</p>
+</div>
+<a name="R_texture_ref" href="javascript:toggle(70)">
+<div class="entry" id="70">
+R_texture_ref <span class="file">(r_common.h)</span></div>
+</a>
+<div class="entry_body" id="70_body" style="display:none">
+<pre><b class="keyword2">#define</b> R_texture_ref<span class="def_op">(</span>t<span class="def_op">)</span> C_ref_up<span class="def_op">((</span>c_ref_t <span class="def_op">*)(</span>t<span class="def_op">))</span></pre>
+<p class="comment"> r_assets.c</p>
+</div>
+<a name="R_texture_select" href="javascript:toggle(71)">
+<div class="entry" id="71">
+R_texture_select <span class="file">(r_assets.c)</span></div>
+</a>
+<div class="entry_body" id="71_body" style="display:none">
+<pre><b class="keyword0">void</b> R_texture_select<span class="def_op">(<a href="#r_texture_t">r_texture_t</a></span> <span class="def_op">*);</span></pre>
+<p class="comment">
+ Selects (binds) a texture for rendering in OpenGL. Also sets whatever options
+ are necessary to get the texture to show up properly.</p>
+</div>
+<a name="R_texture_upload" href="javascript:toggle(72)">
+<div class="entry" id="72">
+R_texture_upload <span class="file">(r_assets.c)</span></div>
+</a>
+<div class="entry_body" id="72_body" style="display:none">
+<pre><b class="keyword0">void</b> R_texture_upload<span class="def_op">(<b class="keyword0">const</b></span> <a href="#r_texture_t">r_texture_t</a> <span class="def_op">*,</span> <b class="keyword0">int</b> mipmaps<span class="def_op">);</span></pre>
+<p class="comment">
+ If the texture's <code>SDL</code> surface has changed, the image must be reloaded into
+ OpenGL. This function will do this. It is assumed that the texture surface
+ format has not changed since the texture was created. Note that mipmaps will
+ make UI textures look blurry so do not use them for anything that will be
+ rendered in 2D mode.</p>
+</div>
+<a name="R_window_cleanup" href="javascript:toggle(73)">
+<div class="entry" id="73">
+R_window_cleanup <span class="file">(r_shared.h)</span></div>
+</a>
+<div class="entry_body" id="73_body" style="display:none">
+<pre><b class="keyword2">#define</b> R_window_cleanup<span class="def_op">(</span>w<span class="def_op">)</span> R_sprite_cleanup<span class="def_op">(&(</span>w<span class="def_op">)-></span>sprite<span class="def_op">)</span></pre>
+<p class="comment"> r_sprite.c</p>
+</div>
+<a name="R_window_init" href="javascript:toggle(74)">
+<div class="entry" id="74">
+R_window_init <span class="file">(r_sprite.c)</span></div>
+</a>
+<div class="entry_body" id="74_body" style="display:none">
+<pre><b class="keyword0">void</b> R_window_init<span class="def_op">(<a href="#r_window_t">r_window_t</a></span> <span class="def_op">*,</span> <b class="keyword0">const</b> <b class="keyword0">char</b> <span class="def_op">*</span>filename<span class="def_op">);</span></pre>
+<p class="comment">
+ Initializes a window sprite.</p>
+</div>
+<a name="R_window_render" href="javascript:toggle(75)">
+<div class="entry" id="75">
+R_window_render <span class="file">(r_sprite.c)</span></div>
+</a>
+<div class="entry_body" id="75_body" style="display:none">
+<pre><b class="keyword0">void</b> R_window_render<span class="def_op">(<a href="#r_window_t">r_window_t</a></span> <span class="def_op">*);</span></pre>
+<p class="comment">
+ Renders a window sprite. A window sprite is composed of a grid of nine quads
+ where the corner quads have a fixed size and the connecting quads stretch to
+ fill the rest of the sprite size.<br>
+<br>
+ The array is indexed this way:<br>
+<br>
+   0---2------4---6<br>
+   |   |      |   |<br>
+   1---3------5---7<br>
+   |   |      |   |<br>
+   |   |      |   |<br>
+   11--10-----9---8<br>
+   |   |      |   |<br>
+   12--13-----14--15<br>
+<br>
+ Note that unlike normal sprites, no edge anti-aliasing is done as it is
+ assumed that all windows will make use of alpha transparency.</p>
+</div>
+</body>
+</html>

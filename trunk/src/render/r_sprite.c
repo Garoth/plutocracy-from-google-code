@@ -111,7 +111,7 @@ void R_sprite_render(const r_sprite_t *sprite)
                 return;
 
         /* Render textured quad */
-        half = C_vec2_invscalef(sprite->size, 2.f);
+        half = C_vec2_divf(sprite->size, 2.f);
         verts[0].co = C_vec3(-half.x, half.y, 0.f);
         verts[0].uv = C_vec2(0.f, 1.f);
         verts[1].co = C_vec3(-half.x, -half.y, 0.f);
@@ -324,7 +324,7 @@ void R_window_init(r_window_t *window, const char *path)
         if (!window)
                 return;
         R_sprite_init(&window->sprite, path);
-        window->corner = C_vec2_invscalef(window->sprite.size, 4.f);
+        window->corner = C_vec2_divf(window->sprite.size, 4.f);
 }
 
 /******************************************************************************\
@@ -370,7 +370,7 @@ void R_window_render(r_window_t *window)
                 mid_uv.y *= corner.y / window->corner.y;
         }
 
-        mid_half = C_vec2_invscalef(window->sprite.size, 2.f);
+        mid_half = C_vec2_divf(window->sprite.size, 2.f);
         mid_half = C_vec2_sub(mid_half, corner);
         verts[0].co = C_vec3(-corner.x - mid_half.x,
                              -corner.y - mid_half.y, 0.f);

@@ -80,6 +80,9 @@ int R_font_width(r_font_t);
 void R_free_fonts(void);
 void R_load_fonts(void);
 
+/* r_globe.c */
+void R_generate_globe(int seed, int subdivs);
+
 /* r_model.c */
 void R_model_cleanup(r_model_t *);
 int R_model_init(r_model_t *, const char *filename);

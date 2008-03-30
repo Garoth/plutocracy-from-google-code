@@ -17,8 +17,7 @@ c_var_t r_width, r_height, r_color_bits, r_depth_bits, r_windowed, r_vsync,
         r_gamma, r_pixel_scale, r_clear, r_gl_errors;
 
 /* Render testing */
-c_var_t r_test_globe, r_test_globe_seed, r_test_model_path,
-        r_test_sprite_num, r_test_sprite_path, r_test_text;
+c_var_t r_test_model_path, r_test_sprite_num, r_test_sprite_path, r_test_text;
 
 /* Fonts */
 c_var_t r_font_console, r_font_console_pt,
@@ -42,9 +41,6 @@ void R_register_variables(void)
         C_register_integer(&r_gl_errors, "r_gl_errors", 0, C_VE_ANYTIME);
 
         /* Render testing */
-        C_register_integer(&r_test_globe, "r_test_globe", FALSE, C_VE_LATCHED);
-        C_register_integer(&r_test_globe_seed, "r_test_globe_seed", 0,
-                           C_VE_LATCHED);
         C_register_string(&r_test_model_path, "r_test_model", "", C_VE_LATCHED);
         C_register_integer(&r_test_sprite_num, "r_test_sprites", 0,
                            C_VE_LATCHED);

@@ -1,0 +1,49 @@
+<html>
+<head>
+<link rel=StyleSheet href="gendoc.css" type="text/css">
+<title>Plutocracy Game Namespace</title>
+</head>
+<script>
+         function toggle(n) {
+                 body = document.getElementById(n + '_body');
+                 if (body.style.display == 'block')
+                         body.style.display = 'none';
+                 else
+                         body.style.display = 'block';
+         }
+</script>
+<body>
+<div class="menu">
+<a href="#Definitions">Definitions</a> | 
+<a href="#Types">Types</a> | 
+<a href="#Functions">Functions</a>
+</div>
+<h1>Plutocracy Game Namespace</h1>
+<a name="Definitions"></a>
+<h2>Definitions</h2>
+<a name="Types"></a>
+<h2>Types</h2>
+<a name="g_tile_t" href="javascript:toggle(0)">
+<div class="entry" id="0">
+g_tile_t <span class="file">(g_common.h)</span></div>
+</a>
+<div class="entry_body" id="0_body" style="display:none">
+<pre><b class="keyword1">typedef</b> <b class="keyword1">struct</b> g_tile <span class="def_op">{</span>
+        c_vec3_t corners<span class="def_op">[</span><span class="def_const">3</span><span class="def_op">];</span>
+        <b class="keyword1">struct</b> g_tile <span class="def_op">*</span>neighbors<span class="def_op">[</span><span class="def_const">6</span><span class="def_op">];</span>
+<span class="def_op">}</span> g_tile_t<span class="def_op">;</span></pre>
+<p class="comment"> A tile on the globe</p>
+</div>
+<a name="Functions"></a>
+<h2>Functions</h2>
+<a name="G_generate_globe" href="javascript:toggle(1)">
+<div class="entry" id="1">
+G_generate_globe <span class="file">(g_globe.c)</span></div>
+</a>
+<div class="entry_body" id="1_body" style="display:none">
+<pre><b class="keyword0">void</b> G_generate_globe<span class="def_op">(<b class="keyword0">int</b></span> seed<span class="def_op">,</span> <b class="keyword0">int</b> subdiv<span class="def_op">);</span></pre>
+<p class="comment">
+ Generate a new icosahedral sphere globe.</p>
+</div>
+</body>
+</html>

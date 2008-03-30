@@ -83,6 +83,7 @@ static void main_loop(void)
         C_status("Main loop");
         C_time_init();
         C_count_reset(&throttled);
+        C_rand_seed(time(NULL));
         R_text_init(&status_text);
 
         /* Calculate the desired frame msec.

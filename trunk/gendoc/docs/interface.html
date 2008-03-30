@@ -1,0 +1,484 @@
+<html>
+<head>
+<link rel=StyleSheet href="gendoc.css" type="text/css">
+<title>Plutocracy Interface Namespace</title>
+</head>
+<script>
+         function toggle(n) {
+                 body = document.getElementById(n + '_body');
+                 if (body.style.display == 'block')
+                         body.style.display = 'none';
+                 else
+                         body.style.display = 'block';
+         }
+</script>
+<body>
+<div class="menu">
+<a href="#Definitions">Definitions</a> | 
+<a href="#Types">Types</a> | 
+<a href="#Functions">Functions</a>
+</div>
+<h1>Plutocracy Interface Namespace</h1>
+<a name="Definitions"></a>
+<h2>Definitions</h2>
+<a name="I_ENTRY_HISTORY" href="javascript:toggle(0)">
+<div class="entry" id="0">
+I_ENTRY_HISTORY <span class="file">(i_common.h)</span></div>
+</a>
+<div class="entry_body" id="0_body" style="display:none">
+<pre><b class="keyword2">#define</b> I_ENTRY_HISTORY <span class="def_const">32</span></pre>
+<p class="comment"> Size of the history queue kept by the text entry widget</p>
+</div>
+<a name="I_WHEEL_SCROLL" href="javascript:toggle(1)">
+<div class="entry" id="1">
+I_WHEEL_SCROLL <span class="file">(i_common.h)</span></div>
+</a>
+<div class="entry_body" id="1_body" style="display:none">
+<pre><b class="keyword2">#define</b> I_WHEEL_SCROLL <span class="def_const">32.f</span></pre>
+<p class="comment"> Pixels to scroll for mouse wheel scrolling</p>
+</div>
+<a name="Types"></a>
+<h2>Types</h2>
+<a name="i_button_t" href="javascript:toggle(2)">
+<div class="entry" id="2">
+i_button_t <span class="file">(i_common.h)</span></div>
+</a>
+<div class="entry_body" id="2_body" style="display:none">
+<pre><b class="keyword1">typedef</b> <b class="keyword1">struct</b> i_button <span class="def_op">{</span>
+        <a href="#i_widget_t">i_widget_t</a> widget<span class="def_op">;</span>
+        r_window_t normal<span class="def_op">,</span> hover<span class="def_op">,</span> active<span class="def_op">;</span>
+        r_sprite_t icon<span class="def_op">,</span> text<span class="def_op">,</span> light<span class="def_op">,</span> prelight<span class="def_op">;</span>
+        <a href="#i_callback_f">i_callback_f</a> on_click<span class="def_op">;</span>
+        <b class="keyword0">int</b> decorated<span class="def_op">;</span>
+        <b class="keyword0">char</b> buffer<span class="def_op">[</span><span class="def_const">64</span><span class="def_op">];</span>
+<span class="def_op">}</span> i_button_t<span class="def_op">;</span></pre>
+<p class="comment"> Buttons can have an icon and/or text</p>
+</div>
+<a name="i_callback_f" href="javascript:toggle(3)">
+<div class="entry" id="3">
+i_callback_f <span class="file">(i_common.h)</span></div>
+</a>
+<div class="entry_body" id="3_body" style="display:none">
+<pre><b class="keyword1">typedef</b> <b class="keyword0">void</b> <span class="def_op">(*</span>i_callback_f<span class="def_op">)(<b class="keyword0">void</b></span> <span class="def_op">*</span>widget<span class="def_op">);</span></pre>
+<p class="comment"> Simple callback for handling widget-specific events</p>
+</div>
+<a name="i_color_t" href="javascript:toggle(4)">
+<div class="entry" id="4">
+i_color_t <span class="file">(i_common.h)</span></div>
+</a>
+<div class="entry_body" id="4_body" style="display:none">
+<pre><b class="keyword1">typedef</b> <b class="keyword1">enum</b> <span class="def_op">{</span>
+        I_COLOR<span class="def_op">,</span>
+        I_COLOR_ALT<span class="def_op">,</span>
+        I_COLORS
+<span class="def_op">}</span> i_color_t<span class="def_op">;</span></pre>
+<p class="comment"> The interface uses a limited number of colors</p>
+</div>
+<a name="i_entry_t" href="javascript:toggle(5)">
+<div class="entry" id="5">
+i_entry_t <span class="file">(i_common.h)</span></div>
+</a>
+<div class="entry_body" id="5_body" style="display:none">
+<pre><b class="keyword1">typedef</b> <b class="keyword1">struct</b> i_entry <span class="def_op">{</span>
+        <a href="#i_widget_t">i_widget_t</a> widget<span class="def_op">;</span>
+        r_sprite_t text<span class="def_op">,</span> cursor<span class="def_op">;</span>
+        r_window_t window<span class="def_op">;</span>
+        <a href="#i_callback_f">i_callback_f</a> on_enter<span class="def_op">;</span>
+        <b class="keyword0">float</b> scroll<span class="def_op">;</span>
+        <b class="keyword0">int</b> pos<span class="def_op">,</span> history_pos<span class="def_op">,</span> history_size<span class="def_op">;</span>
+        <b class="keyword0">char</b> buffer<span class="def_op">[</span><span class="def_const">256</span><span class="def_op">],</span> history<span class="def_op">[</span>I_ENTRY_HISTORY<span class="def_op">][</span><span class="def_const">256</span><span class="def_op">];</span>
+<span class="def_op">}</span> i_entry_t<span class="def_op">;</span></pre>
+<p class="comment"> A one-line text field</p>
+</div>
+<a name="i_event_f" href="javascript:toggle(6)">
+<div class="entry" id="6">
+i_event_f <span class="file">(i_common.h)</span></div>
+</a>
+<div class="entry_body" id="6_body" style="display:none">
+<pre><b class="keyword1">typedef</b> <b class="keyword0">int</b> <span class="def_op">(*</span>i_event_f<span class="def_op">)(<b class="keyword0">void</b></span> <span class="def_op">*</span>widget<span class="def_op">,</span> <a href="#i_event_t">i_event_t</a><span class="def_op">);</span></pre>
+<p class="comment"> Function to handle mouse, keyboard, or other events. Return <code>FALSE</code> to
+   prevent the automatic propagation of an event to the widget's children.</p>
+</div>
+<a name="i_event_t" href="javascript:toggle(7)">
+<div class="entry" id="7">
+i_event_t <span class="file">(i_common.h)</span></div>
+</a>
+<div class="entry_body" id="7_body" style="display:none">
+<pre><b class="keyword1">typedef</b> <b class="keyword1">enum</b> <span class="def_op">{</span>
+        I_EV_NONE<span class="def_op">,</span>              <span class="def_comment">/* Do nothing */</span>
+        I_EV_ADD_CHILD<span class="def_op">,</span>         <span class="def_comment">/* A child widget was added */</span>
+        I_EV_CLEANUP<span class="def_op">,</span>           <span class="def_comment">/* Should free resources */</span>
+        I_EV_CONFIGURE<span class="def_op">,</span>         <span class="def_comment">/* Initialized or resized */</span>
+        I_EV_GRAB_FOCUS<span class="def_op">,</span>        <span class="def_comment">/* Entry widgets should take key focus */</span>
+        I_EV_HIDE<span class="def_op">,</span>              <span class="def_comment">/* Widget is being hidden */</span>
+        I_EV_KEY_DOWN<span class="def_op">,</span>          <span class="def_comment">/* A key is pressed down or repeated */</span>
+        I_EV_KEY_UP<span class="def_op">,</span>            <span class="def_comment">/* A key is released */</span>
+        I_EV_MOUSE_IN<span class="def_op">,</span>          <span class="def_comment">/* Mouse just entered widget area */</span>
+        I_EV_MOUSE_OUT<span class="def_op">,</span>         <span class="def_comment">/* Mouse just left widget area */</span>
+        I_EV_MOUSE_MOVE<span class="def_op">,</span>        <span class="def_comment">/* Mouse is moved over widget */</span>
+        I_EV_MOUSE_DOWN<span class="def_op">,</span>        <span class="def_comment">/* A mouse button is pressed on the widget */</span>
+        I_EV_MOUSE_UP<span class="def_op">,</span>          <span class="def_comment">/* A mouse button is released on the widget */</span>
+        I_EV_MOVED<span class="def_op">,</span>             <span class="def_comment">/* Widget was moved */</span>
+        I_EV_RENDER<span class="def_op">,</span>            <span class="def_comment">/* Should render */</span>
+        I_EV_SHOW<span class="def_op">,</span>              <span class="def_comment">/* Widget is being shown */</span>
+        I_EVENTS
+<span class="def_op">}</span> i_event_t<span class="def_op">;</span></pre>
+<p class="comment"> Possible events. The arguments (mouse position etc) for the events are
+   stored in global variables, so the interface system only processes one
+   event at a time.</p>
+</div>
+<a name="i_fit_t" href="javascript:toggle(8)">
+<div class="entry" id="8">
+i_fit_t <span class="file">(i_common.h)</span></div>
+</a>
+<div class="entry_body" id="8_body" style="display:none">
+<pre><b class="keyword1">typedef</b> <b class="keyword1">enum</b> <span class="def_op">{</span>
+        I_FIT_NONE<span class="def_op">,</span>
+        I_FIT_TOP<span class="def_op">,</span>
+        I_FIT_BOTTOM<span class="def_op">,</span>
+<span class="def_op">}</span> i_fit_t<span class="def_op">;</span></pre>
+<p class="comment"> Determines how a widget will use any extra space it has been assigned</p>
+</div>
+<a name="i_label_t" href="javascript:toggle(9)">
+<div class="entry" id="9">
+i_label_t <span class="file">(i_common.h)</span></div>
+</a>
+<div class="entry_body" id="9_body" style="display:none">
+<pre><b class="keyword1">typedef</b> <b class="keyword1">struct</b> i_label <span class="def_op">{</span>
+        <a href="#i_widget_t">i_widget_t</a> widget<span class="def_op">;</span>
+        r_sprite_t text<span class="def_op">;</span>
+        r_font_t font<span class="def_op">;</span>
+        <a href="#i_color_t">i_color_t</a> color<span class="def_op">;</span>
+        <b class="keyword0">char</b> buffer<span class="def_op">[</span><span class="def_const">256</span><span class="def_op">];</span>
+<span class="def_op">}</span> i_label_t<span class="def_op">;</span></pre>
+<p class="comment"> Labels only have text</p>
+</div>
+<a name="i_pack_t" href="javascript:toggle(10)">
+<div class="entry" id="10">
+i_pack_t <span class="file">(i_common.h)</span></div>
+</a>
+<div class="entry_body" id="10_body" style="display:none">
+<pre><b class="keyword1">typedef</b> <b class="keyword1">enum</b> <span class="def_op">{</span>
+        I_PACK_NONE<span class="def_op">,</span>
+        I_PACK_H<span class="def_op">,</span>
+        I_PACK_V<span class="def_op">,</span>
+        I_PACK_TYPES
+<span class="def_op">}</span> i_pack_t<span class="def_op">;</span></pre>
+<p class="comment"> Widgets can only be packed as lists horizontally or vertically</p>
+</div>
+<a name="i_scrollback_t" href="javascript:toggle(11)">
+<div class="entry" id="11">
+i_scrollback_t <span class="file">(i_common.h)</span></div>
+</a>
+<div class="entry_body" id="11_body" style="display:none">
+<pre><b class="keyword1">typedef</b> <b class="keyword1">struct</b> i_scrollback <span class="def_op">{</span>
+        <a href="#i_widget_t">i_widget_t</a> widget<span class="def_op">;</span>
+        r_window_t window<span class="def_op">;</span>
+        <b class="keyword0">float</b> scroll<span class="def_op">;</span>
+        <b class="keyword0">int</b> children<span class="def_op">,</span> limit<span class="def_op">;</span>
+<span class="def_op">}</span> i_scrollback_t<span class="def_op">;</span></pre>
+<p class="comment"> A fixed-size, work-area widget that can dynamically add new components
+   vertically and scroll up and down. Widgets will begin to be removed after
+   a specified limit is reached.</p>
+</div>
+<a name="i_widget_state_t" href="javascript:toggle(12)">
+<div class="entry" id="12">
+i_widget_state_t <span class="file">(i_common.h)</span></div>
+</a>
+<div class="entry_body" id="12_body" style="display:none">
+<pre><b class="keyword1">typedef</b> <b class="keyword1">enum</b> <span class="def_op">{</span>
+        I_WS_DISABLED<span class="def_op">,</span>
+        I_WS_READY<span class="def_op">,</span>
+        I_WS_HOVER<span class="def_op">,</span>
+        I_WS_ACTIVE<span class="def_op">,</span>
+        I_WIDGET_STATES
+<span class="def_op">}</span> i_widget_state_t<span class="def_op">;</span></pre>
+<p class="comment"> Widget input states</p>
+</div>
+<a name="i_widget_t" href="javascript:toggle(13)">
+<div class="entry" id="13">
+i_widget_t <span class="file">(i_common.h)</span></div>
+</a>
+<div class="entry_body" id="13_body" style="display:none">
+<pre><b class="keyword1">typedef</b> <b class="keyword1">struct</b> i_widget <span class="def_op">{</span>
+        <b class="keyword0">char</b> name<span class="def_op">[</span><span class="def_const">32</span><span class="def_op">];</span>
+        <b class="keyword1">struct</b> i_widget <span class="def_op">*</span>parent<span class="def_op">,</span> <span class="def_op">*</span>next<span class="def_op">,</span> <span class="def_op">*</span>child<span class="def_op">;</span>
+        c_vec2_t origin<span class="def_op">,</span> size<span class="def_op">;</span>
+        <a href="#i_event_f">i_event_f</a> event_func<span class="def_op">;</span>
+        <a href="#i_widget_state_t">i_widget_state_t</a> state<span class="def_op">;</span>
+        <b class="keyword0">float</b> fade<span class="def_op">,</span> padding<span class="def_op">;</span>
+        <b class="keyword0">int</b> configured<span class="def_op">,</span> entry<span class="def_op">,</span> expand<span class="def_op">,</span> shown<span class="def_op">,</span> heap<span class="def_op">;</span>
+<span class="def_op">}</span> i_widget_t<span class="def_op">;</span></pre>
+<p class="comment"> The basic properties all interface widgets need to have. The widget struct
+   should be the first member of any derived widget struct.<br>
+<br>
+   When a widget receives the <code>I_EV_CONFIGURE</code> event it, its parent has set its
+   origin and size to the maximum available space. The widget must then change
+   its size to its actual size.<br>
+<br>
+   The reason for keeping <code>name</code> as a buffer rather than a pointer to a
+   statically-allocated string is to assist in memory leak detection. The
+   leak detector thinks the memory is a string and prints the widget name.</p>
+</div>
+<a name="i_window_t" href="javascript:toggle(14)">
+<div class="entry" id="14">
+i_window_t <span class="file">(i_common.h)</span></div>
+</a>
+<div class="entry_body" id="14_body" style="display:none">
+<pre><b class="keyword1">typedef</b> <b class="keyword1">struct</b> i_window <span class="def_op">{</span>
+        <a href="#i_widget_t">i_widget_t</a> widget<span class="def_op">;</span>
+        r_window_t window<span class="def_op">;</span>
+        <a href="#i_pack_t">i_pack_t</a> pack_children<span class="def_op">;</span>
+        <a href="#i_fit_t">i_fit_t</a> fit<span class="def_op">;</span>
+        r_sprite_t hanger<span class="def_op">;</span>
+        <a href="#i_widget_t">i_widget_t</a> <span class="def_op">*</span>key_focus<span class="def_op">;</span>
+        <b class="keyword0">float</b> hanger_x<span class="def_op">;</span>
+        <b class="keyword0">int</b> hanger_shown<span class="def_op">,</span> decorated<span class="def_op">;</span>
+<span class="def_op">}</span> i_window_t<span class="def_op">;</span></pre>
+<p class="comment"> Windows are decorated containers</p>
+</div>
+<a name="Functions"></a>
+<h2>Functions</h2>
+<a name="I_button_init" href="javascript:toggle(15)">
+<div class="entry" id="15">
+I_button_init <span class="file">(i_button.c)</span></div>
+</a>
+<div class="entry_body" id="15_body" style="display:none">
+<pre><b class="keyword0">void</b> I_button_init<span class="def_op">(<a href="#i_button_t">i_button_t</a></span> <span class="def_op">*,</span> <b class="keyword0">const</b> <b class="keyword0">char</b> <span class="def_op">*</span>icon<span class="def_op">,</span> <b class="keyword0">const</b> <b class="keyword0">char</b> <span class="def_op">*</span>text<span class="def_op">,</span> <b class="keyword0">int</b> bg<span class="def_op">);</span></pre>
+<p class="comment">
+ Initializes a button widget. The <code>icon</code> path and <code>text</code> strings can be <code>NULL</code>
+ and do not need to persist after calling the function. Call with <code>bg</code> set to
+ <code>TRUE</code> to decorate the button background.</p>
+</div>
+<a name="I_cleanup" href="javascript:toggle(16)">
+<div class="entry" id="16">
+I_cleanup <span class="file">(i_layout.c)</span></div>
+</a>
+<div class="entry_body" id="16_body" style="display:none">
+<pre><b class="keyword0">void</b> I_cleanup<span class="def_op">(<b class="keyword0">void</b>);</span></pre>
+<p class="comment">
+ Free interface assets.</p>
+</div>
+<a name="I_dispatch" href="javascript:toggle(17)">
+<div class="entry" id="17">
+I_dispatch <span class="file">(i_widgets.c)</span></div>
+</a>
+<div class="entry_body" id="17_body" style="display:none">
+<pre><b class="keyword0">void</b> I_dispatch<span class="def_op">(<b class="keyword0">const</b></span> SDL_Event <span class="def_op">*);</span></pre>
+<p class="comment">
+ Handle an <code>SDL</code> event. Does not allow multiple keys or mouse buttons to be
+ pressed at the same time.</p>
+</div>
+<a name="I_entry_configure" href="javascript:toggle(18)">
+<div class="entry" id="18">
+I_entry_configure <span class="file">(i_entry.c)</span></div>
+</a>
+<div class="entry_body" id="18_body" style="display:none">
+<pre><b class="keyword0">void</b> I_entry_configure<span class="def_op">(<a href="#i_entry_t">i_entry_t</a></span> <span class="def_op">*,</span> <b class="keyword0">const</b> <b class="keyword0">char</b> <span class="def_op">*);</span></pre>
+<p class="comment">
+ Sets the entry field text and resets the cursor position. <code>string</code> does
+ not need to persist after this function is called.</p>
+</div>
+<a name="I_entry_event" href="javascript:toggle(19)">
+<div class="entry" id="19">
+I_entry_event <span class="file">(i_entry.c)</span></div>
+</a>
+<div class="entry_body" id="19_body" style="display:none">
+<pre><b class="keyword0">int</b> I_entry_event<span class="def_op">(<a href="#i_entry_t">i_entry_t</a></span> <span class="def_op">*,</span> <a href="#i_event_t">i_event_t</a><span class="def_op">);</span></pre>
+<p class="comment">
+ Entry widget event function.<br>
+ <code>FIXME</code>: Unicode input<br>
+ <code>TODO</code>: Horizontal packing</p>
+</div>
+<a name="I_entry_init" href="javascript:toggle(20)">
+<div class="entry" id="20">
+I_entry_init <span class="file">(i_entry.c)</span></div>
+</a>
+<div class="entry_body" id="20_body" style="display:none">
+<pre><b class="keyword0">void</b> I_entry_init<span class="def_op">(<a href="#i_entry_t">i_entry_t</a></span> <span class="def_op">*,</span> <b class="keyword0">const</b> <b class="keyword0">char</b> <span class="def_op">*);</span></pre>
+<p class="comment">
+ Initializes an entry widget.</p>
+</div>
+<a name="I_event_string" href="javascript:toggle(21)">
+<div class="entry" id="21">
+I_event_string <span class="file">(i_widgets.c)</span></div>
+</a>
+<div class="entry_body" id="21_body" style="display:none">
+<pre><b class="keyword0">const</b> <b class="keyword0">char</b> <span class="def_op">*</span>I_event_string<span class="def_op">(<a href="#i_event_t">i_event_t</a></span> event<span class="def_op">);</span></pre>
+<p class="comment">
+ Returns a statically allocated string containing the name of an event token.</p>
+</div>
+<a name="I_init" href="javascript:toggle(22)">
+<div class="entry" id="22">
+I_init <span class="file">(i_layout.c)</span></div>
+</a>
+<div class="entry_body" id="22_body" style="display:none">
+<pre><b class="keyword0">void</b> I_init<span class="def_op">(<b class="keyword0">void</b>);</span></pre>
+<p class="comment">
+ Loads interface assets and initializes windows.</p>
+</div>
+<a name="I_label_init" href="javascript:toggle(23)">
+<div class="entry" id="23">
+I_label_init <span class="file">(i_widgets.c)</span></div>
+</a>
+<div class="entry_body" id="23_body" style="display:none">
+<pre><b class="keyword0">void</b> I_label_init<span class="def_op">(<a href="#i_label_t">i_label_t</a></span> <span class="def_op">*,</span> <b class="keyword0">const</b> <b class="keyword0">char</b> <span class="def_op">*);</span></pre>
+<p class="comment">
+ Initializes a label widget.</p>
+</div>
+<a name="I_label_new" href="javascript:toggle(24)">
+<div class="entry" id="24">
+I_label_new <span class="file">(i_widgets.c)</span></div>
+</a>
+<div class="entry_body" id="24_body" style="display:none">
+<pre><a href="#i_label_t">i_label_t</a> <span class="def_op">*</span>I_label_new<span class="def_op">(<b class="keyword0">const</b></span> <b class="keyword0">char</b> <span class="def_op">*);</span></pre>
+<p class="comment">
+ Dynamically allocates a label widget.</p>
+</div>
+<a name="I_register_variables" href="javascript:toggle(25)">
+<div class="entry" id="25">
+I_register_variables <span class="file">(i_variables.c)</span></div>
+</a>
+<div class="entry_body" id="25_body" style="display:none">
+<pre><b class="keyword0">void</b> I_register_variables<span class="def_op">(<b class="keyword0">void</b>);</span></pre>
+<p class="comment">
+ Registers interface namespace variables.</p>
+</div>
+<a name="I_render" href="javascript:toggle(26)">
+<div class="entry" id="26">
+I_render <span class="file">(i_layout.c)</span></div>
+</a>
+<div class="entry_body" id="26_body" style="display:none">
+<pre><b class="keyword0">void</b> I_render<span class="def_op">(<b class="keyword0">void</b>);</span></pre>
+<p class="comment">
+ Render all visible windows.</p>
+</div>
+<a name="I_widget_add" href="javascript:toggle(27)">
+<div class="entry" id="27">
+I_widget_add <span class="file">(i_widgets.c)</span></div>
+</a>
+<div class="entry_body" id="27_body" style="display:none">
+<pre><b class="keyword0">void</b> I_widget_add<span class="def_op">(<a href="#i_widget_t">i_widget_t</a></span> <span class="def_op">*</span>parent<span class="def_op">,</span> <a href="#i_widget_t">i_widget_t</a> <span class="def_op">*</span>child<span class="def_op">);</span></pre>
+<p class="comment">
+ Attaches a child widget to another widget to the end of the parent's children
+ linked list. Sends the <code>I_EV_ADD_CHILD</code> event.</p>
+</div>
+<a name="I_widget_cleanup" href="javascript:toggle(28)">
+<div class="entry" id="28">
+I_widget_cleanup <span class="file">(i_common.h)</span></div>
+</a>
+<div class="entry_body" id="28_body" style="display:none">
+<pre><b class="keyword2">#define</b> I_widget_cleanup<span class="def_op">(</span>w<span class="def_op">)</span> I_widget_event<span class="def_op">(</span>w<span class="def_op">,</span> I_EV_CLEANUP<span class="def_op">)</span></pre>
+<p class="comment"> i_widgets.c</p>
+</div>
+<a name="I_widget_event" href="javascript:toggle(29)">
+<div class="entry" id="29">
+I_widget_event <span class="file">(i_widgets.c)</span></div>
+</a>
+<div class="entry_body" id="29_body" style="display:none">
+<pre><b class="keyword0">void</b> I_widget_event<span class="def_op">(<a href="#i_widget_t">i_widget_t</a></span> <span class="def_op">*,</span> <a href="#i_event_t">i_event_t</a><span class="def_op">);</span></pre>
+<p class="comment">
+ Dispatches basic widget events and does some checks to see if the event
+ applies to this widget. Cleans up resources on <code>I_EV_CLEANUP</code> and propagates
+ the event to all child widgets.<br>
+<br>
+ Key focus follows the mouse. Only one widget can have keyboard focus at any
+ time and that is the last widget that the mouse cursor passed over that
+ could take keyboard input.<br>
+<br>
+ Events filter down through containers to child widgets. The ordering will call
+ all of a widget's parent containers before calling the widget and will call
+ all of the children of a widget before calling a sibling.<br>
+<br>
+ Always call this function instead of a widget's class event function in order
+ to ensure correct event filtering and propagation.</p>
+</div>
+<a name="I_widget_inited" href="javascript:toggle(30)">
+<div class="entry" id="30">
+I_widget_inited <span class="file">(i_widgets.c)</span></div>
+</a>
+<div class="entry_body" id="30_body" style="display:none">
+<pre><b class="keyword0">void</b> I_widget_inited<span class="def_op">(<b class="keyword0">const</b></span> <a href="#i_widget_t">i_widget_t</a> <span class="def_op">*);</span></pre>
+<p class="comment">
+ Prints messages helpful for memory debugging. Call within a widget
+ initialization function at the very end.</p>
+</div>
+<a name="I_widget_move" href="javascript:toggle(31)">
+<div class="entry" id="31">
+I_widget_move <span class="file">(i_widgets.c)</span></div>
+</a>
+<div class="entry_body" id="31_body" style="display:none">
+<pre><b class="keyword0">void</b> I_widget_move<span class="def_op">(<a href="#i_widget_t">i_widget_t</a></span> <span class="def_op">*,</span> c_vec2_t new_origin<span class="def_op">);</span></pre>
+<p class="comment">
+ Move a widget and all of its children. Will not generate move events if the
+ origin did not change.</p>
+</div>
+<a name="I_widget_pack" href="javascript:toggle(32)">
+<div class="entry" id="32">
+I_widget_pack <span class="file">(i_widgets.c)</span></div>
+</a>
+<div class="entry_body" id="32_body" style="display:none">
+<pre><b class="keyword0">void</b> I_widget_pack<span class="def_op">(<a href="#i_widget_t">i_widget_t</a></span> <span class="def_op">*,</span> <a href="#i_pack_t">i_pack_t</a><span class="def_op">,</span> <a href="#i_fit_t">i_fit_t</a><span class="def_op">);</span></pre>
+<p class="comment">
+ Packs a widget's children.</p>
+</div>
+<a name="I_widget_propagate" href="javascript:toggle(33)">
+<div class="entry" id="33">
+I_widget_propagate <span class="file">(i_widgets.c)</span></div>
+</a>
+<div class="entry_body" id="33_body" style="display:none">
+<pre><b class="keyword0">void</b> I_widget_propagate<span class="def_op">(<a href="#i_widget_t">i_widget_t</a></span> <span class="def_op">*,</span> <a href="#i_event_t">i_event_t</a><span class="def_op">);</span></pre>
+<p class="comment">
+ Propagates an event to all of the widget's children in order. This must be
+ called from your event function if you want to propagate events to child
+ widgets.</p>
+</div>
+<a name="I_widget_remove" href="javascript:toggle(34)">
+<div class="entry" id="34">
+I_widget_remove <span class="file">(i_widgets.c)</span></div>
+</a>
+<div class="entry_body" id="34_body" style="display:none">
+<pre><b class="keyword0">void</b> I_widget_remove<span class="def_op">(<a href="#i_widget_t">i_widget_t</a></span> <span class="def_op">*);</span></pre>
+<p class="comment">
+ Remove a widget from its parent container.</p>
+</div>
+<a name="I_widget_set_name" href="javascript:toggle(35)">
+<div class="entry" id="35">
+I_widget_set_name <span class="file">(i_widgets.c)</span></div>
+</a>
+<div class="entry_body" id="35_body" style="display:none">
+<pre><b class="keyword0">void</b> I_widget_set_name<span class="def_op">(<a href="#i_widget_t">i_widget_t</a></span> <span class="def_op">*,</span> <b class="keyword0">const</b> <b class="keyword0">char</b> <span class="def_op">*</span>class_name<span class="def_op">);</span></pre>
+<p class="comment">
+ Initializes a widget name field with a unique name that includes the
+ widget's class.</p>
+</div>
+<a name="I_widget_show" href="javascript:toggle(36)">
+<div class="entry" id="36">
+I_widget_show <span class="file">(i_widgets.c)</span></div>
+</a>
+<div class="entry_body" id="36_body" style="display:none">
+<pre><b class="keyword0">void</b> I_widget_show<span class="def_op">(<a href="#i_widget_t">i_widget_t</a></span> <span class="def_op">*,</span> <b class="keyword0">int</b> show<span class="def_op">);</span></pre>
+<p class="comment">
+ Show or hide a widget and all of its children. Will not generate events if
+ the visibility status did not change.</p>
+</div>
+<a name="I_window_hanger" href="javascript:toggle(37)">
+<div class="entry" id="37">
+I_window_hanger <span class="file">(i_widgets.c)</span></div>
+</a>
+<div class="entry_body" id="37_body" style="display:none">
+<pre><b class="keyword0">void</b> I_window_hanger<span class="def_op">(<a href="#i_window_t">i_window_t</a></span> <span class="def_op">*,</span> <a href="#i_widget_t">i_widget_t</a> <span class="def_op">*</span>align<span class="def_op">,</span> <b class="keyword0">int</b> shown<span class="def_op">);</span></pre>
+<p class="comment">
+ Configure a window widget's hanger sprite.</p>
+</div>
+<a name="I_window_init" href="javascript:toggle(38)">
+<div class="entry" id="38">
+I_window_init <span class="file">(i_widgets.c)</span></div>
+</a>
+<div class="entry_body" id="38_body" style="display:none">
+<pre><b class="keyword0">void</b> I_window_init<span class="def_op">(<a href="#i_window_t">i_window_t</a></span> <span class="def_op">*);</span></pre>
+<p class="comment">
+ Initializes an window widget.</p>
+</div>
+</body>
+</html>

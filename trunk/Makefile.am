@@ -6,10 +6,8 @@ bin_PROGRAMS = plutocracy
 
 # All source and header files part of the project
 plutocracy_SOURCES = \
-        src/common/c_glibc_rand.c \
         src/common/c_log.c \
         src/common/c_memory.c \
-        src/common/c_noise.c \
         src/common/c_shared.h \
         src/common/c_string.c \
         src/common/c_time.c \
@@ -32,6 +30,7 @@ plutocracy_SOURCES = \
         src/network/n_shared.h \
         src/render/r_assets.c \
         src/render/r_common.h \
+        src/render/r_globe.c \
         src/render/r_model.c \
         src/render/r_render.c \
         src/render/r_shared.h \

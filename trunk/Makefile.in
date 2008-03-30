@@ -48,15 +48,14 @@ CONFIG_CLEAN_FILES =
 am__installdirs = "$(DESTDIR)$(bindir)"
 binPROGRAMS_INSTALL = $(INSTALL_PROGRAM)
 PROGRAMS = $(bin_PROGRAMS)
-am_plutocracy_OBJECTS = c_glibc_rand.$(OBJEXT) c_log.$(OBJEXT) \
-	c_memory.$(OBJEXT) c_noise.$(OBJEXT) c_string.$(OBJEXT) \
-	c_time.$(OBJEXT) c_variables.$(OBJEXT) g_globe.$(OBJEXT) \
-	i_button.$(OBJEXT) i_console.$(OBJEXT) i_entry.$(OBJEXT) \
-	i_game.$(OBJEXT) i_layout.$(OBJEXT) i_variables.$(OBJEXT) \
-	i_widgets.$(OBJEXT) n_client.$(OBJEXT) r_assets.$(OBJEXT) \
-	r_model.$(OBJEXT) r_render.$(OBJEXT) r_sprite.$(OBJEXT) \
-	r_static_mesh.$(OBJEXT) r_variables.$(OBJEXT) \
-	plutocracy.$(OBJEXT)
+am_plutocracy_OBJECTS = c_log.$(OBJEXT) c_memory.$(OBJEXT) \
+	c_string.$(OBJEXT) c_time.$(OBJEXT) c_variables.$(OBJEXT) \
+	g_globe.$(OBJEXT) i_button.$(OBJEXT) i_console.$(OBJEXT) \
+	i_entry.$(OBJEXT) i_game.$(OBJEXT) i_layout.$(OBJEXT) \
+	i_variables.$(OBJEXT) i_widgets.$(OBJEXT) n_client.$(OBJEXT) \
+	r_assets.$(OBJEXT) r_globe.$(OBJEXT) r_model.$(OBJEXT) \
+	r_render.$(OBJEXT) r_sprite.$(OBJEXT) r_static_mesh.$(OBJEXT) \
+	r_variables.$(OBJEXT) plutocracy.$(OBJEXT)
 plutocracy_OBJECTS = $(am_plutocracy_OBJECTS)
 plutocracy_LDADD = $(LDADD)
 plutocracy_DEPENDENCIES =
@@ -175,10 +174,8 @@ AM_CFLAGS = @SDL_CFLAGS@
 
 # All source and header files part of the project
 plutocracy_SOURCES = \
-        src/common/c_glibc_rand.c \
         src/common/c_log.c \
         src/common/c_memory.c \
-        src/common/c_noise.c \
         src/common/c_shared.h \
         src/common/c_string.c \
         src/common/c_time.c \
@@ -201,6 +198,7 @@ plutocracy_SOURCES = \
         src/network/n_shared.h \
         src/render/r_assets.c \
         src/render/r_common.h \
+        src/render/r_globe.c \
         src/render/r_model.c \
         src/render/r_render.c \
         src/render/r_shared.h \
@@ -301,10 +299,8 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/c_glibc_rand.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/c_log.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/c_memory.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/c_noise.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/c_string.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/c_time.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/c_variables.Po@am__quote@
@@ -319,6 +315,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/n_client.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/plutocracy.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/r_assets.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/r_globe.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/r_model.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/r_render.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/r_sprite.Po@am__quote@
@@ -338,20 +335,6 @@ distclean-compile:
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$<' object='$@' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(COMPILE) -c `$(CYGPATH_W) '$<'`
-
-c_glibc_rand.o: src/common/c_glibc_rand.c
-@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT c_glibc_rand.o -MD -MP -MF $(DEPDIR)/c_glibc_rand.Tpo -c -o c_glibc_rand.o `test -f 'src/common/c_glibc_rand.c' || echo '$(srcdir)/'`src/common/c_glibc_rand.c
-@am__fastdepCC_TRUE@	mv -f $(DEPDIR)/c_glibc_rand.Tpo $(DEPDIR)/c_glibc_rand.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='src/common/c_glibc_rand.c' object='c_glibc_rand.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o c_glibc_rand.o `test -f 'src/common/c_glibc_rand.c' || echo '$(srcdir)/'`src/common/c_glibc_rand.c
-
-c_glibc_rand.obj: src/common/c_glibc_rand.c
-@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT c_glibc_rand.obj -MD -MP -MF $(DEPDIR)/c_glibc_rand.Tpo -c -o c_glibc_rand.obj `if test -f 'src/common/c_glibc_rand.c'; then $(CYGPATH_W) 'src/common/c_glibc_rand.c'; else $(CYGPATH_W) '$(srcdir)/src/common/c_glibc_rand.c'; fi`
-@am__fastdepCC_TRUE@	mv -f $(DEPDIR)/c_glibc_rand.Tpo $(DEPDIR)/c_glibc_rand.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='src/common/c_glibc_rand.c' object='c_glibc_rand.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o c_glibc_rand.obj `if test -f 'src/common/c_glibc_rand.c'; then $(CYGPATH_W) 'src/common/c_glibc_rand.c'; else $(CYGPATH_W) '$(srcdir)/src/common/c_glibc_rand.c'; fi`
 
 c_log.o: src/common/c_log.c
 @am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT c_log.o -MD -MP -MF $(DEPDIR)/c_log.Tpo -c -o c_log.o `test -f 'src/common/c_log.c' || echo '$(srcdir)/'`src/common/c_log.c
@@ -380,20 +363,6 @@ c_memory.obj: src/common/c_memory.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	source='src/common/c_memory.c' object='c_memory.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o c_memory.obj `if test -f 'src/common/c_memory.c'; then $(CYGPATH_W) 'src/common/c_memory.c'; else $(CYGPATH_W) '$(srcdir)/src/common/c_memory.c'; fi`
-
-c_noise.o: src/common/c_noise.c
-@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT c_noise.o -MD -MP -MF $(DEPDIR)/c_noise.Tpo -c -o c_noise.o `test -f 'src/common/c_noise.c' || echo '$(srcdir)/'`src/common/c_noise.c
-@am__fastdepCC_TRUE@	mv -f $(DEPDIR)/c_noise.Tpo $(DEPDIR)/c_noise.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='src/common/c_noise.c' object='c_noise.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o c_noise.o `test -f 'src/common/c_noise.c' || echo '$(srcdir)/'`src/common/c_noise.c
-
-c_noise.obj: src/common/c_noise.c
-@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT c_noise.obj -MD -MP -MF $(DEPDIR)/c_noise.Tpo -c -o c_noise.obj `if test -f 'src/common/c_noise.c'; then $(CYGPATH_W) 'src/common/c_noise.c'; else $(CYGPATH_W) '$(srcdir)/src/common/c_noise.c'; fi`
-@am__fastdepCC_TRUE@	mv -f $(DEPDIR)/c_noise.Tpo $(DEPDIR)/c_noise.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='src/common/c_noise.c' object='c_noise.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o c_noise.obj `if test -f 'src/common/c_noise.c'; then $(CYGPATH_W) 'src/common/c_noise.c'; else $(CYGPATH_W) '$(srcdir)/src/common/c_noise.c'; fi`
 
 c_string.o: src/common/c_string.c
 @am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT c_string.o -MD -MP -MF $(DEPDIR)/c_string.Tpo -c -o c_string.o `test -f 'src/common/c_string.c' || echo '$(srcdir)/'`src/common/c_string.c
@@ -576,6 +545,20 @@ r_assets.obj: src/render/r_assets.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	source='src/render/r_assets.c' object='r_assets.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o r_assets.obj `if test -f 'src/render/r_assets.c'; then $(CYGPATH_W) 'src/render/r_assets.c'; else $(CYGPATH_W) '$(srcdir)/src/render/r_assets.c'; fi`
+
+r_globe.o: src/render/r_globe.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT r_globe.o -MD -MP -MF $(DEPDIR)/r_globe.Tpo -c -o r_globe.o `test -f 'src/render/r_globe.c' || echo '$(srcdir)/'`src/render/r_globe.c
+@am__fastdepCC_TRUE@	mv -f $(DEPDIR)/r_globe.Tpo $(DEPDIR)/r_globe.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='src/render/r_globe.c' object='r_globe.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o r_globe.o `test -f 'src/render/r_globe.c' || echo '$(srcdir)/'`src/render/r_globe.c
+
+r_globe.obj: src/render/r_globe.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT r_globe.obj -MD -MP -MF $(DEPDIR)/r_globe.Tpo -c -o r_globe.obj `if test -f 'src/render/r_globe.c'; then $(CYGPATH_W) 'src/render/r_globe.c'; else $(CYGPATH_W) '$(srcdir)/src/render/r_globe.c'; fi`
+@am__fastdepCC_TRUE@	mv -f $(DEPDIR)/r_globe.Tpo $(DEPDIR)/r_globe.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='src/render/r_globe.c' object='r_globe.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o r_globe.obj `if test -f 'src/render/r_globe.c'; then $(CYGPATH_W) 'src/render/r_globe.c'; else $(CYGPATH_W) '$(srcdir)/src/render/r_globe.c'; fi`
 
 r_model.o: src/render/r_model.c
 @am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT r_model.o -MD -MP -MF $(DEPDIR)/r_model.Tpo -c -o r_model.o `test -f 'src/render/r_model.c' || echo '$(srcdir)/'`src/render/r_model.c

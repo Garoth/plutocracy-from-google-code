@@ -1,5 +1,5 @@
 /******************************************************************************\
- Plutocracy - Copyright (C) 2008 - Michael Levin, Devin Papineau
+ Plutocracy - Copyright (C) 2008 - Michael Levin
 
  This program is free software; you can redistribute it and/or modify it under
  the terms of the GNU General Public License as published by the Free Software
@@ -11,15 +11,12 @@
 \******************************************************************************/
 
 #include "r_common.h"
-#include "../game/g_shared.h"
-#include <time.h>
 
 /* Height limit of the clipping stack */
 #define CLIP_STACK 32
 
 extern c_var_t r_clear, r_gl_errors,
-               r_test_globe, r_test_globe_seed, r_test_model_path,
-               r_test_mesh_path, r_test_sprite_num, r_test_sprite_path,
+               r_test_model_path, r_test_sprite_num, r_test_sprite_path,
                r_test_text;
 
 /* Keep track of how many faces we render each frame */
@@ -30,11 +27,9 @@ r_mode_t r_mode;
 int r_width_2d, r_height_2d;
 
 /* Testing assets */
-static r_static_mesh_t *test_mesh;
 static r_model_t test_model;
 static r_sprite_t *test_sprites;
 static r_text_t test_text;
-static g_globe_t *test_globe;
 
 /* Clipping stack */
 static int clip_stack;
@@ -157,18 +152,9 @@ static void set_gl_state(void)
 \******************************************************************************/
 static void load_test_assets(void)
 {
-        /* Test globe and model */
-        C_var_unlatch(&r_test_globe);
-        C_var_unlatch(&r_test_globe_seed);
+        /* Test model */
         C_var_unlatch(&r_test_model_path);
-        if (r_test_globe.value.n) {
-                unsigned int seed;
-
-                seed = r_test_globe_seed.value.n ? r_test_globe_seed.value.n :
-                                                   time(NULL);
-                C_debug("Test globe seed %u", seed);
-                test_globe = G_globe_alloc(5, seed, 0.1);
-        } else if (*r_test_model_path.value.s)
+        if (*r_test_model_path.value.s)
                 R_model_init(&test_model, r_test_model_path.value.s);
 
         /* Spinning sprites */
@@ -225,6 +211,7 @@ int R_init(void)
 
         R_load_assets();
         load_test_assets();
+        R_generate_globe(0, 4);
         return TRUE;
 }
 
@@ -236,9 +223,7 @@ void R_cleanup(void)
         R_free_assets();
 
         /* Cleanup render testing */
-        R_static_mesh_free(test_mesh);
         R_model_cleanup(&test_model);
-        G_globe_free(test_globe);
         if (test_sprites) {
                 int i;
 
@@ -252,12 +237,12 @@ void R_cleanup(void)
 /******************************************************************************\
  Render the test model.
 \******************************************************************************/
-static int render_test_model(void)
+static void render_test_model(void)
 {
         float left[] = { -1.0, 0.0, 0.0, 0.0 };
 
         if (!test_model.data)
-                return FALSE;
+                return;
 
         R_set_mode(R_MODE_3D);
 
@@ -275,170 +260,33 @@ static int render_test_model(void)
         /* Spin the model around a bit */
         test_model.angles.x += 0.05 * c_frame_sec;
         test_model.angles.y += 0.30 * c_frame_sec;
-
-        return TRUE;
-}
-
-/******************************************************************************\
- Render the test mesh.
-\******************************************************************************/
-static int render_test_mesh(void)
-{
-        static float x_rot, y_rot;
-        float left[] = { -1.0, 0.0, 0.0, 0.0 };
-
-        if (!test_mesh)
-                return FALSE;
-
-        R_set_mode(R_MODE_3D);
-
-        /* Setup a white light to the left */
-        glEnable(GL_LIGHTING);
-        glEnable(GL_LIGHT0);
-        glLightfv(GL_LIGHT0, GL_POSITION, left);
-
-        /* Render the test mesh */
-        glPushMatrix();
-        glLoadIdentity();
-        glTranslatef(0.0, 0.0, -2000.0);
-        glRotatef(x_rot, 1.0, 0.0, 0.0);
-        glRotatef(y_rot, 0.0, 1.0, 0.0);
-        glTranslatef(0.0, -10.0, 0.0);
-        R_static_mesh_render(test_mesh, NULL);
-        glPopMatrix();
-        R_check_errors();
-
-        x_rot += 8 * c_frame_sec;
-        y_rot += 20 * c_frame_sec;
-
-        return TRUE;
-}
-
-/******************************************************************************\
- Render the test globe.
-\******************************************************************************/
-int render_test_globe()
-{
-        static float x_rot, y_rot;
-        float left[] = { -1.0, 0.0, 0.0, 0.0 };
-
-        static int island_to_show = 1;
-        static int since_island_change = 0;
-        int i;
-
-        if (!r_test_globe.value.n)
-                return FALSE;
-
-        R_set_mode(R_MODE_3D);
-
-        /* Globe renders without texturing atm */
-        glDisable(GL_TEXTURE_2D);
-
-        /* Have a light from the left */
-        glEnable(GL_LIGHTING);
-        glEnable(GL_LIGHT0);
-        glLightfv(GL_LIGHT0, GL_POSITION, left);
-
-        glPushMatrix();
-        glLoadIdentity();
-
-        glTranslatef(0.0, 0.0, -2000.0);
-        glRotatef(x_rot, 1.0, 0.0, 0.0);
-        glRotatef(y_rot, 0.0, 1.0, 0.0);
-
-        /* And render. I'll just shove stuff in here right now.
-           I'm actually worried about the generation of the thing. */
-        glEnableClientState(GL_VERTEX_ARRAY);
-        glEnableClientState(GL_NORMAL_ARRAY);
-
-        /* Water */
-        /*glColorMask(FALSE, FALSE, FALSE, FALSE);*/
-        glColor3f(0.0, 0.5, 1.0);
-        glVertexPointer(3, GL_FLOAT, 0, test_globe->water_verts);
-        glNormalPointer(GL_FLOAT, 0, test_globe->water_verts);
-        glEnable(GL_NORMALIZE); /* So I can be lazy */
-        glDrawElements(GL_TRIANGLES, test_globe->ninds,
-                       GL_UNSIGNED_SHORT, test_globe->inds);
-        glDisable(GL_NORMALIZE);
-
-        /* Lines - scratch that - Solid land overtop */
-        /*glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);*/
-        /*glColorMask(TRUE, TRUE, TRUE, TRUE);*/
-        glColor3f(0.435294117647059,
-                  0.741176470588235,
-                  0.298039215686275);
-        glVertexPointer(3, GL_FLOAT, 0, test_globe->verts);
-        glNormalPointer(GL_FLOAT, 0, test_globe->norms);
-        glDrawElements(GL_TRIANGLES, test_globe->ninds,
-                       GL_UNSIGNED_SHORT, test_globe->inds);
-
-        glDisableClientState(GL_VERTEX_ARRAY);
-        glDisableClientState(GL_NORMAL_ARRAY);
-
-        /* Show all points on island_to_show */
-        glPointSize(5.0);
-        glColor3f(1.0, 0.0, 0.0);
-        glBegin(GL_POINTS);
-
-        for (i = 0; i < test_globe->nverts; i++)
-                if (test_globe->island_ids[i] == island_to_show) {
-                        c_vec3_t v;
-
-                        v = C_vec3_norm(test_globe->water_verts[i]);
-                        glNormal3f(v.x, v.y, v.z);
-                        v = test_globe->verts[i];
-                        glVertex3f(v.x, v.y, v.z);
-                }
-
-        glEnd();
-
-        glPopMatrix();
-
-        /* Reset polygon mode and texturing */
-        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-        glEnable(GL_TEXTURE_2D);
-
-        R_check_errors();
-
-        x_rot += 2 * c_frame_sec;
-        y_rot += 20 * c_frame_sec;
-
-        if (250 < (since_island_change += c_frame_msec)) {
-                island_to_show %= test_globe->n_islands;
-                island_to_show++;
-                since_island_change = 0;
-        }
-
-        return TRUE;
 }
 
 /******************************************************************************\
  Render test sprites.
 \******************************************************************************/
-int render_test_sprites(void)
+void render_test_sprites(void)
 {
         int i;
 
         if (!r_test_sprite_path.value.s[0] || r_test_sprite_num.value.n < 1)
-                return FALSE;
+                return;
         for (i = 0; i < r_test_sprite_num.value.n; i++) {
                 R_sprite_render(test_sprites + i);
                 test_sprites[i].angle += i * c_frame_sec /
                                          r_test_sprite_num.value.n;
         }
-        return TRUE;
 }
 
 /******************************************************************************\
  Render test text.
 \******************************************************************************/
-int render_test_text(void)
+void render_test_text(void)
 {
         if (!r_test_text.value.s[0])
-                return FALSE;
+                return;
         R_text_render(&test_text);
         test_text.sprite.angle += 0.5f * c_frame_sec;
-        return TRUE;
 }
 
 /******************************************************************************\
@@ -462,7 +310,7 @@ void R_check_errors_full(const char *file, int line, const char *func)
 
 /******************************************************************************\
  Sets up OpenGL to render 2D or 3D polygons.
-   TODO: Work a camera into the projection matrix.
+   TODO: Work a camera into the model view matrix.
 \******************************************************************************/
 void R_set_mode(r_mode_t mode)
 {
@@ -475,15 +323,20 @@ void R_set_mode(r_mode_t mode)
                 glDisable(GL_LIGHTING);
                 glDisable(GL_CULL_FACE);
                 glDisable(GL_DEPTH_TEST);
-        } else {
-                R_clip_disable();
+        } else if (mode == R_MODE_3D) {
                 gluPerspective(90.0, (float)r_width.value.n / r_height.value.n,
                                1.f, 10000.f);
                 glEnable(GL_LIGHTING);
                 glEnable(GL_CULL_FACE);
                 glEnable(GL_DEPTH_TEST);
-        }
+                glDisable(GL_CLIP_PLANE0);
+                glDisable(GL_CLIP_PLANE1);
+                glDisable(GL_CLIP_PLANE2);
+                glDisable(GL_CLIP_PLANE3);
+        } else
+                C_error("Unknown render mode %d", mode);
         glMatrixMode(GL_MODELVIEW);
+        glLoadIdentity();
         R_check_errors();
         r_mode = mode;
 }
@@ -637,7 +490,8 @@ void R_clip_rect(c_vec2_t origin, c_vec2_t size)
 void R_start_frame(void)
 {
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        if (render_test_globe() || render_test_model() || render_test_mesh());
+        render_test_model();
+        R_render_globe();
 }
 
 /******************************************************************************\
