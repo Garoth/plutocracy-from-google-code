@@ -78,8 +78,8 @@ int I_button_event(i_button_t *button, i_event_t event)
                 } else {
                         c_vec2_t origin2, size2;
 
-                        origin2 = C_vec2_subf(origin, i_border.value.n);
-                        size2 = C_vec2_addf(size, i_border.value.n * 2);
+                        origin2 = C_vec2_subf(origin, (float)i_border.value.n);
+                        size2 = C_vec2_addf(size, i_border.value.n * 2.f);
                         button->light.origin = origin2;
                         button->light.size = size2;
                         button->prelight.origin = origin2;
@@ -90,7 +90,7 @@ int I_button_event(i_button_t *button, i_event_t event)
                 origin.y += size.y / 2;
                 if (button->decorated) {
                         origin.x += i_border.value.n;
-                        size = C_vec2_subf(size, i_border.value.n * 2);
+                        size = C_vec2_subf(size, i_border.value.n * 2.f);
                 }
                 if (button->icon.texture) {
                         button->icon.origin = C_vec2(origin.x, origin.y -

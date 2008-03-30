@@ -253,7 +253,7 @@ void R_sprite_init_text(r_sprite_t *sprite, r_font_t font, float wrap,
                         continue;
                 }
                 if (size.x > width)
-                        width = size.x;
+                        width = (int)size.x;
         }
         if (++width < 2 || height < 2)
                 return;

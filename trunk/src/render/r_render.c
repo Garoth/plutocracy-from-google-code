@@ -366,7 +366,7 @@ void R_set_mode(r_mode_t mode)
 static void set_clipping(void)
 {
         GLdouble eqn[4];
-        float left, top, right, bottom;;
+        float left, top, right, bottom;
         int i;
 
         R_set_mode(R_MODE_2D);
