@@ -99,7 +99,7 @@ static void theme_configure(void)
         C_var_unlatch(&i_work_area);
 
         /* Root window */
-        i_root.size = C_vec2(r_width_2d, r_height_2d);
+        i_root.size = C_vec2((float)r_width_2d, (float)r_height_2d);
 
         /* Left toolbar */
         left_toolbar.widget.size = C_vec2(0.f, 32.f + i_border.value.n * 2);

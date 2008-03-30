@@ -19,8 +19,8 @@
    largest supported resoluton is WQXGA 2560x1600 (nVidia Geforce 8800GT)
    which requires a pixel scale of 2 to have a 2D display area of approximately
    1280x800. */
-#define R_PIXEL_SCALE_MIN 0.5
-#define R_PIXEL_SCALE_MAX 2.0
+#define R_PIXEL_SCALE_MIN 0.5f
+#define R_PIXEL_SCALE_MAX 2.0f
 
 /* The wide range of 2D scaling can shrink fonts too small to be viewable,
    so we need to set a minimum (in points). */

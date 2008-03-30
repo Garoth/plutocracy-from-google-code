@@ -30,3 +30,4 @@
 #define __func__ __FUNCTION__
 #define snprintf _snprintf
 #define strcasecmp _stricmp
+

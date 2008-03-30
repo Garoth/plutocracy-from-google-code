@@ -191,10 +191,6 @@
 				>
 			</File>
 			<File
-				RelativePath="..\src\common\c_noise.c"
-				>
-			</File>
-			<File
 				RelativePath="..\src\common\c_shared.h"
 				>
 			</File>
@@ -232,6 +228,14 @@
 			</File>
 			<File
 				RelativePath="..\src\interface\i_entry.c"
+				>
+			</File>
+			<File
+				RelativePath="..\src\interface\i_game.c"
+				>
+			</File>
+			<File
+				RelativePath="..\src\interface\i_layout.c"
 				>
 			</File>
 			<File
@@ -292,6 +296,10 @@
 			</File>
 			<File
 				RelativePath="..\src\render\r_common.h"
+				>
+			</File>
+			<File
+				RelativePath="..\src\render\r_globe.c"
 				>
 			</File>
 			<File

@@ -48,9 +48,12 @@
 #ifndef NUL
 #define NUL '\0'
 #endif
+#ifndef INFINITY
+#define INFINITY 2147483647
+#endif
 
 /* Golden ratio */
-#define C_TAU 1.61803398874989
+#define C_TAU 1.61803398874989f
 
 /* If you are going to use the C_va* functions, keep in mind that after calling
    any of those functions [C_VA_BUFFERS] times, you will begin overwriting
@@ -62,8 +65,8 @@
 
 /* All angles should be in radians but there are some cases (OpenGL) where
    conversions are necessary */
-#define C_rad_to_deg(a) ((a) * 180 / M_PI)
-#define C_deg_to_rad(a) ((a) * M_PI / 180)
+#define C_rad_to_deg(a) ((a) * 180.f / (float)M_PI)
+#define C_deg_to_rad(a) ((a) * (float)M_PI / 180.f)
 
 /* Certain functions should not be used. Files that legitimately use these
    should undefine these replacements. */
