@@ -38,23 +38,23 @@ docs/gendoc.html: gendoc $(GENDOC_FILES) Makefile
 	./gendoc $(GENDOC_FILES) > docs/gendoc.html
 
 docs/shared.html: gendoc $(SHARED_FILES) Makefile
-	./gendoc --title "Plutocracy Shared Namespace" \
+	./gendoc --title "Plutocracy Shared" \
 	         $(SHARED_FILES) > docs/shared.html
 
 docs/interface.html: gendoc $(INTERFACE_FILES) Makefile
-	./gendoc --title "Plutocracy Interface Namespace" \
+	./gendoc --title "Plutocracy Interface" \
 	         $(INTERFACE_FILES) > docs/interface.html
 
 docs/render.html: gendoc $(RENDER_FILES) Makefile
-	./gendoc --title "Plutocracy Render Namespace" \
+	./gendoc --title "Plutocracy Render" \
 	         $(RENDER_FILES) > docs/render.html
 
 docs/game.html: gendoc $(GAME_FILES) Makefile
-	./gendoc --title "Plutocracy Game Namespace" \
+	./gendoc --title "Plutocracy Game" \
 	         $(GAME_FILES) > docs/game.html
 
 docs/network.html: gendoc $(NETWORK_FILES) Makefile
-	./gendoc --title "Plutocracy Network Namespace" \
+	./gendoc --title "Plutocracy Network" \
 	         $(NETWORK_FILES) > docs/network.html
 
 gendoc: $(SOURCES) gendoc.h Makefile

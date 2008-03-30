@@ -104,6 +104,7 @@ int R_init(void);
 void R_start_frame(void);
 
 extern c_count_t r_count_faces;
+extern c_vec3_t r_camera;
 extern int r_width_2d, r_height_2d;
 
 /* r_sprite.c */

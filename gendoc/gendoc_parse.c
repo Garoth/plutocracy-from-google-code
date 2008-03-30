@@ -79,6 +79,7 @@ int D_is_keyword(const char *buf, entry_t **entry, int *type)
                 { "for",        1 },
                 { "else",       1 },
                 { "enum",       1 },
+                { "extern",     0 },
                 { "float",      0 },
                 { "goto",       1 },
                 { "if",         1 },

@@ -19,6 +19,9 @@ c_var_t i_border, i_button, i_button_active, i_button_hover, i_button_light,
         i_button_prelight, i_color, i_color2, i_fade, i_hanger, i_shadow,
         i_theme, i_window, i_work_area;
 
+/* Interface usability variables */
+c_var_t i_scroll_speed;
+
 /******************************************************************************\
  Registers interface namespace variables.
 \******************************************************************************/
@@ -51,5 +54,8 @@ void I_register_variables(void)
                           "gui/themes/default/window.png", C_VE_LATCHED);
         C_register_string(&i_work_area, "i_work_area",
                           "gui/themes/default/work_area.png", C_VE_LATCHED);
+
+        /* Interface usability variables */
+        C_register_float(&i_scroll_speed, "i_scroll_speed", 50.f, C_VE_ANYTIME);
 }
 

@@ -26,6 +26,9 @@ c_count_t r_count_faces;
 r_mode_t r_mode;
 int r_width_2d, r_height_2d;
 
+/* Camera rotation and zoom */
+c_vec3_t r_camera;
+
 /* Testing assets */
 static r_model_t test_model;
 static r_sprite_t *test_sprites;
@@ -243,6 +246,7 @@ static void render_test_model(void)
 
         if (!test_model.data)
                 return;
+        glClear(GL_DEPTH_BUFFER_BIT);
 
         R_set_mode(R_MODE_3D);
 
@@ -309,8 +313,19 @@ void R_check_errors_full(const char *file, int line, const char *func)
 }
 
 /******************************************************************************\
+ Sets up the camera in 3D mode.
+\******************************************************************************/
+static void set_camera(void)
+{
+        glMatrixMode(GL_MODELVIEW);
+        glLoadIdentity();
+        glTranslatef(0, 0, -r_camera.z);
+        glRotatef(r_camera.x, 1.0, 0.0, 0.0);
+        glRotatef(r_camera.y, 0.0, 1.0, 0.0);
+}
+
+/******************************************************************************\
  Sets up OpenGL to render 2D or 3D polygons.
-   TODO: Work a camera into the model view matrix.
 \******************************************************************************/
 void R_set_mode(r_mode_t mode)
 {
@@ -323,6 +338,8 @@ void R_set_mode(r_mode_t mode)
                 glDisable(GL_LIGHTING);
                 glDisable(GL_CULL_FACE);
                 glDisable(GL_DEPTH_TEST);
+                glMatrixMode(GL_MODELVIEW);
+                glLoadIdentity();
         } else if (mode == R_MODE_3D) {
                 gluPerspective(90.0, (float)r_width.value.n / r_height.value.n,
                                1.f, 10000.f);
@@ -333,10 +350,9 @@ void R_set_mode(r_mode_t mode)
                 glDisable(GL_CLIP_PLANE1);
                 glDisable(GL_CLIP_PLANE2);
                 glDisable(GL_CLIP_PLANE3);
+                set_camera();
         } else
                 C_error("Unknown render mode %d", mode);
-        glMatrixMode(GL_MODELVIEW);
-        glLoadIdentity();
         R_check_errors();
         r_mode = mode;
 }
