@@ -81,7 +81,7 @@ char *C_wrap_log(const char *src, int margin, int wrap, int *plen)
                                 last_break = i;
                         j -= i - last_break;
                         i = last_break;
-                        if (j >= sizeof (dest) - margin - 1)
+                        if (j >= (int)sizeof (dest) - margin - 1)
                                 break;
                         dest[j++] = '\n';
                         dest[j++] = ':';
@@ -130,19 +130,19 @@ void C_log(c_log_level_t level, const char *file, int line,
                 if (level >= C_LOG_DEBUG) {
                         snprintf(fmt2, sizeof(fmt2), "| %s(): %s",
                                  function, fmt);
-                        margin = 6 + strlen(function);
+                        margin = 6 + (int)strlen(function);
                 } else if (level == C_LOG_STATUS) {
                         snprintf(fmt2, sizeof(fmt2), "\n%s(): %s --",
                                  function, fmt);
-                        margin = 4 + strlen(function);
+                        margin = 4 + (int)strlen(function);
                 } else if (level == C_LOG_WARNING) {
                         snprintf(fmt2, sizeof(fmt2), "* %s(): %s",
                                  function, fmt);
-                        margin = 6 + strlen(function);
+                        margin = 6 + (int)strlen(function);
                 } else {
                         snprintf(fmt2, sizeof(fmt2), "*** %s(): %s",
                                  function, fmt);
-                        margin = 8 + strlen(function);
+                        margin = 8 + (int)strlen(function);
                 }
         } else if (c_log_level.value.n >= C_LOG_TRACE) {
                 margin = 8;
@@ -169,6 +169,13 @@ void C_log(c_log_level_t level, const char *file, int line,
                 C_file_write(log_file, wrapped, len);
         else
                 fputs(wrapped, stderr);
+
+#ifdef WIN32
+        /* Display a messagebox in Windows */
+        if (level == C_LOG_ERROR)
+                MessageBox(NULL, buffer, PACKAGE_STRING, MB_OK | MB_ICONERROR);
+#endif
+
         if (level == C_LOG_ERROR)
                 abort();
         if (c_log_mode != C_LM_NORMAL)
@@ -177,7 +184,7 @@ void C_log(c_log_level_t level, const char *file, int line,
         if (c_log_func)
                 c_log_func(level, margin, buffer);
         if (c_log_mode == C_LM_HANDLER)
-                c_log_mode = C_LM_NORMAL;
+                c_log_mode = C_LM_NORMAL;                
 }
 
 /******************************************************************************\
