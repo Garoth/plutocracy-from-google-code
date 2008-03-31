@@ -79,7 +79,8 @@ int I_scrollback_event(i_scrollback_t *sb, i_event_t event)
                 R_window_cleanup(&sb->window);
                 R_window_init(&sb->window, i_work_area.value.s);
                 if (!sb->widget.size.y)
-                        sb->widget.size.y = R_font_line_skip(R_FONT_CONSOLE);
+                        sb->widget.size.y = (float)
+                                            R_font_line_skip(R_FONT_CONSOLE);
                 sb->window.sprite.size = sb->widget.size;
                 sb->window.sprite.origin = sb->widget.origin;
                 I_widget_pack(&sb->widget, I_PACK_V, I_FIT_NONE);
@@ -168,8 +169,9 @@ static void on_enter(i_entry_t *entry)
 static int scrollback_event(i_scrollback_t *sb, i_event_t event)
 {
         if (event == I_EV_CONFIGURE)
-                cols_max = sb->widget.size.x / R_font_width(R_FONT_CONSOLE) *
-                           r_pixel_scale.value.f;
+                cols_max = (int)(sb->widget.size.x /
+                                 R_font_width(R_FONT_CONSOLE) *
+                                 r_pixel_scale.value.f);
         return I_scrollback_event(sb, event);
 }
 
