@@ -27,7 +27,7 @@ r_mode_t r_mode;
 int r_width_2d, r_height_2d;
 
 /* Camera rotation and zoom */
-float r_cam_dist;
+float r_cam_dist, r_cam_zoom;
 static c_vec2_t cam_diff;
 static GLfloat cam_matrix[16];
 
@@ -209,11 +209,6 @@ int R_init(void)
         C_status("Opening window");
         C_count_reset(&r_count_faces);
 
-        /* NVidia drivers respect this environment variable for vsync
-           FIXME: Doesn't work! */
-        SDL_putenv(r_vsync.value.n ? "__GL_SYNC_TO_VBLANK=1" :
-                                     "__GL_SYNC_TO_VBLANK=0");
-
         /* Need to do these initialization steps before loading any assets */
         if (!set_video_mode())
                 return FALSE;
@@ -328,7 +323,7 @@ void R_check_errors_full(const char *file, int line, const char *func)
 static void load_camera(void)
 {
         glLoadIdentity();
-        glTranslatef(0, 0, -r_cam_dist);
+        glTranslatef(0, 0, -r_cam_dist - r_cam_zoom);
         glMultMatrixf(cam_matrix);
 }
 
@@ -354,9 +349,21 @@ static void update_camera(void)
 /******************************************************************************\
  Move the camera incrementally relative to the current orientation.
 \******************************************************************************/
-void R_move_camera_by(c_vec2_t angle)
+void R_move_cam_by(c_vec2_t angle)
 {
         cam_diff = C_vec2_add(cam_diff, angle);
+}
+
+/******************************************************************************\
+ Zoom the camera incrementally.
+\******************************************************************************/
+void R_zoom_cam_by(float f)
+{
+        r_cam_zoom += f;
+        if (r_cam_zoom < 0)
+                r_cam_zoom = 0;
+        if (r_cam_zoom > R_ZOOM_MAX - R_ZOOM_MIN)
+                r_cam_zoom = R_ZOOM_MAX - R_ZOOM_MIN;
 }
 
 /******************************************************************************\

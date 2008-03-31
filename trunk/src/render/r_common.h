@@ -104,7 +104,7 @@ void R_check_errors_full(const char *file, int line, const char *func);
 void R_set_mode(r_mode_t);
 
 extern r_mode_t r_mode;
-extern float r_cam_dist;
+extern float r_cam_dist, r_cam_zoom;
 
 /* r_static_mesh.c */
 void R_static_mesh_cleanup(r_static_mesh_t *);
