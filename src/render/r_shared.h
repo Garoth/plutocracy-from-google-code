@@ -26,6 +26,10 @@
    so we need to set a minimum (in points). */
 #define R_FONT_SIZE_MIN 10
 
+/* Ranges for zooming in and out */
+#define R_ZOOM_MIN 10.f
+#define R_ZOOM_MAX 40.f
+
 /* Opaque texture object */
 typedef struct r_texture r_texture_t;
 
@@ -82,6 +86,7 @@ void R_load_fonts(void);
 
 /* r_globe.c */
 void R_generate_globe(int seed, int subdivs);
+float R_screen_to_globe(int pixels);
 
 /* r_model.c */
 void R_model_cleanup(r_model_t *);
@@ -101,7 +106,8 @@ void R_clip_rect(c_vec2_t origin, c_vec2_t size);
 void R_clip_disable(void);
 void R_finish_frame(void);
 int R_init(void);
-void R_move_camera_by(c_vec2_t);
+void R_move_cam_by(c_vec2_t);
+void R_zoom_cam_by(float);
 void R_start_frame(void);
 
 extern c_count_t r_count_faces;

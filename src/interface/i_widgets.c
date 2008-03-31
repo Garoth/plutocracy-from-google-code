@@ -516,7 +516,6 @@ void I_widget_event(i_widget_t *widget, i_event_t event)
         case I_EV_MOUSE_DOWN:
                 if (widget->state == I_WS_READY || widget->state == I_WS_HOVER)
                         widget->state = I_WS_ACTIVE;
-        case I_EV_MOUSE_UP:
         case I_EV_MOUSE_MOVE:
 
                 /* Mouse left the widget area */
@@ -662,7 +661,7 @@ void I_dispatch(const SDL_Event *ev)
 
         /* Normally dispatch up from the root window, but for key events send
            straight to the focused widget */
-        if (event == I_EV_KEY_DOWN || event == I_EV_KEY_UP) {
+        if (event == I_EV_KEY_DOWN) {
                 if (i_key_focus && i_key_focus->event_func &&
                     i_key_focus->shown && i_key_focus->state != I_WS_DISABLED)
                         i_key_focus->event_func(i_key_focus, event);

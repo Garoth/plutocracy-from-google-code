@@ -87,6 +87,7 @@ static void subdivide4(void)
                 vertices[3 * j + 2].co = mid_0_1;
         }
         tiles *= 4;
+        radius *= 2;
         sphericize();
 }
 
@@ -99,6 +100,7 @@ static void subdivide4(void)
  We need to have duplicates however because we keep three vertices for each
  face, regardless of unique position because their UV coordinates will probably
  be different.
+
 \******************************************************************************/
 static void generate_icosahedron(void)
 {
@@ -163,7 +165,7 @@ static void generate_icosahedron(void)
         vertices[58]    = vertices[30];
         vertices[59]    = vertices[38];
         tiles = 20;
-        radius = 2000.f; //C_TAU;
+        radius = sqrtf(C_TAU + 2);
 }
 
 /******************************************************************************\
@@ -210,7 +212,7 @@ void R_generate_globe(int seed, int subdiv4)
         R_texture_free(texture);
         texture = R_texture_load("models/globe/test.png", TRUE);
 
-        r_cam_dist = radius + 500.f;
+        r_cam_dist = radius + R_ZOOM_MIN;
 }
 
 /******************************************************************************\
@@ -236,5 +238,15 @@ void R_render_globe(void)
         R_check_errors();
 
         glEnable(GL_TEXTURE_2D);
+}
+
+/******************************************************************************\
+ Converts screen pixel distance to globe radians.
+ FIXME: Hacky and inaccurate.
+\******************************************************************************/
+float R_screen_to_globe(int pixels)
+{
+        return 0.04f * r_pixel_scale.value.f * pixels /
+               (r_cam_dist - r_cam_zoom);
 }
 

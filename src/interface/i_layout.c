@@ -20,6 +20,7 @@ i_widget_t i_root;
 static c_vec2_t root_scroll;
 static i_window_t left_toolbar, console_window, game_window, *open_window;
 static i_button_t console_button, game_button;
+static int grabbing, grab_x, grab_y;
 
 /******************************************************************************\
  Root window event function.
@@ -48,6 +49,32 @@ static int root_event(i_widget_t *root, i_event_t event)
                     (i_key == SDLK_UP && root_scroll.y > 0.f))
                         root_scroll.y = 0.f;
                 break;
+        case I_EV_MOUSE_DOWN:
+                if (i_mouse == SDL_BUTTON_WHEELDOWN)
+                        R_zoom_cam_by(i_zoom_speed.value.f);
+                if (i_mouse == SDL_BUTTON_WHEELUP)
+                        R_zoom_cam_by(-i_zoom_speed.value.f);
+                if (i_mouse == SDL_BUTTON_MIDDLE) {
+                        grabbing = TRUE;
+                        grab_x = i_mouse_x;
+                        grab_y = i_mouse_y;
+                }
+                break;
+        case I_EV_MOUSE_UP:
+                if (i_mouse == SDL_BUTTON_MIDDLE)
+                        grabbing = FALSE;
+                break;
+        case I_EV_MOUSE_MOVE:
+                if (grabbing) {
+                        float dx, dy;
+
+                        dx = R_screen_to_globe(i_mouse_x - grab_x);
+                        dy = R_screen_to_globe(i_mouse_y - grab_y);
+                        R_move_cam_by(C_vec2(dx, dy));
+                        grab_x = i_mouse_x;
+                        grab_y = i_mouse_y;
+                }
+                break;
         case I_EV_CONFIGURE:
                 i_colors[I_COLOR] = C_color_string(i_color.value.s);
                 i_colors[I_COLOR_ALT] = C_color_string(i_color2.value.s);
@@ -59,7 +86,7 @@ static int root_event(i_widget_t *root, i_event_t event)
 
                 return FALSE;
         case I_EV_RENDER:
-                R_move_camera_by(C_vec2_scalef(root_scroll, c_frame_sec));
+                R_move_cam_by(C_vec2_scalef(root_scroll, c_frame_sec));
                 break;
         default:
                 break;

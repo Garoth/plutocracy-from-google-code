@@ -20,7 +20,7 @@ c_var_t i_border, i_button, i_button_active, i_button_hover, i_button_light,
         i_theme, i_window, i_work_area;
 
 /* Interface usability variables */
-c_var_t i_scroll_speed;
+c_var_t i_scroll_speed, i_zoom_speed;
 
 /******************************************************************************\
  Registers interface namespace variables.
@@ -57,5 +57,6 @@ void I_register_variables(void)
 
         /* Interface usability variables */
         C_register_float(&i_scroll_speed, "i_scroll_speed", 1.f, C_VE_ANYTIME);
+        C_register_float(&i_zoom_speed, "i_zoom_speed", 1.f, C_VE_ANYTIME);
 }
 
