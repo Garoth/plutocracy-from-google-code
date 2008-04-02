@@ -85,7 +85,7 @@ void R_free_fonts(void);
 void R_load_fonts(void);
 
 /* r_globe.c */
-void R_generate_globe(int seed, int subdivs);
+void R_generate_globe(int seed, int subdiv4);
 float R_screen_to_globe(int pixels);
 
 /* r_model.c */
@@ -105,7 +105,7 @@ void R_clip_pop(void);
 void R_clip_rect(c_vec2_t origin, c_vec2_t size);
 void R_clip_disable(void);
 void R_finish_frame(void);
-int R_init(void);
+void R_init(void);
 void R_move_cam_by(c_vec2_t);
 void R_zoom_cam_by(float);
 void R_start_frame(void);

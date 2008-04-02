@@ -11,5 +11,9 @@
 \******************************************************************************/
 
 /* g_globe.c */
-void G_generate_globe(int seed, int subdiv);
+void G_init(void);
+void G_render(void);
+
+/* g_variables.c */
+void G_register_variables(void);
 

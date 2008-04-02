@@ -203,15 +203,16 @@ static void load_test_assets(void)
 /******************************************************************************\
  Creates the client window. Initializes OpenGL settings such view matrices,
  culling, and depth testing. Returns TRUE on success.
+ TODO: Try backup "safe" video modes when user requested mode fails.
 \******************************************************************************/
-int R_init(void)
+void R_init(void)
 {
         C_status("Opening window");
         C_count_reset(&r_count_faces);
 
         /* Need to do these initialization steps before loading any assets */
         if (!set_video_mode())
-                return FALSE;
+                C_error("No available video modes");
         check_gl_extensions();
         set_gl_state();
         R_clip_disable();
@@ -219,9 +220,6 @@ int R_init(void)
         /* Everything should be ready to load assets now */
         R_load_assets();
         load_test_assets();
-        R_generate_globe(0, 4);
-
-        return TRUE;
 }
 
 /******************************************************************************\

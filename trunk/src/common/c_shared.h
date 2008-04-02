@@ -97,7 +97,8 @@
 
 /* Debug log levels, errors are fatal and will always abort */
 typedef enum {
-        C_LOG_ERROR,
+        C_LOG_PRINT = -1,
+        C_LOG_ERROR = 0,
         C_LOG_WARNING,
         C_LOG_STATUS,
         C_LOG_DEBUG,
@@ -153,11 +154,11 @@ typedef int (*c_var_update_f)(c_var_t *, c_var_value_t);
 struct c_var {
         const char *name;
         struct c_var *next;
-        c_var_value_t value, latched;
+        c_var_value_t value, latched, stock;
         c_var_type_t type;
         c_var_edit_t edit;
         c_var_update_f update;
-        char has_latched;
+        char has_latched, archive;
 };
 
 /* Resizing arrays */
@@ -171,7 +172,8 @@ typedef struct c_array {
 /* A structure to hold the data for a file that is being read in tokens */
 typedef struct c_token_file {
         c_file_t *file;
-        char *pos, *token, swap, filename[32], buffer[4000];
+        char *pos, *token, swap, filename[256], buffer[4000];
+        int eof;
 } c_token_file_t;
 
 /* Reference-counted linked-list. Memory allocated using the referenced
@@ -205,6 +207,7 @@ void C_close_log_file(void);
 void C_log(c_log_level_t, const char *file, int line,
            const char *function, const char *fmt, ...);
 void C_open_log_file(void);
+void C_print(const char *);
 #define C_status(fmt, ...) C_log(C_LOG_STATUS, __FILE__, __LINE__, \
                                  __func__, fmt, ## __VA_ARGS__)
 #define C_status_full(f, l, fn, fmt, ...) C_log(C_LOG_STATUS, f, l, \
@@ -257,14 +260,19 @@ void C_test_mem_check(void);
 
 extern c_var_t c_mem_check;
 
+/* c_os_*.c */
+const char *C_user_dir(void);
+
 /* c_string.c */
 #define C_bool_string(b) ((b) ? "TRUE" : "FALSE")
 c_color_t C_color_string(const char *);
+char *C_escape_string(const char *);
 void C_file_close(c_file_t *);
 #define C_file_gets(f, buf) fgets(buf, sizeof (buf), f)
 #define C_file_open_read(name) fopen(name, "r")
 #define C_file_open_write(name) fopen(name, "w")
 #define C_file_read(f, buf, len) fread(buf, 1, len, f)
+#define C_file_printf(f, fm, ...) fprintf(f, fm, ## __VA_ARGS__)
 #define C_file_vprintf(f, fm, v) vfprintf(f, fm, v)
 #define C_file_write(f, buf, len) fwrite(buf, 1, len, f)
 #define C_is_digit(c) (((c) >= '0' && (c) <= '9') || (c) == '.' || (c) == '-')
@@ -277,6 +285,7 @@ int C_strncpy(char *dest, const char *src, int len);
 #define C_strncpy_buf(d, s) C_strncpy(d, s, sizeof (d))
 void C_token_file_cleanup(c_token_file_t *);
 int C_token_file_init(c_token_file_t *, const char *filename);
+void C_token_file_init_string(c_token_file_t *, const char *string);
 const char *C_token_file_read_full(c_token_file_t *, int *out_quoted);
 #define C_token_file_read(f) C_token_file_read_full(f, NULL)
 #define C_strdup(s) C_strdup_full(__FILE__, __LINE__, __func__, s)
@@ -301,17 +310,16 @@ extern float c_frame_sec;
 
 /* c_variables.c */
 void C_cleanup_variables(void);
-int C_parse_config(const char *string);
 int C_parse_config_file(const char *filename);
-void C_register_float(c_var_t *, const char *name, float value,
-                      c_var_edit_t);
-void C_register_integer(c_var_t *, const char *name, int value,
-                        c_var_edit_t);
-void C_register_string(c_var_t *, const char *name, const char *value,
-                       c_var_edit_t);
-void C_register_string_dynamic(c_var_t *, const char *name, char *value,
-                               c_var_edit_t);
+void C_parse_config_string(const char *string);
+void C_register_float(c_var_t *, const char *name, float value);
+void C_register_integer(c_var_t *, const char *name, int value);
+void C_register_string(c_var_t *, const char *name, const char *value);
 void C_register_variables(void);
+c_var_t *C_resolve_var(const char *name);
 void C_var_set(c_var_t *, const char *value);
 void C_var_unlatch(c_var_t *);
+void C_write_autogen(void);
+
+extern int c_exit;
 

@@ -10,16 +10,19 @@
  FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
 \******************************************************************************/
 
-#include "../common/c_shared.h"
-#include "../render/r_shared.h"
-#include "g_shared.h"
+#include "g_common.h"
 
-/* A tile on the globe */
-typedef struct g_tile {
-        c_vec3_t corners[3];
-        struct g_tile *neighbors[6];
-} g_tile_t;
-
-/* g_globe.c */
+/* Globe variables */
 c_var_t g_globe_seed, g_globe_subdiv4;
+
+/******************************************************************************\
+ Registers the game namespace variables.
+\******************************************************************************/
+void G_register_variables(void)
+{
+        C_register_integer(&g_globe_seed, "g_globe_seed", C_rand());
+        g_globe_seed.archive = FALSE;
+        C_register_integer(&g_globe_subdiv4, "g_globe_subdiv4", 4);
+        g_globe_subdiv4.archive = FALSE;
+}
 

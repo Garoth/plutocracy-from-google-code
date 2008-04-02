@@ -8,6 +8,7 @@ bin_PROGRAMS = plutocracy
 plutocracy_SOURCES = \
         src/common/c_log.c \
         src/common/c_memory.c \
+        src/common/c_os_posix.c \
         src/common/c_shared.h \
         src/common/c_string.c \
         src/common/c_time.c \
@@ -16,6 +17,7 @@ plutocracy_SOURCES = \
         src/game/g_common.h \
         src/game/g_shared.h \
         src/game/g_globe.c \
+        src/game/g_variables.c \
         src/interface/i_button.c \
         src/interface/i_common.h \
         src/interface/i_console.c \

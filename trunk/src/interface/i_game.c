@@ -21,7 +21,7 @@ static i_button_t quit_button;
 static void quit_button_clicked(i_button_t *button)
 {
         C_debug("Exit button clicked");
-        exit(0);
+        c_exit = TRUE;
 }
 
 /******************************************************************************\

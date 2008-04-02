@@ -10,22 +10,29 @@
  FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
 \******************************************************************************/
 
-#include "g_common.h"
+/* This file should only be included on POSIX-compliant systems */
+
+#include "c_shared.h"
+#include <errno.h>
+#include <sys/stat.h>
 
 /******************************************************************************\
- Render the game elements.
+ Returns the path to the user's writeable Plutocracy directory. The directory
+ is not returned with a trailing slash.
 \******************************************************************************/
-void G_render(void)
+const char *C_user_dir(void)
 {
-}
+        static char user_dir[256];
 
-/******************************************************************************\
- Initialize an idle globe.
-\******************************************************************************/
-void G_init(void)
-{
-        C_var_unlatch(&g_globe_seed);
-        C_var_unlatch(&g_globe_subdiv4);
-        R_generate_globe(g_globe_seed.value.n, g_globe_subdiv4.value.n);
+        if (!user_dir[0]) {
+                snprintf(user_dir, sizeof (user_dir), "%s/." PACKAGE,
+                         getenv("HOME"));
+                C_debug("Home directory is '%s'", user_dir);
+                if (!mkdir(user_dir, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH))
+                        C_debug("Directory created");
+                else if (errno != EEXIST)
+                        C_debug("Failed to create: %s", strerror(errno));
+        }
+        return user_dir;
 }
 
