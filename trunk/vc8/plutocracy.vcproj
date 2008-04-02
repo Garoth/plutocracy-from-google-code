@@ -141,7 +141,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="SDL.lib SDLmain.lib SDL_image.lib SDL_ttf.lib OpenGL32.lib GlU32.lib user32.lib"
+				AdditionalDependencies="SDL.lib SDLmain.lib SDL_image.lib SDL_ttf.lib OpenGL32.lib GlU32.lib user32.lib shell32.lib"
 				OutputFile="$(OutDir)/plutocracy.exe"
 				LinkIncremental="1"
 				GenerateDebugInformation="true"
@@ -188,6 +188,10 @@
 			</File>
 			<File
 				RelativePath="..\src\common\c_memory.c"
+				>
+			</File>
+			<File
+				RelativePath="..\src\common\c_os_windows.c"
 				>
 			</File>
 			<File
@@ -264,6 +268,10 @@
 			</File>
 			<File
 				RelativePath="..\src\game\g_shared.h"
+				>
+			</File>
+			<File
+				RelativePath="..\src\game\g_variables.c"
 				>
 			</File>
 		</Filter>

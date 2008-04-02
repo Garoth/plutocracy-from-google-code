@@ -82,7 +82,7 @@ char *C_skip_spaces(const char *str)
 int C_read_file(const char *filename, char *buffer, int size)
 {
         c_file_t *file;
-        size_t bytes_read;
+        int bytes_read;
 
         C_assert(buffer);
         if (!filename || !filename[0]) {
@@ -95,7 +95,7 @@ int C_read_file(const char *filename, char *buffer, int size)
                 buffer[0] = NUL;
                 return -1;
         }
-        bytes_read = C_file_read(file, buffer, size);
+        bytes_read = (int)C_file_read(file, buffer, size);
         if (bytes_read > size - 1)
                 bytes_read = size - 1;
         buffer[bytes_read] = NUL;
@@ -277,7 +277,7 @@ const char *C_token_file_read_full(c_token_file_t *tf, int *quoted)
 \******************************************************************************/
 int C_strncpy(char *dest, const char *src, int len)
 {
-        size_t src_len;
+        int src_len;
 
         if (!dest)
                 return 0;
@@ -286,7 +286,7 @@ int C_strncpy(char *dest, const char *src, int len)
                         dest[0] = NUL;
                 return 0;
         }
-        src_len = strlen(src);
+        src_len = (int)strlen(src);
         if (src_len > --len) {
                 C_debug("dest (%d bytes) too short to hold src (%d bytes)",
                         len, src_len);
@@ -305,7 +305,7 @@ int C_strlen(const char *string)
 {
         if (!string)
                 return 0;
-        return strlen(string);
+        return (int)strlen(string);
 }
 
 /******************************************************************************\
