@@ -10,16 +10,15 @@
  FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
 \******************************************************************************/
 
-#include "../common/c_shared.h"
-#include "../render/r_shared.h"
-#include "g_shared.h"
+/* This file should only be included on Microsoft Windows systems */
 
-/* A tile on the globe */
-typedef struct g_tile {
-        c_vec3_t corners[3];
-        struct g_tile *neighbors[6];
-} g_tile_t;
+#include "c_shared.h"
 
-/* g_globe.c */
-c_var_t g_globe_seed, g_globe_subdiv4;
+/******************************************************************************\
+ Returns the path to the user's writeable Plutocracy directory.
+\******************************************************************************/
+const char *C_user_dir(void)
+{
+        C_error("Unimplemented!");
+}
 

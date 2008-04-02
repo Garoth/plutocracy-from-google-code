@@ -49,12 +49,13 @@ am__installdirs = "$(DESTDIR)$(bindir)"
 binPROGRAMS_INSTALL = $(INSTALL_PROGRAM)
 PROGRAMS = $(bin_PROGRAMS)
 am_plutocracy_OBJECTS = c_log.$(OBJEXT) c_memory.$(OBJEXT) \
-	c_string.$(OBJEXT) c_time.$(OBJEXT) c_variables.$(OBJEXT) \
-	g_globe.$(OBJEXT) i_button.$(OBJEXT) i_console.$(OBJEXT) \
-	i_entry.$(OBJEXT) i_game.$(OBJEXT) i_layout.$(OBJEXT) \
-	i_variables.$(OBJEXT) i_widgets.$(OBJEXT) n_client.$(OBJEXT) \
-	r_assets.$(OBJEXT) r_globe.$(OBJEXT) r_model.$(OBJEXT) \
-	r_render.$(OBJEXT) r_sprite.$(OBJEXT) r_static_mesh.$(OBJEXT) \
+	c_os_posix.$(OBJEXT) c_string.$(OBJEXT) c_time.$(OBJEXT) \
+	c_variables.$(OBJEXT) g_globe.$(OBJEXT) g_variables.$(OBJEXT) \
+	i_button.$(OBJEXT) i_console.$(OBJEXT) i_entry.$(OBJEXT) \
+	i_game.$(OBJEXT) i_layout.$(OBJEXT) i_variables.$(OBJEXT) \
+	i_widgets.$(OBJEXT) n_client.$(OBJEXT) r_assets.$(OBJEXT) \
+	r_globe.$(OBJEXT) r_model.$(OBJEXT) r_render.$(OBJEXT) \
+	r_sprite.$(OBJEXT) r_static_mesh.$(OBJEXT) \
 	r_variables.$(OBJEXT) plutocracy.$(OBJEXT)
 plutocracy_OBJECTS = $(am_plutocracy_OBJECTS)
 plutocracy_LDADD = $(LDADD)
@@ -176,6 +177,7 @@ AM_CFLAGS = @SDL_CFLAGS@
 plutocracy_SOURCES = \
         src/common/c_log.c \
         src/common/c_memory.c \
+        src/common/c_os_posix.c \
         src/common/c_shared.h \
         src/common/c_string.c \
         src/common/c_time.c \
@@ -184,6 +186,7 @@ plutocracy_SOURCES = \
         src/game/g_common.h \
         src/game/g_shared.h \
         src/game/g_globe.c \
+        src/game/g_variables.c \
         src/interface/i_button.c \
         src/interface/i_common.h \
         src/interface/i_console.c \
@@ -301,10 +304,12 @@ distclean-compile:
 
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/c_log.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/c_memory.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/c_os_posix.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/c_string.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/c_time.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/c_variables.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/g_globe.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/g_variables.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/i_button.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/i_console.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/i_entry.Po@am__quote@
@@ -364,6 +369,20 @@ c_memory.obj: src/common/c_memory.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o c_memory.obj `if test -f 'src/common/c_memory.c'; then $(CYGPATH_W) 'src/common/c_memory.c'; else $(CYGPATH_W) '$(srcdir)/src/common/c_memory.c'; fi`
 
+c_os_posix.o: src/common/c_os_posix.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT c_os_posix.o -MD -MP -MF $(DEPDIR)/c_os_posix.Tpo -c -o c_os_posix.o `test -f 'src/common/c_os_posix.c' || echo '$(srcdir)/'`src/common/c_os_posix.c
+@am__fastdepCC_TRUE@	mv -f $(DEPDIR)/c_os_posix.Tpo $(DEPDIR)/c_os_posix.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='src/common/c_os_posix.c' object='c_os_posix.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o c_os_posix.o `test -f 'src/common/c_os_posix.c' || echo '$(srcdir)/'`src/common/c_os_posix.c
+
+c_os_posix.obj: src/common/c_os_posix.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT c_os_posix.obj -MD -MP -MF $(DEPDIR)/c_os_posix.Tpo -c -o c_os_posix.obj `if test -f 'src/common/c_os_posix.c'; then $(CYGPATH_W) 'src/common/c_os_posix.c'; else $(CYGPATH_W) '$(srcdir)/src/common/c_os_posix.c'; fi`
+@am__fastdepCC_TRUE@	mv -f $(DEPDIR)/c_os_posix.Tpo $(DEPDIR)/c_os_posix.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='src/common/c_os_posix.c' object='c_os_posix.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o c_os_posix.obj `if test -f 'src/common/c_os_posix.c'; then $(CYGPATH_W) 'src/common/c_os_posix.c'; else $(CYGPATH_W) '$(srcdir)/src/common/c_os_posix.c'; fi`
+
 c_string.o: src/common/c_string.c
 @am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT c_string.o -MD -MP -MF $(DEPDIR)/c_string.Tpo -c -o c_string.o `test -f 'src/common/c_string.c' || echo '$(srcdir)/'`src/common/c_string.c
 @am__fastdepCC_TRUE@	mv -f $(DEPDIR)/c_string.Tpo $(DEPDIR)/c_string.Po
@@ -419,6 +438,20 @@ g_globe.obj: src/game/g_globe.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	source='src/game/g_globe.c' object='g_globe.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o g_globe.obj `if test -f 'src/game/g_globe.c'; then $(CYGPATH_W) 'src/game/g_globe.c'; else $(CYGPATH_W) '$(srcdir)/src/game/g_globe.c'; fi`
+
+g_variables.o: src/game/g_variables.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT g_variables.o -MD -MP -MF $(DEPDIR)/g_variables.Tpo -c -o g_variables.o `test -f 'src/game/g_variables.c' || echo '$(srcdir)/'`src/game/g_variables.c
+@am__fastdepCC_TRUE@	mv -f $(DEPDIR)/g_variables.Tpo $(DEPDIR)/g_variables.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='src/game/g_variables.c' object='g_variables.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o g_variables.o `test -f 'src/game/g_variables.c' || echo '$(srcdir)/'`src/game/g_variables.c
+
+g_variables.obj: src/game/g_variables.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT g_variables.obj -MD -MP -MF $(DEPDIR)/g_variables.Tpo -c -o g_variables.obj `if test -f 'src/game/g_variables.c'; then $(CYGPATH_W) 'src/game/g_variables.c'; else $(CYGPATH_W) '$(srcdir)/src/game/g_variables.c'; fi`
+@am__fastdepCC_TRUE@	mv -f $(DEPDIR)/g_variables.Tpo $(DEPDIR)/g_variables.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='src/game/g_variables.c' object='g_variables.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o g_variables.obj `if test -f 'src/game/g_variables.c'; then $(CYGPATH_W) 'src/game/g_variables.c'; else $(CYGPATH_W) '$(srcdir)/src/game/g_variables.c'; fi`
 
 i_button.o: src/interface/i_button.c
 @am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT i_button.o -MD -MP -MF $(DEPDIR)/i_button.Tpo -c -o i_button.o `test -f 'src/interface/i_button.c' || echo '$(srcdir)/'`src/interface/i_button.c

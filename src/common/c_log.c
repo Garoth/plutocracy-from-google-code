@@ -49,6 +49,19 @@ void C_open_log_file(void)
 }
 
 /******************************************************************************\
+ Prints text to the GUI handler.
+\******************************************************************************/
+void C_print(const char *string)
+{
+        if (!c_log_func || c_log_mode != C_LM_NORMAL)
+                return;
+        c_log_mode = C_LM_HANDLER;
+        c_log_func(C_LOG_PRINT, 0, string);
+        if (c_log_mode == C_LM_HANDLER)
+                c_log_mode = C_LM_NORMAL;
+}
+
+/******************************************************************************\
  Wraps log-formatted text. [margin] amount of padding is added to each line
  following the first. If [plen] is not NULL, it is set to the length of the
  returned string.
@@ -184,7 +197,7 @@ void C_log(c_log_level_t level, const char *file, int line,
         if (c_log_func)
                 c_log_func(level, margin, buffer);
         if (c_log_mode == C_LM_HANDLER)
-                c_log_mode = C_LM_NORMAL;                
+                c_log_mode = C_LM_NORMAL;
 }
 
 /******************************************************************************\

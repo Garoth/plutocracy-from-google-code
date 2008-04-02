@@ -27,36 +27,51 @@ c_var_t i_scroll_speed, i_zoom_speed;
 \******************************************************************************/
 void I_register_variables(void)
 {
-        C_register_integer(&i_debug, "i_debug", FALSE, C_VE_ANYTIME);
+        C_register_integer(&i_debug, "i_debug", FALSE);
+        i_debug.edit = C_VE_ANYTIME;
 
         /* Theme variables */
-        C_register_integer(&i_border, "i_border", 8, C_VE_LATCHED);
+        C_register_integer(&i_border, "i_border", 8);
+        i_border.archive = FALSE;
         C_register_string(&i_button, "i_button",
-                          "gui/themes/default/button.png", C_VE_LATCHED);
+                          "gui/themes/default/button.png");
+        i_button.archive = FALSE;
         C_register_string(&i_button_active, "i_button_active",
-                          "gui/themes/default/button_active.png", C_VE_LATCHED);
+                          "gui/themes/default/button_active.png");
+        i_button_active.archive = FALSE;
         C_register_string(&i_button_hover, "i_button_hover",
-                          "gui/themes/default/button_hover.png", C_VE_LATCHED);
+                          "gui/themes/default/button_hover.png");
+        i_button_hover.archive = FALSE;
         C_register_string(&i_button_prelight, "i_button_prelight",
-                          "gui/themes/default/button_prelight.png",
-                          C_VE_LATCHED);
+                          "gui/themes/default/button_prelight.png");
+        i_button_prelight.archive = FALSE;
         C_register_string(&i_button_light, "i_button_light",
-                          "gui/themes/default/button_light.png", C_VE_LATCHED);
-        C_register_string(&i_color, "i_color", "aluminium1", C_VE_LATCHED);
-        C_register_string(&i_color2, "i_color2", "aluminium3", C_VE_LATCHED);
-        C_register_float(&i_fade, "i_fade", 4.f, C_VE_ANYTIME);
+                          "gui/themes/default/button_light.png");
+        i_button_light.archive = FALSE;
+        C_register_string(&i_color, "i_color", "aluminium1");
+        i_color.archive = FALSE;
+        C_register_string(&i_color2, "i_color2", "aluminium3");
+        i_color2.archive = FALSE;
+        C_register_float(&i_fade, "i_fade", 4.f);
+        i_fade.archive = FALSE;
+        i_fade.edit = C_VE_ANYTIME;
         C_register_string(&i_hanger, "i_hanger",
-                          "gui/themes/default/hanger.png", C_VE_LATCHED);
-        C_register_string(&i_theme, "i_theme",
-                          "gui/themes/default/theme.cfg", C_VE_LATCHED);
-        C_register_float(&i_shadow, "i_shadow", 1.f, C_VE_LATCHED);
+                          "gui/themes/default/hanger.png");
+        i_hanger.archive = FALSE;
+        C_register_string(&i_theme, "i_theme", "gui/themes/default/theme.cfg");
+        C_register_float(&i_shadow, "i_shadow", 1.f);
+        i_shadow.archive = FALSE;
         C_register_string(&i_window, "i_window",
-                          "gui/themes/default/window.png", C_VE_LATCHED);
+                          "gui/themes/default/window.png");
+        i_window.archive = FALSE;
         C_register_string(&i_work_area, "i_work_area",
-                          "gui/themes/default/work_area.png", C_VE_LATCHED);
+                          "gui/themes/default/work_area.png");
+        i_work_area.archive = FALSE;
 
         /* Interface usability variables */
-        C_register_float(&i_scroll_speed, "i_scroll_speed", 1.f, C_VE_ANYTIME);
-        C_register_float(&i_zoom_speed, "i_zoom_speed", 1.f, C_VE_ANYTIME);
+        C_register_float(&i_scroll_speed, "i_scroll_speed", 1.f);
+        i_scroll_speed.edit = C_VE_ANYTIME;
+        C_register_float(&i_zoom_speed, "i_zoom_speed", 1.f);
+        i_zoom_speed.edit = C_VE_ANYTIME;
 }
 

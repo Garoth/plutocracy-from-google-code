@@ -28,6 +28,9 @@ c_var_t c_max_fps, c_show_fps;
    after initilization! */
 c_var_t c_mem_check;
 
+/* This should be set to TRUE when the main loop needs to exit properly */
+int c_exit;
+
 static c_var_t *root;
 
 /******************************************************************************\
@@ -36,16 +39,19 @@ static c_var_t *root;
 void C_register_variables(void)
 {
         /* Message logging */
-        C_register_integer(&c_log_level, "c_log_level", C_LOG_WARNING,
-                           C_VE_ANYTIME);
-        C_register_string(&c_log_file, "c_log_file", "", C_VE_LATCHED);
+        C_register_integer(&c_log_level, "c_log_level", C_LOG_WARNING);
+        c_log_level.edit = C_VE_ANYTIME;
+        C_register_string(&c_log_file, "c_log_file", "");
 
         /* FPS cap */
-        C_register_integer(&c_max_fps, "c_max_fps", 120, C_VE_ANYTIME);
-        C_register_integer(&c_show_fps, "c_show_fps", FALSE, C_VE_ANYTIME);
+        C_register_integer(&c_max_fps, "c_max_fps", 120);
+        c_max_fps.edit = C_VE_ANYTIME;
+        C_register_integer(&c_show_fps, "c_show_fps", FALSE);
+        c_show_fps.edit = C_VE_ANYTIME;
 
         /* Memory checking */
-        C_register_integer(&c_mem_check, "c_mem_check", FALSE, C_VE_ANYTIME);
+        C_register_integer(&c_mem_check, "c_mem_check", FALSE);
+        c_mem_check.archive = FALSE;
 }
 
 /******************************************************************************\
@@ -58,6 +64,7 @@ void C_cleanup_variables(void)
 
         var = root;
         while (var) {
+                C_var_unlatch(var);
                 if (var->type == C_VT_STRING_DYNAMIC) {
                         C_free(var->value.s);
                         var->value.s = "";
@@ -78,7 +85,7 @@ void C_cleanup_variables(void)
  modified. The variables are tracked as a linked list.
 \******************************************************************************/
 void C_var_register(c_var_t *var, const char *name, c_var_type_t type,
-                    c_var_value_t value, c_var_edit_t edit)
+                    c_var_value_t value)
 {
         if (var->type)
                 C_error("Attempted to re-register '%s' with '%s'",
@@ -86,46 +93,34 @@ void C_var_register(c_var_t *var, const char *name, c_var_type_t type,
         var->next = root;
         var->type = type;
         var->name = name;
-        var->value = value;
-        var->latched = value;
-        var->edit = edit;
+        var->stock = var->latched = var->value = value;
+        var->edit = C_VE_LATCHED;
+        var->archive = TRUE;
         root = var;
 }
 
-void C_register_float(c_var_t *var, const char *name, float value_f,
-                      c_var_edit_t edit)
+void C_register_float(c_var_t *var, const char *name, float value_f)
 {
         c_var_value_t value;
 
         value.f = value_f;
-        C_var_register(var, name, C_VT_FLOAT, value, edit);
+        C_var_register(var, name, C_VT_FLOAT, value);
 }
 
-void C_register_integer(c_var_t *var, const char *name, int value_n,
-                        c_var_edit_t edit)
+void C_register_integer(c_var_t *var, const char *name, int value_n)
 {
         c_var_value_t value;
 
         value.n = value_n;
-        C_var_register(var, name, C_VT_INTEGER, value, edit);
+        C_var_register(var, name, C_VT_INTEGER, value);
 }
 
-void C_register_string(c_var_t *var, const char *name, const char *value_s,
-                       c_var_edit_t edit)
+void C_register_string(c_var_t *var, const char *name, const char *value_s)
 {
         c_var_value_t value;
 
         value.s = (char *)value_s;
-        C_var_register(var, name, C_VT_STRING, value, edit);
-}
-
-void C_register_string_dynamic(c_var_t *var, const char *name, char *value_s,
-                               c_var_edit_t edit)
-{
-        c_var_value_t value;
-
-        value.s = value_s;
-        C_var_register(var, name, C_VT_STRING_DYNAMIC, value, edit);
+        C_var_register(var, name, C_VT_STRING, value);
 }
 
 /******************************************************************************\
@@ -233,6 +228,8 @@ void C_var_set(c_var_t *var, const char *string)
 \******************************************************************************/
 void C_var_unlatch(c_var_t *var)
 {
+        if (var->type == C_VT_UNREGISTERED)
+                C_error("Tried to unlatch an unregistered variable");
         if (!var->has_latched || var->edit != C_VE_LATCHED)
                 return;
         var->value = var->latched;
@@ -242,35 +239,43 @@ void C_var_unlatch(c_var_t *var)
 }
 
 /******************************************************************************\
- Skips any space characters and comment lines in the string.
+ Prints out the current and latched values of a variable.
 \******************************************************************************/
-static char *skip_unparseable(const char *string)
+static void print_var(const c_var_t *var)
 {
-        char ch;
+        const char *value, *latched;
 
-        for (ch = *string; ch; ch = *(++string)) {
-
-                /* Skip comment lines */
-                if (ch == '/') {
-                        if (string[1] == '/') {
-                                while (ch && ch != '\n')
-                                        ch = *(++string);
-                                continue;
-                        }
-                        if (string[1] == '*') {
-                                do {
-                                        ch = *(++string);
-                                } while (ch && (ch != '/' ||
-                                                string[-1] != '*'));
-                                continue;
-                        }
-                }
-
-                /* Skip spaces */
-                if (ch > ' ')
-                        break;
+        switch (var->type) {
+        case C_VT_INTEGER:
+                value = C_va("Integer '%s' is %d", var->name, var->value.n);
+                break;
+        case C_VT_FLOAT:
+                value = C_va("Float '%s' is %g", var->name, var->value.f);
+                break;
+        case C_VT_STRING:
+        case C_VT_STRING_DYNAMIC:
+                value = C_va("String '%s' is '%s'", var->name, var->value.s);
+                break;
+        default:
+                C_error("Tried to print out unregistered variable");
         }
-        return (char *)string;
+        latched = "";
+        if (var->edit == C_VE_LATCHED && var->has_latched) {
+                switch (var->type) {
+                case C_VT_INTEGER:
+                        latched = C_va(" (%d latched)", var->latched.n);
+                        break;
+                case C_VT_FLOAT:
+                        latched = C_va(" (%g latched)", var->latched.f);
+                        break;
+                case C_VT_STRING:
+                case C_VT_STRING_DYNAMIC:
+                        latched = C_va(" ('%s' latched)", var->latched.s);
+                default:
+                        break;
+                }
+        }
+        C_print(C_va("%s%s", value, latched));
 }
 
 /******************************************************************************\
@@ -281,136 +286,122 @@ static char *skip_unparseable(const char *string)
                           "can be concatenated"
    c_numbers_not_in_quotes -123.5
 
- Ignores newlines and spaces. Returns FALSE if there was an error (but not a
- warning) while parsing the configuration string.
+ Ignores newlines and spaces. Variable names entered without values will have
+ their current values printed out.
 \******************************************************************************/
-int C_parse_config(const char *string)
+static void parse_config_token_file(c_token_file_t *tf)
 {
-        int parsed, parsing_name, parsing_string;
-        char name[256], value[4096], *pos;
+        c_var_t *var;
+        const char *token;
+        int quoted;
+        char value[2048];
 
-        /* Start parsing name */
-        name[0] = NUL;
+        var = NULL;
         value[0] = NUL;
-        pos = name;
-        parsing_name = TRUE;
-        parsing_string = FALSE;
-        parsed = 0;
-
-        for (;; string++) {
-                const char *old_string;
-
-                old_string = string;
-                if (!parsing_string)
-                        string = skip_unparseable(string);
-                if (parsing_name) {
-                        parsing_string = *string == '"';
-
-                        /* End of string */
-                        if (!*string)
-                                break;
-
-                        /* Did we switch to parsing a value? */
-                        if ((old_string != string && C_is_digit(string[0])) ||
-                            parsing_string) {
-                                if (!name[0]) {
-                                        C_warning("Parsing variable value "
-                                                  "without a name");
-                                        return FALSE;
-                                }
-                                parsing_name = FALSE;
-                                *pos = NUL;
-                                pos = value;
-                                if (!parsing_string)
-                                        string--;
-                                continue;
-                        }
-
-                        /* Check buffer limit */
-                        if (pos - name >= sizeof (name)) {
-                                C_warning("Variable '%s' name too long", name);
-                                return FALSE;
-                        }
-                } else {
-
-                        /* Did we finish parsing the value? */
-                        if (!*string ||
-                            (!parsing_string && !C_is_digit(*string)) ||
-                            (parsing_string && *string == '"' &&
-                             string[-1] != '\\')) {
-                                c_var_t *var;
-
-                                /* Check for concatenation */
-                                if (parsing_string) {
-                                        string = skip_unparseable(string + 1);
-                                        if (*string == '"')
-                                                continue;
-                                }
-
-                                /* Switch to parsing the name */
-                                string--;
-                                *pos = NUL;
-                                pos = name;
-                                parsing_name = TRUE;
-
-                                /* Set the variable */
-                                var = C_resolve_var(name);
-                                if (var)
+        for (;;) {
+                token = C_token_file_read_full(tf, &quoted);
+                if (!token[0] && !quoted)
+                        break;
+                if (!C_is_digit(token[0]) && !quoted) {
+                        if (var) {
+                                if (value[0])
                                         C_var_set(var, value);
                                 else
-                                        C_warning("variable '%s' not found",
-                                                  name);
-                                parsed++;
-
-                                continue;
+                                        print_var(var);
                         }
-
-                        /* Check buffer limit */
-                        if (pos - value >= sizeof (value)) {
-                                C_warning("Variable '%s' value too long", name);
-                                return FALSE;
-                        }
+                        var = C_resolve_var(token);
+                        if (!var)
+                                C_print(C_va("No variable named '%s'", token));
+                        value[0] = NUL;
+                        continue;
                 }
-
-                /* Escape characters in strings */
-                if (parsing_string && string[0] == '\\') {
-                        if (string[1] == '\n') {
-                                string++;
-                                continue;
-                        } else if (string[1] == 'n') {
-                                *(pos++) = '\n';
-                                string++;
-                                continue;
-                        } else if (string[1] == 't') {
-                                *(pos++) = '\t';
-                                string++;
-                                continue;
-                        } else if (string[1] == '\\') {
-                                *(pos++) = '\\';
-                                string++;
-                                continue;
-                        }
-                }
-
-                *(pos++) = *string;
+                strncat(value, token, sizeof (value));
         }
-        C_debug("Parsed %d variables", parsed);
+        if (var) {
+                if (value[0])
+                        C_var_set(var, value);
+                else
+                        print_var(var);
+        }
+}
+
+/******************************************************************************\
+ Parses a configuration file.
+\******************************************************************************/
+int C_parse_config_file(const char *filename)
+{
+        c_token_file_t tf;
+
+        if (!C_token_file_init(&tf, filename))
+                return FALSE;
+        parse_config_token_file(&tf);
         return TRUE;
 }
 
 /******************************************************************************\
- Parses a configuration file (see above).
-   TODO: Remove the file size limit
-   TODO: Multiple file search paths
+ Parses a configuration file from a string.
 \******************************************************************************/
-int C_parse_config_file(const char *filename)
+void C_parse_config_string(const char *string)
 {
-        char buffer[32000];
+        c_token_file_t tf;
 
-        if (C_read_file(filename, buffer, sizeof (buffer)) < 0) {
-                C_warning("Error reading config '%s'", filename);
-                return FALSE;
+        C_token_file_init_string(&tf, string);
+        parse_config_token_file(&tf);
+}
+
+/******************************************************************************\
+ Writes a configuration file that contains the values of all modified,
+ archivable variables.
+\******************************************************************************/
+void C_write_autogen(void)
+{
+        c_file_t *file;
+        c_var_t *var;
+
+        file = C_file_open_write(C_va("%s/autogen.cfg", C_user_dir()));
+        if (!file) {
+                C_warning("Failed to save variable config");
+                return;
         }
-        return C_parse_config(buffer);
+        C_file_printf(file, "/*************************************************"
+                            "*****************************\\\n"
+                            " %s - Automatically generated config\n"
+                            "\\************************************************"
+                            "******************************/\n\n",
+                            PACKAGE_STRING);
+        for (var = root; var; var = var->next) {
+                if (var->archive) {
+                        const char *value;
+
+                        C_var_unlatch(var);
+                        value = NULL;
+                        switch (var->type) {
+                        case C_VT_INTEGER:
+                                if (var->value.n == var->stock.n)
+                                        continue;
+                                value = C_va("%d", var->value.n);
+                                break;
+                        case C_VT_FLOAT:
+                                if (var->value.f == var->stock.f)
+                                        continue;
+                                value = C_va("%g", var->value.f);
+                                break;
+                        case C_VT_STRING:
+                        case C_VT_STRING_DYNAMIC:
+                                if (!strcmp(var->value.s, var->stock.s))
+                                        continue;
+                                value = C_escape_string(var->value.s);
+                                break;
+                        default:
+                                C_error("Unregistered variable in list");
+                        }
+                        if (value)
+                                C_file_printf(file, "%s %s\n",
+                                              var->name, value);
+                }
+        }
+        C_file_printf(file, "\n");
+        C_file_close(file);
+        C_debug("Saved autogen config");
 }
 

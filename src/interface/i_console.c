@@ -158,7 +158,7 @@ static void on_enter(i_entry_t *entry)
         if (!entry->buffer[0])
                 return;
         I_console_print(I_COLOR_ALT, entry->buffer);
-        C_parse_config(entry->buffer);
+        C_parse_config_string(entry->buffer);
         I_entry_configure(entry, NULL);
 }
 

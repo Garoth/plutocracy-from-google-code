@@ -400,6 +400,10 @@ const char *I_event_string(i_event_t event)
                 return "I_EV_CLEANUP";
         case I_EV_CONFIGURE:
                 return "I_EV_CONFIGURE";
+        case I_EV_GRAB_FOCUS:
+                return "I_EV_GRAB_FOCUS";
+        case I_EV_HIDE:
+                return "I_EV_HIDE";
         case I_EV_KEY_DOWN:
                 return "I_EV_KEY_DOWN";
         case I_EV_KEY_UP:
@@ -414,8 +418,12 @@ const char *I_event_string(i_event_t event)
                 return "I_EV_MOUSE_DOWN";
         case I_EV_MOUSE_UP:
                 return "I_EV_MOUSE_UP";
+        case I_EV_MOVED:
+                return "I_EV_MOVED";
         case I_EV_RENDER:
                 return "I_EV_RENDER";
+        case I_EV_SHOW:
+                return "I_EV_SHOW";
         default:
                 if (event >= 0 && event < I_EVENTS)
                         C_warning("Forgot I_event_string() entry for event %d",
@@ -466,10 +474,12 @@ static int check_mouse_out(i_widget_t *widget)
 \******************************************************************************/
 void I_widget_event(i_widget_t *widget, i_event_t event)
 {
-        int propagate;
+        int propagate, handle;
 
         if (!widget->name[0])
                 C_error("Propagated event to uninitialized widget");
+        propagate = TRUE;
+        handle = TRUE;
 
         /* The only event an unconfigured widget can handle is I_EV_CONFIGURE */
         if (widget->configured < 1 && event != I_EV_CONFIGURE)
@@ -516,6 +526,7 @@ void I_widget_event(i_widget_t *widget, i_event_t event)
         case I_EV_MOUSE_DOWN:
                 if (widget->state == I_WS_READY || widget->state == I_WS_HOVER)
                         widget->state = I_WS_ACTIVE;
+                handle = FALSE;
         case I_EV_MOUSE_MOVE:
 
                 /* Mouse left the widget area */
@@ -562,8 +573,7 @@ void I_widget_event(i_widget_t *widget, i_event_t event)
         }
 
         /* Call widget-specific event handler and propagate event down */
-        propagate = TRUE;
-        if (widget->event_func)
+        if (widget->event_func && handle)
                 propagate = widget->event_func(widget, event);
         if (propagate)
                 I_widget_propagate(widget, event);
@@ -579,12 +589,16 @@ void I_widget_event(i_widget_t *widget, i_event_t event)
                 else
                         C_zero(widget);
                 break;
+        case I_EV_MOUSE_DOWN:
+                if (mouse_focus == widget && widget->event_func)
+                        widget->event_func(widget, event);
+                break;
         case I_EV_MOUSE_UP:
                 if (widget->state == I_WS_ACTIVE)
                         widget->state = I_WS_HOVER;
                 break;
         case I_EV_MOUSE_MOVE:
-                if (widget->entry && mouse_focus == widget)
+                if (mouse_focus == widget && widget->entry)
                         i_key_focus = widget;
                 break;
         default:

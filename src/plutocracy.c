@@ -16,6 +16,7 @@
 #include "common/c_shared.h"
 #include "render/r_shared.h"
 #include "interface/i_shared.h"
+#include "game/g_shared.h"
 
 #define CORRUPT_CHECK_VALUE 1776
 
@@ -87,12 +88,11 @@ static void main_loop(void)
         R_text_init(&status_text);
 
         /* Calculate the desired frame msec.
-             FIXME: I don't know why, but we need to wait twice as long as
-                    the mathematically correct rate...? */
+           TODO: Why do we need to wait twice as long as the correct rate? */
         if (c_max_fps.value.n >= 1)
                 desired_msec = 2000 / c_max_fps.value.n;
 
-        for (;;) {
+        while (!c_exit) {
                 R_start_frame();
                 while (SDL_PollEvent(&ev)) {
                         switch(ev.type) {
@@ -108,6 +108,7 @@ static void main_loop(void)
                                 break;
                         }
                 }
+                G_render();
                 I_render();
                 render_status();
                 R_finish_frame();
@@ -149,7 +150,7 @@ static void parse_config_args(int argc, char *argv[])
                 *(pos++) = ' ';
         }
         *pos = NUL;
-        C_parse_config(buffer);
+        C_parse_config_string(buffer);
 }
 
 /******************************************************************************\
@@ -215,10 +216,12 @@ int main(int argc, char *argv[])
         C_register_variables();
         R_register_variables();
         I_register_variables();
+        G_register_variables();
 
         /* Parse configuration scripts and open the log file */
         C_parse_config_file("config/default.cfg");
         I_parse_config();
+        C_parse_config_file(C_va("%s/autogen.cfg", C_user_dir()));
         parse_config_args(argc, argv);
         C_open_log_file();
 
@@ -228,12 +231,15 @@ int main(int argc, char *argv[])
         /* Initialize */
         C_status("Initializing " PACKAGE_STRING " client");
         init_sdl();
-        if (!R_init())
-                C_error("Render initialization failed");
+        R_init();
         I_init();
+        G_init();
 
         /* Run the main loop */
         main_loop();
+
+        /* This will only be reached at proper exits */
+        C_write_autogen();
 
         return 0;
 }

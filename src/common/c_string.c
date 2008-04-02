@@ -110,10 +110,11 @@ int C_read_file(const char *filename, char *buffer, int size)
 int C_token_file_init(c_token_file_t *tf, const char *filename)
 {
         C_strncpy_buf(tf->filename, filename);
-        C_zero_buf(tf->buffer);
-        tf->token = tf->pos = tf->buffer + sizeof (tf->buffer) - 2;
-        tf->swap = ' ';
+        tf->token = tf->pos = tf->buffer + sizeof (tf->buffer) - 3;
+        tf->pos[1] = tf->swap = ' ';
+        tf->pos[2] = NUL;
         tf->file = C_file_open_read(filename);
+        tf->eof = FALSE;
         if (!tf->file) {
                 C_warning("Failed to open token file '%s'", filename);
                 return FALSE;
@@ -123,91 +124,141 @@ int C_token_file_init(c_token_file_t *tf, const char *filename)
 }
 
 /******************************************************************************\
+ Initializes a token file structure without actually opening a file. The
+ buffer is filled with [string].
+\******************************************************************************/
+void C_token_file_init_string(c_token_file_t *tf, const char *string)
+{
+        C_strncpy_buf(tf->buffer, string);
+        tf->token = tf->pos = tf->buffer;
+        tf->swap = tf->buffer[0];
+        tf->filename[0] = NUL;
+        tf->file = NULL;
+        tf->eof = TRUE;
+}
+
+/******************************************************************************\
  Cleanup resources associated with a token file.
 \******************************************************************************/
 void C_token_file_cleanup(c_token_file_t *tf)
 {
-        C_file_close(tf->file);
-        C_debug("Closed '%s'", tf->filename);
+        if (!tf)
+                return;
+        if (tf->file) {
+                C_file_close(tf->file);
+                C_debug("Closed '%s'", tf->filename);
+        }
 }
 
 /******************************************************************************\
  Fills the buffer with new data when necessary. Should be run before any time
  the token file buffer position advances.
+
+ Because we need to check ahead one character in order to properly detect
+ C-style block comments, this function will read in the next chunk while there
+ is still one unread byte left in the buffer.
 \******************************************************************************/
 static void token_file_check_chunk(c_token_file_t *tf)
 {
-        size_t token_len, bytes_read;
+        size_t token_len, bytes_read, to_read;
 
-        if (tf->pos[1])
+        if ((tf->pos[1] && tf->pos[2]) || tf->eof)
                 return;
         token_len = tf->pos - tf->token + 1;
-        if (token_len >= sizeof (tf->buffer) - 1) {
+        if (token_len >= sizeof (tf->buffer) - 2) {
                 C_warning("Oversize token in '%s'", tf->filename);
                 token_len = 0;
         }
         memmove(tf->buffer, tf->token, token_len);
         tf->token = tf->buffer;
-        tf->pos = tf->token + token_len - 1;
-        bytes_read = C_file_read(tf->file, tf->buffer + token_len,
-                                 sizeof (tf->buffer) - token_len - 1);
+        tf->buffer[token_len] = tf->pos[1];
+        tf->pos = tf->buffer + token_len - 1;
+        to_read = sizeof (tf->buffer) - token_len - 2;
+        bytes_read = C_file_read(tf->file, tf->pos + 2, to_read);
         tf->buffer[token_len + bytes_read] = NUL;
+        tf->eof = bytes_read < to_read;
+}
 
+/******************************************************************************\
+ Returns positive if the string starts with a comment. Returns negative if the
+ string is a block comment. Returns zero otherwise.
+\******************************************************************************/
+static int is_comment(const char *str)
+{
+        if (str[0] == '/' && str[1] == '*')
+                return -1;
+        if (str[0] == '#' || (str[0] == '/' && str[1] == '/'))
+                return 1;
+        return 0;
+}
+
+/******************************************************************************\
+ Returns TRUE if the string ends the current comment type.
+\******************************************************************************/
+static int is_comment_end(const char *str, int type)
+{
+        return (type > 0 && str[0] == '\n') ||
+               (type < 0 && str[0] == '/' && str[-1] == '*');
 }
 
 /******************************************************************************\
  Read a token out of a token file. A token is either a series of characters
- unbroken by spaces or comments or a double-quote enclosed string. Enclosed
- strings are parsed for backslash symbols. A token file supports '#' line
- comments.
+ unbroken by spaces or comments or a single or double-quote enclosed string.
+ The kind of encolosed string (or zero) is returned via [quoted]. Enclosed
+ strings are parsed for backslash symbols. Token files support Bash, C, and
+ C++ style comments.
 \******************************************************************************/
 const char *C_token_file_read_full(c_token_file_t *tf, int *quoted)
 {
         int parsing_comment, parsing_string;
 
-        if (!tf->file || !tf->pos || tf->pos < tf->buffer ||
+        if (!tf->pos || tf->pos < tf->buffer ||
             tf->pos >= tf->buffer + sizeof (tf->buffer))
                 C_error("Invalid token file");
         *tf->pos = tf->swap;
 
         /* Skip space */
         parsing_comment = FALSE;
-        while (C_is_space(*tf->pos) || parsing_comment || *tf->pos == '#') {
-                if (*tf->pos == '#')
-                        parsing_comment = TRUE;
-                if (*tf->pos == '\n')
-                        parsing_comment = FALSE;
+        while (C_is_space(*tf->pos) || parsing_comment || is_comment(tf->pos)) {
+                if (!parsing_comment)
+                        parsing_comment = is_comment(tf->pos);
+                else if (is_comment_end(tf->pos, parsing_comment))
+                        parsing_comment = 0;
                 token_file_check_chunk(tf);
                 tf->token = ++tf->pos;
         }
-        if (!*tf->pos)
+        if (!*tf->pos) {
+                if (quoted)
+                        *quoted = FALSE;
                 return "";
+        }
 
         /* Read token */
-        if ((parsing_string = *tf->pos == '"')) {
+        parsing_string = FALSE;
+        if (*tf->pos == '"' || *tf->pos == '\'') {
+                parsing_string = *tf->pos;
                 token_file_check_chunk(tf);
                 tf->token = ++tf->pos;
         }
         while (*tf->pos) {
                 if (parsing_string) {
-                        if (*tf->pos == '"') {
+                        if (*tf->pos == parsing_string) {
                                 token_file_check_chunk(tf);
                                 *(tf->pos++) = NUL;
                                 break;
+                        } else if (parsing_string == '"' && *tf->pos == '\\') {
+                                token_file_check_chunk(tf);
+                                memmove(tf->pos, tf->pos + 1, tf->buffer +
+                                        sizeof (tf->buffer) - tf->pos - 1);
+                                if (*tf->pos == 'n')
+                                        *tf->pos = '\n';
+                                else if (*tf->pos == 'r')
+                                        *tf->pos = '\r';
+                                else if (*tf->pos == 't')
+                                        *tf->pos = '\t';
                         }
-                } else if (C_is_space(*tf->pos) || *tf->pos == '#')
+                } else if (C_is_space(*tf->pos) || is_comment(tf->pos))
                         break;
-                if (tf->pos[-1] == '\\') {
-                        if (*tf->pos == 'n')
-                                *tf->pos = '\n';
-                        else if (*tf->pos == 'r')
-                                *tf->pos = '\r';
-                        else if (*tf->pos == 't')
-                                *tf->pos = '\t';
-                        else
-                                memmove(tf->pos - 1, tf->pos, tf->buffer +
-                                        sizeof (tf->buffer) - tf->pos);
-                }
                 token_file_check_chunk(tf);
                 tf->pos++;
         }
@@ -345,5 +396,35 @@ c_color_t C_color_string(const char *string)
                 if (!strcasecmp(colors[i].name, string))
                         return C_color_32(colors[i].value);
         return C_color_32(strtoul(string, NULL, 16));
+}
+
+/******************************************************************************\
+ Wraps a string in double-quotes and escapes any special characters. Returns
+ a statically allocated string.
+\******************************************************************************/
+char *C_escape_string(const char *str)
+{
+        static char buf[4096];
+        char *pbuf;
+
+        buf[0] = '"';
+        for (pbuf = buf + 1; *str && pbuf <= buf + sizeof (buf) - 3; str++) {
+                if (*str == '"' || *str == '\\')
+                        *pbuf++ = '\\';
+                else if (*str == '\n') {
+                        *pbuf++ = '\\';
+                        *pbuf = 'n';
+                        continue;
+                } else if(*str == '\t') {
+                        *pbuf++ = '\\';
+                        *pbuf = 't';
+                        continue;
+                } else if (*str == '\r')
+                        continue;
+                *pbuf++ = *str;
+        }
+        *pbuf++ = '"';
+        *pbuf = NUL;
+        return buf;
 }
 
