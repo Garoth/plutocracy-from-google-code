@@ -25,13 +25,13 @@ const char *C_user_dir(void)
         static char user_dir[256];
 
         if (!user_dir[0]) {
-                snprintf(user_dir, sizeof (user_dir), "%s/." PACKAGE,
-                         getenv("HOME"));
+                snprintf(user_dir, sizeof (user_dir),
+                         "%s/." PACKAGE, getenv("HOME"));
                 C_debug("Home directory is '%s'", user_dir);
                 if (!mkdir(user_dir, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH))
                         C_debug("Directory created");
                 else if (errno != EEXIST)
-                        C_debug("Failed to create: %s", strerror(errno));
+                        C_warning("Failed to create: %s", strerror(errno));
         }
         return user_dir;
 }
