@@ -85,10 +85,6 @@
 #undef strncpy
 #define strncpy(d, s, n) ERROR_use_C_strncpy
 
-/* FIXME: Windows-compatible, deterministic random number generator */
-#define C_rand() rand()
-#define C_rand_seed(s) srand(s)
-
 /* Vectors */
 #include "c_vectors.h"
 
@@ -262,6 +258,10 @@ extern c_var_t c_mem_check;
 
 /* c_os_*.c */
 const char *C_user_dir(void);
+
+/* c_rand.c */
+int C_rand(void);
+void C_rand_seed(unsigned int);
 
 /* c_string.c */
 #define C_bool_string(b) ((b) ? "TRUE" : "FALSE")
