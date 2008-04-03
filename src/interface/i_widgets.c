@@ -637,6 +637,10 @@ void I_dispatch(const SDL_Event *ev)
                         C_trace("SDL_KEYDOWN (%s%s)",
                                 (i_key_shift ? "shift + " : ""),
                                 I_key_string(i_key));
+                if (!i_key) {
+                        C_warning("SDL sent zero keysym");
+                        return;
+                }
                 break;
         case SDL_KEYUP:
                 event = I_EV_KEY_UP;
