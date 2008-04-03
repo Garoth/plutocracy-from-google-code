@@ -197,7 +197,7 @@ void I_init(void)
         SDL_EnableKeyRepeat(300, 30);
 
         /* Enable Unicode so we get Unicode key strokes AND capitals */
-        SDL_EnableUNICODE(TRUE);
+        SDL_EnableUNICODE(1);
 
         /* Root window */
         C_zero(&i_root);
