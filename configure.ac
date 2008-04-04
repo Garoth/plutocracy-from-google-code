@@ -51,5 +51,14 @@ AC_CHECK_FUNCS([memmove memset sqrt strcasecmp])
 # Checks if '$CC -c -o' is allowed, needed for per-target flags
 #AM_PROG_CC_C_O
 
+# If configured with --enable-libc-errors will generate errors when standard
+# library functions that have been overriden and should not appear in code
+# are used. This may not work properly on all systems.
+AC_ARG_ENABLE(libc-errors, [Generate errors for deprecated libc functions])
+if test x$enable_libc_errors = xyes; then
+      AC_DEFINE([PLUTOCRACY_LIBC_ERRORS], [],
+                [Generate errors for deprecated libc functions])
+fi
+
 AC_OUTPUT(Makefile)
 

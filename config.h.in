@@ -77,6 +77,9 @@
 /* Define to the version of this package. */
 #undef PACKAGE_VERSION
 
+/* Generate errors for deprecated libc functions */
+#undef PLUTOCRACY_LIBC_ERRORS
+
 /* Define as the return type of signal handlers (`int' or `void'). */
 #undef RETSIGTYPE
 

@@ -69,7 +69,11 @@
 #define C_deg_to_rad(a) ((a) * (float)M_PI / 180.f)
 
 /* Certain functions should not be used. Files that legitimately use these
-   should undefine these replacements. */
+   should undefine these replacements. This is a bad thing to do because some
+   standard library implementations will have strange definitions for these
+   functions which may call each other. For instance, strcmp() which calls
+   strlen(). */
+#ifdef PLUTOCRACY_LIBC_ERRORS
 #undef calloc
 #define calloc(s) ERROR_use_C_calloc
 #undef fclose
@@ -86,6 +90,7 @@
 #define strlen(s) ERROR_use_C_strlen
 #undef strncpy
 #define strncpy(d, s, n) ERROR_use_C_strncpy
+#endif
 
 /* Vectors */
 #include "c_vectors.h"
