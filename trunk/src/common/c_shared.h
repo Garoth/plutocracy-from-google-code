@@ -284,7 +284,7 @@ void C_file_close(c_file_t *);
 #define C_file_write(f, buf, len) fwrite(buf, 1, len, f)
 #define C_is_digit(c) (((c) >= '0' && (c) <= '9') || (c) == '.' || (c) == '-')
 #define C_is_print(c) ((c) > 0 && (c) < 0x7f)
-#define C_is_space(c) ((c) && (c) <= ' ')
+#define C_is_space(c) ((c) > 0 && (c) <= ' ')
 int C_read_file(const char *filename, char *buffer, int size);
 char *C_skip_spaces(const char *str);
 #define C_strdup(s) C_strdup_full(__FILE__, __LINE__, __func__, s)

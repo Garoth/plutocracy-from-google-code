@@ -636,7 +636,7 @@ void I_dispatch(const SDL_Event *ev)
                 if (i_debug.value.n > 0)
                         C_trace("SDL_KEYDOWN (%s%s)",
                                 (i_key_shift ? "shift + " : ""),
-                                I_key_string(i_key));
+                                I_key_string(i_key_unicode));
                 if (!i_key) {
                         C_warning("SDL sent zero keysym");
                         return;
@@ -648,7 +648,9 @@ void I_dispatch(const SDL_Event *ev)
                 i_key_shift = ev->key.keysym.mod & KMOD_SHIFT;
                 i_key_unicode = ev->key.keysym.unicode;
                 if (i_debug.value.n > 0)
-                        C_trace("SDL_KEYUP");
+                        C_trace("SDL_KEYUP (%s%s)",
+                                (i_key_shift ? "shift + " : ""),
+                                I_key_string(i_key_unicode));
                 break;
         case SDL_MOUSEMOTION:
                 event = I_EV_MOUSE_MOVE;

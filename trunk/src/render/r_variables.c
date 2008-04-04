@@ -43,9 +43,13 @@ void R_register_variables(void)
 
         /* Render testing */
         C_register_string(&r_test_model_path, "r_test_model", "");
+        r_test_model_path.archive = FALSE;
         C_register_integer(&r_test_sprite_num, "r_test_sprites", 0);
+        r_test_sprite_num.archive = FALSE;
         C_register_string(&r_test_sprite_path, "r_test_sprite", "");
+        r_test_sprite_path.archive = FALSE;
         C_register_string(&r_test_text, "r_test_text", "");
+        r_test_text.archive = FALSE;
 
         /* Fonts */
         C_register_string(&r_font_console, "r_font_console",
