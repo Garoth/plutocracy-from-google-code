@@ -334,7 +334,7 @@ c_vec2_t R_font_size(r_font_t font, const char *text)
 {
         int w, h;
 
-        TTF_SizeText(fonts[font].ttf_font, text, &w, &h);
+        TTF_SizeUTF8(fonts[font].ttf_font, text, &w, &h);
         return C_vec2(w, h);
 }
 

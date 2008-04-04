@@ -82,6 +82,8 @@
 #define realloc(p, s) ERROR_use_C_realloc
 #undef strdup
 #define strdup(s) ERROR_use_C_strdup
+#undef strlen
+#define strlen(s) ERROR_use_C_strlen
 #undef strncpy
 #define strncpy(d, s, n) ERROR_use_C_strncpy
 
@@ -280,6 +282,8 @@ void C_file_close(c_file_t *);
 #define C_is_space(c) ((c) && (c) <= ' ')
 int C_read_file(const char *filename, char *buffer, int size);
 char *C_skip_spaces(const char *str);
+#define C_strdup(s) C_strdup_full(__FILE__, __LINE__, __func__, s)
+char *C_strdup_full(const char *file, int line, const char *func, const char *);
 int C_strlen(const char *);
 int C_strncpy(char *dest, const char *src, int len);
 #define C_strncpy_buf(d, s) C_strncpy(d, s, sizeof (d))
@@ -288,8 +292,11 @@ int C_token_file_init(c_token_file_t *, const char *filename);
 void C_token_file_init_string(c_token_file_t *, const char *string);
 const char *C_token_file_read_full(c_token_file_t *, int *out_quoted);
 #define C_token_file_read(f) C_token_file_read_full(f, NULL)
-#define C_strdup(s) C_strdup_full(__FILE__, __LINE__, __func__, s)
-char *C_strdup_full(const char *file, int line, const char *func, const char *);
+int C_utf8_append(char *dest, int *dest_i, size_t dest_sz, const char *src);
+char *C_utf8_encode(int unicode, int *len);
+int C_utf8_index(char *str, int n);
+int C_utf8_size(unsigned char first_byte);
+int C_utf8_strlen(const char *, int *utf8_chars);
 char *C_va(const char *fmt, ...);
 char *C_van(int *output_len, const char *fmt, ...);
 char *C_vanv(int *output_len, const char *fmt, va_list);

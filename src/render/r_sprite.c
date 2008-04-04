@@ -207,7 +207,7 @@ void R_sprite_init_text(r_sprite_t *sprite, r_font_t font, float wrap,
                         float shadow, int invert, const char *string)
 {
         r_texture_t *tex;
-        int i, j, y, last_break, last_line, width, height, line_skip;
+        int i, j, y, last_break, last_line, width, height, line_skip, char_len;
         char buf[1024], *line;
 
         if (font < 0 || font >= R_FONTS)
@@ -227,15 +227,13 @@ void R_sprite_init_text(r_sprite_t *sprite, r_font_t font, float wrap,
         width = 0;
         height = (line_skip = R_font_line_skip(font)) + 2;
         line = buf;
-        for (i = 0, j = 0; string[i]; i++) {
+        for (i = 0, j = 0; ; i += char_len) {
                 c_vec2_t size;
 
-                if (j >= sizeof (buf) - 2) {
-                        C_warning("Ran out of buffer space");
-                        break;
-                }
-                buf[j++] = string[i];
+                char_len = C_utf8_append(buf, &j, sizeof (buf) - 1, string + i);
                 buf[j] = NUL;
+                if (!char_len)
+                        break;
                 if (C_is_space(string[i]))
                         last_break = i;
                 size = R_font_size(font, line);

@@ -69,19 +69,24 @@ void C_print(const char *string)
 char *C_wrap_log(const char *src, int margin, int wrap, int *plen)
 {
         static char dest[320];
-        int i, j, k, last_break, last_line, cols;
+        int i, j, k, last_break, last_line, cols, char_len;
 
+        /* Make sure the margin and wrap settings are sane */
         if (wrap < 20)
                 wrap = 20;
         if (margin > wrap / 2)
                 margin = wrap / 2;
+
+        /* Take care of leading newlines here to prevent padding them */
         for (j = i = 0; src[i] == '\n'; i++)
                 dest[j++] = '\n';
-        for (last_break = last_line = cols = 0; src[i]; i++) {
-                cols++;
-                dest[j++] = src[i];
-                if (j >= sizeof (dest) - 2)
+
+        for (last_break = last_line = cols = 0; ; i += char_len, cols++) {
+                if (!(char_len = C_utf8_append(dest, &j, sizeof (dest) - 2,
+                                               src + i)))
                         break;
+
+                /* Track the last breakable spot */
                 if (src[i] == ' ' || src[i] == '\t' || src[i] == '-' ||
                     src[i] == '/' || src[i] == '\\')
                         last_break = i;
@@ -89,12 +94,14 @@ char *C_wrap_log(const char *src, int margin, int wrap, int *plen)
                         last_break = i;
                         j--;
                 }
+
+                /* Wrap text and pad up until the margin length */
                 if (cols >= wrap || src[i] == '\n') {
                         if (last_break == last_line)
                                 last_break = i;
                         j -= i - last_break;
                         i = last_break;
-                        if (j >= (int)sizeof (dest) - margin - 1)
+                        if (j >= (int)sizeof (dest) - margin - 3)
                                 break;
                         dest[j++] = '\n';
                         dest[j++] = ':';
@@ -143,19 +150,19 @@ void C_log(c_log_level_t level, const char *file, int line,
                 if (level >= C_LOG_DEBUG) {
                         snprintf(fmt2, sizeof(fmt2), "| %s(): %s",
                                  function, fmt);
-                        margin = 6 + (int)strlen(function);
+                        margin = 6 + C_strlen(function);
                 } else if (level == C_LOG_STATUS) {
                         snprintf(fmt2, sizeof(fmt2), "\n%s(): %s --",
                                  function, fmt);
-                        margin = 4 + (int)strlen(function);
+                        margin = 4 + C_strlen(function);
                 } else if (level == C_LOG_WARNING) {
                         snprintf(fmt2, sizeof(fmt2), "* %s(): %s",
                                  function, fmt);
-                        margin = 6 + (int)strlen(function);
+                        margin = 6 + C_strlen(function);
                 } else {
                         snprintf(fmt2, sizeof(fmt2), "*** %s(): %s",
                                  function, fmt);
-                        margin = 8 + (int)strlen(function);
+                        margin = 8 + C_strlen(function);
                 }
         } else if (c_log_level.value.n >= C_LOG_TRACE) {
                 margin = 8;
