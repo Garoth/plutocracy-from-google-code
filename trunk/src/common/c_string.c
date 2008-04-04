@@ -15,7 +15,10 @@
 #include "c_shared.h"
 
 /* This file legitimately uses standard library string and file I/O functions */
+#ifdef PLUTOCRACY_LIBC_ERRORS
+#undef strlen
 #undef fclose
+#endif
 
 /******************************************************************************\
  These functions parse variable argument lists into a static buffer and return

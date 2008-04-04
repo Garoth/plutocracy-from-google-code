@@ -16,10 +16,12 @@
 
 /* This is the only file that legitimately uses standard library allocation
    and freeing functions */
+#ifdef PLUTOCRACY_LIBC_ERRORS
 #undef calloc
 #undef free
 #undef malloc
 #undef realloc
+#endif
 
 /* When memory checking is enabled, this structure is prepended to every
    allocated block. There is also a no-mans-land chunk, filled with a specific
