@@ -24,9 +24,6 @@ static int grabbing, grab_x, grab_y;
 
 /******************************************************************************\
  Root window event function.
- TODO: Stuff like rotating the globe and other interactions will happen here
-       because this is the catch all for mouse/keyboard events that don't get
-       handled.
 \******************************************************************************/
 static int root_event(i_widget_t *root, i_event_t event)
 {
