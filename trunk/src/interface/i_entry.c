@@ -17,24 +17,27 @@
 \******************************************************************************/
 static void entry_set_pos(i_entry_t *entry, int pos)
 {
-        size_t len;
         float diff;
+        int buffer_len, buffer_chars, buf_i, pos_i;
         char buf[256];
 
         /* Make sure position stays in range */
+        buffer_len = C_utf8_strlen(entry->buffer, &buffer_chars);
         if (pos < 0)
                 pos = 0;
-        len = strlen(entry->buffer);
-        if (len > sizeof (buf))
-                len = sizeof (buf);
-        if (pos > len)
-                pos = len;
+        if (pos > buffer_chars)
+                pos = buffer_chars;
+        pos_i = C_utf8_index(entry->buffer, pos);
 
         /* Render the inverted cursor character */
-        buf[0] = entry->buffer[pos];
-        if (buf[0] < ' ')
+        if (entry->buffer[pos_i]) {
+                buf_i = 0;
+                C_utf8_append(buf, &buf_i, sizeof (buf), entry->buffer + pos_i);
+                buf[buf_i] = NUL;
+        } else {
                 buf[0] = ' ';
-        buf[1] = NUL;
+                buf[1] = NUL;
+        }
         R_sprite_cleanup(&entry->cursor);
         R_sprite_init_text(&entry->cursor, R_FONT_CONSOLE, 0,
                            i_shadow.value.f, TRUE, buf);
@@ -43,8 +46,8 @@ static void entry_set_pos(i_entry_t *entry, int pos)
         if (pos > 0) {
                 c_vec2_t size;
 
-                memcpy(buf, entry->buffer, pos);
-                buf[pos] = NUL;
+                memcpy(buf, entry->buffer, pos_i);
+                buf[pos_i] = NUL;
                 size = C_vec2_divf(R_font_size(R_FONT_CONSOLE, buf),
                                    r_pixel_scale.value.f);
                 entry->cursor.origin.x += size.x;
@@ -88,15 +91,18 @@ static void entry_moved(i_entry_t *entry)
 \******************************************************************************/
 static void entry_delete(i_entry_t *entry, int pos)
 {
-        size_t len;
+        int buffer_len, size, pos_i;
 
         if (pos < 0)
                 return;
-        len = strlen(entry->buffer);
-        if (pos >= len)
+        buffer_len = C_strlen(entry->buffer);
+        pos_i = C_utf8_index(entry->buffer, entry->pos);
+        if (pos_i >= buffer_len)
                 return;
-        memmove(entry->buffer + pos, entry->buffer + pos + 1, len - pos - 1);
-        entry->buffer[len - 1] = NUL;
+        size = C_utf8_size(entry->buffer[pos_i]);
+        memmove(entry->buffer + pos_i, entry->buffer + pos_i + size,
+                buffer_len - pos_i - size);
+        entry->buffer[buffer_len - size] = NUL;
         entry->pos = pos;
         R_sprite_cleanup(&entry->text);
         R_sprite_init_text(&entry->text, R_FONT_CONSOLE, 0,
@@ -106,21 +112,24 @@ static void entry_delete(i_entry_t *entry, int pos)
 }
 
 /******************************************************************************\
- Insert a character into an entry widget buffer.
+ Insert a Unicode character into an entry widget buffer.
 \******************************************************************************/
-static void entry_insert(i_entry_t *entry, char ch)
+static void entry_insert(i_entry_t *entry, int ch)
 {
-        size_t len;
+        char *str;
+        int pos_i, buffer_len, str_len;
 
-        len = strlen(entry->buffer);
-        if (len >= sizeof (entry->buffer))
+        str = C_utf8_encode(ch, &str_len);
+        buffer_len = C_strlen(entry->buffer);
+        if (buffer_len >= sizeof (entry->buffer) - str_len)
                 return;
-        if (entry->pos < len)
-                memmove(entry->buffer + entry->pos + 1,
-                        entry->buffer + entry->pos, len - entry->pos);
-        entry->buffer[entry->pos++] = ch;
-        if (entry->pos > len)
-                entry->buffer[entry->pos] = NUL;
+        pos_i = C_utf8_index(entry->buffer, entry->pos);
+        if (pos_i < buffer_len)
+                memmove(entry->buffer + pos_i + str_len,
+                        entry->buffer + pos_i, buffer_len - pos_i);
+        memcpy(entry->buffer + pos_i, str, str_len);
+        entry->pos++;
+        entry->buffer[buffer_len + str_len] = NUL;
         R_sprite_cleanup(&entry->text);
         R_sprite_init_text(&entry->text, R_FONT_CONSOLE, 0,
                            i_shadow.value.f, FALSE, entry->buffer);
@@ -178,7 +187,6 @@ static void entry_history_save(i_entry_t *entry)
 
 /******************************************************************************\
  Entry widget event function.
- FIXME: Unicode input
  TODO: Horizontal packing
 \******************************************************************************/
 int I_entry_event(i_entry_t *entry, i_event_t event)

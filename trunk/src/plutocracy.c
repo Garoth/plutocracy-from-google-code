@@ -129,7 +129,7 @@ static void main_loop(void)
 \******************************************************************************/
 static void parse_config_args(int argc, char *argv[])
 {
-        int i;
+        int i, len;
         char buffer[4096], *pos;
 
         if (argc < 2)
@@ -138,9 +138,7 @@ static void parse_config_args(int argc, char *argv[])
         buffer[0] = NUL;
         pos = buffer;
         for (i = 1; i < argc; i++) {
-                size_t len;
-
-                len = strlen(argv[i]);
+                len = C_strlen(argv[i]);
                 if (pos + len >= buffer + sizeof (buffer)) {
                         C_warning("Command-line config overflowed");
                         return;

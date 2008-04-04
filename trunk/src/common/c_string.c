@@ -14,7 +14,8 @@
 
 #include "c_shared.h"
 
-/* This file legitimately uses standard library file I/O functions */
+/* This file legitimately uses standard library string and file I/O functions */
+#undef strlen
 #undef fclose
 
 /******************************************************************************\
@@ -425,6 +426,145 @@ char *C_escape_string(const char *str)
         }
         *pbuf++ = '"';
         *pbuf = NUL;
+        return buf;
+}
+
+/******************************************************************************\
+ Returns the number of bytes in a single UTF-8 character:
+ http://www.cl.cam.ac.uk/%7Emgk25/unicode.html#utf-8
+\******************************************************************************/
+int C_utf8_size(unsigned char first_byte)
+{
+        /* U-00000000 – U-0000007F (ASCII) */
+        if (first_byte < 192)
+                return 1;
+
+        /* U-00000080 – U-000007FF */
+        else if (first_byte < 224)
+                return 2;
+
+        /* U-00000800 – U-0000FFFF */
+        else if (first_byte < 240)
+                return 3;
+
+        /* U-00010000 – U-001FFFFF */
+        else if (first_byte < 248)
+                return 4;
+
+        /* U-00200000 – U-03FFFFFF */
+        else if (first_byte < 252)
+                return 5;
+
+        /* U-04000000 – U-7FFFFFFF */
+        return 6;
+}
+
+/******************************************************************************\
+ Returns the index of the [n]th UTF-8 character in [str].
+\******************************************************************************/
+int C_utf8_index(char *str, int n)
+{
+        int i, len;
+
+        for (i = 0; n > 0; n--)
+                for (len = C_utf8_size(str[i]); len > 0; len--, i++)
+                        if (!str[i])
+                                return i;
+        return i;
+}
+
+/******************************************************************************\
+ Equivalent to the standard library strlen but returns zero if the string is
+ NULL. If [chars] is not NULL, the number of UTF-8 characters will be output
+ to it. Note that if the number of UTF-8 characters is not needed, C_strlen()
+ is preferrable to this function.
+\******************************************************************************/
+int C_utf8_strlen(const char *str, int *chars)
+{
+        int i, str_len, char_len;
+
+        if (!str || !str[0]) {
+                if (chars)
+                        *chars = 0;
+                return 0;
+        }
+        char_len = C_utf8_size(*str);
+        for (i = 0, str_len = 1; str[i]; char_len--, i++)
+                if (char_len < 1) {
+                        str_len++;
+                        char_len = C_utf8_size(str[i]);
+                }
+        if (chars)
+                *chars = str_len;
+        return i;
+}
+
+/******************************************************************************\
+ One UTF-8 character from [src] will be copied to [dest]. The index of the
+ current position in [dest], [dest_i] and the index in [src], [src_i], will
+ be advanced accordingly. [dest] will not be allowed to overrun [dest_sz]
+ bytes. Returns the size of the UTF-8 character or 0 if there is not enough
+ room or if [src] starts with NUL.
+\******************************************************************************/
+int C_utf8_append(char *dest, int *dest_i, size_t dest_sz, const char *src)
+{
+        int len, char_len;
+
+        if (!*src)
+                return 0;
+        char_len = C_utf8_size(*src);
+        if (*dest_i + char_len > dest_sz)
+                return 0;
+        for (len = char_len; *src && len > 0; len--)
+                dest[(*dest_i)++] = *src++;
+        return char_len;
+}
+
+/******************************************************************************\
+ Convert a Unicode token to a UTF-8 character sequence. The length of the
+ token in bytes is output to [plen], which can be NULL.
+\******************************************************************************/
+char *C_utf8_encode(int unicode, int *plen)
+{
+        static char buf[7];
+        int i, len;
+
+        /* ASCII is an exception */
+        if (unicode <= 0x7f) {
+                buf[0] = unicode;
+                buf[1] = NUL;
+                if (plen)
+                        *plen = 1;
+                return buf;
+        }
+
+        /* Size of the sequence depends on the range */
+        if (unicode <= 0xff)
+                len = 2;
+        else if (unicode <= 0xffff)
+                len = 3;
+        else if (unicode <= 0x1fffff)
+                len = 4;
+        else if (unicode <= 0x3FFFFFF)
+                len = 5;
+        else if (unicode <= 0x7FFFFFF)
+                len = 6;
+        else {
+                C_warning("Invalid Unicode character 0x%8x", unicode);
+                buf[0] = NUL;
+                if (plen)
+                        *plen = 0;
+                return buf;
+        }
+        if (plen)
+                *plen = len;
+
+        /* The first byte is 0b*110x* and the rest are 0b10xxxxxx */
+        buf[0] = 0xfc << (6 - len);
+        for (i = 0; i < len; i++) {
+                buf[i] = unicode & 0x3f;
+                unicode >>= 6;
+        }
         return buf;
 }
 
