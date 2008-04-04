@@ -15,7 +15,6 @@
 #include "c_shared.h"
 
 /* This file legitimately uses standard library string and file I/O functions */
-#undef strlen
 #undef fclose
 
 /******************************************************************************\
