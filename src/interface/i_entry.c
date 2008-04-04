@@ -236,7 +236,7 @@ int I_entry_event(i_entry_t *entry, i_event_t event)
                         entry_history_save(entry);
                         entry->on_enter(entry);
                 }
-                if (i_key >= ' ' && i_key < 0x7f)
+                if (i_key >= ' ' && i_key_unicode)
                         entry_insert(entry, i_key_unicode);
                 break;
         case I_EV_RENDER:
