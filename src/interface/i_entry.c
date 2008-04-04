@@ -96,7 +96,7 @@ static void entry_delete(i_entry_t *entry, int pos)
         if (pos < 0)
                 return;
         buffer_len = C_strlen(entry->buffer);
-        pos_i = C_utf8_index(entry->buffer, entry->pos);
+        pos_i = C_utf8_index(entry->buffer, pos);
         if (pos_i >= buffer_len)
                 return;
         size = C_utf8_size(entry->buffer[pos_i]);
