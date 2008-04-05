@@ -526,10 +526,10 @@ int C_utf8_append(char *dest, int *dest_i, size_t dest_sz, const char *src)
  Convert a Unicode token to a UTF-8 character sequence. The length of the
  token in bytes is output to [plen], which can be NULL.
 \******************************************************************************/
-char *C_utf8_encode(int unicode, int *plen)
+char *C_utf8_encode(unsigned int unicode, int *plen)
 {
         static char buf[7];
-        int i, len;
+        int len;
 
         /* ASCII is an exception */
         if (unicode <= 0x7f) {
@@ -563,10 +563,11 @@ char *C_utf8_encode(int unicode, int *plen)
 
         /* The first byte is 0b*110x* and the rest are 0b10xxxxxx */
         buf[0] = 0xfc << (6 - len);
-        for (i = 0; i < len; i++) {
-                buf[i] = unicode & 0x3f;
+        while (--len > 0) {
+                buf[len] = 0x80 + (unicode & 0x3f);
                 unicode >>= 6;
         }
+        buf[0] += unicode;
         return buf;
 }
 
