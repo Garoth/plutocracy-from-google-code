@@ -321,6 +321,7 @@ extern int c_time_msec, c_frame_msec, c_frame;
 extern float c_frame_sec;
 
 /* c_variables.c */
+const char *C_auto_complete(const char *);
 void C_cleanup_variables(void);
 int C_parse_config_file(const char *filename);
 void C_parse_config_string(const char *string);

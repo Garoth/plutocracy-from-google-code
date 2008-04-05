@@ -87,6 +87,18 @@ static void entry_moved(i_entry_t *entry)
 }
 
 /******************************************************************************\
+ Reinitializes the entry widget sprites after the buffer is modified.
+\******************************************************************************/
+static void entry_modified(i_entry_t *entry)
+{
+        R_sprite_cleanup(&entry->text);
+        R_sprite_init_text(&entry->text, R_FONT_CONSOLE, 0,
+                           i_shadow.value.f, FALSE, entry->buffer);
+        entry->text.modulate = i_colors[I_COLOR];
+        entry_moved(entry);
+}
+
+/******************************************************************************\
  Delete a character from an entry widget buffer.
 \******************************************************************************/
 static void entry_delete(i_entry_t *entry, int pos)
@@ -104,11 +116,7 @@ static void entry_delete(i_entry_t *entry, int pos)
                 buffer_len - pos_i - size);
         entry->buffer[buffer_len - size] = NUL;
         entry->pos = pos;
-        R_sprite_cleanup(&entry->text);
-        R_sprite_init_text(&entry->text, R_FONT_CONSOLE, 0,
-                           i_shadow.value.f, FALSE, entry->buffer);
-        entry->text.modulate = i_colors[I_COLOR];
-        entry_moved(entry);
+        entry_modified(entry);
 }
 
 /******************************************************************************\
@@ -130,11 +138,7 @@ static void entry_insert(i_entry_t *entry, int ch)
         memcpy(entry->buffer + pos_i, str, str_len);
         entry->pos++;
         entry->buffer[buffer_len + str_len] = NUL;
-        R_sprite_cleanup(&entry->text);
-        R_sprite_init_text(&entry->text, R_FONT_CONSOLE, 0,
-                           i_shadow.value.f, FALSE, entry->buffer);
-        entry->text.modulate = i_colors[I_COLOR];
-        entry_moved(entry);
+        entry_modified(entry);
 }
 
 /******************************************************************************\
@@ -183,6 +187,45 @@ static void entry_history_save(i_entry_t *entry)
         C_strncpy_buf(entry->history[1], entry->buffer);
         entry->history_size++;
         entry->history_pos = 0;
+}
+
+/******************************************************************************\
+ Entry widget autocomplete.
+\******************************************************************************/
+static void entry_auto_complete(i_entry_t *entry)
+{
+        const char *token;
+        char *head, *tail;
+        int pos_i, swap, head_chars, tail_len, token_len, token_chars;
+
+        pos_i = C_utf8_index(entry->buffer, entry->pos);
+
+        /* Isolate and lookup the token we are trying to complete */
+        head = tail = entry->buffer + pos_i;
+        if (pos_i > 0)
+                do {
+                        head--;
+                } while (head > entry->buffer && !C_is_space(head[-1]));
+        while (*tail && !C_is_space(*tail))
+                tail++;
+        swap = *tail;
+        *tail = NUL;
+        C_utf8_strlen(head, &head_chars);
+        token = C_auto_complete(head);
+        *tail = swap;
+        if (!token[0])
+                return;
+
+        /* Add the returned string to the end of the current token */
+        token_len = C_utf8_strlen(token, &token_chars);
+        tail_len = C_strlen(tail);
+        if (tail + token_len + tail_len > entry->buffer +
+                                          sizeof (entry->buffer))
+                return;
+        memmove(tail + token_len, tail, tail_len);
+        memcpy(tail, token, token_len);
+        entry_modified(entry);
+        entry_set_pos(entry, pos_i + head_chars + token_chars);
 }
 
 /******************************************************************************\
@@ -235,7 +278,9 @@ int I_entry_event(i_entry_t *entry, i_event_t event)
                 else if (i_key == SDLK_RETURN && entry->on_enter) {
                         entry_history_save(entry);
                         entry->on_enter(entry);
-                } else if (i_key >= ' ' && i_key_unicode)
+                } else if (i_key == SDLK_TAB)
+                        entry_auto_complete(entry);
+                else if (i_key >= ' ' && i_key_unicode)
                         entry_insert(entry, i_key_unicode);
                 break;
         case I_EV_RENDER:
