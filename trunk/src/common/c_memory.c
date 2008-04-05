@@ -44,7 +44,7 @@ static int mem_calls;
 /******************************************************************************\
  Initialize an array.
 \******************************************************************************/
-void C_array_init_real(c_array_t *ary, size_t item_size, size_t cap)
+void C_array_init_full(c_array_t *ary, int item_size, int cap)
 {
         ary->item_size = item_size;
         ary->len = 0;
@@ -56,7 +56,7 @@ void C_array_init_real(c_array_t *ary, size_t item_size, size_t cap)
  Ensure that enough space is allocated for n elems, but not necessarily more.
  Returns TRUE on success.
 \******************************************************************************/
-void C_array_reserve(c_array_t *ary, size_t n)
+void C_array_reserve(c_array_t *ary, int n)
 {
         ary->elems = C_realloc(ary->elems, ary->item_size * n);
         ary->capacity = n;

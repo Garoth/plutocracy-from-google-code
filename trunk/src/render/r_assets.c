@@ -82,8 +82,9 @@ void R_SDL_put_pixel(SDL_Surface *surf, int x, int y, c_color_t color)
 
         bpp = surf->format->BytesPerPixel;
         p = (Uint8 *)surf->pixels + y * surf->pitch + x * bpp;
-        pixel = SDL_MapRGBA(surf->format, 255.f * color.r, 255.f * color.g,
-                            255.f * color.b, 255.f * color.a);
+        pixel = SDL_MapRGBA(surf->format, (Uint8)(255.f * color.r),
+                            (Uint8)(255.f * color.g), (Uint8)(255.f * color.b),
+                            (Uint8)(255.f * color.a));
         switch(bpp) {
         case 1: *p = pixel;
                 break;
@@ -335,7 +336,7 @@ c_vec2_t R_font_size(r_font_t font, const char *text)
         int w, h;
 
         TTF_SizeUTF8(fonts[font].ttf_font, text, &w, &h);
-        return C_vec2(w, h);
+        return C_vec2((float)w, (float)h);
 }
 
 /******************************************************************************\
@@ -393,7 +394,7 @@ static void load_font(r_font_t font, const char *path, int size)
 {
         int points;
 
-        points = ceilf(size * r_pixel_scale.value.f);
+        points = (int)ceilf(size * r_pixel_scale.value.f);
         if (points < R_FONT_SIZE_MIN)
                 points = R_FONT_SIZE_MIN;
         C_zero(fonts + font);
@@ -408,7 +409,7 @@ static void load_font(r_font_t font, const char *path, int size)
 
         /* SDL_ttf won't tell us the width of the widest glyph directly so we
            assume it is the width of 'W' */
-        fonts[font].width = R_font_size(font, "W").x;
+        fonts[font].width = (int)R_font_size(font, "W").x;
 }
 
 /******************************************************************************\
