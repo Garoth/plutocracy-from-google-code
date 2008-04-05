@@ -298,7 +298,7 @@ void C_token_file_init_string(c_token_file_t *, const char *string);
 const char *C_token_file_read_full(c_token_file_t *, int *out_quoted);
 #define C_token_file_read(f) C_token_file_read_full(f, NULL)
 int C_utf8_append(char *dest, int *dest_i, size_t dest_sz, const char *src);
-char *C_utf8_encode(int unicode, int *len);
+char *C_utf8_encode(unsigned int unicode, int *len);
 int C_utf8_index(char *str, int n);
 int C_utf8_size(unsigned char first_byte);
 int C_utf8_strlen(const char *, int *utf8_chars);
