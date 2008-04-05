@@ -27,8 +27,12 @@
 #define R_FONT_SIZE_MIN 10
 
 /* Ranges for zooming in and out */
-#define R_ZOOM_MIN 10.f
-#define R_ZOOM_MAX 40.f
+#define R_ZOOM_MIN 8.f
+#define R_ZOOM_MAX 16.f
+
+/* OpenGL cannot address enough vertices to render more than 5 subdivisons'
+   worth of tiles */
+#define R_TILES_MAX 20480
 
 /* Opaque texture object */
 typedef struct r_texture r_texture_t;
@@ -76,6 +80,12 @@ typedef struct r_window {
         c_vec2_t corner;
 } r_window_t;
 
+/* Structure that contains configuration parameters for a tile */
+typedef struct r_tile {
+        float height;
+        int terrain;
+} r_tile_t;
+
 /* r_assets.c */
 int R_font_height(r_font_t);
 int R_font_line_skip(r_font_t);
@@ -85,8 +95,13 @@ void R_free_fonts(void);
 void R_load_fonts(void);
 
 /* r_globe.c */
+void R_configure_globe(r_tile_t *array);
 void R_generate_globe(int seed, int subdiv4);
+void R_get_tile_coords(int index, c_vec3_t verts[3]);
+void R_find_tile_neighbors(int index, int neighbors[3]);
 float R_screen_to_globe(int pixels);
+
+extern int r_tiles;
 
 /* r_model.c */
 void R_model_cleanup(r_model_t *);

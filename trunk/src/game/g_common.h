@@ -16,8 +16,8 @@
 
 /* A tile on the globe */
 typedef struct g_tile {
-        c_vec3_t corners[3];
-        struct g_tile *neighbors[6];
+        r_tile_t *render;
+        struct g_tile *neighbors[3];
 } g_tile_t;
 
 /* g_globe.c */

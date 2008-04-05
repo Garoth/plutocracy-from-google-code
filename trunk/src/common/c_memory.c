@@ -198,9 +198,11 @@ static void *realloc_checked(const char *file, int line, const char *function,
 void *C_realloc_full(const char *file, int line, const char *function,
                      void *ptr, size_t size)
 {
-        if (c_mem_check.edit != C_VE_LOCKED) {
+        static int inited;
+
+        if (!inited) {
+                inited = TRUE;
                 C_var_unlatch(&c_mem_check);
-                c_mem_check.edit = C_VE_LOCKED;
         }
         if (c_mem_check.value.n)
                 return realloc_checked(file, line, function, ptr, size);

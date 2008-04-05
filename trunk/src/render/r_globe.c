@@ -12,16 +12,14 @@
 
 #include "r_common.h"
 
-/* Icosahderal sphere sub-divided 6 times yields 40,962 tiles
-   http://student.ulb.ac.be/~claugero/sphere/index.html */
-#define ITERATIONS_MAX 6
-#define TILES_MAX 40962
+#define ITERATIONS_MAX 5
+
+int r_tiles;
 
 static r_texture_t *texture;
-static r_vertex3_t vertices[TILES_MAX * 3];
-static unsigned short indices[TILES_MAX * 3];
+static r_vertex3_t vertices[R_TILES_MAX * 3];
+static unsigned short indices[R_TILES_MAX * 3], rings[R_TILES_MAX * 3];
 static float radius;
-static int tiles;
 
 /******************************************************************************\
  Cleanup globe assets.
@@ -40,7 +38,7 @@ static void sphericize(void)
         int i;
 
         origin = C_vec3(0.f, 0.f, 0.f);
-        for (i = 0; i < tiles * 3; i++)
+        for (i = 0; i < r_tiles * 3; i++)
                 vertices[i].co = C_vec3_scalef(vertices[i].co, radius /
                                                C_vec3_len(vertices[i].co));
 }
@@ -54,7 +52,8 @@ static void subdivide4(void)
         r_vertex3_t *verts;
         int j;
 
-        for (j = 0; j < tiles; j++) {
+        C_trace("Subdividing globe");
+        for (j = 0; j < r_tiles; j++) {
                 mid_0_1 = C_vec3_add(vertices[3 * j].co,
                                      vertices[3 * j + 1].co);
                 mid_0_1 = C_vec3_divf(mid_0_1, 2.f);
@@ -66,7 +65,7 @@ static void subdivide4(void)
                 mid_1_2 = C_vec3_divf(mid_1_2, 2.f);
 
                 /* Top triangle (0) */
-                verts = vertices + 3 * tiles + 9 * j;
+                verts = vertices + 3 * r_tiles + 9 * j;
                 verts[0].co = vertices[3 * j].co;
                 verts[1].co = mid_0_1;
                 verts[2].co = mid_0_2;
@@ -86,7 +85,7 @@ static void subdivide4(void)
                 vertices[3 * j + 1].co = mid_0_2;
                 vertices[3 * j + 2].co = mid_0_1;
         }
-        tiles *= 4;
+        r_tiles *= 4;
         radius *= 2;
         sphericize();
 }
@@ -100,7 +99,6 @@ static void subdivide4(void)
  We need to have duplicates however because we keep three vertices for each
  face, regardless of unique position because their UV coordinates will probably
  be different.
-
 \******************************************************************************/
 static void generate_icosahedron(void)
 {
@@ -164,8 +162,30 @@ static void generate_icosahedron(void)
         vertices[57]    = vertices[45];
         vertices[58]    = vertices[30];
         vertices[59]    = vertices[38];
-        tiles = 20;
+        r_tiles = 20;
         radius = sqrtf(C_TAU + 2);
+}
+
+/******************************************************************************\
+ Generates the vertex rings structure. This is used to store all identical
+ vertices (by coordinate position) in a circular linked list. Each member of
+ the [rings] array contains a pointer to the next ring member for that vertex.
+ This greatly speeds up finding neighbors later on.
+\******************************************************************************/
+static void generate_rings(void)
+{
+        int i, j;
+
+        C_debug("Generating rings");
+        for (i = 0; i < r_tiles * 3; i++) {
+                rings[i] = i;
+                for (j = 0; j < i; j++)
+                        if (C_vec3_eq(vertices[rings[j]].co, vertices[i].co)) {
+                                rings[i] = rings[j];
+                                rings[j] = i;
+                                break;
+                        }
+        }
 }
 
 /******************************************************************************\
@@ -176,6 +196,14 @@ void R_generate_globe(int seed, int subdiv4)
 {
         int i;
 
+        if (subdiv4 < 1)
+                subdiv4 = 1;
+        else if (subdiv4 > ITERATIONS_MAX) {
+                subdiv4 = ITERATIONS_MAX;
+                C_warning("Too many subdivisions requested");
+        }
+        C_debug("Generating globe with seed 0x%8x and %d subdivisions",
+                seed, subdiv4);
         C_rand_seed(seed);
         memset(vertices, 0, sizeof (vertices));
         generate_icosahedron();
@@ -183,23 +211,14 @@ void R_generate_globe(int seed, int subdiv4)
         /* Subdivide triangle faces */
         for (i = 0; i < subdiv4; i++)
                 subdivide4();
+        generate_rings();
 
-        for (i = 0; i < tiles; i++) {
+        for (i = 0; i < r_tiles; i++) {
 
                 /* Set normals away from origin */
                 vertices[3 * i].no = C_vec3_norm(vertices[3 * i].co);
                 vertices[3 * i + 1].no = C_vec3_norm(vertices[3 * i + 1].co);
                 vertices[3 * i + 2].no = C_vec3_norm(vertices[3 * i + 2].co);
-
-                /* Testing UV coordinates */
-                vertices[3 * i].uv = C_vec2(0.f, 0.f);
-                if (C_rand() & 1) {
-                        vertices[3 * i + 1].uv = C_vec2(0.f, 1.f);
-                        vertices[3 * i + 2].uv = C_vec2(1.f, 1.f);
-                } else {
-                        vertices[3 * i + 1].uv = C_vec2(1.f, 1.f);
-                        vertices[3 * i + 2].uv = C_vec2(1.f, 0.f);
-                }
 
                 /* Set indices. This is dumb because we don't take advantage of
                    duplicate vertices, but OpenGL API requires it. */
@@ -230,10 +249,10 @@ void R_render_globe(void)
         glEnable(GL_LIGHT0);
         glLightfv(GL_LIGHT0, GL_POSITION, left);
 
-        C_count_add(&r_count_faces, tiles);
+        C_count_add(&r_count_faces, r_tiles);
         glColor4f(1.f, 1.f, 1.f, 1.f);
         glInterleavedArrays(R_VERTEX3_FORMAT, 0, vertices);
-        glDrawElements(GL_TRIANGLES, 3 * tiles, GL_UNSIGNED_SHORT, indices);
+        glDrawElements(GL_TRIANGLES, 3 * r_tiles, GL_UNSIGNED_SHORT, indices);
 
         R_check_errors();
 
@@ -248,5 +267,106 @@ float R_screen_to_globe(int pixels)
 {
         return 0.04f * r_pixel_scale.value.f * pixels /
                (r_cam_dist - r_cam_zoom);
+}
+
+/******************************************************************************\
+ Returns the vertices associated with a specific tile via [verts].
+\******************************************************************************/
+void R_get_tile_coords(int index, c_vec3_t verts[3])
+{
+        verts[0] = vertices[3 * index].co;
+        verts[1] = vertices[3 * index + 1].co;
+        verts[2] = vertices[3 * index + 2].co;
+}
+
+/******************************************************************************\
+ Fills [verts] with the vertex indices of vertices that match [vert]. Returns
+ the number of entries that are used.
+\******************************************************************************/
+static int vertex_indices(int vert, int verts[6])
+{
+        int i, pos;
+
+        verts[0] = vert;
+        pos = rings[vert];
+        for (i = 1; pos != vert; i++) {
+                if (i > 5)
+                        C_error("Ring for vertex %d overflowed", vert);
+                verts[i] = pos;
+                pos = rings[pos];
+        }
+        if (i < 5)
+                C_error("Ring for vertex %d underflowed", vert);
+        return i;
+}
+
+/******************************************************************************\
+ Adjusts the height of an individual vertex.
+\******************************************************************************/
+static void add_vertex_height(int index, float height)
+{
+        float dist;
+
+        dist = C_vec3_len(vertices[index].co);
+        vertices[index].co = C_vec3_scalef(vertices[index].co,
+                                           (dist + height) / dist);
+}
+
+/******************************************************************************\
+ Adjusts globe verices to show the tile's height.
+\******************************************************************************/
+void R_configure_globe(r_tile_t *tiles)
+{
+        float height;
+        int i, j, k, verts[6], verts_len, tx, ty;
+
+        C_debug("Configuring globe");
+        for (i = 0; i < r_tiles; i++) {
+
+                /* Set tile height */
+                for (j = 0; j < 3; j++) {
+                        verts_len = vertex_indices(3 * i + j, verts);
+                        height = tiles[i].height / verts_len;
+                        for (k = 0; k < verts_len; k++)
+                                add_vertex_height(verts[k], height);
+                }
+
+                /* Tile texture */
+                ty = tiles[i].terrain / 16;
+                tx = tiles[i].terrain - ty * 16;
+                vertices[3 * i].uv = C_vec2(tx * 0.25f + 0.125f, ty * 0.25f);
+                vertices[3 * i + 1].uv = C_vec2(tx * 0.25f, (ty + 1) * 0.25f);
+                vertices[3 * i + 2].uv = C_vec2((tx + 1) * 0.25f,
+                                                (ty + 1) * 0.25f);
+        }
+}
+
+/******************************************************************************\
+ Finds all tiles that share an edge with this tile.
+\******************************************************************************/
+void R_find_tile_neighbors(int index, int neighbors[3])
+{
+        int i, j, neighbors_len, tile, tiles[12];
+        unsigned short original, pos;
+
+        neighbors_len = 0;
+        tiles[0] = -1;
+        for (i = 0; i < 3; i++) {
+                pos = rings[original = rings[3 * index + i]];
+                while (pos != original) {
+                        tile = pos / 3;
+                        for (j = 0; tiles[j] >= 0; j++)
+                                if (tiles[j] == tile) {
+                                        neighbors[neighbors_len++] = tile;
+                                        if (neighbors_len >= 3)
+                                                return;
+                                        goto next_tile;
+                                }
+                        tiles[j] = tile;
+                        tiles[j + 1] = -1;
+next_tile:              pos = rings[pos];
+                }
+        }
+        C_error("Tile %d does not have three neighbors", index);
 }
 

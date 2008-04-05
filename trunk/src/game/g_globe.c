@@ -12,6 +12,9 @@
 
 #include "g_common.h"
 
+static r_tile_t render_tiles[R_TILES_MAX];
+g_tile_t g_tiles[R_TILES_MAX];
+
 /******************************************************************************\
  Render the game elements.
 \******************************************************************************/
@@ -20,12 +23,33 @@ void G_render(void)
 }
 
 /******************************************************************************\
+ Find each tile's neighbors and set fields.
+\******************************************************************************/
+static void setup_tiles(void)
+{
+        int i, j, neighbors[3];
+
+        C_debug("Locating tile neighbors");
+        for (i = 0; i < r_tiles; i++) {
+                R_find_tile_neighbors(i, neighbors);
+                for (j = 0; j < 3; j++)
+                        g_tiles[i].neighbors[j] = g_tiles + neighbors[j];
+                C_zero(render_tiles + i);
+                render_tiles[i].height = C_rand_real() * 3;
+                g_tiles[i].render = render_tiles + i;
+        }
+}
+
+/******************************************************************************\
  Initialize an idle globe.
 \******************************************************************************/
 void G_init(void)
 {
+        C_status("Generating globe");
         C_var_unlatch(&g_globe_seed);
         C_var_unlatch(&g_globe_subdiv4);
         R_generate_globe(g_globe_seed.value.n, g_globe_subdiv4.value.n);
+        setup_tiles();
+        R_configure_globe(render_tiles);
 }
 
