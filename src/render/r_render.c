@@ -218,6 +218,7 @@ void R_init(void)
         check_gl_extensions();
         set_gl_state();
         R_clip_disable();
+        r_cam_zoom = (R_ZOOM_MAX - R_ZOOM_MIN) / 2.f;
 
         /* Everything should be ready to load assets now */
         R_load_assets();

@@ -196,7 +196,8 @@ static void entry_auto_complete(i_entry_t *entry)
 {
         const char *token;
         char *head, *tail;
-        int pos_i, swap, head_chars, tail_len, token_len, token_chars;
+        int pos_i, swap, prehead_chars, head_chars, tail_len,
+            token_len, token_chars;
 
         pos_i = C_utf8_index(entry->buffer, entry->pos);
 
@@ -208,6 +209,10 @@ static void entry_auto_complete(i_entry_t *entry)
                 } while (head > entry->buffer && !C_is_space(head[-1]));
         while (*tail && !C_is_space(*tail))
                 tail++;
+        swap = *head;
+        *head = NUL;
+        C_utf8_strlen(entry->buffer, &prehead_chars);
+        *head = swap;
         swap = *tail;
         *tail = NUL;
         C_utf8_strlen(head, &head_chars);
@@ -225,7 +230,7 @@ static void entry_auto_complete(i_entry_t *entry)
         memmove(tail + token_len, tail, tail_len);
         memcpy(tail, token, token_len);
         entry_modified(entry);
-        entry_set_pos(entry, pos_i + head_chars + token_chars);
+        entry_set_pos(entry, prehead_chars + head_chars + token_chars);
 }
 
 /******************************************************************************\
