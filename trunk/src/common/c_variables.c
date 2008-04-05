@@ -87,16 +87,29 @@ void C_cleanup_variables(void)
 void C_var_register(c_var_t *var, const char *name, c_var_type_t type,
                     c_var_value_t value)
 {
+        c_var_t *pos, *prev;
+
         if (var->type)
                 C_error("Attempted to re-register '%s' with '%s'",
                         var->name, name);
-        var->next = root;
         var->type = type;
         var->name = name;
         var->stock = var->latched = var->value = value;
         var->edit = C_VE_LATCHED;
         var->archive = TRUE;
-        root = var;
+
+        /* Attach the var to the linked list, sorted alphabetically */
+        prev = NULL;
+        pos = root;
+        while (pos && strcasecmp(var->name, pos->name) > 0) {
+                prev = pos;
+                pos = pos->next;
+        }
+        var->next = pos;
+        if (prev)
+                prev->next = var;
+        if (pos == root)
+                root = var;
 }
 
 void C_register_float(c_var_t *var, const char *name, float value_f)
@@ -405,3 +418,46 @@ void C_write_autogen(void)
         C_debug("Saved autogen config");
 }
 
+/******************************************************************************\
+ Find all the cvars that start with [str] a string containing any additional
+ characters that are shared by all candidates. If there is more than one
+ match, the possible matches are printed to the console.
+\******************************************************************************/
+const char *C_auto_complete(const char *str)
+{
+        static char buf[128];
+        c_var_t *var, *matches[100];
+        int i, j, str_len, matches_len, common;
+
+        /* Find all cvars that match [str] */
+        str_len = C_strlen(str);
+        matches_len = 0;
+        for (var = root; var; var = var->next)
+                if (!strncasecmp(var->name, str, str_len)) {
+                        matches[matches_len++] = var;
+                        if (matches_len >= sizeof (matches) / sizeof (*matches))
+                                break;
+                }
+        if (matches_len < 1)
+                return "";
+        if (matches_len < 2)
+                return matches[0]->name + str_len;
+
+        /* Check for a longer common root */
+        common = C_strlen(matches[0]->name);
+        for (i = 1; i < matches_len; i++) {
+                for (j = str_len; matches[i]->name[j] == matches[0]->name[j];
+                     j++);
+                if (j < common)
+                        common = j;
+        }
+        memcpy(buf, matches[0]->name + str_len, common - str_len);
+        buf[common - str_len] = NUL;
+
+        /* Output all of the matched vars to the console */
+        C_print(C_va("\n%d matches:", matches_len));
+        for (i = 0; i < matches_len; i++)
+                C_print(C_va("    %s", matches[i]->name));
+
+        return buf;
+}
