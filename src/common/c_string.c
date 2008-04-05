@@ -508,7 +508,7 @@ int C_utf8_strlen(const char *str, int *chars)
  bytes. Returns the size of the UTF-8 character or 0 if there is not enough
  room or if [src] starts with NUL.
 \******************************************************************************/
-int C_utf8_append(char *dest, int *dest_i, size_t dest_sz, const char *src)
+int C_utf8_append(char *dest, int *dest_i, int dest_sz, const char *src)
 {
         int len, char_len;
 

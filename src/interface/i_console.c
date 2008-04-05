@@ -201,6 +201,12 @@ static void log_handler(c_log_level_t level, int margin, const char *string)
         if (level >= C_LOG_TRACE ||
             !scrollback.widget.configured)
                 return;
+                
+        /* If there is no margin, we don't need to wrap */
+        if (margin < 1) {
+                I_console_print(I_COLOR, string);
+                return;
+        }
 
         /* Wrap the text but take off the trailing newline */
         wrapped = C_wrap_log(string, margin, cols_max, &len);

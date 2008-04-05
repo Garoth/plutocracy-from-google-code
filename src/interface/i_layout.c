@@ -124,20 +124,23 @@ static void theme_configure(void)
 
         /* Left toolbar */
         left_toolbar.widget.size = C_vec2(0.f, 32.f + i_border.value.n * 2);
-        left_toolbar.widget.origin = C_vec2(i_border.value.n, r_height_2d -
+        left_toolbar.widget.origin = C_vec2((float)i_border.value.n,
+                                            r_height_2d -
                                             left_toolbar.widget.size.y -
                                             i_border.value.n);
 
         /* Game window */
         game_window.widget.size = C_vec2(240.f, 0.f);
-        game_window.widget.origin = C_vec2(i_border.value.n, r_height_2d -
+        game_window.widget.origin = C_vec2((float)i_border.value.n,
+                                           r_height_2d -
                                            game_window.widget.size.y -
                                            left_toolbar.widget.size.y -
                                            i_border.value.n * 2);
 
         /* Console window */
         console_window.widget.size = C_vec2(480.f, 240.f);
-        console_window.widget.origin = C_vec2(i_border.value.n, r_height_2d -
+        console_window.widget.origin = C_vec2((float)i_border.value.n,
+                                              r_height_2d -
                                               console_window.widget.size.y -
                                               left_toolbar.widget.size.y -
                                               i_border.value.n * 2);

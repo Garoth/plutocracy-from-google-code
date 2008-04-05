@@ -166,9 +166,7 @@ struct c_var {
 
 /* Resizing arrays */
 typedef struct c_array {
-        size_t capacity;
-        size_t len;
-        size_t item_size;
+        int capacity, len, item_size;
         void *elems;
 } c_array_t;
 
@@ -229,13 +227,14 @@ extern c_log_event_f c_log_func;
 extern c_log_mode_t c_log_mode;
 
 /* c_memory.c */
-void C_array_append(c_array_t *ary, void *item);
-void C_array_cleanup(c_array_t *ary);
+void C_array_append(c_array_t *, void *item);
+void C_array_cleanup(c_array_t *);
 #define C_array_elem(ary, type, i) (((type*)(ary)->elems)[i])
-#define C_array_init(ary, type, cap) C_array_init_real(ary, sizeof(type), cap)
-void C_array_init_real(c_array_t *ary, size_t item_size, size_t cap);
-void C_array_reserve(c_array_t *ary, size_t n);
-void *C_array_steal(c_array_t *ary);
+#define C_array_init(ary, type, cap) C_array_init_full(ary, \
+                                                       (int)sizeof (type), cap)
+void C_array_init_full(c_array_t *, int item_size, int cap);
+void C_array_reserve(c_array_t *, int n);
+void *C_array_steal(c_array_t *);
 #define C_calloc(s) C_recalloc_full(__FILE__, __LINE__, __func__, NULL, s)
 void C_check_leaks(void);
 #define C_free(p) C_free_full(__FILE__, __LINE__, __func__, p)
@@ -268,6 +267,7 @@ const char *C_user_dir(void);
 
 /* c_rand.c */
 int C_rand(void);
+#define C_rand_real() ((float)(C_rand() & 0xffff) / 0xffff)
 void C_rand_seed(unsigned int);
 
 /* c_string.c */
@@ -297,7 +297,7 @@ int C_token_file_init(c_token_file_t *, const char *filename);
 void C_token_file_init_string(c_token_file_t *, const char *string);
 const char *C_token_file_read_full(c_token_file_t *, int *out_quoted);
 #define C_token_file_read(f) C_token_file_read_full(f, NULL)
-int C_utf8_append(char *dest, int *dest_i, size_t dest_sz, const char *src);
+int C_utf8_append(char *dest, int *dest_i, int dest_sz, const char *src);
 char *C_utf8_encode(unsigned int unicode, int *len);
 int C_utf8_index(char *str, int n);
 int C_utf8_size(unsigned char first_byte);

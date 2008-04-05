@@ -83,8 +83,8 @@ static int set_video_mode(void)
                 r_pixel_scale.value.f = R_PIXEL_SCALE_MIN;
         if (r_pixel_scale.value.f > R_PIXEL_SCALE_MAX)
                 r_pixel_scale.value.f = R_PIXEL_SCALE_MAX;
-        r_width_2d = r_width.value.n / r_pixel_scale.value.f + 0.5f;
-        r_height_2d = r_height.value.n / r_pixel_scale.value.f + 0.5f;
+        r_width_2d = (int)(r_width.value.n / r_pixel_scale.value.f + 0.5f);
+        r_height_2d = (int)(r_height.value.n / r_pixel_scale.value.f + 0.5f);
         C_debug("2D area %dx%d", r_width_2d, r_height_2d);
 
         /* Set screen view */
@@ -175,7 +175,7 @@ static void load_test_assets(void)
         if (r_test_sprite_num.value.n && r_test_sprite_path.value.s[0]) {
                 int i;
 
-                C_rand_seed(time(NULL));
+                C_rand_seed((unsigned int)time(NULL));
                 test_sprites = C_malloc(r_test_sprite_num.value.n *
                                         sizeof (*test_sprites));
                 R_sprite_init(test_sprites, r_test_sprite_path.value.s);
@@ -183,9 +183,11 @@ static void load_test_assets(void)
                 for (i = 1; i < r_test_sprite_num.value.n; i++) {
                         R_sprite_init(test_sprites + i,
                                       r_test_sprite_path.value.s);
-                        test_sprites[i].origin = C_vec2(r_width_2d * C_rand(),
-                                                        r_height_2d * C_rand());
-                        test_sprites[i].angle = C_rand();
+                        test_sprites[i].origin = C_vec2(r_width_2d *
+                                                        C_rand_real(),
+                                                        r_height_2d *
+                                                        C_rand_real());
+                        test_sprites[i].angle = C_rand_real();
                 }
         }
 
@@ -195,8 +197,8 @@ static void load_test_assets(void)
         if (r_test_text.value.s[0]) {
                 R_text_configure(&test_text, R_FONT_CONSOLE, 100.f, 1.f,
                                  TRUE, r_test_text.value.s);
-                test_text.sprite.origin = C_vec2(r_width_2d / 2,
-                                                 r_height_2d / 2);
+                test_text.sprite.origin = C_vec2(r_width_2d / 2.f,
+                                                 r_height_2d / 2.f);
         }
 }
 
@@ -265,8 +267,8 @@ static void render_test_model(void)
         R_model_render(&test_model);
 
         /* Spin the model around a bit */
-        test_model.angles.x += 0.05 * c_frame_sec;
-        test_model.angles.y += 0.30 * c_frame_sec;
+        test_model.angles.x += 0.05f * c_frame_sec;
+        test_model.angles.y += 0.30f * c_frame_sec;
 }
 
 /******************************************************************************\
@@ -474,8 +476,8 @@ void R_clip_disable(void)
 {
         clip_values[4 * clip_stack] = 0.f;
         clip_values[4 * clip_stack + 1] = 0.f;
-        clip_values[4 * clip_stack + 2] = INFINITY;
-        clip_values[4 * clip_stack + 3] = INFINITY;
+        clip_values[4 * clip_stack + 2] = 100000.f;
+        clip_values[4 * clip_stack + 3] = 100000.f;
         set_clipping();
 }
 

@@ -63,7 +63,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="SDL.lib SDLmain.lib SDL_image.lib SDL_ttf.lib OpenGL32.lib GlU32.lib"
+				AdditionalDependencies="SDL.lib SDLmain.lib SDL_image.lib SDL_ttf.lib OpenGL32.lib GlU32.lib user32.lib shell32.lib"
 				OutputFile="$(OutDir)/plutocracy.exe"
 				LinkIncremental="2"
 				GenerateDebugInformation="true"
@@ -192,6 +192,10 @@
 			</File>
 			<File
 				RelativePath="..\src\common\c_os_windows.c"
+				>
+			</File>
+			<File
+				RelativePath="..\src\common\c_rand.c"
 				>
 			</File>
 			<File

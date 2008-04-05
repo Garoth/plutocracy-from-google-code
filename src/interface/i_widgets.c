@@ -64,7 +64,7 @@ static int window_event(i_window_t *window, i_event_t event)
                         R_sprite_init(&window->hanger, i_hanger.value.s);
                         window->hanger.origin.y = window->widget.origin.y +
                                                   window->widget.size.y;
-                        window->hanger.size.y = i_border.value.n;
+                        window->hanger.size.y = (float)i_border.value.n;
                 }
                 return FALSE;
         case I_EV_MOUSE_IN:
@@ -286,7 +286,7 @@ static void expand_children(i_widget_t *widget, c_vec2_t size, int expanders)
         c_vec2_t offset;
         i_widget_t *child;
 
-        size = C_vec2_divf(size, expanders);
+        size = C_vec2_divf(size, (float)expanders);
         offset = C_vec2(0.f, 0.f);
         child = widget->child;
         while (child) {
@@ -313,8 +313,8 @@ void I_widget_pack(i_widget_t *widget, i_pack_t pack, i_fit_t fit)
         int expanders;
 
         /* First, let every widget claim the minimum space it requires */
-        size = C_vec2_subf(widget->size, i_border.value.n * 2);
-        origin = C_vec2_addf(widget->origin, i_border.value.n);
+        size = C_vec2_subf(widget->size, i_border.value.n * 2.f);
+        origin = C_vec2_addf(widget->origin, (float)i_border.value.n);
         expanders = 0;
         child = widget->child;
         while (child) {
@@ -654,8 +654,8 @@ void I_dispatch(const SDL_Event *ev)
                 break;
         case SDL_MOUSEMOTION:
                 event = I_EV_MOUSE_MOVE;
-                i_mouse_x = ev->motion.x / r_pixel_scale.value.f + 0.5f;
-                i_mouse_y = ev->motion.y / r_pixel_scale.value.f + 0.5f;
+                i_mouse_x = (int)(ev->motion.x / r_pixel_scale.value.f + 0.5f);
+                i_mouse_y = (int)(ev->motion.y / r_pixel_scale.value.f + 0.5f);
                 if (i_debug.value.n > 0)
                         C_trace("SDL_MOUSEMOTION (%dx%d)",
                                 i_mouse_x, i_mouse_y);

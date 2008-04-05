@@ -129,7 +129,7 @@ static void entry_insert(i_entry_t *entry, int ch)
 
         str = C_utf8_encode(ch, &str_len);
         buffer_len = C_strlen(entry->buffer);
-        if (buffer_len >= sizeof (entry->buffer) - str_len)
+        if (buffer_len >= (int)sizeof (entry->buffer) - str_len)
                 return;
         pos_i = C_utf8_index(entry->buffer, entry->pos);
         if (pos_i < buffer_len)
