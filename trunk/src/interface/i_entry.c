@@ -218,25 +218,24 @@ int I_entry_event(i_entry_t *entry, i_event_t event)
         case I_EV_KEY_DOWN:
                 if (i_key == SDLK_UP)
                         entry_history_go(entry, 1);
-                if (i_key == SDLK_DOWN)
+                else if (i_key == SDLK_DOWN)
                         entry_history_go(entry, -1);
-                if (i_key == SDLK_LEFT)
+                else if (i_key == SDLK_LEFT)
                         entry_set_pos(entry, entry->pos - 1);
-                if (i_key == SDLK_RIGHT)
+                else if (i_key == SDLK_RIGHT)
                         entry_set_pos(entry, entry->pos + 1);
-                if (i_key == SDLK_HOME)
+                else if (i_key == SDLK_HOME)
                         entry_set_pos(entry, 0);
-                if (i_key == SDLK_END)
+                else if (i_key == SDLK_END)
                         entry_set_pos(entry, sizeof (entry->buffer));
-                if (i_key == SDLK_BACKSPACE)
+                else if (i_key == SDLK_BACKSPACE)
                         entry_delete(entry, entry->pos - 1);
-                if (i_key == SDLK_DELETE)
+                else if (i_key == SDLK_DELETE)
                         entry_delete(entry, entry->pos);
-                if (i_key == SDLK_RETURN && entry->on_enter) {
+                else if (i_key == SDLK_RETURN && entry->on_enter) {
                         entry_history_save(entry);
                         entry->on_enter(entry);
-                }
-                if (i_key >= ' ' && i_key_unicode)
+                } else if (i_key >= ' ' && i_key_unicode)
                         entry_insert(entry, i_key_unicode);
                 break;
         case I_EV_RENDER:
