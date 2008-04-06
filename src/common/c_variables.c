@@ -39,19 +39,23 @@ static c_var_t *root;
 void C_register_variables(void)
 {
         /* Message logging */
-        C_register_integer(&c_log_level, "c_log_level", C_LOG_WARNING);
+        C_register_integer(&c_log_level, "c_log_level", C_LOG_WARNING,
+                           "log detail level: 0 = disable, to 4 = traces");
         c_log_level.edit = C_VE_ANYTIME;
-        C_register_string(&c_log_file, "c_log_file", "");
+        C_register_string(&c_log_file, "c_log_file", "",
+                          "filename to redirect log output to");
 
         /* FPS cap */
-        C_register_integer(&c_max_fps, "c_max_fps", 120);
+        C_register_integer(&c_max_fps, "c_max_fps", 120,
+                           "software frames-per-second limit");
         c_max_fps.edit = C_VE_ANYTIME;
-        C_register_integer(&c_show_fps, "c_show_fps", FALSE);
+        C_register_integer(&c_show_fps, "c_show_fps", FALSE,
+                           "enable to display current frames-per-second");
         c_show_fps.edit = C_VE_ANYTIME;
 
         /* Memory checking */
-        C_register_integer(&c_mem_check, "c_mem_check", FALSE);
-        c_mem_check.archive = FALSE;
+        C_register_integer(&c_mem_check, "c_mem_check", FALSE,
+                           "enable to debug memory allocations");
 }
 
 /******************************************************************************\
@@ -84,8 +88,8 @@ void C_cleanup_variables(void)
  These variables cannot be deallocated or have any member other than the value
  modified. The variables are tracked as a linked list.
 \******************************************************************************/
-void C_var_register(c_var_t *var, const char *name, c_var_type_t type,
-                    c_var_value_t value)
+static void var_register(c_var_t *var, const char *name, c_var_type_t type,
+                         c_var_value_t value, const char *comment)
 {
         c_var_t *pos, *prev;
 
@@ -94,6 +98,7 @@ void C_var_register(c_var_t *var, const char *name, c_var_type_t type,
                         var->name, name);
         var->type = type;
         var->name = name;
+        var->comment = comment;
         var->stock = var->latched = var->value = value;
         var->edit = C_VE_LATCHED;
         var->archive = TRUE;
@@ -112,28 +117,31 @@ void C_var_register(c_var_t *var, const char *name, c_var_type_t type,
                 root = var;
 }
 
-void C_register_float(c_var_t *var, const char *name, float value_f)
+void C_register_float(c_var_t *var, const char *name, float value_f,
+                      const char *comment)
 {
         c_var_value_t value;
 
         value.f = value_f;
-        C_var_register(var, name, C_VT_FLOAT, value);
+        var_register(var, name, C_VT_FLOAT, value, comment);
 }
 
-void C_register_integer(c_var_t *var, const char *name, int value_n)
+void C_register_integer(c_var_t *var, const char *name, int value_n,
+                        const char *comment)
 {
         c_var_value_t value;
 
         value.n = value_n;
-        C_var_register(var, name, C_VT_INTEGER, value);
+        var_register(var, name, C_VT_INTEGER, value, comment);
 }
 
-void C_register_string(c_var_t *var, const char *name, const char *value_s)
+void C_register_string(c_var_t *var, const char *name, const char *value_s,
+                       const char *comment)
 {
         c_var_value_t value;
 
         value.s = (char *)value_s;
-        C_var_register(var, name, C_VT_STRING, value);
+        var_register(var, name, C_VT_STRING, value, comment);
 }
 
 /******************************************************************************\
@@ -260,14 +268,17 @@ static void print_var(const c_var_t *var)
 
         switch (var->type) {
         case C_VT_INTEGER:
-                value = C_va("Integer '%s' is %d", var->name, var->value.n);
+                value = C_va("Integer '%s' is %d (%s)",
+                             var->name, var->value.n, var->comment);
                 break;
         case C_VT_FLOAT:
-                value = C_va("Float '%s' is %g", var->name, var->value.f);
+                value = C_va("Float '%s' is %g (%s)",
+                             var->name, var->value.f, var->comment);
                 break;
         case C_VT_STRING:
         case C_VT_STRING_DYNAMIC:
-                value = C_va("String '%s' is '%s'", var->name, var->value.s);
+                value = C_va("String '%s' is '%s' (%s)",
+                             var->name, var->value.s, var->comment);
                 break;
         default:
                 C_error("Tried to print out unregistered variable");
@@ -370,6 +381,9 @@ void C_write_autogen(void)
 {
         c_file_t *file;
         c_var_t *var;
+        const char *value;
+        int i, chars;
+        char comment[80];
 
         file = C_file_open_write(C_va("%s/autogen.cfg", C_user_dir()));
         if (!file) {
@@ -383,35 +397,62 @@ void C_write_autogen(void)
                             "******************************/\n\n",
                             PACKAGE_STRING);
         for (var = root; var; var = var->next) {
-                if (var->archive) {
-                        const char *value;
+                if (!var->archive)
+                        continue;
 
-                        C_var_unlatch(var);
-                        value = NULL;
-                        switch (var->type) {
-                        case C_VT_INTEGER:
-                                if (var->value.n == var->stock.n)
-                                        continue;
-                                value = C_va("%d", var->value.n);
-                                break;
-                        case C_VT_FLOAT:
-                                if (var->value.f == var->stock.f)
-                                        continue;
-                                value = C_va("%g", var->value.f);
-                                break;
-                        case C_VT_STRING:
-                        case C_VT_STRING_DYNAMIC:
-                                if (!strcmp(var->value.s, var->stock.s))
-                                        continue;
-                                value = C_escape_string(var->value.s);
-                                break;
-                        default:
-                                C_error("Unregistered variable in list");
-                        }
-                        if (value)
-                                C_file_printf(file, "%s %s\n",
-                                              var->name, value);
+                /* Get the variable's value */
+                C_var_unlatch(var);
+                value = NULL;
+                switch (var->type) {
+                case C_VT_INTEGER:
+                        if (var->value.n == var->stock.n)
+                                continue;
+                        value = C_va("%d", var->value.n);
+                        break;
+                case C_VT_FLOAT:
+                        if (var->value.f == var->stock.f)
+                                continue;
+                        value = C_va("%g", var->value.f);
+                        break;
+                case C_VT_STRING:
+                case C_VT_STRING_DYNAMIC:
+                        if (!strcmp(var->value.s, var->stock.s))
+                                continue;
+                        value = C_escape_string(var->value.s);
+                        break;
+                default:
+                        C_error("Unregistered variable in list");
                 }
+
+                /* Get the variable's help comment and pad it */
+                if (!var->comment || !var->comment[0])
+                        comment[0] = NUL;
+                else {
+                        C_utf8_strlen(value, &chars);
+                        chars += C_strlen(var->name) + 1;
+                        if (chars > 31) {
+                                C_file_printf(file, "\n/* %s */\n",
+                                              var->comment);
+                                comment[0] = '\n';
+                                comment[1] = NUL;
+                        } else {
+                                for (i = 0; i < 24 - chars; i++)
+                                        comment[i] = ' ';
+                                i += snprintf(comment + i,
+                                              sizeof (comment) - i - 5 - chars,
+                                              "/* %s", var->comment);
+                                if (i > sizeof (comment) - 5 - chars)
+                                        i = sizeof (comment) - 5;
+                                comment[i++] = ' ';
+                                comment[i++] = '*';
+                                comment[i++] = '/';
+                                comment[i] = NUL;
+                        }
+                }
+
+                if (value)
+                        C_file_printf(file, "%s %s%s\n",
+                                      var->name, value, comment);
         }
         C_file_printf(file, "\n");
         C_file_close(file);
@@ -457,7 +498,8 @@ const char *C_auto_complete(const char *str)
         /* Output all of the matched vars to the console */
         C_print(C_va("\n%d matches:", matches_len));
         for (i = 0; i < matches_len; i++)
-                C_print(C_va("    %s", matches[i]->name));
+                C_print(C_va("    %s  (%s)", matches[i]->name,
+                             matches[i]->comment));
 
         return buf;
 }

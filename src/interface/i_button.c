@@ -14,6 +14,7 @@
 
 /******************************************************************************\
  Button widget event function.
+ FIXME: Activated by scroll wheel?
 \******************************************************************************/
 int I_button_event(i_button_t *button, i_event_t event)
 {
@@ -173,6 +174,7 @@ void I_button_init(i_button_t *button, const char *icon, const char *text,
         I_widget_set_name(&button->widget, "Button");
         button->widget.event_func = (i_event_f)I_button_event;
         button->widget.state = I_WS_READY;
+        button->widget.clickable = TRUE;
         button->on_click = NULL;
         button->decorated = bg;
         R_sprite_init(&button->icon, icon);

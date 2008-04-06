@@ -124,6 +124,7 @@ i_widget_t *I_scrollback_init(i_scrollback_t *sb)
         sb->widget.event_func = (i_event_f)I_scrollback_event;
         sb->widget.state = I_WS_READY;
         sb->widget.expand = TRUE;
+        sb->widget.clickable = TRUE;
         sb->limit = 100;
         sb->scroll = 0.f;
         I_widget_inited(&sb->widget);
@@ -201,7 +202,7 @@ static void log_handler(c_log_level_t level, int margin, const char *string)
         if (level >= C_LOG_TRACE ||
             !scrollback.widget.configured)
                 return;
-                
+
         /* If there is no margin, we don't need to wrap */
         if (margin < 1) {
                 I_console_print(I_COLOR, string);

@@ -227,7 +227,7 @@ static void entry_auto_complete(i_entry_t *entry)
         if (tail + token_len + tail_len > entry->buffer +
                                           sizeof (entry->buffer))
                 return;
-        memmove(tail + token_len, tail, tail_len);
+        memmove(tail + token_len, tail, tail_len + 1);
         memcpy(tail, token, token_len);
         entry_modified(entry);
         entry_set_pos(entry, prehead_chars + head_chars + token_chars);

@@ -92,16 +92,6 @@ static int root_event(i_widget_t *root, i_event_t event)
 }
 
 /******************************************************************************\
- Parses the theme configuration file. This is called before the initialization
- functions in case there are font changes in the theme.
-\******************************************************************************/
-void I_parse_config(void)
-{
-        C_var_unlatch(&i_theme);
-        C_parse_config_file(i_theme.value.s);
-}
-
-/******************************************************************************\
  Updates after a theme change.
 \******************************************************************************/
 static void theme_configure(void)
@@ -187,6 +177,15 @@ static void console_button_click(i_button_t *button)
 }
 
 /******************************************************************************\
+ Parse the theme config.
+\******************************************************************************/
+void I_parse_config(void)
+{
+        C_var_unlatch(&i_theme);
+        C_parse_config_file(i_theme.value.s);
+}
+
+/******************************************************************************\
  Loads interface assets and initializes windows.
 \******************************************************************************/
 void I_init(void)
@@ -207,6 +206,7 @@ void I_init(void)
         i_root.configured = 1;
         i_root.entry = TRUE;
         i_root.shown = TRUE;
+        i_root.clickable = TRUE;
 
         /* Left toolbar */
         I_window_init(&left_toolbar);
