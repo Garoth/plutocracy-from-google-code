@@ -20,9 +20,7 @@
 
 #define CORRUPT_CHECK_VALUE 1776
 
-void I_parse_config(void);
-
-extern c_var_t c_max_fps, c_show_fps, i_theme;
+extern c_var_t c_max_fps, c_show_fps;
 
 static c_count_t throttled;
 static r_text_t status_text;
@@ -217,9 +215,8 @@ int main(int argc, char *argv[])
         G_register_variables();
 
         /* Parse configuration scripts and open the log file */
-        C_parse_config_file("config/default.cfg");
-        I_parse_config();
         C_parse_config_file(C_va("%s/autogen.cfg", C_user_dir()));
+        C_parse_config_file(C_va("%s/autoexec.cfg", C_user_dir()));
         parse_config_args(argc, argv);
         C_open_log_file();
 
@@ -228,6 +225,7 @@ int main(int argc, char *argv[])
 
         /* Initialize */
         C_status("Initializing " PACKAGE_STRING " client");
+        I_parse_config();
         init_sdl();
         R_init();
         I_init();

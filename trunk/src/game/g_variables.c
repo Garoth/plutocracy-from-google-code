@@ -20,9 +20,11 @@ c_var_t g_globe_seed, g_globe_subdiv4;
 \******************************************************************************/
 void G_register_variables(void)
 {
-        C_register_integer(&g_globe_seed, "g_globe_seed", C_rand());
+        C_register_integer(&g_globe_seed, "g_globe_seed", C_rand(),
+                           "seed for globe terrain generator");
         g_globe_seed.archive = FALSE;
-        C_register_integer(&g_globe_subdiv4, "g_globe_subdiv4", 4);
+        C_register_integer(&g_globe_subdiv4, "g_globe_subdiv4", 4,
+                           "globe subdivision iterations, 0-5");
         g_globe_subdiv4.archive = FALSE;
 }
 

@@ -91,7 +91,7 @@ typedef struct i_widget {
         i_event_f event_func;
         i_widget_state_t state;
         float fade, padding;
-        int configured, entry, expand, shown, heap;
+        int configured, entry, clickable, expand, shown, heap;
 } i_widget_t;
 
 /* Windows are decorated containers */

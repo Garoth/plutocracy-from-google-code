@@ -14,6 +14,7 @@
 void I_cleanup(void);
 void I_dispatch(const SDL_Event *);
 void I_init(void);
+void I_parse_config(void);
 void I_render(void);
 
 /* i_variables.c */

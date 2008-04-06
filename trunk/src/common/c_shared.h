@@ -155,7 +155,7 @@ typedef int (*c_var_update_f)(c_var_t *, c_var_value_t);
 
 /* Type for configurable variables */
 struct c_var {
-        const char *name;
+        const char *name, *comment;
         struct c_var *next;
         c_var_value_t value, latched, stock;
         c_var_type_t type;
@@ -325,9 +325,12 @@ const char *C_auto_complete(const char *);
 void C_cleanup_variables(void);
 int C_parse_config_file(const char *filename);
 void C_parse_config_string(const char *string);
-void C_register_float(c_var_t *, const char *name, float value);
-void C_register_integer(c_var_t *, const char *name, int value);
-void C_register_string(c_var_t *, const char *name, const char *value);
+void C_register_float(c_var_t *, const char *name, float value,
+                      const char *comment);
+void C_register_integer(c_var_t *, const char *name, int value,
+                        const char *comment);
+void C_register_string(c_var_t *, const char *name, const char *value,
+                       const char *comment);
 void C_register_variables(void);
 c_var_t *C_resolve_var(const char *name);
 void C_var_set(c_var_t *, const char *value);
