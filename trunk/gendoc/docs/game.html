@@ -30,8 +30,8 @@ g_tile_t <span class="file">(g_common.h)</span></div>
 </a>
 <div class="entry_body" id="0_body" style="display:none">
 <pre><b class="keyword1">typedef</b> <b class="keyword1">struct</b> g_tile <span class="def_op">{</span>
-        c_vec3_t corners<span class="def_op">[</span><span class="def_const">3</span><span class="def_op">];</span>
-        <b class="keyword1">struct</b> g_tile <span class="def_op">*</span>neighbors<span class="def_op">[</span><span class="def_const">6</span><span class="def_op">];</span>
+        r_tile_t <span class="def_op">*</span>render<span class="def_op">;</span>
+        <b class="keyword1">struct</b> g_tile <span class="def_op">*</span>neighbors<span class="def_op">[</span><span class="def_const">3</span><span class="def_op">];</span>
 <span class="def_op">}</span> g_tile_t<span class="def_op">;</span></pre>
 <p class="comment"> A tile on the globe</p>
 </div>
