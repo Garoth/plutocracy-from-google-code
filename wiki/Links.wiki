@@ -20,16 +20,13 @@ Khent suggested some similar games to play:
   * [http://www.mobygames.com/game/caesar-ii Ceaser II] is an war/economic strategy game.
   * [http://www.mobygames.com/game/dos/transport-tycoon Transport Tycoon] and [http://www.mobygames.com/game/pizza-tycoon Pizza Tycoon] are classic economy sims.
 
-= Rendering and OpenGL =
-
-== OpenGL Links ==
+= Library APIs =
   * [http://www.opengl.org/sdk/docs/man/ OpenGL manual]
   * [http://www.opengl.org/resources/features/KilgardTechniques/oglpitfall/ 16 OpenGL pitfalls]
-
-== SDL Links ==
   * [http://libsdl.org SDL homepage] (download documentation here)
   * [http://jcatki.no-ip.org:8080/SDL_ttf/SDL_ttf_frame.html SDL_ttf documentation]
   * [http://jcatki.no-ip.org:8080/SDL_image/SDL_image_frame.html SDL_image documentation]
+  * [http://www.zlib.net/manual.html zlib manual]
 
 = Tiling a Sphere =
   * Generate a sphere from any polygon: http://www.neubert.net/PLASpher.html
