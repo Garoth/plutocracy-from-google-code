@@ -26,6 +26,7 @@
      4.3  Bitstream Vera Fonts
      4.4  Additional Fonts
      4.5  SDL Notice
+     4.6  GPL-Compatible Exceptions
 
 
 
@@ -186,7 +187,7 @@
     fonts folder for more details:
 
         gui/fonts/BLKCHCRY.TTF (Earl Allen and Doug Miles, Public Domain)
-        gui/fonts/SF ARchery Black.ttf (Â©2001 ShyFonts Type Foundry)
+        gui/fonts/SF ARchery Black.ttf (© 2001 ShyFonts Type Foundry)
 
 
   4.5  SDL Notice
@@ -200,5 +201,17 @@
     The source is available from the libraries page at the SDL website:
 
       http://www.libsdl.org/
+
+
+  4.6  GPL-Compatible Exceptions
+  ------------------------------
+  
+    The following files are not licensed under the GPL, but can be freely
+    distributed. See the each individual file's copyright notice for specific 
+    details:
+    
+      vc8/glext.h, vc8/glxext.h, vc8/wglext.h (© 2007 The Khronos Group Inc)
+
+
 
 ................................................................................

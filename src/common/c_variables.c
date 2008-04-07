@@ -441,7 +441,7 @@ void C_write_autogen(void)
                                 i += snprintf(comment + i,
                                               sizeof (comment) - i - 5 - chars,
                                               "/* %s", var->comment);
-                                if (i > sizeof (comment) - 5 - chars)
+                                if (i > (int)sizeof (comment) - 5 - chars)
                                         i = sizeof (comment) - 5;
                                 comment[i++] = ' ';
                                 comment[i++] = '*';
