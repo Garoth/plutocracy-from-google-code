@@ -22,6 +22,7 @@ Khent suggested some similar games to play:
 
 = Library APIs =
   * [http://www.opengl.org/sdk/docs/man/ OpenGL manual]
+  * [http://www.gamedev.net/reference/articles/article1929.asp OpenGL extensions in Windows]
   * [http://www.opengl.org/resources/features/KilgardTechniques/oglpitfall/ 16 OpenGL pitfalls]
   * [http://libsdl.org SDL homepage] (download documentation here)
   * [http://jcatki.no-ip.org:8080/SDL_ttf/SDL_ttf_frame.html SDL_ttf documentation]
