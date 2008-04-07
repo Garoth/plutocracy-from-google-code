@@ -26,6 +26,9 @@ c_count_t r_count_faces;
 r_mode_t r_mode;
 int r_width_2d, r_height_2d;
 
+/* Supported extensions */
+int r_extensions[R_EXTENSIONS];
+
 /* Camera rotation and zoom */
 float r_cam_dist, r_cam_zoom;
 static c_vec2_t cam_diff;
@@ -95,11 +98,22 @@ static int set_video_mode(void)
 }
 
 /******************************************************************************\
- Outputs debug strings and checks supported extensions.
- TODO: Use some extensions.
+ Outputs debug strings and checks supported extensions. The supported
+ extensions array (r_extensions) is filled out accordingly.
 \******************************************************************************/
 static void check_gl_extensions(void)
 {
+        GLint gl_int;
+
+        C_zero(r_extensions);
+
+        /* Multitexture */
+        glGetIntegerv(GL_MAX_TEXTURE_UNITS_ARB, &gl_int);
+        if (gl_int >= 4) {
+                r_extensions[R_EXT_MULTITEXTURE] = TRUE;
+                C_debug("%d texture units supported", gl_int);
+        } else
+                C_warning("Insufficient texture units available (%d)", gl_int);
 }
 
 /******************************************************************************\

@@ -34,8 +34,8 @@ static void setup_tiles(void)
                 R_find_tile_neighbors(i, neighbors);
                 for (j = 0; j < 3; j++)
                         g_tiles[i].neighbors[j] = g_tiles + neighbors[j];
-                render_tiles[i].terrain = 0;
-                render_tiles[i].height = C_rand_real() * 3;
+                render_tiles[i].terrain = C_rand() % 16;
+                render_tiles[i].height = 0; //C_rand_real() * 3;
                 g_tiles[i].render = render_tiles + i;
         }
 }
