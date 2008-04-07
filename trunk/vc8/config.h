@@ -21,6 +21,15 @@
 #include <windows.h>
 #include <tchar.h>
 
+/* OpenGL */
+#include <GL/gl.h>
+#include <GL/glu.h>
+
+/* Windows OpenGL headers are old (1.1) and do not provide all the necessary
+   enumerations and definitions for properly utilizing newer extensions:
+   http://opengl.org/registry/ */
+#include "glext.h"
+
 /* Constants normally defined via configure.ac */
 #define PACKAGE "plutocracy"
 #define PACKAGE_STRING "Plutocracy 0.0.0"
