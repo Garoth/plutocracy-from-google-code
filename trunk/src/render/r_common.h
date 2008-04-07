@@ -13,6 +13,12 @@
 #include "../common/c_shared.h"
 #include "r_shared.h"
 
+/* Supported extensions */
+typedef enum {
+        R_EXT_MULTITEXTURE,
+        R_EXTENSIONS,
+} r_extension_t;
+
 /* Vertex type for meshes */
 #pragma pack(push, 4)
 typedef struct r_vertex3 {
@@ -20,8 +26,9 @@ typedef struct r_vertex3 {
         c_vec3_t no;
         c_vec3_t co;
 } r_vertex3_t;
-#define R_VERTEX3_FORMAT GL_T2F_N3F_V3F
 #pragma pack(pop)
+#define R_VERTEX3_FORMAT GL_T2F_N3F_V3F
+
 
 /* Vertex type for sprites */
 #pragma pack(push, 4)
@@ -29,8 +36,8 @@ typedef struct r_vertex2 {
         c_vec2_t uv;
         c_vec3_t co;
 } r_vertex2_t;
-#define R_VERTEX2_FORMAT GL_T2F_V3F
 #pragma pack(pop)
+#define R_VERTEX2_FORMAT GL_T2F_V3F
 
 /* Texture class */
 struct r_texture {
@@ -105,6 +112,7 @@ void R_set_mode(r_mode_t);
 
 extern r_mode_t r_mode;
 extern float r_cam_dist, r_cam_zoom;
+extern int r_extensions[R_EXTENSIONS];
 
 /* r_static_mesh.c */
 void R_static_mesh_cleanup(r_static_mesh_t *);
