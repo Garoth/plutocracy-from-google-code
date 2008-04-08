@@ -37,6 +37,10 @@ static int root_event(i_widget_t *root, i_event_t event)
                         root_scroll.y = -i_scroll_speed.value.f;
                 if (i_key == SDLK_UP && root_scroll.y < 1.f)
                         root_scroll.y = i_scroll_speed.value.f;
+                if (i_key == '-')
+                        R_zoom_cam_by(i_zoom_speed.value.f);
+                if (i_key == '=')
+                        R_zoom_cam_by(-i_zoom_speed.value.f);
                 break;
         case I_EV_KEY_UP:
                 if ((i_key == SDLK_RIGHT && root_scroll.x < 0.f) ||
