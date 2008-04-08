@@ -30,6 +30,7 @@ int r_tiles;
 static globe_vertex_t vertices[R_TILES_MAX * 3];
 static r_texture_t *texture;
 static float radius;
+static int flip_limit;
 static unsigned short indices[R_TILES_MAX * 3];
 
 /******************************************************************************\
@@ -63,7 +64,7 @@ static void subdivide4(void)
         globe_vertex_t *verts;
         int j;
 
-        for (j = 0; j < r_tiles; j++) {
+        for (j = r_tiles - 1; j >= 0; j--) {
                 mid_0_1 = C_vec3_add(vertices[3 * j].co,
                                      vertices[3 * j + 1].co);
                 mid_0_1 = C_vec3_divf(mid_0_1, 2.f);
@@ -73,28 +74,29 @@ static void subdivide4(void)
                 mid_1_2 = C_vec3_add(vertices[3 * j + 1].co,
                                      vertices[3 * j + 2].co);
                 mid_1_2 = C_vec3_divf(mid_1_2, 2.f);
+                verts = vertices + 12 * j;
 
-                /* Top triangle (0) */
-                verts = vertices + 3 * r_tiles + 9 * j;
-                verts[0].co = vertices[3 * j].co;
-                verts[1].co = mid_0_1;
-                verts[2].co = mid_0_2;
+                /* Bottom-left triangle */
+                verts[9].co = mid_0_1;
+                verts[10].co = vertices[3 * j + 1].co;
+                verts[11].co = mid_1_2;
 
-                /* Bottom-left triangle (1) */
-                verts[3].co = mid_0_1;
-                verts[4].co = vertices[3 * j + 1].co;
-                verts[5].co = mid_1_2;
-
-                /* Bottom-right triangle (2) */
+                /* Bottom-right triangle */
                 verts[6].co = mid_0_2;
                 verts[7].co = mid_1_2;
                 verts[8].co = vertices[3 * j + 2].co;
 
-                /* Center triangle (original) */
-                vertices[3 * j].co = mid_1_2;
-                vertices[3 * j + 1].co = mid_0_2;
-                vertices[3 * j + 2].co = mid_0_1;
+                /* Top triangle */
+                verts[3].co = vertices[3 * j].co;
+                verts[4].co = mid_0_1;
+                verts[5].co = mid_0_2;
+
+                /* Center triangle */
+                verts[0].co = mid_1_2;
+                verts[1].co = mid_0_2;
+                verts[2].co = mid_0_1;
         }
+        flip_limit *= 4;
         r_tiles *= 4;
         radius *= 2;
         sphericize();
@@ -112,67 +114,51 @@ static void subdivide4(void)
 \******************************************************************************/
 static void generate_icosahedron(void)
 {
-        vertices[0].co  = C_vec3(0, 1, C_TAU);
-        vertices[1].co  = C_vec3(1, C_TAU, 0);
-        vertices[2].co  = C_vec3(-1, C_TAU, 0);
-        vertices[3]     = vertices[ 0];
-        vertices[4]     = vertices[ 2];
-        vertices[5].co  = C_vec3(-C_TAU, 0, 1);
-        vertices[6]     = vertices[ 0];
-        vertices[7]     = vertices[ 5];
-        vertices[8].co  = C_vec3(0, -1, C_TAU);
-        vertices[9].co  = C_vec3(-1, -C_TAU, 0);
-        vertices[10]    = vertices[ 8];
-        vertices[11]    = vertices[ 5];
-        vertices[12]    = vertices[ 8];
-        vertices[13]    = vertices[ 9];
-        vertices[14].co = C_vec3(1, -C_TAU, 0);
-        vertices[15]    = vertices[ 8];
-        vertices[16]    = vertices[14];
-        vertices[17].co = C_vec3(C_TAU, 0, 1);
-        vertices[18]    = vertices[ 0];
-        vertices[19]    = vertices[ 8];
-        vertices[20]    = vertices[17];
-        vertices[21]    = vertices[ 0];
-        vertices[22]    = vertices[17];
-        vertices[23]    = vertices[ 1];
-        vertices[24]    = vertices[ 1];
-        vertices[25]    = vertices[17];
-        vertices[26].co = C_vec3(C_TAU, 0, -1);
-        vertices[27]    = vertices[26];
-        vertices[28]    = vertices[17];
-        vertices[29]    = vertices[14];
-        vertices[30].co = C_vec3(0, -1, -C_TAU);
-        vertices[31]    = vertices[26];
-        vertices[32]    = vertices[14];
-        vertices[33]    = vertices[30];
-        vertices[34]    = vertices[14];
-        vertices[35]    = vertices[ 9];
-        vertices[36]    = vertices[30];
-        vertices[37]    = vertices[ 9];
-        vertices[38].co = C_vec3(-C_TAU, 0, -1);
-        vertices[39]    = vertices[ 5];
-        vertices[40]    = vertices[38];
-        vertices[41]    = vertices[ 9];
-        vertices[42]    = vertices[38];
-        vertices[43]    = vertices[ 5];
-        vertices[44]    = vertices[ 2];
-        vertices[45].co = C_vec3(0, 1, -C_TAU);
-        vertices[46]    = vertices[38];
-        vertices[47]    = vertices[ 2];
-        vertices[48]    = vertices[45];
-        vertices[49]    = vertices[ 2];
-        vertices[50]    = vertices[ 1];
-        vertices[51]    = vertices[45];
-        vertices[52]    = vertices[ 1];
-        vertices[53]    = vertices[26];
-        vertices[54]    = vertices[45];
-        vertices[55]    = vertices[26];
-        vertices[56]    = vertices[30];
-        vertices[57]    = vertices[45];
-        vertices[58]    = vertices[30];
-        vertices[59]    = vertices[38];
+        int i, regular_faces[] = {
+
+                /* Front faces */
+                7, 5, 4,
+                5, 7, 0,
+                0, 2, 5,
+                3, 5, 2,
+                2, 10, 3,
+                10, 2, 1,
+
+                /* Rear faces */
+                1, 11, 10,
+                11, 1, 6,
+                6, 8, 11,
+                9, 11, 8,
+                8, 4, 9,
+                4, 8, 7,
+
+                /* Top/bottom faces */
+                0, 6, 1,
+                6, 0, 7,
+                9, 3, 10,
+                3, 9, 4,
+        };
+
+        /* Flipped (over 0 vertex) face vertices */
+        vertices[0].co = C_vec3(0, C_TAU, 1);
+        vertices[1].co = C_vec3(-C_TAU, 1, 0);
+        vertices[2].co = C_vec3(-1, 0, C_TAU);
+        vertices[3].co = C_vec3(0, -C_TAU, 1);
+        vertices[4].co = C_vec3(C_TAU, -1, 0);
+        vertices[5].co = C_vec3(1, 0, C_TAU);
+        vertices[6].co = C_vec3(0, C_TAU, -1);
+        vertices[7].co = C_vec3(C_TAU, 1, 0);
+        vertices[8].co = C_vec3(1, 0, -C_TAU);
+        vertices[9].co = C_vec3(0, -C_TAU, -1);
+        vertices[10].co = C_vec3(-C_TAU, -1, 0);
+        vertices[11].co = C_vec3(-1, 0, -C_TAU);
+        flip_limit = 4;
+
+        /* Regular face vertices */
         r_tiles = 20;
+        for (i = 12; i < r_tiles * 3; i++)
+                vertices[i].co = vertices[regular_faces[i - 12]].co;
+
         radius = sqrtf(C_TAU + 2);
 }
 
@@ -298,7 +284,7 @@ static int vertex_indices(int vert, int verts[6])
 void R_configure_globe(r_tile_t *tiles)
 {
         float dist, height, bottom;
-        int i, j, k, verts[6], verts_len, tx, ty;
+        int i, j, k, verts[6], verts_len, tx, ty, flip;
 
         C_debug("Configuring globe");
         for (i = 0; i < r_tiles; i++) {
@@ -318,10 +304,11 @@ void R_configure_globe(r_tile_t *tiles)
                 /* Tile texture */
                 ty = tiles[i].terrain / 4;
                 tx = tiles[i].terrain - ty * 4;
-                bottom = (ty + 1) * 0.25f - 0.06f;
+                bottom = (ty + 1) * 0.25f - 0.0351f;
                 vertices[3 * i].uv = C_vec2(tx * 0.25f + 0.125f, ty * 0.25f);
-                vertices[3 * i + 1].uv = C_vec2(tx * 0.25f, bottom);
-                vertices[3 * i + 2].uv = C_vec2((tx + 1) * 0.25f, bottom);
+                flip = i < flip_limit;
+                vertices[3 * i + 1].uv = C_vec2((tx + flip) * 0.25f, bottom);
+                vertices[3 * i + 2].uv = C_vec2((tx + !flip) * 0.25f, bottom);
         }
 }
 
@@ -352,6 +339,6 @@ void R_find_tile_neighbors(int index, int neighbors[3])
 next_tile:              pos = vertices[pos].next;
                 }
         }
-        C_error("Tile %d does not have three neighbors", index);
+        //C_error("Tile %d does not have three neighbors", index);
 }
 
