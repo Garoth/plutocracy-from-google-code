@@ -17,7 +17,7 @@ c_var_t r_width, r_height, r_color_bits, r_depth_bits, r_windowed, r_vsync,
         r_gamma, r_pixel_scale, r_clear, r_gl_errors;
 
 /* Render testing */
-c_var_t r_test_model_path, r_test_sprite_num, r_test_sprite_path, r_test_text;
+c_var_t r_test_model, r_test_sprite, r_test_sprite_num, r_test_text;
 
 /* Fonts */
 c_var_t r_font_console, r_font_console_pt,
@@ -50,18 +50,14 @@ void R_register_variables(void)
         r_gl_errors.edit = C_VE_ANYTIME;
 
         /* Render testing */
-        C_register_string(&r_test_model_path, "r_test_model", "",
+        C_register_string(&r_test_model, "r_test_model", "",
                           "path to PLUM model to test");
-        r_test_model_path.archive = FALSE;
+        C_register_string(&r_test_sprite, "r_test_sprite", "",
+                          "path to test sprite texture");
         C_register_integer(&r_test_sprite_num, "r_test_sprites", 0,
                            "number of test sprites to show");
-        r_test_sprite_num.archive = FALSE;
-        C_register_string(&r_test_sprite_path, "r_test_sprite", "",
-                          "path to test sprite texture");
-        r_test_sprite_path.archive = FALSE;
         C_register_string(&r_test_text, "r_test_text", "",
                           "text to test rendering");
-        r_test_text.archive = FALSE;
 
         /* Fonts */
         C_register_string(&r_font_console, "r_font_console",

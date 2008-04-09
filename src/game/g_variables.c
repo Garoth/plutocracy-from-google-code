@@ -25,6 +25,5 @@ void G_register_variables(void)
         g_globe_seed.archive = FALSE;
         C_register_integer(&g_globe_subdiv4, "g_globe_subdiv4", 4,
                            "globe subdivision iterations, 0-5");
-        g_globe_subdiv4.archive = FALSE;
 }
 

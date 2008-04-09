@@ -39,6 +39,9 @@ AC_CHECK_LIB(SDL_ttf, TTF_Init, [],
 AC_CHECK_LIB(GL, glEnable, [], [AC_MSG_ERROR([*** -lGL not found!])])
 AC_CHECK_LIB(GLU, gluPerspective, [], [AC_MSG_ERROR([*** -lGLU not found!])])
 
+# Check for zlib
+AC_CHECK_LIB(z, gzopen, [], [AC_MSG_ERROR([*** -lz not found!])])
+
 # Check for various headers
 AC_CHECK_HEADERS([strings.h])
 

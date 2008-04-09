@@ -1,11 +1,12 @@
 INCLUDES =
-LDADD = -lm @SDL_LIBS@
+LDADD = -lm -lz @SDL_LIBS@
 AM_CFLAGS = @SDL_CFLAGS@
 
 bin_PROGRAMS = plutocracy
 
 # All source and header files part of the project
 plutocracy_SOURCES = \
+        src/common/c_file.c \
         src/common/c_log.c \
         src/common/c_memory.c \
         src/common/c_os_posix.c \

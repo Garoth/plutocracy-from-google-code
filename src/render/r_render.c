@@ -15,10 +15,6 @@
 /* Height limit of the clipping stack */
 #define CLIP_STACK 32
 
-extern c_var_t r_clear, r_gl_errors,
-               r_test_model_path, r_test_sprite_num, r_test_sprite_path,
-               r_test_text;
-
 /* Keep track of how many faces we render each frame */
 c_count_t r_count_faces;
 
@@ -174,29 +170,41 @@ static void set_gl_state(void)
 }
 
 /******************************************************************************\
+ Reloads the test model when [r_test_model] changes value.
+\******************************************************************************/
+static int test_model_update(c_var_t *var, c_var_value_t value)
+{
+        R_model_cleanup(&test_model);
+        if (!value.s[0])
+                return TRUE;
+        return R_model_init(&test_model, value.s);
+}
+
+/******************************************************************************\
  Loads all the render testing assets.
 \******************************************************************************/
 static void load_test_assets(void)
 {
         /* Test model */
-        C_var_unlatch(&r_test_model_path);
-        if (*r_test_model_path.value.s)
-                R_model_init(&test_model, r_test_model_path.value.s);
+        C_var_unlatch(&r_test_model);
+        if (*r_test_model.value.s)
+                R_model_init(&test_model, r_test_model.value.s);
+        r_test_model.edit = C_VE_FUNCTION;
+        r_test_model.update = test_model_update;
 
         /* Spinning sprites */
         C_var_unlatch(&r_test_sprite_num);
-        C_var_unlatch(&r_test_sprite_path);
-        if (r_test_sprite_num.value.n && r_test_sprite_path.value.s[0]) {
+        C_var_unlatch(&r_test_sprite);
+        if (r_test_sprite_num.value.n && r_test_sprite.value.s[0]) {
                 int i;
 
                 C_rand_seed((unsigned int)time(NULL));
                 test_sprites = C_malloc(r_test_sprite_num.value.n *
                                         sizeof (*test_sprites));
-                R_sprite_init(test_sprites, r_test_sprite_path.value.s);
+                R_sprite_init(test_sprites, r_test_sprite.value.s);
                 test_sprites[0].origin = C_vec2(32, 32);
                 for (i = 1; i < r_test_sprite_num.value.n; i++) {
-                        R_sprite_init(test_sprites + i,
-                                      r_test_sprite_path.value.s);
+                        R_sprite_init(test_sprites + i, r_test_sprite.value.s);
                         test_sprites[i].origin = C_vec2(r_width_2d *
                                                         C_rand_real(),
                                                         r_height_2d *
@@ -293,7 +301,7 @@ void render_test_sprites(void)
 {
         int i;
 
-        if (!r_test_sprite_path.value.s[0] || r_test_sprite_num.value.n < 1)
+        if (!r_test_sprite.value.s[0] || r_test_sprite_num.value.n < 1)
                 return;
         for (i = 0; i < r_test_sprite_num.value.n; i++) {
                 R_sprite_render(test_sprites + i);

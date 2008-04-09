@@ -35,6 +35,9 @@
 #include <SDL_image.h>
 #include <SDL_ttf.h>
 
+/* zlib */
+#include <zlib.h>
+
 /* Ensure common definitions */
 #ifndef TRUE
 #define TRUE 1
@@ -76,6 +79,8 @@
 #ifdef PLUTOCRACY_LIBC_ERRORS
 #undef calloc
 #define calloc(s) ERROR_use_C_calloc
+#undef fopen
+#define fopen(n, m) ERROR_use_C_file_open
 #undef fclose
 #define fclose(f) ERROR_use_C_file_close
 #undef free
@@ -90,6 +95,8 @@
 #define strlen(s) ERROR_use_C_strlen
 #undef strncpy
 #define strncpy(d, s, n) ERROR_use_C_strncpy
+#undef FILE
+#define FILE ERROR_use_c_file_t
 #endif
 
 /* Vectors */
@@ -122,7 +129,6 @@ typedef enum {
         C_VT_INTEGER,
         C_VT_FLOAT,
         C_VT_STRING,
-        C_VT_STRING_DYNAMIC,
 } c_var_type_t;
 
 /* Variables can be set at different times */
@@ -133,14 +139,24 @@ typedef enum {
         C_VE_FUNCTION,
 } c_var_edit_t;
 
-/* Wrap the standard library file I/O */
-typedef FILE c_file_t;
+/* File I/O types */
+typedef enum {
+        C_FT_NONE,
+        C_FT_LIBC,
+        C_FT_ZLIB,
+} c_file_type_t;
+
+/* Wrap multiple file I/O libraries */
+typedef struct {
+        c_file_type_t type;
+        void *stream;
+} c_file_t;
 
 /* Holds all possible variable types */
 typedef union {
         int n;
         float f;
-        char *s;
+        char s[256];
 } c_var_value_t;
 
 /* Callback for GUI log handler */
@@ -172,8 +188,8 @@ typedef struct c_array {
 
 /* A structure to hold the data for a file that is being read in tokens */
 typedef struct c_token_file {
-        c_file_t *file;
-        char *pos, *token, swap, filename[256], buffer[4000];
+        char filename[256], buffer[4000], swap, *pos, *token;
+        c_file_t file;
         int eof;
 } c_token_file_t;
 
@@ -191,6 +207,20 @@ typedef struct c_count {
         int start_frame, start_time, last_time;
         float value;
 } c_count_t;
+
+/* c_file.c */
+void C_file_cleanup(c_file_t *);
+int C_file_init_read(c_file_t *, const char *name);
+int C_file_init_write(c_file_t *, const char *name);
+int C_file_printf(c_file_t *file, const char *fmt, ...);
+int C_file_read(c_file_t *file, char *buf, int len);
+int C_file_vprintf(c_file_t *file, const char *fmt, va_list va);
+int C_file_write(c_file_t *file, const char *buf, int len);
+void C_token_file_cleanup(c_token_file_t *);
+int C_token_file_init(c_token_file_t *, const char *filename);
+void C_token_file_init_string(c_token_file_t *, const char *string);
+const char *C_token_file_read_full(c_token_file_t *, int *out_quoted);
+#define C_token_file_read(f) C_token_file_read_full(f, NULL)
 
 /* c_log.c */
 #define C_assert(s) C_assert_full(__FILE__, __LINE__, __func__, !(s), #s)
@@ -274,29 +304,15 @@ void C_rand_seed(unsigned int);
 #define C_bool_string(b) ((b) ? "TRUE" : "FALSE")
 c_color_t C_color_string(const char *);
 char *C_escape_string(const char *);
-void C_file_close(c_file_t *);
-#define C_file_gets(f, buf) fgets(buf, sizeof (buf), f)
-#define C_file_open_read(name) fopen(name, "r")
-#define C_file_open_write(name) fopen(name, "w")
-#define C_file_read(f, buf, len) fread(buf, 1, len, f)
-#define C_file_printf(f, fm, ...) fprintf(f, fm, ## __VA_ARGS__)
-#define C_file_vprintf(f, fm, v) vfprintf(f, fm, v)
-#define C_file_write(f, buf, len) fwrite(buf, 1, len, f)
 #define C_is_digit(c) (((c) >= '0' && (c) <= '9') || (c) == '.' || (c) == '-')
 #define C_is_print(c) ((c) > 0 && (c) < 0x7f)
 #define C_is_space(c) ((c) > 0 && (c) <= ' ')
-int C_read_file(const char *filename, char *buffer, int size);
 char *C_skip_spaces(const char *str);
 #define C_strdup(s) C_strdup_full(__FILE__, __LINE__, __func__, s)
 char *C_strdup_full(const char *file, int line, const char *func, const char *);
 int C_strlen(const char *);
 int C_strncpy(char *dest, const char *src, int len);
 #define C_strncpy_buf(d, s) C_strncpy(d, s, sizeof (d))
-void C_token_file_cleanup(c_token_file_t *);
-int C_token_file_init(c_token_file_t *, const char *filename);
-void C_token_file_init_string(c_token_file_t *, const char *string);
-const char *C_token_file_read_full(c_token_file_t *, int *out_quoted);
-#define C_token_file_read(f) C_token_file_read_full(f, NULL)
 int C_utf8_append(char *dest, int *dest_i, int dest_sz, const char *src);
 char *C_utf8_encode(unsigned int unicode, int *len);
 int C_utf8_index(char *str, int n);

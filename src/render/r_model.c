@@ -21,7 +21,7 @@ static c_ref_t *data_root;
  Finish parsing an object.
 \******************************************************************************/
 static int finish_object(r_model_data_t *data, int frame, int object,
-                          c_array_t *verts, c_array_t *indices)
+                         c_array_t *verts, c_array_t *indices)
 {
         r_static_mesh_t *mesh;
         int index, index_last;
