@@ -40,22 +40,22 @@ void C_register_variables(void)
 {
         /* Message logging */
         C_register_integer(&c_log_level, "c_log_level", C_LOG_WARNING,
-                           "log detail level: 0 = disable, to 4 = traces");
+                           _("log detail level: 0 = disable, to 4 = traces"));
         c_log_level.edit = C_VE_ANYTIME;
         C_register_string(&c_log_file, "c_log_file", "",
-                          "filename to redirect log output to");
+                          _("filename to redirect log output to"));
 
         /* FPS cap */
         C_register_integer(&c_max_fps, "c_max_fps", 120,
-                           "software frames-per-second limit");
+                           _("software frames-per-second limit"));
         c_max_fps.edit = C_VE_ANYTIME;
         C_register_integer(&c_show_fps, "c_show_fps", FALSE,
-                           "enable to display current frames-per-second");
+                           _("enable to display current frames-per-second"));
         c_show_fps.edit = C_VE_ANYTIME;
 
         /* Memory checking */
         C_register_integer(&c_mem_check, "c_mem_check", FALSE,
-                           "enable to debug memory allocations");
+                           _("enable to debug memory allocations"));
 }
 
 /******************************************************************************\

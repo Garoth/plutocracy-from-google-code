@@ -172,7 +172,7 @@ top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 INCLUDES = 
 LDADD = -lm -lz @SDL_LIBS@
-AM_CFLAGS = @SDL_CFLAGS@
+AM_CFLAGS = @SDL_CFLAGS@ -DLOCALEDIR=\""$(datadir)/locale"\"
 
 # All source and header files part of the project
 plutocracy_SOURCES = \
