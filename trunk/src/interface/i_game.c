@@ -30,11 +30,11 @@ static void quit_button_clicked(i_button_t *button)
 void I_game_init(i_window_t *window)
 {
         /* Label */
-        I_label_init(&label, "Game Menu:");
+        I_label_init(&label, _("Game Menu:"));
         I_widget_add(&window->widget, &label.widget);
 
         /* Quit button */
-        I_button_init(&quit_button, NULL, "Quit", TRUE);
+        I_button_init(&quit_button, NULL, _("Quit"), TRUE);
         quit_button.on_click = (i_callback_f)quit_button_clicked;
         I_widget_add(&window->widget, &quit_button.widget);
 }

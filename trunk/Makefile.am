@@ -1,6 +1,6 @@
 INCLUDES =
 LDADD = -lm -lz @SDL_LIBS@
-AM_CFLAGS = @SDL_CFLAGS@
+AM_CFLAGS = @SDL_CFLAGS@ -DLOCALEDIR=\""$(datadir)/locale"\"
 
 bin_PROGRAMS = plutocracy
 

@@ -38,6 +38,11 @@
 /* zlib */
 #include <zlib.h>
 
+/* GNU gettext */
+#include <locale.h>
+#include <libintl.h>
+#define _(s) gettext(s)
+
 /* Ensure common definitions */
 #ifndef TRUE
 #define TRUE 1

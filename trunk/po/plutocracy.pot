@@ -1,0 +1,201 @@
+# Plutocracy translation template
+# Copyright (C) 2008 Michael Levin
+# This file is distributed under the same license as the Plutocracy package.
+# Michael Levin <risujin@risujin.org>, 2008.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: Plutocracy 0.0.0\n"
+"Report-Msgid-Bugs-To: Michael Levin <risujin@risujin.org>\n"
+"POT-Creation-Date: 2008-04-09 01:11-0500\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=CHARSET\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: src/render/r_variables.c:41
+msgid "1 = windowed mode, 0 = fullscreen"
+msgstr ""
+
+#: src/interface/i_console.c:228
+msgid "Console:"
+msgstr ""
+
+#: src/interface/i_game.c:33
+msgid "Game Menu:"
+msgstr ""
+
+#: src/interface/i_game.c:37
+msgid "Quit"
+msgstr ""
+
+#: src/plutocracy.c:232
+msgid "Untranslated version"
+msgstr ""
+
+#: src/render/r_variables.c:48
+msgid "background clear color"
+msgstr ""
+
+#: src/interface/i_variables.c:75
+msgid "darkness of interface shadows: 0-1."
+msgstr ""
+
+#: src/render/r_variables.c:39
+msgid "depth buffer bits: 16 or 24 bits"
+msgstr ""
+
+#: src/common/c_variables.c:58
+msgid "enable to debug memory allocations"
+msgstr ""
+
+#: src/common/c_variables.c:53
+msgid "enable to display current frames-per-second"
+msgstr ""
+
+#: src/render/r_variables.c:50
+msgid "enable to quit if there is a GL error"
+msgstr ""
+
+#: src/render/r_variables.c:43
+msgid "enable vertical sync"
+msgstr ""
+
+#: src/common/c_variables.c:46
+msgid "filename to redirect log output to"
+msgstr ""
+
+#: src/render/r_variables.c:44
+msgid "gamma correction"
+msgstr ""
+
+#: src/game/g_variables.c:27
+msgid "globe subdivision iterations, 0-5"
+msgstr ""
+
+#: src/interface/i_variables.c:62
+msgid "interface alternate text color"
+msgstr ""
+
+#: src/interface/i_variables.c:31
+msgid "interface event traces: 1 = SDL, 2 = widgets"
+msgstr ""
+
+#: src/interface/i_variables.c:59
+msgid "interface text color"
+msgstr ""
+
+#: src/common/c_variables.c:43
+msgid "log detail level: 0 = disable, to 4 = traces"
+msgstr ""
+
+#: src/render/r_variables.c:59
+msgid "number of test sprites to show"
+msgstr ""
+
+#: src/render/r_variables.c:72
+msgid "path to GUI font TTF file"
+msgstr ""
+
+#: src/render/r_variables.c:55
+msgid "path to PLUM model to test"
+msgstr ""
+
+#: src/render/r_variables.c:66
+msgid "path to TTF console font file"
+msgstr ""
+
+#: src/interface/i_variables.c:48
+msgid "path to decorated button hover texture"
+msgstr ""
+
+#: src/interface/i_variables.c:44
+msgid "path to decorated button pressed texture"
+msgstr ""
+
+#: src/interface/i_variables.c:40
+msgid "path to decorated button texture"
+msgstr ""
+
+#: src/interface/i_variables.c:52
+msgid "path to icon button hover texture"
+msgstr ""
+
+#: src/interface/i_variables.c:56
+msgid "path to icon button pressed texture"
+msgstr ""
+
+#: src/render/r_variables.c:57
+msgid "path to test sprite texture"
+msgstr ""
+
+#: src/interface/i_variables.c:73
+msgid "path to theme config"
+msgstr ""
+
+#: src/interface/i_variables.c:70
+msgid "path to window hanger texture"
+msgstr ""
+
+#: src/interface/i_variables.c:79
+msgid "path to window widget background texture"
+msgstr ""
+
+#: src/interface/i_variables.c:83
+msgid "path to work-area widget background texture"
+msgstr ""
+
+#: src/interface/i_variables.c:36
+msgid "pixel width of borders in interface"
+msgstr ""
+
+#: src/interface/i_variables.c:65
+msgid "rate of fade in and out for widgets"
+msgstr ""
+
+#: src/render/r_variables.c:46
+msgid "scales the interface pixel unit"
+msgstr ""
+
+#: src/interface/i_variables.c:88
+msgid "scrolling speed in pixels per second"
+msgstr ""
+
+#: src/game/g_variables.c:24
+msgid "seed for globe terrain generator"
+msgstr ""
+
+#: src/render/r_variables.c:75
+msgid "size of GUI font in points"
+msgstr ""
+
+#: src/render/r_variables.c:69
+msgid "size of console font in points"
+msgstr ""
+
+#: src/common/c_variables.c:50
+msgid "software frames-per-second limit"
+msgstr ""
+
+#: src/render/r_variables.c:61
+msgid "text to test rendering"
+msgstr ""
+
+#: src/render/r_variables.c:37
+msgid "texture color depth: 16 or 32 bits"
+msgstr ""
+
+#: src/render/r_variables.c:35
+msgid "window height in pixels"
+msgstr ""
+
+#: src/render/r_variables.c:33
+msgid "window width in pixels"
+msgstr ""
+
+#: src/interface/i_variables.c:91
+msgid "zoom speed in units per click"
+msgstr ""
