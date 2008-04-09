@@ -317,7 +317,7 @@ void R_configure_globe(r_tile_t *tiles)
 \******************************************************************************/
 void R_find_tile_neighbors(int index, int neighbors[3])
 {
-        int i, j, neighbors_len, tile, tiles[12];
+        int i, j, neighbors_len, tile, tiles[12] = {0};
         unsigned short original, pos;
 
         neighbors_len = 0;
