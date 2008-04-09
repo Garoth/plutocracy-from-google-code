@@ -19,17 +19,17 @@ extern c_var_t c_log_level, c_log_file;
 c_log_event_f c_log_func;
 c_log_mode_t c_log_mode;
 
-static FILE *log_file;
+static c_file_t log_file;
 
 /******************************************************************************\
  Close the log file to conserve file handles.
 \******************************************************************************/
 void C_close_log_file(void)
 {
-        if (!log_file || log_file == stderr)
+        if (!log_file.type)
                 return;
         C_debug("Closing log-file");
-        C_file_close(log_file);
+        C_file_cleanup(&log_file);
 }
 
 /******************************************************************************\
@@ -40,11 +40,10 @@ void C_open_log_file(void)
         C_var_unlatch(&c_log_file);
         if (!c_log_file.value.s[0])
                 return;
-        log_file = C_file_open_write(c_log_file.value.s);
-        if (log_file)
-                C_debug("Opened log-file '%s'", c_log_file.value.s);
+        if (C_file_init_write(&log_file, c_log_file.value.s))
+                C_debug("Opened log file '%s'", c_log_file.value.s);
         else
-                C_warning("Failed to open log-file '%s'",
+                C_warning("Failed to open log file '%s'",
                           c_log_file.value.s);
 }
 
@@ -185,8 +184,8 @@ void C_log(c_log_level_t level, const char *file, int line,
         vsprintf(buffer, fmt2, va);
         va_end(va);
         wrapped = C_wrap_log(buffer, margin, C_LOG_WRAP_COLS, &len);
-        if (log_file)
-                C_file_write(log_file, wrapped, len);
+        if (log_file.type)
+                C_file_write(&log_file, wrapped, len);
         else
                 fputs(wrapped, stderr);
 

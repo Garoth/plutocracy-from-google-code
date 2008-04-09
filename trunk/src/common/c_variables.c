@@ -59,26 +59,6 @@ void C_register_variables(void)
 }
 
 /******************************************************************************\
- Frees dynamically allocated string variables so the leak checker will not
- get angry.
-\******************************************************************************/
-void C_cleanup_variables(void)
-{
-        c_var_t *var;
-
-        var = root;
-        while (var) {
-                C_var_unlatch(var);
-                if (var->type == C_VT_STRING_DYNAMIC) {
-                        C_free(var->value.s);
-                        var->value.s = "";
-                        var->type = C_VT_STRING;
-                }
-                var = var->next;
-        }
-}
-
-/******************************************************************************\
  This function will register a static configurable variable. The data is stored
  in the c_var_t [var], which is guaranteed to always have the specified
  [type] and can be addressed using [name] from within a configuration string.
@@ -140,7 +120,7 @@ void C_register_string(c_var_t *var, const char *name, const char *value_s,
 {
         c_var_value_t value;
 
-        value.s = (char *)value_s;
+        C_strncpy_buf(value.s, value_s);
         var_register(var, name, C_VT_STRING, value, comment);
 }
 
@@ -194,8 +174,7 @@ void C_var_set(c_var_t *var, const char *string)
                         return;
                 break;
         case C_VT_STRING:
-        case C_VT_STRING_DYNAMIC:
-                new_value.s = (char *)string;
+                C_strncpy_buf(new_value.s, string);
                 if (!strcmp(var_value->s, string))
                         return;
                 break;
@@ -216,29 +195,18 @@ void C_var_set(c_var_t *var, const char *string)
         if (var->edit == C_VE_LATCHED) {
                 var->has_latched = TRUE;
                 set_string = "latched";
-                if (var->type == C_VT_STRING && var->value.s != var->latched.s)
-                        C_free(var->latched.s);
         }
+        *var_value = new_value;
         switch (var->type) {
         case C_VT_INTEGER:
-                *var_value = new_value;
                 C_debug("Integer '%s' %s %d", var->name,
                         set_string, new_value.n);
                 break;
         case C_VT_FLOAT:
-                *var_value = new_value;
-                C_debug("Float '%s' %s %g", var->name,
-                        set_string, new_value.f);
+                C_debug("Float '%s' %s %g", var->name, set_string, new_value.f);
                 break;
-        case C_VT_STRING_DYNAMIC:
-                C_free(var_value->s);
         case C_VT_STRING:
-                new_value.s = C_strdup(string);
-                if (var->edit != C_VE_LATCHED)
-                        var->type = C_VT_STRING_DYNAMIC;
-                *var_value = new_value;
-                C_debug("String '%s' %s '%s'", var->name,
-                        set_string, new_value.s);
+                C_debug("String '%s' %s '%s'", var->name, set_string, string);
         default:
                 break;
         }
@@ -255,8 +223,6 @@ void C_var_unlatch(c_var_t *var)
                 return;
         var->value = var->latched;
         var->has_latched = FALSE;
-        if (var->type == C_VT_STRING)
-                var->type = C_VT_STRING_DYNAMIC;
 }
 
 /******************************************************************************\
@@ -276,7 +242,6 @@ static void print_var(const c_var_t *var)
                              var->name, var->value.f, var->comment);
                 break;
         case C_VT_STRING:
-        case C_VT_STRING_DYNAMIC:
                 value = C_va("String '%s' is '%s' (%s)",
                              var->name, var->value.s, var->comment);
                 break;
@@ -293,7 +258,6 @@ static void print_var(const c_var_t *var)
                         latched = C_va(" (%g latched)", var->latched.f);
                         break;
                 case C_VT_STRING:
-                case C_VT_STRING_DYNAMIC:
                         latched = C_va(" ('%s' latched)", var->latched.s);
                 default:
                         break;
@@ -317,18 +281,18 @@ static void parse_config_token_file(c_token_file_t *tf)
 {
         c_var_t *var;
         const char *token;
-        int quoted;
+        int quoted, have_value;
         char value[2048];
 
         var = NULL;
-        value[0] = NUL;
+        have_value = FALSE;
         for (;;) {
                 token = C_token_file_read_full(tf, &quoted);
                 if (!token[0] && !quoted)
                         break;
                 if (!C_is_digit(token[0]) && !quoted) {
                         if (var) {
-                                if (value[0])
+                                if (have_value)
                                         C_var_set(var, value);
                                 else
                                         print_var(var);
@@ -337,12 +301,14 @@ static void parse_config_token_file(c_token_file_t *tf)
                         if (!var)
                                 C_print(C_va("No variable named '%s'", token));
                         value[0] = NUL;
+                        have_value = FALSE;
                         continue;
                 }
                 strncat(value, token, sizeof (value));
+                have_value = TRUE;
         }
         if (var) {
-                if (value[0])
+                if (have_value)
                         C_var_set(var, value);
                 else
                         print_var(var);
@@ -379,23 +345,22 @@ void C_parse_config_string(const char *string)
 \******************************************************************************/
 void C_write_autogen(void)
 {
-        c_file_t *file;
+        c_file_t file;
         c_var_t *var;
         const char *value;
         int i, chars;
         char comment[80];
 
-        file = C_file_open_write(C_va("%s/autogen.cfg", C_user_dir()));
-        if (!file) {
+        if (!C_file_init_write(&file, C_va("%s/autogen.cfg", C_user_dir()))) {
                 C_warning("Failed to save variable config");
                 return;
         }
-        C_file_printf(file, "/*************************************************"
-                            "*****************************\\\n"
-                            " %s - Automatically generated config\n"
-                            "\\************************************************"
-                            "******************************/\n\n",
-                            PACKAGE_STRING);
+        C_file_printf(&file, "/***************************************"
+                             "***************************************\\\n"
+                             " %s - Automatically generated config\n"
+                             "\\**************************************"
+                             "****************************************/\n\n",
+                             PACKAGE_STRING);
         for (var = root; var; var = var->next) {
                 if (!var->archive)
                         continue;
@@ -415,7 +380,6 @@ void C_write_autogen(void)
                         value = C_va("%g", var->value.f);
                         break;
                 case C_VT_STRING:
-                case C_VT_STRING_DYNAMIC:
                         if (!strcmp(var->value.s, var->stock.s))
                                 continue;
                         value = C_escape_string(var->value.s);
@@ -431,7 +395,7 @@ void C_write_autogen(void)
                         C_utf8_strlen(value, &chars);
                         chars += C_strlen(var->name) + 1;
                         if (chars > 31) {
-                                C_file_printf(file, "\n/* %s */\n",
+                                C_file_printf(&file, "\n/* %s */\n",
                                               var->comment);
                                 comment[0] = '\n';
                                 comment[1] = NUL;
@@ -451,11 +415,11 @@ void C_write_autogen(void)
                 }
 
                 if (value)
-                        C_file_printf(file, "%s %s%s\n",
+                        C_file_printf(&file, "%s %s%s\n",
                                       var->name, value, comment);
         }
-        C_file_printf(file, "\n");
-        C_file_close(file);
+        C_file_printf(&file, "\n");
+        C_file_cleanup(&file);
         C_debug("Saved autogen config");
 }
 

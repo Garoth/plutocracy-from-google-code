@@ -48,15 +48,16 @@ CONFIG_CLEAN_FILES =
 am__installdirs = "$(DESTDIR)$(bindir)"
 binPROGRAMS_INSTALL = $(INSTALL_PROGRAM)
 PROGRAMS = $(bin_PROGRAMS)
-am_plutocracy_OBJECTS = c_log.$(OBJEXT) c_memory.$(OBJEXT) \
-	c_os_posix.$(OBJEXT) c_rand.$(OBJEXT) c_string.$(OBJEXT) \
-	c_time.$(OBJEXT) c_variables.$(OBJEXT) g_globe.$(OBJEXT) \
-	g_variables.$(OBJEXT) i_button.$(OBJEXT) i_console.$(OBJEXT) \
-	i_entry.$(OBJEXT) i_game.$(OBJEXT) i_layout.$(OBJEXT) \
-	i_variables.$(OBJEXT) i_widgets.$(OBJEXT) n_client.$(OBJEXT) \
-	r_assets.$(OBJEXT) r_globe.$(OBJEXT) r_model.$(OBJEXT) \
-	r_render.$(OBJEXT) r_sprite.$(OBJEXT) r_static_mesh.$(OBJEXT) \
-	r_variables.$(OBJEXT) plutocracy.$(OBJEXT)
+am_plutocracy_OBJECTS = c_file.$(OBJEXT) c_log.$(OBJEXT) \
+	c_memory.$(OBJEXT) c_os_posix.$(OBJEXT) c_rand.$(OBJEXT) \
+	c_string.$(OBJEXT) c_time.$(OBJEXT) c_variables.$(OBJEXT) \
+	g_globe.$(OBJEXT) g_variables.$(OBJEXT) i_button.$(OBJEXT) \
+	i_console.$(OBJEXT) i_entry.$(OBJEXT) i_game.$(OBJEXT) \
+	i_layout.$(OBJEXT) i_variables.$(OBJEXT) i_widgets.$(OBJEXT) \
+	n_client.$(OBJEXT) r_assets.$(OBJEXT) r_globe.$(OBJEXT) \
+	r_model.$(OBJEXT) r_render.$(OBJEXT) r_sprite.$(OBJEXT) \
+	r_static_mesh.$(OBJEXT) r_variables.$(OBJEXT) \
+	plutocracy.$(OBJEXT)
 plutocracy_OBJECTS = $(am_plutocracy_OBJECTS)
 plutocracy_LDADD = $(LDADD)
 plutocracy_DEPENDENCIES =
@@ -170,11 +171,12 @@ target_alias = @target_alias@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 INCLUDES = 
-LDADD = -lm @SDL_LIBS@
+LDADD = -lm -lz @SDL_LIBS@
 AM_CFLAGS = @SDL_CFLAGS@
 
 # All source and header files part of the project
 plutocracy_SOURCES = \
+        src/common/c_file.c \
         src/common/c_log.c \
         src/common/c_memory.c \
         src/common/c_os_posix.c \
@@ -303,6 +305,7 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/c_file.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/c_log.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/c_memory.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/c_os_posix.Po@am__quote@
@@ -342,6 +345,20 @@ distclean-compile:
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$<' object='$@' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(COMPILE) -c `$(CYGPATH_W) '$<'`
+
+c_file.o: src/common/c_file.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT c_file.o -MD -MP -MF $(DEPDIR)/c_file.Tpo -c -o c_file.o `test -f 'src/common/c_file.c' || echo '$(srcdir)/'`src/common/c_file.c
+@am__fastdepCC_TRUE@	mv -f $(DEPDIR)/c_file.Tpo $(DEPDIR)/c_file.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='src/common/c_file.c' object='c_file.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o c_file.o `test -f 'src/common/c_file.c' || echo '$(srcdir)/'`src/common/c_file.c
+
+c_file.obj: src/common/c_file.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT c_file.obj -MD -MP -MF $(DEPDIR)/c_file.Tpo -c -o c_file.obj `if test -f 'src/common/c_file.c'; then $(CYGPATH_W) 'src/common/c_file.c'; else $(CYGPATH_W) '$(srcdir)/src/common/c_file.c'; fi`
+@am__fastdepCC_TRUE@	mv -f $(DEPDIR)/c_file.Tpo $(DEPDIR)/c_file.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='src/common/c_file.c' object='c_file.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o c_file.obj `if test -f 'src/common/c_file.c'; then $(CYGPATH_W) 'src/common/c_file.c'; else $(CYGPATH_W) '$(srcdir)/src/common/c_file.c'; fi`
 
 c_log.o: src/common/c_log.c
 @am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT c_log.o -MD -MP -MF $(DEPDIR)/c_log.Tpo -c -o c_log.o `test -f 'src/common/c_log.c' || echo '$(srcdir)/'`src/common/c_log.c
