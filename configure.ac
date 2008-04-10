@@ -63,5 +63,8 @@ if test x$enable_libc_errors = xyes; then
                 [Generate errors for deprecated libc functions])
 fi
 
-AC_OUTPUT(Makefile)
+# Look for an external gettext (gettextize wants this)
+AM_GNU_GETTEXT([external])
+
+AC_OUTPUT(Makefile po/Makefile.in)
 

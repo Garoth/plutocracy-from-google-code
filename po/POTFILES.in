@@ -1,0 +1,12 @@
+# List of source files which contain translatable strings.
+
+# Variable comments are always translated
+src/common/c_variables.c
+src/common/g_variables.c
+src/common/i_variables.c
+src/common/r_variables.c
+
+# Interface files that are translated
+src/interface/i_game.c
+src/interface/i_console.c
+
