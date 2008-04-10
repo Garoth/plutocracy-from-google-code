@@ -588,10 +588,6 @@ void I_widget_event(i_widget_t *widget, i_event_t event)
                 else
                         C_zero(widget);
                 break;
-        case I_EV_MOUSE_UP:
-                if (widget->state == I_WS_ACTIVE)
-                        widget->state = I_WS_HOVER;
-                break;
         case I_EV_MOUSE_MOVE:
                 if (mouse_focus == widget && widget->entry)
                         i_key_focus = widget;
@@ -679,12 +675,8 @@ void I_dispatch(const SDL_Event *ev)
                         i_key_focus->event_func(i_key_focus, event);
         } else if (event == I_EV_MOUSE_DOWN) {
                 if (mouse_focus && mouse_focus->event_func &&
-                    mouse_focus->shown && mouse_focus->state != I_WS_DISABLED) {
-                        if (mouse_focus->state == I_WS_READY ||
-                            mouse_focus->state == I_WS_HOVER)
-                                mouse_focus->state = I_WS_ACTIVE;
+                    mouse_focus->shown && mouse_focus->state != I_WS_DISABLED)
                         mouse_focus->event_func(mouse_focus, event);
-                }
         } else
                 I_widget_event(&i_root, event);
 

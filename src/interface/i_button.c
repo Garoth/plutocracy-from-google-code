@@ -14,7 +14,6 @@
 
 /******************************************************************************\
  Button widget event function.
- FIXME: Activated by scroll wheel?
 \******************************************************************************/
 int I_button_event(i_button_t *button, i_event_t event)
 {
