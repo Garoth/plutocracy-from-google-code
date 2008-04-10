@@ -39,8 +39,8 @@
 #include <zlib.h>
 
 /* GNU gettext */
+#include <gettext.h>
 #include <locale.h>
-#include <libintl.h>
 #define _(s) gettext(s)
 
 /* Ensure common definitions */
