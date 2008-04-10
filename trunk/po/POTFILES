@@ -1,0 +1,6 @@
+     ../src/common/c_variables.c \
+     ../src/common/g_variables.c \
+     ../src/common/i_variables.c \
+     ../src/common/r_variables.c \
+     ../src/interface/i_game.c \
+     ../src/interface/i_console.c

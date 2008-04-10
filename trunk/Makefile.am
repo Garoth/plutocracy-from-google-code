@@ -1,6 +1,7 @@
 INCLUDES =
 LDADD = -lm -lz @SDL_LIBS@
 AM_CFLAGS = @SDL_CFLAGS@ -DLOCALEDIR=\""$(datadir)/locale"\"
+SUBDIRS = po
 
 bin_PROGRAMS = plutocracy
 
@@ -53,10 +54,12 @@ ${srcdir}/src/common/c_shared.h.gch: ${srcdir}/src/common/c_shared.h \
 CLEANFILES = src/common/c_shared.h.gch
 
 # Distribute extra files with the tarball
-EXTRA_DIST = gui models blender config vc8 gendoc
+EXTRA_DIST = config.rpath m4/ChangeLog  gui models blender config vc8 gendoc
 
 # We don't want to distrubute SVN cache, delete it out of the packaging
 # directories before creating the tarball
 dist-hook:
 	rm -rf `find $(distdir) -name .svn`
 
+
+ACLOCAL_AMFLAGS = -I m4
