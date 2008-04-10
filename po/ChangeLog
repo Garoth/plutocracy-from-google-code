@@ -1,5 +1,9 @@
 2008-04-10  gettextize  <bug-gnu-gettext@gnu.org>
 
+	* Makefile.in.in: Upgrade to gettext-0.17.
+
+2008-04-10  gettextize  <bug-gnu-gettext@gnu.org>
+
 	* Makefile.in.in: New file, from gettext-0.16.1.
 	* boldquot.sed: New file, from gettext-0.16.1.
 	* en@boldquot.header: New file, from gettext-0.16.1.
