@@ -27,15 +27,12 @@ void G_render(void)
 \******************************************************************************/
 static void setup_tiles(void)
 {
-        int i, j, neighbors[3];
+        int i;
 
         C_debug("Locating tile neighbors");
         for (i = 0; i < r_tiles; i++) {
-                R_find_tile_neighbors(i, neighbors);
-                for (j = 0; j < 3; j++)
-                        g_tiles[i].neighbors[j] = g_tiles + neighbors[j];
                 render_tiles[i].terrain = 0; // C_rand() % 16;
-                render_tiles[i].height = 0; //C_rand_real() * 3;
+                render_tiles[i].height = C_rand_real() * 3;
                 g_tiles[i].render = render_tiles + i;
         }
 }

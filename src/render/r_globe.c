@@ -21,7 +21,7 @@ typedef struct globe_vertex {
         c_color_t color[3];
         c_vec3_t no;
         c_vec3_t co;
-        int next, neighbor;
+        int next;
 } globe_vertex_t;
 #pragma pack(pop)
 
@@ -57,49 +57,110 @@ static void sphericize(void)
 
 /******************************************************************************\
  Subdivide each globe tile into four tiles.
+
+ Partioned tile vertices are numbered in the following manner:
+
+          3
+         / \
+        4---5
+
+     6  2---1  9
+    / \  \ /  / \
+   7---8  0  10-11
+
+ A vertex's neighbor is the vertex of the tile that shares the next counter-
+ clockwise edge of the tile from that vertex.
 \******************************************************************************/
 static void subdivide4(void)
 {
         c_vec3_t mid_0_1, mid_0_2, mid_1_2;
         globe_vertex_t *verts;
-        int j;
+        int i, i_flip, j, n[3], n_flip[3];
 
-        for (j = r_tiles - 1; j >= 0; j--) {
-                mid_0_1 = C_vec3_add(vertices[3 * j].co,
-                                     vertices[3 * j + 1].co);
+        for (i = r_tiles - 1; i >= 0; i--) {
+                verts = vertices + 12 * i;
+
+                /* Determine which faces are flipped (over 0 vertex) */
+                i_flip = i < flip_limit;
+                for (j = 0; j < 3; j++) {
+                        n[j] = vertices[3 * i + j].next / 3;
+                        n_flip[j] = (n[j] < flip_limit) != i_flip;
+                }
+
+                /* Compute mid-point coordinates */
+                mid_0_1 = C_vec3_add(vertices[3 * i].co,
+                                     vertices[3 * i + 1].co);
                 mid_0_1 = C_vec3_divf(mid_0_1, 2.f);
-                mid_0_2 = C_vec3_add(vertices[3 * j].co,
-                                     vertices[3 * j + 2].co);
+                mid_0_2 = C_vec3_add(vertices[3 * i].co,
+                                     vertices[3 * i + 2].co);
                 mid_0_2 = C_vec3_divf(mid_0_2, 2.f);
-                mid_1_2 = C_vec3_add(vertices[3 * j + 1].co,
-                                     vertices[3 * j + 2].co);
+                mid_1_2 = C_vec3_add(vertices[3 * i + 1].co,
+                                     vertices[3 * i + 2].co);
                 mid_1_2 = C_vec3_divf(mid_1_2, 2.f);
-                verts = vertices + 12 * j;
-
-                /* Bottom-left triangle */
-                verts[9].co = mid_0_1;
-                verts[10].co = vertices[3 * j + 1].co;
-                verts[11].co = mid_1_2;
 
                 /* Bottom-right triangle */
-                verts[6].co = mid_0_2;
-                verts[7].co = mid_1_2;
-                verts[8].co = vertices[3 * j + 2].co;
+                verts[9].co = mid_0_2;
+                verts[9].next = 12 * i + 1;
+                verts[10].co = mid_1_2;
+                verts[10].next = 12 * n[1] + 8;
+                verts[11].co = vertices[3 * i + 2].co;
+                verts[11].next = 12 * n[2] + (n_flip[2] ? 7 : 3);
+
+                /* Bottom-left triangle */
+                verts[6].co = mid_0_1;
+                verts[6].next = 12 * n[0] + (n_flip[0] ? 9 : 4);
+                verts[7].co = vertices[3 * i + 1].co;
+                verts[7].next = 12 * n[1] + 11;
+                verts[8].co = mid_1_2;
+                verts[8].next = 12 * i;
 
                 /* Top triangle */
-                verts[3].co = vertices[3 * j].co;
+                verts[3].co = vertices[3 * i].co;
+                verts[3].next = 12 * n[0] + (n_flip[0] ? 3 : 7);
                 verts[4].co = mid_0_1;
+                verts[4].next = 12 * i + 2;
                 verts[5].co = mid_0_2;
+                verts[5].next = 12 * n[2] + (n_flip[2] ? 4 : 9);
 
                 /* Center triangle */
                 verts[0].co = mid_1_2;
+                verts[0].next = 12 * i + 10;
                 verts[1].co = mid_0_2;
+                verts[1].next = 12 * i + 5;
                 verts[2].co = mid_0_1;
+                verts[2].next = 12 * i + 6;
         }
         flip_limit *= 4;
         r_tiles *= 4;
         radius *= 2;
         sphericize();
+}
+
+/******************************************************************************\
+ Finds vertex neighbors by iteration. Runs in O(n^2) time.
+\******************************************************************************/
+static void find_neighbors(void)
+{
+        int i, i_next, j, j_next;
+
+        for (i = 0; i < r_tiles * 3; i++) {
+                i_next = 3 * (i / 3) + (i + 1) % 3;
+                for (j = 0; ; j++) {
+                        if (j == i)
+                                continue;
+                        if (C_vec3_eq(vertices[i].co, vertices[j].co)) {
+                                j_next = 3 * (j / 3) + (3 + j - 1) % 3;
+                                if (C_vec3_eq(vertices[i_next].co,
+                                              vertices[j_next].co)) {
+                                        vertices[i].next = j;
+                                        break;
+                                }
+                        }
+                        if (j >= r_tiles * 3)
+                                C_error("Failed to find next vertex for "
+                                        "vertex %d", i);
+                }
+        }
 }
 
 /******************************************************************************\
@@ -117,27 +178,20 @@ static void generate_icosahedron(void)
         int i, regular_faces[] = {
 
                 /* Front faces */
-                7, 5, 4,
-                5, 7, 0,
-                0, 2, 5,
-                3, 5, 2,
-                2, 10, 3,
-                10, 2, 1,
+                7, 5, 4,        5, 7, 0,        0, 2, 5,
+                3, 5, 2,        2, 10, 3,       10, 2, 1,
 
                 /* Rear faces */
-                1, 11, 10,
-                11, 1, 6,
-                6, 8, 11,
-                9, 11, 8,
-                8, 4, 9,
-                4, 8, 7,
+                1, 11, 10,      11, 1, 6,       6, 8, 11,
+                9, 11, 8,       8, 4, 9,        4, 8, 7,
 
                 /* Top/bottom faces */
-                0, 6, 1,
-                6, 0, 7,
-                9, 3, 10,
-                3, 9, 4,
+                0, 6, 1,        6, 0, 7,        9, 3, 10,       3, 9, 4,
         };
+
+        flip_limit = 4;
+        r_tiles = 20;
+        radius = sqrtf(C_TAU + 2);
 
         /* Flipped (over 0 vertex) face vertices */
         vertices[0].co = C_vec3(0, C_TAU, 1);
@@ -152,14 +206,12 @@ static void generate_icosahedron(void)
         vertices[9].co = C_vec3(0, -C_TAU, -1);
         vertices[10].co = C_vec3(-C_TAU, -1, 0);
         vertices[11].co = C_vec3(-1, 0, -C_TAU);
-        flip_limit = 4;
 
         /* Regular face vertices */
-        r_tiles = 20;
         for (i = 12; i < r_tiles * 3; i++)
                 vertices[i].co = vertices[regular_faces[i - 12]].co;
 
-        radius = sqrtf(C_TAU + 2);
+        find_neighbors();
 }
 
 /******************************************************************************\
@@ -168,7 +220,7 @@ static void generate_icosahedron(void)
 \******************************************************************************/
 void R_generate_globe(int seed, int subdiv4)
 {
-        int i, j;
+        int i;
 
         if (subdiv4 < 0)
                 subdiv4 = 0;
@@ -182,24 +234,14 @@ void R_generate_globe(int seed, int subdiv4)
         memset(vertices, 0, sizeof (vertices));
         generate_icosahedron();
 
-        C_debug("Subdividng globe (%dx)", subdiv4);
+        C_debug("Subdividing globe %d times", subdiv4);
         for (i = 0; i < subdiv4; i++)
                 subdivide4();
 
-        C_debug("Processing vertices");
+        /* Set indices and normals */
         for (i = 0; i < r_tiles * 3; i++) {
                 indices[i] = i;
-                vertices[i].next = i;
                 vertices[i].no = C_vec3_norm(vertices[i].co);
-
-                /* Add this vertex to a circular linked list of co-located
-                   vertices. This greatly speeds up finding tile neighbors. */
-                for (j = 0; j < i; j++)
-                        if (C_vec3_eq(vertices[j].co, vertices[i].co)) {
-                                vertices[i].next = vertices[j].next;
-                                vertices[j].next = i;
-                                break;
-                        }
         }
 
         /* Load the terrain texture */
@@ -272,6 +314,8 @@ static int vertex_indices(int vert, int verts[6])
         verts[0] = vert;
         pos = vertices[vert].next;
         for (i = 1; pos != vert; i++) {
+                if (i > 6)
+                        C_error("Vertex %d ring overflow", vert);
                 verts[i] = pos;
                 pos = vertices[pos].next;
         }
@@ -279,29 +323,39 @@ static int vertex_indices(int vert, int verts[6])
 }
 
 /******************************************************************************\
+ Sets the height of one tile.
+\******************************************************************************/
+static void set_tile_height(int tile, float height)
+{
+        c_vec3_t co;
+        float dist;
+        int i, j, verts[6], verts_len;
+
+        for (i = 0; i < 3; i++) {
+                verts_len = vertex_indices(3 * tile + i, verts);
+                height = height / verts_len;
+                for (j = 0; j < verts_len; j++) {
+                        co = vertices[verts[j]].co;
+                        dist = C_vec3_len(co);
+                        co = C_vec3_scalef(co, (dist + height) / dist);
+                        vertices[verts[j]].co = co;
+                }
+        }
+}
+
+/******************************************************************************\
  Adjusts globe verices to show the tile's height.
 \******************************************************************************/
 void R_configure_globe(r_tile_t *tiles)
 {
-        float dist, height, bottom;
-        int i, j, k, verts[6], verts_len, tx, ty, flip;
+        float bottom;
+        int i, tx, ty, flip;
 
         C_debug("Configuring globe");
         for (i = 0; i < r_tiles; i++) {
+                set_tile_height(i, tiles[i].height);
 
-                /* Set tile height */
-                for (j = 0; j < 3; j++) {
-                        verts_len = vertex_indices(3 * i + j, verts);
-                        height = tiles[i].height / verts_len;
-                        for (k = 0; k < verts_len; k++) {
-                                dist = C_vec3_len(vertices[verts[k]].co);
-                                vertices[verts[k]].co =
-                                        C_vec3_scalef(vertices[verts[k]].co,
-                                                      (dist + height) / dist);
-                        }
-                }
-
-                /* Tile texture */
+                /* Tile terrain texture */
                 ty = tiles[i].terrain / 4;
                 tx = tiles[i].terrain - ty * 4;
                 bottom = (ty + 1) * 0.25f - 0.0351f;
@@ -310,35 +364,5 @@ void R_configure_globe(r_tile_t *tiles)
                 vertices[3 * i + 1].uv = C_vec2((tx + flip) * 0.25f, bottom);
                 vertices[3 * i + 2].uv = C_vec2((tx + !flip) * 0.25f, bottom);
         }
-}
-
-/******************************************************************************\
- Finds all tiles that share an edge with this tile.
-\******************************************************************************/
-void R_find_tile_neighbors(int index, int neighbors[3])
-{
-        int i, j, neighbors_len, tile, tiles[12] = {0};
-        unsigned short original, pos;
-
-        neighbors_len = 0;
-        tiles[0] = -1;
-        for (i = 0; i < 3; i++) {
-                original = 3 * index + i;
-                pos = vertices[original].next;
-                while (pos != original) {
-                        tile = pos / 3;
-                        for (j = 0; tiles[j] >= 0; j++)
-                                if (tiles[j] == tile) {
-                                        neighbors[neighbors_len++] = tile;
-                                        if (neighbors_len >= 3)
-                                                return;
-                                        goto next_tile;
-                                }
-                        tiles[j] = tile;
-                        tiles[j + 1] = -1;
-next_tile:              pos = vertices[pos].next;
-                }
-        }
-        //C_error("Tile %d does not have three neighbors", index);
 }
 
