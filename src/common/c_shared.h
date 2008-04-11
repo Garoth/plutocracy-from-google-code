@@ -10,9 +10,6 @@
  FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
 \******************************************************************************/
 
-/* Project configuration header */
-#include "config.h"
-
 /* Standard library */
 #include <stdlib.h>
 #include <stdio.h>
@@ -39,9 +36,14 @@
 #include <zlib.h>
 
 /* GNU gettext */
-#include <gettext.h>
+#include <libintl.h>
 #include <locale.h>
 #define _(s) gettext(s)
+
+/* Strings that identify the program */
+#define PACKAGE "plutocracy"
+#define PACKAGE_STRING "Plutocracy" VERSION
+#define VERSION "0.0.0"
 
 /* Ensure common definitions */
 #ifndef TRUE
