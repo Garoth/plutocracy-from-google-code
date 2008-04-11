@@ -177,11 +177,6 @@ int main(int argc, char *argv[])
            control the order of cleanup */
         atexit(cleanup);
 
-        /* gettext initialization */
-        setlocale(LC_ALL, "");
-        bindtextdomain(PACKAGE, LOCALEDIR);
-        textdomain(PACKAGE);
-
         /* Each namespace must register its configurable variables */
         C_register_variables();
         R_register_variables();

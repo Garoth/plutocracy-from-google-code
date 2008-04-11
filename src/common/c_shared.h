@@ -10,6 +10,9 @@
  FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
 \******************************************************************************/
 
+/* Configuration parameters */
+#include "config.h"
+
 /* Standard library */
 #include <stdlib.h>
 #include <stdio.h>
@@ -36,14 +39,7 @@
 #include <zlib.h>
 
 /* GNU gettext */
-#include <libintl.h>
-#include <locale.h>
-#define _(s) gettext(s)
-
-/* Strings that identify the program */
-#define PACKAGE "plutocracy"
-#define PACKAGE_STRING "Plutocracy" VERSION
-#define VERSION "0.0.0"
+#define _(s) s
 
 /* Ensure common definitions */
 #ifndef TRUE
@@ -348,7 +344,6 @@ extern float c_frame_sec;
 
 /* c_variables.c */
 const char *C_auto_complete(const char *);
-void C_cleanup_variables(void);
 int C_parse_config_file(const char *filename);
 void C_parse_config_string(const char *string);
 void C_register_float(c_var_t *, const char *name, float value,
