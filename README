@@ -64,7 +64,7 @@
         Feb 2008 -
         Models, game design, development blog
 
-      Amanieu d'Antras
+      Amanieu d'Antras <amanieu@gmail.com>
         Apr 2008 -
         Additional programming
 
@@ -205,11 +205,11 @@
 
   4.6  GPL-Compatible Exceptions
   ------------------------------
-  
+
     The following files are not licensed under the GPL, but can be freely
-    distributed. See the each individual file's copyright notice for specific 
+    distributed. See the each individual file's copyright notice for specific
     details:
-    
+
       vc8/glext.h, vc8/glxext.h, vc8/wglext.h (© 2007 The Khronos Group Inc)
 
 
