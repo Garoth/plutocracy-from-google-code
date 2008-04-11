@@ -64,6 +64,7 @@ if test x$enable_libc_errors = xyes; then
 fi
 
 # Look for an external gettext (gettextize wants these)
+ALL_LINGUAS=""
 AM_GNU_GETTEXT_VERSION(0.17-2)
 AM_GNU_GETTEXT([external])
 

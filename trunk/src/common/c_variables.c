@@ -82,6 +82,7 @@ static void var_register(c_var_t *var, const char *name, c_var_type_t type,
         var->stock = var->latched = var->value = value;
         var->edit = C_VE_LATCHED;
         var->archive = TRUE;
+        var->changed = -1;
 
         /* Attach the var to the linked list, sorted alphabetically */
         prev = NULL;
@@ -197,6 +198,7 @@ void C_var_set(c_var_t *var, const char *string)
                 set_string = "latched";
         }
         *var_value = new_value;
+        var->changed = c_frame;
         switch (var->type) {
         case C_VT_INTEGER:
                 C_debug("Integer '%s' %s %d", var->name,
@@ -467,3 +469,17 @@ const char *C_auto_complete(const char *str)
 
         return buf;
 }
+
+/******************************************************************************\
+ A convenience function that changes [var]'s edit mode to C_VE_FUNCTION, sets
+ its update function, and finally calls the update function on the current
+ value of the variable.
+\******************************************************************************/
+void C_var_update(c_var_t *var, c_var_update_f update)
+{
+        C_var_unlatch(var);
+        update(var, var->value);
+        var->edit = C_VE_FUNCTION;
+        var->update = update;
+}
+

@@ -28,18 +28,9 @@ typedef struct globe_vertex {
 int r_tiles;
 
 static globe_vertex_t vertices[R_TILES_MAX * 3];
-static r_texture_t *texture;
 static float radius;
 static int flip_limit;
 static unsigned short indices[R_TILES_MAX * 3];
-
-/******************************************************************************\
- Cleanup globe assets.
-\******************************************************************************/
-void R_cleanup_globe(void)
-{
-        R_texture_free(texture);
-}
 
 /******************************************************************************\
  Space out the vertices at even distance from the sphere.
@@ -244,10 +235,6 @@ void R_generate_globe(int seed, int subdiv4)
                 vertices[i].no = C_vec3_norm(vertices[i].co);
         }
 
-        /* Load the terrain texture */
-        R_texture_free(texture);
-        texture = R_texture_load("models/globe/terrain.png", TRUE);
-
         r_cam_dist = radius + R_ZOOM_MIN;
 }
 
@@ -259,7 +246,7 @@ void R_render_globe(void)
         float left[] = { -1.0, 0.0, 0.0, 0.0 };
 
         R_set_mode(R_MODE_3D);
-        R_texture_select(texture);
+        R_texture_select(r_tile_tex);
 
         /* Have a light from the left */
         glEnable(GL_LIGHTING);

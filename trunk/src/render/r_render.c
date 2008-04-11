@@ -40,6 +40,24 @@ static int clip_stack;
 static float clip_values[CLIP_STACK * 4];
 
 /******************************************************************************\
+ Updates when [r_pixel_scale] changes.
+\******************************************************************************/
+static int pixel_scale_update(c_var_t *var, c_var_value_t value)
+{
+        if (value.f < R_PIXEL_SCALE_MIN)
+                value.f = R_PIXEL_SCALE_MIN;
+        if (value.f > R_PIXEL_SCALE_MAX)
+                value.f = R_PIXEL_SCALE_MAX;
+        r_width_2d = (int)(r_width.value.n / value.f + 0.5f);
+        r_height_2d = (int)(r_height.value.n / value.f + 0.5f);
+        r_pixel_scale.value = value;
+        R_free_fonts();
+        R_load_fonts();
+        C_debug("2D area %dx%d", r_width_2d, r_height_2d);
+        return TRUE;
+}
+
+/******************************************************************************\
  Sets the video mode. SDL creates a window in windowed mode.
 \******************************************************************************/
 static int set_video_mode(void)
@@ -53,6 +71,13 @@ static int set_video_mode(void)
         C_var_unlatch(&r_windowed);
         C_var_unlatch(&r_width);
         C_var_unlatch(&r_height);
+
+        /* Ensure a minimum render size or pre-rendering will crash */
+        if (r_width.value.n < 640)
+                r_width.value.n = 640;
+        if (r_height.value.n < 480)
+                r_height.value.n = 480;
+
         SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
         SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 8);
         SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, r_depth_bits.value.n);
@@ -76,15 +101,8 @@ static int set_video_mode(void)
                 return FALSE;
         }
 
-        /* The 2D dimensions are scaled */
-        C_var_unlatch(&r_pixel_scale);
-        if (r_pixel_scale.value.f < R_PIXEL_SCALE_MIN)
-                r_pixel_scale.value.f = R_PIXEL_SCALE_MIN;
-        if (r_pixel_scale.value.f > R_PIXEL_SCALE_MAX)
-                r_pixel_scale.value.f = R_PIXEL_SCALE_MAX;
-        r_width_2d = (int)(r_width.value.n / r_pixel_scale.value.f + 0.5f);
-        r_height_2d = (int)(r_height.value.n / r_pixel_scale.value.f + 0.5f);
-        C_debug("2D area %dx%d", r_width_2d, r_height_2d);
+        /* Update 2D area */
+        C_var_update(&r_pixel_scale, pixel_scale_update);
 
         /* Set screen view */
         glViewport(0, 0, r_width.value.n, r_height.value.n);
@@ -117,8 +135,6 @@ static void check_gl_extensions(void)
 \******************************************************************************/
 static void set_gl_state(void)
 {
-        c_color_t clear_color;
-
         glEnable(GL_TEXTURE_2D);
         glEnable(GL_COLOR_MATERIAL);
 
@@ -134,11 +150,6 @@ static void set_gl_state(void)
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
         glDepthFunc(GL_LEQUAL);
 
-        /* Set the background color */
-        C_var_unlatch(&r_clear);
-        clear_color = C_color_string(r_clear.value.s);
-        glClearColor(clear_color.r, clear_color.g, clear_color.b, 1.0);
-
         /* Setting the color parameter will modulate the texture color */
         glColorMaterial(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE);
         glColor3f(1.0, 1.0, 1.0);
@@ -151,10 +162,6 @@ static void set_gl_state(void)
         /* GL_SMOOTH here means faces are shaded taking each vertex into
            account rather than one solid color per face */
         glShadeModel(GL_SMOOTH);
-
-        /* Set the OpenGL gamma ramp using SDL */
-        C_var_unlatch(&r_gamma);
-        SDL_SetGamma(r_gamma.value.f, r_gamma.value.f, r_gamma.value.f);
 
         /* Not configured to a render mode intially */
         r_mode = R_MODE_NONE;
@@ -225,6 +232,26 @@ static void load_test_assets(void)
 }
 
 /******************************************************************************\
+ Updates the gamma ramp when [r_gamma] changes.
+\******************************************************************************/
+static int gamma_update(c_var_t *var, c_var_value_t value)
+{
+        return SDL_SetGamma(value.f, value.f, value.f) >= 0;
+}
+
+/******************************************************************************\
+ Updates the clear color when [r_clear] changes.
+\******************************************************************************/
+static int clear_update(c_var_t *var, c_var_value_t value)
+{
+        c_color_t clear_color;
+
+        clear_color = C_color_string(value.s);
+        glClearColor(clear_color.r, clear_color.g, clear_color.b, 1.f);
+        return TRUE;
+}
+
+/******************************************************************************\
  Creates the client window. Initializes OpenGL settings such view matrices,
  culling, and depth testing. Returns TRUE on success.
  TODO: Try backup "safe" video modes when user requested mode fails.
@@ -245,6 +272,15 @@ void R_init(void)
         /* Everything should be ready to load assets now */
         R_load_assets();
         load_test_assets();
+
+        /* Prerender procedural textures after asset loading */
+        R_prerender();
+
+        /* Set updatable variables */
+        C_var_update(&r_clear, clear_update);
+        C_var_update(&r_gamma, gamma_update);
+        r_pixel_scale.edit = C_VE_FUNCTION;
+        r_pixel_scale.update = pixel_scale_update;
 }
 
 /******************************************************************************\

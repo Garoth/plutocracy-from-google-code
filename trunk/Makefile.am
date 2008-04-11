@@ -1,6 +1,7 @@
 INCLUDES =
 LDADD = -lm -lz @SDL_LIBS@
-AM_CFLAGS = @SDL_CFLAGS@ -DLOCALEDIR=\""$(datadir)/locale"\"
+AM_CFLAGS = @SDL_CFLAGS@ -DLOCALEDIR=\""$(datadir)/locale"\" \
+            -DDATADIR=\"$(datadir)\" -DPKGDATADIR=\"$(pkgdatadir)\"
 SUBDIRS = po
 
 bin_PROGRAMS = plutocracy
@@ -37,12 +38,19 @@ plutocracy_SOURCES = \
         src/render/r_common.h \
         src/render/r_globe.c \
         src/render/r_model.c \
+        src/render/r_prerender.c \
         src/render/r_render.c \
         src/render/r_shared.h \
         src/render/r_sprite.c \
         src/render/r_static_mesh.c \
         src/render/r_variables.c \
         src/plutocracy.c
+
+# These files are installed (typically) in /usr/share/plutocracy
+pkgdata_DATA = ChangeLog README TODO
+install-data-hook:
+	$(install_sh_DATA) `find gui models ! -path \*\.svn\* -type f` \
+	                   $(pkgdatadir)
 
 # Precompiled header rules
 ${plutocracy_OBJECTS}: ${srcdir}/src/common/c_shared.h.gch
@@ -54,12 +62,13 @@ ${srcdir}/src/common/c_shared.h.gch: ${srcdir}/src/common/c_shared.h \
 CLEANFILES = src/common/c_shared.h.gch
 
 # Distribute extra files with the tarball
-EXTRA_DIST = config.rpath m4/ChangeLog  gui models blender config vc8 gendoc
+EXTRA_DIST = config.rpath m4/ChangeLog gui models blender vc8 gendoc
 
 # We don't want to distrubute SVN cache, delete it out of the packaging
 # directories before creating the tarball
 dist-hook:
 	rm -rf `find $(distdir) -name .svn`
 
-
+# Added by gettextize
 ACLOCAL_AMFLAGS = -I m4
+

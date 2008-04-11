@@ -14,7 +14,8 @@
 
 #include "c_shared.h"
 
-int c_time_msec, c_frame_msec, c_frame;
+c_count_t c_throttled;
+int c_time_msec, c_frame_msec, c_frame, c_throttle_msec;
 float c_frame_sec;
 
 /******************************************************************************\
@@ -24,6 +25,7 @@ void C_time_init(void)
 {
         c_frame = 1;
         c_time_msec = SDL_GetTicks();
+        C_count_reset(&c_throttled);
 }
 
 /******************************************************************************\
@@ -114,5 +116,30 @@ float C_count_fps(const c_count_t *counter)
         if (seconds <= 0.f)
                 return 0.f;
         return (c_frame - counter->start_frame) / seconds;
+}
+
+/******************************************************************************\
+ Throttle framerate if vsync is off or broken so we don't burn the CPU for no
+ reason. SDL_Delay() will only work in 10ms increments on some systems so it
+ is necessary to break down our delays into bite-sized chunks ([wait_msec]).
+ TODO: Why do we need to wait twice as long as the correct rate?
+\******************************************************************************/
+void C_throttle_fps(void)
+{
+        static int wait_msec;
+        int msec;
+
+        if (c_max_fps.value.n < 1)
+                return;
+        c_throttle_msec = 2000 / c_max_fps.value.n;
+        if (c_frame_msec > c_throttle_msec)
+                return;
+        wait_msec += c_throttle_msec - c_frame_msec;
+        msec = (wait_msec / 10) * 10;
+        if (msec > 0) {
+                SDL_Delay(msec);
+                wait_msec -= msec;
+                C_count_add(&c_throttled, msec);
+        }
 }
 

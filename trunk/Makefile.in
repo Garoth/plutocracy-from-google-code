@@ -14,6 +14,7 @@
 
 @SET_MAKE@
 
+
 VPATH = @srcdir@
 pkgdatadir = $(datadir)/@PACKAGE@
 pkglibdir = $(libdir)/@PACKAGE@
@@ -52,7 +53,7 @@ am__CONFIG_DISTCLEAN_FILES = config.status config.cache config.log \
 mkinstalldirs = $(install_sh) -d
 CONFIG_HEADER = config.h
 CONFIG_CLEAN_FILES =
-am__installdirs = "$(DESTDIR)$(bindir)"
+am__installdirs = "$(DESTDIR)$(bindir)" "$(DESTDIR)$(pkgdatadir)"
 binPROGRAMS_INSTALL = $(INSTALL_PROGRAM)
 PROGRAMS = $(bin_PROGRAMS)
 am_plutocracy_OBJECTS = c_file.$(OBJEXT) c_log.$(OBJEXT) \
@@ -62,9 +63,9 @@ am_plutocracy_OBJECTS = c_file.$(OBJEXT) c_log.$(OBJEXT) \
 	i_console.$(OBJEXT) i_entry.$(OBJEXT) i_game.$(OBJEXT) \
 	i_layout.$(OBJEXT) i_variables.$(OBJEXT) i_widgets.$(OBJEXT) \
 	n_client.$(OBJEXT) r_assets.$(OBJEXT) r_globe.$(OBJEXT) \
-	r_model.$(OBJEXT) r_render.$(OBJEXT) r_sprite.$(OBJEXT) \
-	r_static_mesh.$(OBJEXT) r_variables.$(OBJEXT) \
-	plutocracy.$(OBJEXT)
+	r_model.$(OBJEXT) r_prerender.$(OBJEXT) r_render.$(OBJEXT) \
+	r_sprite.$(OBJEXT) r_static_mesh.$(OBJEXT) \
+	r_variables.$(OBJEXT) plutocracy.$(OBJEXT)
 plutocracy_OBJECTS = $(am_plutocracy_OBJECTS)
 plutocracy_LDADD = $(LDADD)
 plutocracy_DEPENDENCIES =
@@ -84,6 +85,14 @@ RECURSIVE_TARGETS = all-recursive check-recursive dvi-recursive \
 	install-pdf-recursive install-ps-recursive install-recursive \
 	installcheck-recursive installdirs-recursive pdf-recursive \
 	ps-recursive uninstall-recursive
+am__vpath_adj_setup = srcdirstrip=`echo "$(srcdir)" | sed 's|.|.|g'`;
+am__vpath_adj = case $$p in \
+    $(srcdir)/*) f=`echo "$$p" | sed "s|^$$srcdirstrip/||"`;; \
+    *) f=$$p;; \
+  esac;
+am__strip_dir = `echo $$p | sed -e 's|^.*/||'`;
+pkgdataDATA_INSTALL = $(INSTALL_DATA)
+DATA = $(pkgdata_DATA)
 RECURSIVE_CLEAN_TARGETS = mostlyclean-recursive clean-recursive	\
   distclean-recursive maintainer-clean-recursive
 ETAGS = etags
@@ -214,7 +223,9 @@ top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 INCLUDES = 
 LDADD = -lm -lz @SDL_LIBS@
-AM_CFLAGS = @SDL_CFLAGS@ -DLOCALEDIR=\""$(datadir)/locale"\"
+AM_CFLAGS = @SDL_CFLAGS@ -DLOCALEDIR=\""$(datadir)/locale"\" \
+            -DDATADIR=\"$(datadir)\" -DPKGDATADIR=\"$(pkgdatadir)\"
+
 SUBDIRS = po
 
 # All source and header files part of the project
@@ -249,6 +260,7 @@ plutocracy_SOURCES = \
         src/render/r_common.h \
         src/render/r_globe.c \
         src/render/r_model.c \
+        src/render/r_prerender.c \
         src/render/r_render.c \
         src/render/r_shared.h \
         src/render/r_sprite.c \
@@ -256,10 +268,15 @@ plutocracy_SOURCES = \
         src/render/r_variables.c \
         src/plutocracy.c
 
+
+# These files are installed (typically) in /usr/share/plutocracy
+pkgdata_DATA = ChangeLog README TODO
 CLEANFILES = src/common/c_shared.h.gch
 
 # Distribute extra files with the tarball
-EXTRA_DIST = config.rpath m4/ChangeLog  gui models blender config vc8 gendoc
+EXTRA_DIST = config.rpath m4/ChangeLog gui models blender vc8 gendoc
+
+# Added by gettextize
 ACLOCAL_AMFLAGS = -I m4
 all: config.h
 	$(MAKE) $(AM_MAKEFLAGS) all-recursive
@@ -371,6 +388,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/r_assets.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/r_globe.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/r_model.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/r_prerender.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/r_render.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/r_sprite.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/r_static_mesh.Po@am__quote@
@@ -684,6 +702,20 @@ r_model.obj: src/render/r_model.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o r_model.obj `if test -f 'src/render/r_model.c'; then $(CYGPATH_W) 'src/render/r_model.c'; else $(CYGPATH_W) '$(srcdir)/src/render/r_model.c'; fi`
 
+r_prerender.o: src/render/r_prerender.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT r_prerender.o -MD -MP -MF $(DEPDIR)/r_prerender.Tpo -c -o r_prerender.o `test -f 'src/render/r_prerender.c' || echo '$(srcdir)/'`src/render/r_prerender.c
+@am__fastdepCC_TRUE@	mv -f $(DEPDIR)/r_prerender.Tpo $(DEPDIR)/r_prerender.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='src/render/r_prerender.c' object='r_prerender.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o r_prerender.o `test -f 'src/render/r_prerender.c' || echo '$(srcdir)/'`src/render/r_prerender.c
+
+r_prerender.obj: src/render/r_prerender.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT r_prerender.obj -MD -MP -MF $(DEPDIR)/r_prerender.Tpo -c -o r_prerender.obj `if test -f 'src/render/r_prerender.c'; then $(CYGPATH_W) 'src/render/r_prerender.c'; else $(CYGPATH_W) '$(srcdir)/src/render/r_prerender.c'; fi`
+@am__fastdepCC_TRUE@	mv -f $(DEPDIR)/r_prerender.Tpo $(DEPDIR)/r_prerender.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='src/render/r_prerender.c' object='r_prerender.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o r_prerender.obj `if test -f 'src/render/r_prerender.c'; then $(CYGPATH_W) 'src/render/r_prerender.c'; else $(CYGPATH_W) '$(srcdir)/src/render/r_prerender.c'; fi`
+
 r_render.o: src/render/r_render.c
 @am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT r_render.o -MD -MP -MF $(DEPDIR)/r_render.Tpo -c -o r_render.o `test -f 'src/render/r_render.c' || echo '$(srcdir)/'`src/render/r_render.c
 @am__fastdepCC_TRUE@	mv -f $(DEPDIR)/r_render.Tpo $(DEPDIR)/r_render.Po
@@ -753,6 +785,23 @@ plutocracy.obj: src/plutocracy.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	source='src/plutocracy.c' object='plutocracy.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o plutocracy.obj `if test -f 'src/plutocracy.c'; then $(CYGPATH_W) 'src/plutocracy.c'; else $(CYGPATH_W) '$(srcdir)/src/plutocracy.c'; fi`
+install-pkgdataDATA: $(pkgdata_DATA)
+	@$(NORMAL_INSTALL)
+	test -z "$(pkgdatadir)" || $(MKDIR_P) "$(DESTDIR)$(pkgdatadir)"
+	@list='$(pkgdata_DATA)'; for p in $$list; do \
+	  if test -f "$$p"; then d=; else d="$(srcdir)/"; fi; \
+	  f=$(am__strip_dir) \
+	  echo " $(pkgdataDATA_INSTALL) '$$d$$p' '$(DESTDIR)$(pkgdatadir)/$$f'"; \
+	  $(pkgdataDATA_INSTALL) "$$d$$p" "$(DESTDIR)$(pkgdatadir)/$$f"; \
+	done
+
+uninstall-pkgdataDATA:
+	@$(NORMAL_UNINSTALL)
+	@list='$(pkgdata_DATA)'; for p in $$list; do \
+	  f=$(am__strip_dir) \
+	  echo " rm -f '$(DESTDIR)$(pkgdatadir)/$$f'"; \
+	  rm -f "$(DESTDIR)$(pkgdatadir)/$$f"; \
+	done
 
 # This directory's subdirectories are mostly independent; you can cd
 # into them and run `make' without going through this Makefile.
@@ -1032,10 +1081,10 @@ distcleancheck: distclean
 	       exit 1; } >&2
 check-am: all-am
 check: check-recursive
-all-am: Makefile $(PROGRAMS) config.h
+all-am: Makefile $(PROGRAMS) $(DATA) config.h
 installdirs: installdirs-recursive
 installdirs-am:
-	for dir in "$(DESTDIR)$(bindir)"; do \
+	for dir in "$(DESTDIR)$(bindir)" "$(DESTDIR)$(pkgdatadir)"; do \
 	  test -z "$$dir" || $(MKDIR_P) "$$dir"; \
 	done
 install: install-recursive
@@ -1084,7 +1133,9 @@ info: info-recursive
 
 info-am:
 
-install-data-am:
+install-data-am: install-pkgdataDATA
+	@$(NORMAL_INSTALL)
+	$(MAKE) $(AM_MAKEFLAGS) install-data-hook
 
 install-dvi: install-dvi-recursive
 
@@ -1121,10 +1172,10 @@ ps: ps-recursive
 
 ps-am:
 
-uninstall-am: uninstall-binPROGRAMS
+uninstall-am: uninstall-binPROGRAMS uninstall-pkgdataDATA
 
 .MAKE: $(RECURSIVE_CLEAN_TARGETS) $(RECURSIVE_TARGETS) install-am \
-	install-strip
+	install-data-am install-strip
 
 .PHONY: $(RECURSIVE_CLEAN_TARGETS) $(RECURSIVE_TARGETS) CTAGS GTAGS \
 	all all-am am--refresh check check-am clean clean-binPROGRAMS \
@@ -1133,16 +1184,20 @@ uninstall-am: uninstall-binPROGRAMS
 	distclean distclean-compile distclean-generic distclean-hdr \
 	distclean-tags distcleancheck distdir distuninstallcheck dvi \
 	dvi-am html html-am info info-am install install-am \
-	install-binPROGRAMS install-data install-data-am install-dvi \
-	install-dvi-am install-exec install-exec-am install-html \
-	install-html-am install-info install-info-am install-man \
-	install-pdf install-pdf-am install-ps install-ps-am \
-	install-strip installcheck installcheck-am installdirs \
-	installdirs-am maintainer-clean maintainer-clean-generic \
-	mostlyclean mostlyclean-compile mostlyclean-generic pdf pdf-am \
-	ps ps-am tags tags-recursive uninstall uninstall-am \
-	uninstall-binPROGRAMS
+	install-binPROGRAMS install-data install-data-am \
+	install-data-hook install-dvi install-dvi-am install-exec \
+	install-exec-am install-html install-html-am install-info \
+	install-info-am install-man install-pdf install-pdf-am \
+	install-pkgdataDATA install-ps install-ps-am install-strip \
+	installcheck installcheck-am installdirs installdirs-am \
+	maintainer-clean maintainer-clean-generic mostlyclean \
+	mostlyclean-compile mostlyclean-generic pdf pdf-am ps ps-am \
+	tags tags-recursive uninstall uninstall-am \
+	uninstall-binPROGRAMS uninstall-pkgdataDATA
 
+install-data-hook:
+	$(install_sh_DATA) `find gui models ! -path \*\.svn\* -type f` \
+	                   $(pkgdatadir)
 
 # Precompiled header rules
 ${plutocracy_OBJECTS}: ${srcdir}/src/common/c_shared.h.gch
