@@ -101,9 +101,15 @@ r_texture_t *R_texture_load(const char *filename, int mipmaps);
 void R_texture_select(r_texture_t *);
 void R_texture_upload(const r_texture_t *, int mipmaps);
 
+extern r_texture_t *r_tile_tex;
+
 /* r_globe.c */
-void R_cleanup_globe(void);
 void R_render_globe(void);
+
+/* r_prerender.c */
+void R_prerender(void);
+
+extern r_texture_t *r_tile_blend_tex[3];
 
 /* r_render.c */
 #define R_check_errors() R_check_errors_full(__FILE__, __LINE__, __func__);
@@ -123,6 +129,6 @@ void R_static_mesh_free(r_static_mesh_t *);
 
 /* r_variables.c */
 extern c_var_t r_clear, r_color_bits, r_depth_bits, r_gamma, r_gl_errors,
-               r_height, r_test_model, r_test_sprite_num, r_test_sprite,
-               r_test_text, r_vsync, r_width, r_windowed;
+               r_test_model, r_test_prerender, r_test_sprite_num, r_test_sprite,
+               r_test_text, r_vsync, r_windowed;
 

@@ -262,6 +262,14 @@ void I_cleanup(void)
 \******************************************************************************/
 void I_render(void)
 {
+        /* If video parameters changed last frame, we need to reconfigure */
+        if (r_pixel_scale.changed == c_frame - 1 ||
+            r_width.changed == c_frame - 1 ||
+            r_height.changed == c_frame - 1) {
+                theme_configure();
+                I_widget_event(&i_root, I_EV_CONFIGURE);
+        }
+
         I_widget_event(&i_root, I_EV_RENDER);
 }
 

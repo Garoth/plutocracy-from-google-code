@@ -5881,6 +5881,7 @@ _ACEOF
 fi
 
 # Look for an external gettext (gettextize wants these)
+ALL_LINGUAS=""
 
 
   { echo "$as_me:$LINENO: checking whether NLS is requested" >&5

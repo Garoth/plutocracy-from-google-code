@@ -20,11 +20,7 @@
 
 #define CORRUPT_CHECK_VALUE 1776
 
-extern c_var_t c_max_fps, c_show_fps;
-
-static c_count_t throttled;
 static r_text_t status_text;
-static int desired_msec;
 
 /******************************************************************************\
  Renders the status text on the screen. This function uses the throttled
@@ -34,42 +30,23 @@ static void render_status(void)
 {
         if (c_show_fps.value.n < 0)
                 return;
-        if (C_count_poll(&throttled, 5000)) {
+        if (C_count_poll(&c_throttled, 5000)) {
                 char *str;
 
                 str = C_va("%.0f fps, (%.0f%% throttled), %.0f faces/frame",
-                           C_count_fps(&throttled),
-                           100.f * C_count_per_frame(&throttled) / desired_msec,
+                           C_count_fps(&c_throttled),
+                           100.f * C_count_per_frame(&c_throttled) /
+                                   c_throttle_msec,
                            C_count_per_frame(&r_count_faces));
                 R_text_configure(&status_text, R_FONT_CONSOLE,
                                  0, 1.f, FALSE, str);
                 status_text.sprite.origin = C_vec2(4, 4);
-                C_count_reset(&throttled);
+                C_count_reset(&c_throttled);
                 C_count_reset(&r_count_faces);
         }
         R_text_render(&status_text);
 }
 
-/******************************************************************************\
- Throttle framerate if vsync is off or broken so we don't burn the CPU for no
- reason. SDL_Delay() will only work in 10ms increments on some systems so it
- is necessary to break down our delays into bite-sized chunks ([wait_msec]).
-\******************************************************************************/
-static void throttle_fps(void)
-{
-        static int wait_msec;
-        int msec;
-
-        if (c_max_fps.value.n < 1 || c_frame_msec > desired_msec)
-                return;
-        wait_msec += desired_msec - c_frame_msec;
-        msec = (wait_msec / 10) * 10;
-        if (msec > 0) {
-                SDL_Delay(msec);
-                wait_msec -= msec;
-                C_count_add(&throttled, msec);
-        }
-}
 
 /******************************************************************************\
  This is the client's graphical main loop.
@@ -81,15 +58,8 @@ static void main_loop(void)
 
         C_status("Main loop");
         C_time_init();
-        C_count_reset(&throttled);
         C_rand_seed((unsigned int)time(NULL));
         R_text_init(&status_text);
-
-        /* Calculate the desired frame msec.
-           TODO: Why do we need to wait twice as long as the correct rate? */
-        if (c_max_fps.value.n >= 1)
-                desired_msec = 2000 / c_max_fps.value.n;
-
         while (!c_exit) {
                 R_start_frame();
                 while (SDL_PollEvent(&ev)) {
@@ -111,7 +81,7 @@ static void main_loop(void)
                 render_status();
                 R_finish_frame();
                 C_time_update();
-                throttle_fps();
+                C_throttle_fps();
 
                 /* This check is a long-shot, but if there was rampant memory
                    corruption this variable's value may have been changed */

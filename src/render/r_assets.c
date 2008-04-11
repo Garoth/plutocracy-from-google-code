@@ -26,11 +26,10 @@ static struct {
 extern c_var_t r_font_console, r_font_console_pt,
                r_font_gui, r_font_gui_pt;
 
-/* Texture linked list */
+r_texture_t *r_tile_tex;
 static c_ref_t *root;
-
-/* SDL texture format */
 static SDL_PixelFormat sdl_format;
+static int ttf_inited;
 
 /******************************************************************************\
  Frees memory associated with a texture.
@@ -419,6 +418,9 @@ void R_load_fonts(void)
 {
         int i;
 
+        if (!ttf_inited)
+                return;
+
         /* Console font */
         C_var_unlatch(&r_font_console);
         C_var_unlatch(&r_font_console_pt);
@@ -468,9 +470,11 @@ void R_load_assets(void)
         if (TTF_Init() == -1)
                 C_error("Failed to initialize SDL TTF library: %s",
                         TTF_GetError());
-
-        /* Load fonts */
+        ttf_inited = TRUE;
         R_load_fonts();
+
+        /* Load textures */
+        r_tile_tex = R_texture_load("models/globe/terrain.png", TRUE);
 }
 
 /******************************************************************************\
@@ -480,6 +484,8 @@ void R_free_fonts(void)
 {
         int i;
 
+        if (!ttf_inited)
+                return;
         for (i = 0; i < R_FONTS; i++)
                 TTF_CloseFont(fonts[i].ttf_font);
 }
@@ -489,7 +495,7 @@ void R_free_fonts(void)
 \******************************************************************************/
 void R_free_assets(void)
 {
-        R_cleanup_globe();
+        R_texture_free(r_tile_tex);
         R_free_fonts();
         TTF_Quit();
 }

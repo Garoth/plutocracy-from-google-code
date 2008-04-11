@@ -182,6 +182,7 @@ struct c_var {
         c_var_type_t type;
         c_var_edit_t edit;
         c_var_update_f update;
+        int changed;
         char has_latched, archive;
 };
 
@@ -334,11 +335,13 @@ float C_count_per_frame(const c_count_t *);
 float C_count_per_sec(const c_count_t *);
 int C_count_poll(c_count_t *, int interval);
 void C_count_reset(c_count_t *);
+void C_throttle_fps(void);
 void C_time_init(void);
 void C_time_update(void);
 unsigned int C_timer(void);
 
-extern int c_time_msec, c_frame_msec, c_frame;
+extern c_count_t c_throttled;
+extern int c_time_msec, c_frame_msec, c_frame, c_throttle_msec;
 extern float c_frame_sec;
 
 /* c_variables.c */
@@ -356,7 +359,9 @@ void C_register_variables(void);
 c_var_t *C_resolve_var(const char *name);
 void C_var_set(c_var_t *, const char *value);
 void C_var_unlatch(c_var_t *);
+void C_var_update(c_var_t *, c_var_update_f);
 void C_write_autogen(void);
 
+extern c_var_t c_max_fps, c_show_fps;
 extern int c_exit;
 
