@@ -89,27 +89,34 @@
   2.1  POSIX systems
   ------------------
 
-    You will need to install the following development packages:
+    On a Debian/Ubuntu system you will need to install the following
+    development packages in addition to your normal compiling environment:
 
-       libsdl-dev
-       libsdl-image-dev
-       libsdl-ttf-dev
+      libsdl-dev
+      libsdl-image-dev
+      libsdl-ttf-dev
+      zlib1g-dev
+      scons
 
-    Plutocracy is packaged with autotools. Compile with:
+    Plutocracy is packaged with SCons. Compile with:
 
-       ./configure && make
+      $ scons
 
-    There are no special configure flags currently. Install with:
+    To install run the following command:
 
-       make install
+      $ scons install prefix=/usr
 
-    See the INSTALL file for generic instructions for Autotools.
+    The 'prefix' argument determines what directory root the program will be
+    installed under (defaults to '/usr/local'). For additional build targets
+    run scons help:
+
+      $ scons -h
 
 
   2.2  Windows
   ------------
 
-    Plutocracy cannot compiled for Windows using Autotools or MinGW because the
+    Plutocracy cannot compiled for Windows using SCons and MinGW because the
     supporting SDL libraries are not available for MinGW.
 
     The vc8 directory contains a solution and project file setup for compiling
@@ -119,6 +126,7 @@
       SDL         http://libsdl.org/
       SDL_image   http://www.libsdl.org/projects/SDL_image/
       SDL_ttf     http://www.libsdl.org/projects/SDL_ttf/
+      zlib        http://www.zlib.net/
 
     To run Plutocracy after compiling, download the runtime DLLs:
 
@@ -179,18 +187,7 @@
       http://dejavu.sourceforge.net/wiki/index.php/License
 
 
-  4.4  Additional Fonts
-  ---------------------
-
-    The following fonts were obtained from www.dafont.com and are covered by
-    their respective licenses. See each font's corresponding text file in the
-    fonts folder for more details:
-
-        gui/fonts/BLKCHCRY.TTF (Earl Allen and Doug Miles, Public Domain)
-        gui/fonts/SF ARchery Black.ttf (© 2001 ShyFonts Type Foundry)
-
-
-  4.5  SDL Notice
+  4.4  SDL Notice
   ---------------
 
     Please include this notice with the SDL runtime environment. This library is
@@ -203,14 +200,16 @@
       http://www.libsdl.org/
 
 
-  4.6  GPL-Compatible Exceptions
+  4.5  GPL-Compatible Exceptions
   ------------------------------
 
     The following files are not licensed under the GPL, but can be freely
     distributed. See the each individual file's copyright notice for specific
     details:
 
-      vc8/glext.h, vc8/glxext.h, vc8/wglext.h (© 2007 The Khronos Group Inc)
+      vc8/glext.h (© 2007 The Khronos Group Inc)
+      gui/fonts/BLKCHCRY.TTF (Earl Allen and Doug Miles, Public Domain)
+      gui/fonts/SF ARchery Black.ttf (© 2001 ShyFonts Type Foundry)
 
 
 
