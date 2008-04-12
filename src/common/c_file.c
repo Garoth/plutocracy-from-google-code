@@ -154,6 +154,7 @@ void C_token_file_init_string(c_token_file_t *tf, const char *string)
         tf->token = tf->pos = tf->buffer;
         tf->swap = tf->buffer[0];
         tf->filename[0] = NUL;
+        tf->file.type = C_FT_NONE;
         tf->eof = TRUE;
 }
 
@@ -162,7 +163,7 @@ void C_token_file_init_string(c_token_file_t *tf, const char *string)
 \******************************************************************************/
 void C_token_file_cleanup(c_token_file_t *tf)
 {
-        if (!tf || !tf->file.stream)
+        if (!tf || !tf->file.stream || !tf->file.type)
                 return;
         C_file_cleanup(&tf->file);
         C_debug("Closed token file '%s'", tf->filename);
@@ -286,5 +287,48 @@ const char *C_token_file_read_full(c_token_file_t *tf, int *quoted)
         if (quoted)
                 *quoted = parsing_string;
         return tf->token;
+}
+
+/******************************************************************************\
+ Reads a string in Quake-like key/value pair format:
+
+   // C and C++ comments allowed
+   c_my_var_has_no_spaces "values always in quotes"
+                          "can be concatenated"
+   c_numbers_not_in_quotes -123.5
+
+ Ignores newlines and spaces. Variable names entered without values will have
+ their current values printed out.
+
+ The [callback] function will be called for every single key and key-value
+ pair. Single keys will have a NULL [value] argument. If [callback] returns
+ FALSE, file parsing will stop.
+
+ The caller is responsible for initializing and cleaning up the token file!
+\******************************************************************************/
+void C_token_file_parse_pairs(c_token_file_t *tf, c_key_value_f callback)
+{
+        const char *token;
+        int quoted, have_value;
+        char key[C_TOKEN_SIZE], value[C_TOKEN_SIZE];
+
+        key[0] = NUL;
+        have_value = FALSE;
+        for (;;) {
+                token = C_token_file_read_full(tf, &quoted);
+                if (!token[0] && !quoted)
+                        break;
+                if (!C_is_digit(token[0]) && !quoted) {
+                        if (key[0] && !callback(key, have_value ? value : NULL))
+                                return;
+                        C_strncpy_buf(key, token);
+                        value[0] = NUL;
+                        have_value = FALSE;
+                        continue;
+                }
+                strncat(value, token, sizeof (value));
+                have_value = TRUE;
+        }
+        callback(key, have_value ? value : NULL);
 }
 

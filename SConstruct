@@ -12,7 +12,7 @@
 # FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
 ################################################################################
 #
-# Note that while SCONS supports Windows, this SConstruct file is for POSIX
+# Note that while SCons supports Windows, this SConstruct file is for POSIX
 # systems only!
 
 import glob, os, sys
@@ -47,7 +47,10 @@ The following build targets are supported:
 # Plutocracy
 plutocracy_src = ['src/plutocracy.c'] + glob.glob('src/*/*.c')
 plutocracy_src.remove('src/common/c_os_windows.c')
-plutocracy_env = Environment()
+plutocracy_env = Environment(ENV = {'PATH' : os.environ['PATH'],
+                                    'TERM' : os.environ['TERM'],
+                                    'HOME' : os.environ['HOME']},
+                             CC = os.environ['CC'])
 if int(ARGUMENTS.get('debug', 1)):
         plutocracy_env.Append(CFLAGS = ['-g', '-Wall'])
 else:
@@ -73,6 +76,11 @@ if int(ARGUMENTS.get('gch', 1)):
         plutocracy_env.Depends(plutocracy_obj, plutocracy_gch)
 
 # Installing Plutocracy
+install_prefix = os.path.join(os.getcwd(),
+                              ARGUMENTS.get('prefix', '/usr/local'))
+install_data = os.path.join(install_prefix, 'share/plutocracy')
+Alias('install', install_prefix)
+Depends('install', plutocracy)
 def InstallRecursive(dest, src):
         files = os.listdir(src)
         for f in files:
@@ -85,11 +93,6 @@ def InstallRecursive(dest, src):
                         InstallRecursive(os.path.join(dest, f), src_path)
                         continue
                 Install(dest, src_path)
-install_prefix = os.path.join(os.getcwd(),
-                              ARGUMENTS.get('prefix', '/usr/local'))
-install_data = os.path.join(install_prefix, 'share/plutocracy')
-Alias('install', install_prefix)
-Depends('install', plutocracy)
 
 # Files that get installed
 Install(os.path.join(install_prefix, 'bin'), plutocracy)
@@ -112,7 +115,10 @@ plutocracy_env.Depends(plutocracy_obj + [plutocracy_gch], 'config.h')
 AlwaysBuild(plutocracy_env.Command('config.h', '', WriteConfigH))
 
 # Gendoc
-gendoc_env = Environment()
+gendoc_env = Environment(ENV = {'PATH' : os.environ['PATH'],
+                                'TERM' : os.environ['TERM'],
+                                'HOME' : os.environ['HOME']},
+                         CC = os.environ['CC'])
 gendoc_env.Append(CFLAGS = ['-g', '-Wall'])
 gendoc = gendoc_env.Program('gendoc/gendoc', glob.glob('gendoc/*.c'))
 def GendocOutput(output, path, title, inputs = []):

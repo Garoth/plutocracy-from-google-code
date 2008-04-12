@@ -143,6 +143,7 @@ static void cleanup(void)
         R_text_cleanup(&status_text);
         R_cleanup();
         SDL_Quit();
+        C_cleanup_lang();
         C_check_leaks();
         C_debug("Done");
 }
@@ -187,6 +188,7 @@ int main(int argc, char *argv[])
         C_parse_config_file(C_va("%s/autogen.cfg", C_user_dir()));
         C_parse_config_file(C_va("%s/autoexec.cfg", C_user_dir()));
         parse_config_args(argc, argv);
+        I_parse_config();
         C_open_log_file();
 
         /* Run tests if they are enabled */
@@ -194,8 +196,8 @@ int main(int argc, char *argv[])
 
         /* Initialize */
         C_status("Initializing " PACKAGE_STRING " client");
-        C_debug(_("Untranslated version"));
-        I_parse_config();
+        C_init_lang();
+        C_translate_vars();
         init_sdl();
         R_init();
         I_init();

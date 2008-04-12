@@ -38,9 +38,6 @@
 /* zlib */
 #include <zlib.h>
 
-/* GNU gettext */
-#define _(s) s
-
 /* Ensure common definitions */
 #ifndef TRUE
 #define TRUE 1
@@ -68,6 +65,9 @@
    the function will not compile on some systems. */
 #define C_VA_BUFFERS 16
 #define C_VA_BUFFER_SIZE 2000
+
+/* This is the size of the largest token a token file can contain */
+#define C_TOKEN_SIZE 4096
 
 /* All angles should be in radians but there are some cases (OpenGL) where
    conversions are necessary */
@@ -168,6 +168,9 @@ typedef void (*c_log_event_f)(c_log_level_t, int margin, const char *);
 /* Callback for cleaning up referenced memory */
 typedef void (*c_ref_cleanup_f)(void *data);
 
+/* Callback for key-value file parsing */
+typedef int (*c_key_value_f)(const char *key, const char *value);
+
 /* Callback for modified variables. Return TRUE to set the value. */
 typedef struct c_var c_var_t;
 typedef int (*c_var_update_f)(c_var_t *, c_var_value_t);
@@ -192,7 +195,7 @@ typedef struct c_array {
 
 /* A structure to hold the data for a file that is being read in tokens */
 typedef struct c_token_file {
-        char filename[256], buffer[4000], swap, *pos, *token;
+        char filename[256], buffer[C_TOKEN_SIZE], swap, *pos, *token;
         c_file_t file;
         int eof;
 } c_token_file_t;
@@ -224,6 +227,7 @@ void C_token_file_cleanup(c_token_file_t *);
 int C_token_file_init(c_token_file_t *, const char *filename);
 void C_token_file_init_string(c_token_file_t *, const char *string);
 const char *C_token_file_read_full(c_token_file_t *, int *out_quoted);
+void C_token_file_parse_pairs(c_token_file_t *tf, c_key_value_f callback);
 #define C_token_file_read(f) C_token_file_read_full(f, NULL)
 
 /* c_log.c */
@@ -306,8 +310,11 @@ void C_rand_seed(unsigned int);
 
 /* c_string.c */
 #define C_bool_string(b) ((b) ? "TRUE" : "FALSE")
+void C_cleanup_lang(void);
 c_color_t C_color_string(const char *);
 char *C_escape_string(const char *);
+unsigned int C_hash_djb2(const char *);
+void C_init_lang(void);
 #define C_is_digit(c) (((c) >= '0' && (c) <= '9') || (c) == '.' || (c) == '-')
 #define C_is_print(c) ((c) > 0 && (c) < 0x7f)
 #define C_is_space(c) ((c) > 0 && (c) <= ' ')
@@ -325,6 +332,9 @@ int C_utf8_strlen(const char *, int *utf8_chars);
 char *C_va(const char *fmt, ...);
 char *C_van(int *output_len, const char *fmt, ...);
 char *C_vanv(int *output_len, const char *fmt, va_list);
+const char *C_str(const char *token, const char *fallback);
+
+extern c_var_t c_lang;
 
 /* c_time.c */
 #define C_count_add(c, v) ((c)->value += (v))
@@ -354,6 +364,7 @@ void C_register_string(c_var_t *, const char *name, const char *value,
                        const char *comment);
 void C_register_variables(void);
 c_var_t *C_resolve_var(const char *name);
+void C_translate_vars(void);
 void C_var_set(c_var_t *, const char *value);
 void C_var_unlatch(c_var_t *);
 void C_var_update(c_var_t *, c_var_update_f);

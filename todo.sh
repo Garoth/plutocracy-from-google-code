@@ -4,7 +4,7 @@
 # code that have a TODO or FIXME marker on them. The script will search all
 # non-svn files in the src directory. Any additional files should be added
 # to the list below:
-FILES="Makefile.am configure.ac README"
+FILES="README"
 
 if [ `stat -c%s TODO` -ge 2 ]
 then

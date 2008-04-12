@@ -220,7 +220,7 @@ void R_generate_globe(int seed, int subdiv4)
                 C_warning("Too many subdivisions requested");
         }
 
-        C_debug("Generating globe with seed 0x%8x", seed);
+        C_debug("Generating globe with seed 0x%x", seed);
         C_rand_seed(seed);
         memset(vertices, 0, sizeof (vertices));
         generate_icosahedron();
