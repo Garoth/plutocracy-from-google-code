@@ -125,9 +125,6 @@ void R_render();
 
 /* Client and server network calls */
 void N_network();
-
-/* Platform compatibility code */
-void P_platform();
 }}}
 
 = Common and Shared Headers =
