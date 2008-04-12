@@ -180,9 +180,30 @@ static int parse_file(const char *filename)
 }
 
 /******************************************************************************\
+ Reads in and outputs the header file.
+\******************************************************************************/
+static void output_header(const char *filename)
+{
+        FILE *file;
+        char buf[4096];
+
+        if (!filename || !filename[0])
+                return;
+        file = fopen(filename, "r");
+        if (!file) {
+                fprintf(stderr, "gendoc: Failed to open header '%s'\n",
+                        filename);
+                return;
+        }
+        fread(buf, 1, sizeof (buf), file);
+        fclose(file);
+        puts(buf);
+}
+
+/******************************************************************************\
  Outputs HTML document.
 \******************************************************************************/
-static void output_html(const char *title)
+static void output_html(const char *title, const char *header)
 {
         /* Header */
         printf("<html>\n"
@@ -199,14 +220,15 @@ static void output_html(const char *title)
                "                         body.style.display = 'block';\n"
                "         }\n"
                "</script>\n"
-               "<body>\n"
-               "<div class=\"menu\">\n"
+               "<body>\n", title);
+        output_header(header);
+        printf("<div class=\"menu\">\n"
                "<a href=\"#Definitions\">Definitions</a> |\n"
                "<a href=\"#Types\">Types</a> |\n"
                "<a href=\"#Functions\">Functions</a> |\n"
                "<a href=\"#Variables\">Variables</a>\n"
                "</div>\n"
-               "<h1>%s</h1>\n", title, title);
+               "<h1>%s</h1>\n", title);
 
         /* Write definitions */
         printf("<a name=\"Definitions\"></a>\n"
@@ -238,7 +260,7 @@ static void output_html(const char *title)
 int main(int argc, char *argv[])
 {
         int i;
-        char title[64] = "Plutocracy GenDoc";
+        char title[64] = "Plutocracy GenDoc", header[256] = "";
 
         /* Somebody didn't read directions */
         if (argc < 2) {
@@ -257,6 +279,8 @@ int main(int argc, char *argv[])
                 if (argv[i][0] == '-' && argv[i][1] == '-') {
                         if (!strcmp(argv[i], "--title") && i < argc - 1)
                                 D_strncpy_buf(title, argv[++i]);
+                        else if (!strcmp(argv[i], "--header") && i < argc - 1)
+                                D_strncpy_buf(header, argv[++i]);
                         else {
                                 fprintf(stderr, "Invalid argument '%s'\n",
                                         argv[i]);
@@ -270,7 +294,7 @@ int main(int argc, char *argv[])
         }
 
         /* Output HTML document */
-        output_html(title);
+        output_html(title, header);
 
         return 0;
 }
