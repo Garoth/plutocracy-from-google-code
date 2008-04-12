@@ -47,10 +47,9 @@ The following build targets are supported:
 # Plutocracy
 plutocracy_src = ['src/plutocracy.c'] + glob.glob('src/*/*.c')
 plutocracy_src.remove('src/common/c_os_windows.c')
-plutocracy_env = Environment(ENV = {'PATH' : os.environ['PATH'],
-                                    'TERM' : os.environ['TERM'],
-                                    'HOME' : os.environ['HOME']},
-                             CC = os.environ['CC'])
+plutocracy_env = Environment(ENV = os.environ)
+if ('CC' in os.environ):
+        plutocracy_env.Replace(CC = os.environ['CC'])
 if int(ARGUMENTS.get('debug', 1)):
         plutocracy_env.Append(CFLAGS = ['-g', '-Wall'])
 else:
@@ -115,16 +114,17 @@ plutocracy_env.Depends(plutocracy_obj + [plutocracy_gch], 'config.h')
 AlwaysBuild(plutocracy_env.Command('config.h', '', WriteConfigH))
 
 # Gendoc
-gendoc_env = Environment(ENV = {'PATH' : os.environ['PATH'],
-                                'TERM' : os.environ['TERM'],
-                                'HOME' : os.environ['HOME']},
-                         CC = os.environ['CC'])
+gendoc_env = Environment(ENV = os.environ)
+if ('CC' in os.environ):
+        plutocracy_env.Replace(CC = os.environ['CC'])
 gendoc_env.Append(CFLAGS = ['-g', '-Wall'])
 gendoc = gendoc_env.Program('gendoc/gendoc', glob.glob('gendoc/*.c'))
 def GendocOutput(output, path, title, inputs = []):
         inputs = (glob.glob(path + '/*.h') + glob.glob(path + '/*.c') + inputs);
-        cmd = gendoc_env.Command(output, inputs, 'gendoc/gendoc --title "' +
-                                 title + '" ' + ' '.join(inputs) + ' > $TARGET')
+        cmd = gendoc_env.Command(output, inputs, 'gendoc/gendoc ' +
+                                 '--header "gendoc/header.txt" ' +
+                                 '--title "' + title + '" ' +
+                                 ' '.join(inputs) + ' > $TARGET')
         gendoc_env.Depends(cmd, gendoc)
 
 # Gendoc HTML files

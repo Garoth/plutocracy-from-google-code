@@ -100,3 +100,11 @@ span.no_file {
         padding-right: 4pt;
 }
 
+.header {
+        background: #555753;
+        border-bottom: 1px solid #414544;
+        color: #414544;
+        margin: 0;
+        padding: 4pt;
+}
+
