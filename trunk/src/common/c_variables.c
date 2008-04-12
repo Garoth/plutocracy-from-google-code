@@ -28,6 +28,10 @@ c_var_t c_max_fps, c_show_fps;
    after initilization! */
 c_var_t c_mem_check;
 
+/* Language that should be used for translations, must restart game to apply
+   changes */
+c_var_t c_lang;
+
 /* This should be set to TRUE when the main loop needs to exit properly */
 int c_exit;
 
@@ -40,22 +44,26 @@ void C_register_variables(void)
 {
         /* Message logging */
         C_register_integer(&c_log_level, "c_log_level", C_LOG_WARNING,
-                           _("log detail level: 0 = disable, to 4 = traces"));
+                           "log detail level: 0 = disable, to 4 = traces");
         c_log_level.edit = C_VE_ANYTIME;
         C_register_string(&c_log_file, "c_log_file", "",
-                          _("filename to redirect log output to"));
+                          "filename to redirect log output to");
 
         /* FPS cap */
         C_register_integer(&c_max_fps, "c_max_fps", 120,
-                           _("software frames-per-second limit"));
+                           "software frames-per-second limit");
         c_max_fps.edit = C_VE_ANYTIME;
         C_register_integer(&c_show_fps, "c_show_fps", FALSE,
-                           _("enable to display current frames-per-second"));
+                           "enable to display current frames-per-second");
         c_show_fps.edit = C_VE_ANYTIME;
 
         /* Memory checking */
         C_register_integer(&c_mem_check, "c_mem_check", FALSE,
-                           _("enable to debug memory allocations"));
+                           "enable to debug memory allocations");
+
+        /* Language selection */
+        C_register_string(&c_lang, "c_lang", "",
+                          "language used for all text in the game");
 }
 
 /******************************************************************************\
@@ -269,52 +277,22 @@ static void print_var(const c_var_t *var)
 }
 
 /******************************************************************************\
- Reads a string in Quake configuration format:
-
-   // C and C++ comments allowed
-   c_my_var_has_no_spaces "values always in quotes"
-                          "can be concatenated"
-   c_numbers_not_in_quotes -123.5
-
- Ignores newlines and spaces. Variable names entered without values will have
- their current values printed out.
+ Callback for parsing a configuration file key-value pair.
 \******************************************************************************/
-static void parse_config_token_file(c_token_file_t *tf)
+static int config_key_value(const char *key, const char *value)
 {
         c_var_t *var;
-        const char *token;
-        int quoted, have_value;
-        char value[2048];
 
-        var = NULL;
-        have_value = FALSE;
-        for (;;) {
-                token = C_token_file_read_full(tf, &quoted);
-                if (!token[0] && !quoted)
-                        break;
-                if (!C_is_digit(token[0]) && !quoted) {
-                        if (var) {
-                                if (have_value)
-                                        C_var_set(var, value);
-                                else
-                                        print_var(var);
-                        }
-                        var = C_resolve_var(token);
-                        if (!var)
-                                C_print(C_va("No variable named '%s'", token));
-                        value[0] = NUL;
-                        have_value = FALSE;
-                        continue;
-                }
-                strncat(value, token, sizeof (value));
-                have_value = TRUE;
+        var = C_resolve_var(key);
+        if (!var) {
+                C_print(C_va("No variable named '%s'", key));
+                return TRUE;
         }
-        if (var) {
-                if (have_value)
-                        C_var_set(var, value);
-                else
-                        print_var(var);
-        }
+        if (value)
+                C_var_set(var, value);
+        else
+                print_var(var);
+        return TRUE;
 }
 
 /******************************************************************************\
@@ -326,7 +304,8 @@ int C_parse_config_file(const char *filename)
 
         if (!C_token_file_init(&tf, filename))
                 return FALSE;
-        parse_config_token_file(&tf);
+        C_token_file_parse_pairs(&tf, config_key_value);
+        C_token_file_cleanup(&tf);
         return TRUE;
 }
 
@@ -338,7 +317,8 @@ void C_parse_config_string(const char *string)
         c_token_file_t tf;
 
         C_token_file_init_string(&tf, string);
-        parse_config_token_file(&tf);
+        C_token_file_parse_pairs(&tf, config_key_value);
+        C_token_file_cleanup(&tf);
 }
 
 /******************************************************************************\
@@ -481,5 +461,19 @@ void C_var_update(c_var_t *var, c_var_update_f update)
         update(var, var->value);
         var->edit = C_VE_FUNCTION;
         var->update = update;
+}
+
+/******************************************************************************\
+ Translate all the comments for the variables. This was not done during
+ registration because we could not read the [c_lang] var yet.
+\******************************************************************************/
+void C_translate_vars(void)
+{
+        c_var_t *var;
+
+        for (var = root; var; var = var->next)
+                if (var->comment && var->comment[0])
+                        var->comment = C_str(C_va("%s-comment", var->name),
+                                                  var->comment);
 }
 

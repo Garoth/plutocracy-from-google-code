@@ -225,7 +225,7 @@ void I_console_init(i_window_t *window)
         c_log_func = log_handler;
 
         /* Label */
-        I_label_init(&label, _("Console:"));
+        I_label_init(&label, C_str("i-console", "Console:"));
         I_widget_add(&window->widget, &label.widget);
 
         /* Scrollback area */

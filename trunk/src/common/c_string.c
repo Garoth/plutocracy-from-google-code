@@ -19,6 +19,19 @@
 #undef strlen
 #endif
 
+/* The mask is applied to the hash function as a quick way of limiting the
+   hash index to the table range */
+#define TRANSLATIONS_MASK 0xff
+#define TRANSLATIONS_MAX (TRANSLATIONS_MASK + 1)
+
+/* Translation database type */
+typedef struct translation {
+        char *value, key[60];
+} translation_t;
+
+static translation_t translations[TRANSLATIONS_MAX];
+static int translations_len;
+
 /******************************************************************************\
  These functions parse variable argument lists into a static buffer and return
  a pointer to it. You can also pass a pointer to an integer to get the length
@@ -346,7 +359,7 @@ char *C_utf8_encode(unsigned int unicode, int *plen)
         else if (unicode <= 0x7FFFFFF)
                 len = 6;
         else {
-                C_warning("Invalid Unicode character 0x%8x", unicode);
+                C_warning("Invalid Unicode character 0x%x", unicode);
                 buf[0] = NUL;
                 if (plen)
                         *plen = 0;
@@ -363,5 +376,111 @@ char *C_utf8_encode(unsigned int unicode, int *plen)
         }
         buf[0] += unicode;
         return buf;
+}
+
+/******************************************************************************\
+ A string hashing function due to Dan Bernstein of comp.lang.c.
+ http://www.cse.yorku.ca/~oz/hash.html
+\******************************************************************************/
+unsigned int C_hash_djb2(const char *str)
+{
+        unsigned int hash = 5381;
+        int c;
+
+        while ((c = *str++))
+                hash = (hash << 5) + hash + (unsigned int)c;
+        return hash;
+}
+
+/******************************************************************************\
+ Find the index of where a string would go in the translations table. The
+ translation keys are not case-sensitive.
+\******************************************************************************/
+static int translations_index(const char *key)
+{
+        int i;
+
+        for (i = (int)(C_hash_djb2(key) & TRANSLATIONS_MASK);
+             translations[i].value && strcasecmp(translations[i].key, key);
+             i = (i + 1) & TRANSLATIONS_MASK);
+        return i;
+}
+
+/******************************************************************************\
+ Retrieve a translated string from the translation database. If the token is
+ not found in the current translation database [fallback] is returned.
+\******************************************************************************/
+const char *C_str(const char *key, const char *stock)
+{
+        int index;
+
+        if (translations_len < 1)
+                return stock;
+        index = translations_index(key);
+        if (translations[index].value)
+                return translations[index].value;
+        return stock;
+}
+
+/******************************************************************************\
+ Insert a new entry into the translation hash table.
+\******************************************************************************/
+static int lang_key_value(const char *key, const char *value)
+{
+        int index;
+
+        if (!value) {
+                C_warning("Language file has no value for key '%s'", key);
+                return TRUE;
+        }
+
+        /* Always leave one entry in the hash table empty so that the index
+           loop will be able to quit if it can't find a match and the table
+           is full */
+        if (translations_len >= TRANSLATIONS_MAX - 1) {
+                C_warning("Maximum translations reached (key '%s')", key);
+                return FALSE;
+        }
+
+        index = translations_index(key);
+        if (translations[index].value) {
+                C_warning("Already have a translation for key '%s'", key);
+                return TRUE;
+        }
+        C_strncpy_buf(translations[index].key, key);
+        translations[index].value = C_strdup(value);
+        translations_len++;
+        return TRUE;
+}
+
+/******************************************************************************\
+ Load the translation database file in lang/[c_lang] file and parse it. Format
+ is the same as that of a normal configuration file.
+\******************************************************************************/
+void C_init_lang(void)
+{
+        c_token_file_t tf;
+
+        C_var_unlatch(&c_lang);
+        if (!c_lang.value.s[0] ||
+            !C_token_file_init(&tf, C_va("lang/%s", c_lang.value.s)))
+                return;
+        C_debug("Using language file '%s'", tf.filename);
+        C_token_file_parse_pairs(&tf, lang_key_value);
+        C_token_file_cleanup(&tf);
+}
+
+/******************************************************************************\
+ Free all the strings when exiting to prevent false-alarm leak detections.
+\******************************************************************************/
+void C_cleanup_lang(void)
+{
+        int i;
+
+        if (translations_len < 1)
+                return;
+        C_debug("Cleaning up translation database");
+        for (i = 0; i < sizeof (translations) / sizeof (*translations); i++)
+                C_free(translations[i].value);
 }
 
