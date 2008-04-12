@@ -15,11 +15,17 @@
 # Note that while SCONS supports Windows, this SConstruct file is for POSIX
 # systems only!
 
-import glob, os
+import glob, os, sys
 
 # Package parameters
 package = 'plutocracy'
 version = '0.0.0'
+
+# Incompatible with Windows, use the Visual Studio project files
+if (sys.platform == 'win32'):
+        print ('\nWindows is not supported by the SCons script. Use the ' +
+               'Visual Studio project files in the vc8 directory.')
+        sys.exit(1)
 
 # Available command-line arguments
 Help("""

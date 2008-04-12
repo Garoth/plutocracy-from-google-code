@@ -78,7 +78,7 @@ int C_file_read(c_file_t *file, char *buf, int len)
         if (!file || !file->stream || !file->type)
                 return 0;
         if (file->type == C_FT_LIBC)
-                return fread(buf, 1, len, (FILE *)file->stream);
+                return (int)fread(buf, 1, len, (FILE *)file->stream);
         else if (file->type == C_FT_ZLIB)
                 return gzread((gzFile *)file->stream, buf, len);
         C_error("Invalid file I/O type %d", file->type);
@@ -95,7 +95,7 @@ int C_file_write(c_file_t *file, const char *buf, int len)
                 return 0;
         if (file->type != C_FT_LIBC)
                 C_error("Invalid file I/O type %d", file->type);
-        return fwrite(buf, 1, len, (FILE *)file->stream);
+        return (int)fwrite(buf, 1, len, (FILE *)file->stream);
 }
 
 /******************************************************************************\
@@ -178,11 +178,11 @@ void C_token_file_cleanup(c_token_file_t *tf)
 \******************************************************************************/
 static void token_file_check_chunk(c_token_file_t *tf)
 {
-        size_t token_len, bytes_read, to_read;
+        int token_len, bytes_read, to_read;
 
         if ((tf->pos[1] && tf->pos[2]) || tf->eof)
                 return;
-        token_len = tf->pos - tf->token + 1;
+        token_len = (int)(tf->pos - tf->token) + 1;
         if (token_len >= sizeof (tf->buffer) - 2) {
                 C_warning("Oversize token in '%s'", tf->filename);
                 token_len = 0;
