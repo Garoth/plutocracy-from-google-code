@@ -86,19 +86,22 @@ header = """/*****************************************************************\
  FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
 \\****************************************************************************\
 **/
+
 """
 outputWriter.write(header)
 visibleStrings.sort()
 comments.sort()
 
 #Print visible strings
-outputWriter.write(os.linesep + "/* Translatable strings */" + os.linesep)
+outputWriter.write("/* Translatable strings */" + os.linesep * 2)
 for pair in visibleStrings:
-        outputWriter.write(pair[0] + ' "' + pair[1] + '"' + os.linesep)
+        outputWriter.write('// English: "' + pair[1] + '"' + os.linesep + \
+                           pair[0] + ' ""' + os.linesep * 2)
 
 #Print comments
-outputWriter.write(os.linesep + "/* Variable comments */" + os.linesep)
+outputWriter.write("/* Variable comments */" + os.linesep * 2)
 for pair in comments: 
-        outputWriter.write(pair[0] + '-comment "' + pair[1] + '"' + os.linesep)
+        outputWriter.write('// English: "' + pair[1] + '"' + os.linesep + \
+                           pair[0] + '-comment ""' + os.linesep * 2)
 
 print "Data written to output file: " + outputWriter.name
