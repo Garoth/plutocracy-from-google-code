@@ -1,6 +1,6 @@
 #!/usr/bin/python
 #******************************************************************************#
-# Plutocracy Translation - Copyright (C) 2008 - Andrei "Garoth" Thorp 
+# Plutocracy Translation - Copyright (C) 2008 - Andrei "Garoth" Thorp
 #
 # This program is free software; you can redistribute it and/or modify it under
 # the terms of the GNU General Public License as published by the Free Software
@@ -33,7 +33,7 @@ def printHelp():
 if len(sys.argv) != 3:
         printHelp()
         sys.exit(1)
-if not os.path.isdir(os.path.join(os.getcwd(), sys.argv[1])): 
+if not os.path.isdir(os.path.join(os.getcwd(), sys.argv[1])):
         print "ERROR: input is not a directory!"
         sys.exit(1)
 
@@ -41,14 +41,14 @@ outputWriter = open(sys.argv[2], "w")
 
 #-------------------------------------------------------------------------
 # Read's the file's lines, split by ; not by \n and apply the regex to it.
-# Store the result in lists for processing and writing to file 
+# Store the result in lists for processing and writing to file
 #-------------------------------------------------------------------------
 def matchAndStore(fileReader):
         matched = False
         fileText = fileReader.read()
         cLines = fileText.split(";")
 
-        for line in cLines: 
+        for line in cLines:
                 matchesOne = re.findall(patternOne, line)
                 matchesTwo = re.findall(patternTwo, line)
 
@@ -62,7 +62,7 @@ def matchAndStore(fileReader):
                         matched = True
                         comments.append(matchesTwo[0])
 
-        if matched == True: 
+        if matched == True:
                 print "Found in file %s" % fileReader.name
                 print ""
 
@@ -93,15 +93,14 @@ visibleStrings.sort()
 comments.sort()
 
 #Print visible strings
-outputWriter.write("/* Translatable strings */" + os.linesep * 2)
 for pair in visibleStrings:
-        outputWriter.write('// English: "' + pair[1] + '"' + os.linesep + \
+        outputWriter.write('/* EN: "' + pair[1] + '" */' + os.linesep +
                            pair[0] + ' ""' + os.linesep * 2)
 
 #Print comments
-outputWriter.write("/* Variable comments */" + os.linesep * 2)
-for pair in comments: 
-        outputWriter.write('// English: "' + pair[1] + '"' + os.linesep + \
+for pair in comments:
+        outputWriter.write('/* EN: "' + pair[1] + '" */' + os.linesep +
                            pair[0] + '-comment ""' + os.linesep * 2)
 
 print "Data written to output file: " + outputWriter.name
+

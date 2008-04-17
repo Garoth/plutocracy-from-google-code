@@ -28,7 +28,7 @@ static r_text_t status_text;
 \******************************************************************************/
 static void render_status(void)
 {
-        if (c_show_fps.value.n < 0)
+        if (c_show_fps.value.n <= 0)
                 return;
         if (C_count_poll(&c_throttled, 5000)) {
                 char *str;

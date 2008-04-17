@@ -29,7 +29,6 @@ typedef struct r_vertex3 {
 #pragma pack(pop)
 #define R_VERTEX3_FORMAT GL_T2F_N3F_V3F
 
-
 /* Vertex type for sprites */
 #pragma pack(push, 4)
 typedef struct r_vertex2 {
@@ -88,9 +87,11 @@ typedef enum {
 SDL_Surface *R_font_render(r_font_t, const char *);
 void R_free_assets(void);
 void R_load_assets(void);
-c_color_t R_SDL_get_pixel(const SDL_Surface *surf, int x, int y);
-void R_SDL_invert(SDL_Surface *surf, int rgb, int alpha);
-void R_SDL_put_pixel(SDL_Surface *surf, int x, int y, c_color_t color);
+void R_surface_flip_v(SDL_Surface *);
+c_color_t R_surface_get(const SDL_Surface *, int x, int y);
+void R_surface_invert(SDL_Surface *, int rgb, int alpha);
+void R_surface_mask(SDL_Surface *dest, SDL_Surface *src);
+void R_surface_put(SDL_Surface *, int x, int y, c_color_t);
 #define R_texture_alloc(w, h, a) R_texture_alloc_full(__FILE__, __LINE__, \
                                                       __func__, w, h, a)
 r_texture_t *R_texture_alloc_full(const char *file, int line, const char *func,
@@ -101,15 +102,14 @@ r_texture_t *R_texture_load(const char *filename, int mipmaps);
 void R_texture_select(r_texture_t *);
 void R_texture_upload(const r_texture_t *, int mipmaps);
 
-extern r_texture_t *r_tile_tex;
-
 /* r_globe.c */
 void R_render_globe(void);
 
 /* r_prerender.c */
-void R_prerender(void);
+void R_init_prerender(void);
+void R_cleanup_prerender(void);
 
-extern r_texture_t *r_tile_blend_tex[3];
+extern r_texture_t *r_tile_tex[4];
 
 /* r_render.c */
 #define R_check_errors() R_check_errors_full(__FILE__, __LINE__, __func__);

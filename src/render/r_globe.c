@@ -17,8 +17,7 @@
 /* Globe vertex type */
 #pragma pack(push, 4)
 typedef struct globe_vertex {
-        c_vec2_t uv;
-        c_color_t color[3];
+        c_vec2_t uv, bleed_uv[3];
         c_vec3_t no;
         c_vec3_t co;
         int next;
@@ -128,6 +127,15 @@ static void subdivide4(void)
 }
 
 /******************************************************************************\
+ Returns the [n]th vertex in the face, clock-wise if positive or
+ counter-clock-wise if negative.
+\******************************************************************************/
+static int face_next(int vertex, int n)
+{
+        return 3 * (vertex / 3) + (3 + vertex + n) % 3;
+}
+
+/******************************************************************************\
  Finds vertex neighbors by iteration. Runs in O(n^2) time.
 \******************************************************************************/
 static void find_neighbors(void)
@@ -135,12 +143,12 @@ static void find_neighbors(void)
         int i, i_next, j, j_next;
 
         for (i = 0; i < r_tiles * 3; i++) {
-                i_next = 3 * (i / 3) + (i + 1) % 3;
+                i_next = face_next(i, 1);
                 for (j = 0; ; j++) {
                         if (j == i)
                                 continue;
                         if (C_vec3_eq(vertices[i].co, vertices[j].co)) {
-                                j_next = 3 * (j / 3) + (3 + j - 1) % 3;
+                                j_next = face_next(j, -1);
                                 if (C_vec3_eq(vertices[i_next].co,
                                               vertices[j_next].co)) {
                                         vertices[i].next = j;
@@ -239,6 +247,60 @@ void R_generate_globe(int seed, int subdiv4)
 }
 
 /******************************************************************************\
+ Configures OpenGL texture units to render the tile bleed layers.
+\******************************************************************************/
+static void begin_multitexture(void)
+{
+        int i;
+
+        if (!r_extensions[R_EXT_MULTITEXTURE])
+                return;
+        glEnable(GL_BLEND);
+        for (i = 0; i < 3; i++) {
+                glActiveTexture(GL_TEXTURE1 + i);
+                glClientActiveTexture(GL_TEXTURE1 + i);
+                glEnable(GL_TEXTURE_2D);
+                glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+                R_texture_select(r_tile_tex[i + 1]);
+
+                /* Set the blending parameters so the layers properly stack
+                   on top of each other */
+                glTexCoordPointer(2, GL_FLOAT, sizeof (*vertices),
+                                  vertices[0].bleed_uv + i);
+                glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_COMBINE);
+                glTexEnvi(GL_TEXTURE_ENV, GL_COMBINE_RGB, GL_INTERPOLATE);
+                glTexEnvi(GL_TEXTURE_ENV, GL_SRC0_RGB, GL_TEXTURE);
+                glTexEnvi(GL_TEXTURE_ENV, GL_OPERAND0_RGB, GL_SRC_COLOR);
+                glTexEnvi(GL_TEXTURE_ENV, GL_SRC1_RGB, GL_PREVIOUS);
+                glTexEnvi(GL_TEXTURE_ENV, GL_OPERAND1_RGB, GL_SRC_COLOR);
+                glTexEnvi(GL_TEXTURE_ENV, GL_SRC2_RGB, GL_TEXTURE);
+                glTexEnvi(GL_TEXTURE_ENV, GL_OPERAND2_RGB, GL_SRC_ALPHA);
+        }
+        glActiveTexture(GL_TEXTURE0);
+        glClientActiveTexture(GL_TEXTURE0);
+}
+
+/******************************************************************************\
+ Disables tile bleed multitexturing.
+\******************************************************************************/
+static void end_multitexture(void)
+{
+        int i;
+
+        if (!r_extensions[R_EXT_MULTITEXTURE])
+                return;
+        glDisable(GL_BLEND);
+        for (i = 0; i < 3; i++) {
+                glActiveTexture(GL_TEXTURE1 + i);
+                glClientActiveTexture(GL_TEXTURE1 + i);
+                glDisable(GL_TEXTURE_2D);
+                glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+        }
+        glActiveTexture(GL_TEXTURE0);
+        glClientActiveTexture(GL_TEXTURE0);
+}
+
+/******************************************************************************\
  Renders the entire globe.
 \******************************************************************************/
 void R_render_globe(void)
@@ -246,17 +308,18 @@ void R_render_globe(void)
         float left[] = { -1.0, 0.0, 0.0, 0.0 };
 
         R_set_mode(R_MODE_3D);
-        R_texture_select(r_tile_tex);
+        begin_multitexture();
 
         /* Have a light from the left */
-        glEnable(GL_LIGHTING);
+        glDisable(GL_LIGHTING);
         glEnable(GL_LIGHT0);
         glLightfv(GL_LIGHT0, GL_POSITION, left);
 
         /* Setup arrays and render the globe mesh */
-        glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+        R_texture_select(r_tile_tex[0]);
         glEnableClientState(GL_VERTEX_ARRAY);
         glEnableClientState(GL_NORMAL_ARRAY);
+        glEnableClientState(GL_TEXTURE_COORD_ARRAY);
         glTexCoordPointer(2, GL_FLOAT, sizeof (*vertices), &vertices[0].uv);
         glVertexPointer(3, GL_FLOAT, sizeof (*vertices), &vertices[0].co);
         glNormalPointer(GL_FLOAT, sizeof (*vertices), &vertices[0].no);
@@ -265,6 +328,7 @@ void R_render_globe(void)
         glDisableClientState(GL_VERTEX_ARRAY);
         glDisableClientState(GL_NORMAL_ARRAY);
 
+        end_multitexture();
         R_check_errors();
         C_count_add(&r_count_faces, r_tiles);
 }
@@ -336,20 +400,41 @@ static void set_tile_height(int tile, float height)
 void R_configure_globe(r_tile_t *tiles)
 {
         float bottom;
-        int i, tx, ty, flip;
+        int i, j, tx, ty, flip;
 
         C_debug("Configuring globe");
         for (i = 0; i < r_tiles; i++) {
                 set_tile_height(i, tiles[i].height);
 
                 /* Tile terrain texture */
-                ty = tiles[i].terrain / 4;
-                tx = tiles[i].terrain - ty * 4;
+                ty = tiles[i].terrain / R_TILE_SHEET_W;
+                tx = tiles[i].terrain - ty * R_TILE_SHEET_W;
                 bottom = (ty + 1) * 0.25f - 0.0351f;
                 vertices[3 * i].uv = C_vec2(tx * 0.25f + 0.125f, ty * 0.25f);
                 flip = i < flip_limit;
                 vertices[3 * i + 1].uv = C_vec2((tx + flip) * 0.25f, bottom);
                 vertices[3 * i + 2].uv = C_vec2((tx + !flip) * 0.25f, bottom);
         }
+
+        /* After all the tile uv coordinates have been set (and if
+           multitexturing is supported) set all the bleed uv coordinates */
+        if (!r_extensions[R_EXT_MULTITEXTURE])
+                return;
+        for (i = 0; i < r_tiles; i++)
+                for (j = 0; j < 3; j++) {
+                        globe_vertex_t *i_v[3], *next_v[3];
+                        int next;
+
+                        next = vertices[3 * i + j].next;
+                        next_v[0] = vertices + next;
+                        next_v[1] = vertices + face_next(next, 2);
+                        next_v[2] = vertices + face_next(next, 1);
+                        i_v[0] = vertices + face_next(3 * i, j);
+                        i_v[1] = vertices + face_next(3 * i, j + 1);
+                        i_v[2] = vertices + face_next(3 * i, j + 2);
+                        i_v[0]->bleed_uv[j] = next_v[1]->uv;
+                        i_v[1]->bleed_uv[j] = next_v[0]->uv;
+                        i_v[2]->bleed_uv[j] = next_v[2]->uv;
+                }
 }
 

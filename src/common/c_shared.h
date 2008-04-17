@@ -29,6 +29,8 @@
 /* OpenGL */
 #include <GL/gl.h>
 #include <GL/glu.h>
+#define GL_GLEXT_PROTOTYPES
+#include "GL/glext.h"
 
 /* SDL */
 #include <SDL.h>
@@ -67,7 +69,7 @@
 #define C_VA_BUFFER_SIZE 2000
 
 /* This is the size of the largest token a token file can contain */
-#define C_TOKEN_SIZE 4096
+#define C_TOKEN_SIZE 4000
 
 /* All angles should be in radians but there are some cases (OpenGL) where
    conversions are necessary */

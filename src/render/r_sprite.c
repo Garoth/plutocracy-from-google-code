@@ -79,6 +79,7 @@ static int sprite_render_start(const r_sprite_t *sprite)
 \******************************************************************************/
 static void sprite_render_finish(void)
 {
+        glColor4f(1.f, 1.f, 1.f, 1.f);
         glDisableClientState(GL_TEXTURE_COORD_ARRAY);
         glDisableClientState(GL_VERTEX_ARRAY);
         glPopMatrix();
@@ -164,34 +165,34 @@ static void blit_shadowed(SDL_Surface *dest, SDL_Surface *src,
                 for (x = 0; x < src->w + 2; x++) {
                         c_color_t dc, sc;
 
-                        dc = R_SDL_get_pixel(dest, to_x + x, to_y + y);
+                        dc = R_surface_get(dest, to_x + x, to_y + y);
 
                         /* Blit the source image pixel */
                         if (x < src->w && y < src->h) {
-                                sc = R_SDL_get_pixel(src, x, y);
+                                sc = R_surface_get(src, x, y);
                                 dc = C_color_blend(dc, sc);
                                 if (dc.a >= 1.f) {
-                                        R_SDL_put_pixel(dest, to_x + x,
-                                                        to_y + y, dc);
+                                        R_surface_put(dest, to_x + x,
+                                                      to_y + y, dc);
                                         continue;
                                 }
                         }
 
                         /* Blit the shadow from (x - 1, y - 1) */
                         if (x && y && w1 && x <= src->w && y <= src->h) {
-                                sc = R_SDL_get_pixel(src, x - 1, y - 1);
+                                sc = R_surface_get(src, x - 1, y - 1);
                                 sc = C_color(0, 0, 0, sc.a * w1);
                                 dc = C_color_blend(sc, dc);
                         }
 
                         /* Blit the shadow from (x - 2, y - 2) */
                         if (x > 1 && y > 1 && w2) {
-                                sc = R_SDL_get_pixel(src, x - 2, y - 2);
+                                sc = R_surface_get(src, x - 2, y - 2);
                                 sc = C_color(0, 0, 0, sc.a * w2);
                                 dc = C_color_blend(sc, dc);
                         }
 
-                        R_SDL_put_pixel(dest, to_x + x, to_y + y, dc);
+                        R_surface_put(dest, to_x + x, to_y + y, dc);
                 }
         SDL_UnlockSurface(dest);
         SDL_UnlockSurface(src);
@@ -275,7 +276,7 @@ void R_sprite_init_text(r_sprite_t *sprite, r_font_t font, float wrap,
                         if (!surf)
                                 break;
                         if (invert)
-                                R_SDL_invert(surf, FALSE, TRUE);
+                                R_surface_invert(surf, FALSE, TRUE);
                         blit_shadowed(tex->surface, surf, 0, y, shadow);
                         SDL_FreeSurface(surf);
                 }

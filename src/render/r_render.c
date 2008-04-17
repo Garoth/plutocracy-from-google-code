@@ -135,24 +135,19 @@ static void check_gl_extensions(void)
 \******************************************************************************/
 static void set_gl_state(void)
 {
+        glAlphaFunc(GL_GREATER, 0);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+        glDepthFunc(GL_LEQUAL);
+        glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
+
+        /* We never render untextured vertices */
         glEnable(GL_TEXTURE_2D);
-        glEnable(GL_COLOR_MATERIAL);
 
         /* We use lines to do 2D edge anti-aliasing although there is probably
            a better way so we need to always smooth lines (requires alpha
            blending to be on to work) */
         glEnable(GL_LINE_SMOOTH);
-
         glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);
-        glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
-
-        glAlphaFunc(GL_GREATER, 0);
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-        glDepthFunc(GL_LEQUAL);
-
-        /* Setting the color parameter will modulate the texture color */
-        glColorMaterial(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE);
-        glColor3f(1.0, 1.0, 1.0);
 
         /* Only rasterize polygons that are facing you. Blender seems to export
            its polygons in counter-clockwise order. */
@@ -272,9 +267,6 @@ void R_init(void)
         /* Everything should be ready to load assets now */
         R_load_assets();
         load_test_assets();
-
-        /* Prerender procedural textures after asset loading */
-        R_prerender();
 
         /* Set updatable variables */
         C_var_update(&r_clear, clear_update);
@@ -434,26 +426,34 @@ void R_set_mode(r_mode_t mode)
                 return;
         glMatrixMode(GL_PROJECTION);
         glLoadIdentity();
+
+        /* 2D mode sets up an orthogonal projection to render sprites */
         if (mode == R_MODE_2D) {
                 glOrtho(0.f, r_width_2d, r_height_2d, 0.f, -1.f, 1.f);
-                glDisable(GL_LIGHTING);
-                glDisable(GL_CULL_FACE);
-                glDisable(GL_DEPTH_TEST);
                 glMatrixMode(GL_MODELVIEW);
                 glLoadIdentity();
-        } else if (mode == R_MODE_3D) {
+        } else {
+                glDisable(GL_CLIP_PLANE0);
+                glDisable(GL_CLIP_PLANE1);
+                glDisable(GL_CLIP_PLANE2);
+                glDisable(GL_CLIP_PLANE3);
+        }
+
+        /* 3D mode sets up perspective projection and camera view for models */
+        if (mode == R_MODE_3D) {
                 gluPerspective(90.0, (float)r_width.value.n / r_height.value.n,
                                1.f, 10000.f);
                 glEnable(GL_LIGHTING);
                 glEnable(GL_CULL_FACE);
                 glEnable(GL_DEPTH_TEST);
-                glDisable(GL_CLIP_PLANE0);
-                glDisable(GL_CLIP_PLANE1);
-                glDisable(GL_CLIP_PLANE2);
-                glDisable(GL_CLIP_PLANE3);
                 glMatrixMode(GL_MODELVIEW);
                 load_camera();
+        } else {
+                glDisable(GL_LIGHTING);
+                glDisable(GL_CULL_FACE);
+                glDisable(GL_DEPTH_TEST);
         }
+
         R_check_errors();
         r_mode = mode;
 }
