@@ -77,6 +77,6 @@ int C_rand(void)
         tmp ^= (tmp << 7) & 0x9d2c5680UL;
         tmp ^= (tmp << 15) & 0xefc60000UL;
         tmp ^= tmp >> 18;
-        return (int)tmp;
+        return (int)(tmp & LOWER_MASK);
 }
 

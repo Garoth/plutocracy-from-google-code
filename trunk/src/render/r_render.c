@@ -123,11 +123,8 @@ static void check_gl_extensions(void)
 
         /* Multitexture */
         glGetIntegerv(GL_MAX_TEXTURE_UNITS_ARB, &gl_int);
-        if (gl_int >= 4) {
-                r_extensions[R_EXT_MULTITEXTURE] = TRUE;
-                C_debug("%d texture units supported", gl_int);
-        } else
-                C_warning("Insufficient texture units available (%d)", gl_int);
+        r_extensions[R_EXT_MULTITEXTURE] = gl_int;
+        C_debug("%d texture units supported", gl_int);
 }
 
 /******************************************************************************\
@@ -418,11 +415,12 @@ void R_zoom_cam_by(float f)
 }
 
 /******************************************************************************\
- Sets up OpenGL to render 3D polygons in world space.
+ Sets up OpenGL to render 3D polygons in world space. If mode is set to
+ R_MODE_HOLD, the mode will not be changeable until set to R_MODE_NONE.
 \******************************************************************************/
 void R_set_mode(r_mode_t mode)
 {
-        if (mode == r_mode)
+        if (mode == r_mode || (mode && r_mode == R_MODE_HOLD))
                 return;
         glMatrixMode(GL_PROJECTION);
         glLoadIdentity();

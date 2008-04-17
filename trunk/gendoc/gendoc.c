@@ -256,6 +256,8 @@ static void output_html(const char *title, const char *header)
 
 /******************************************************************************\
  Entry point. Prints out help directions.
+
+ TODO: Add a --output=... argument to output to a file instead of stdout.
 \******************************************************************************/
 int main(int argc, char *argv[])
 {
