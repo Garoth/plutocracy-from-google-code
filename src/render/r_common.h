@@ -79,8 +79,9 @@ typedef struct r_model_data {
 /* Render modes */
 typedef enum {
         R_MODE_NONE,
-        R_MODE_3D,
+        R_MODE_HOLD,
         R_MODE_2D,
+        R_MODE_3D,
 } r_mode_t;
 
 /* r_assets.c */
@@ -99,17 +100,17 @@ r_texture_t *R_texture_alloc_full(const char *file, int line, const char *func,
 #define R_texture_free(t) C_ref_down((c_ref_t *)(t))
 r_texture_t *R_texture_load(const char *filename, int mipmaps);
 #define R_texture_ref(t) C_ref_up((c_ref_t *)(t))
+void R_texture_render(r_texture_t *, int x, int y);
 void R_texture_select(r_texture_t *);
 void R_texture_upload(const r_texture_t *, int mipmaps);
+
+extern r_texture_t *r_terrain_tex;
 
 /* r_globe.c */
 void R_render_globe(void);
 
 /* r_prerender.c */
-void R_init_prerender(void);
-void R_cleanup_prerender(void);
-
-extern r_texture_t *r_tile_tex[4];
+void R_prerender(void);
 
 /* r_render.c */
 #define R_check_errors() R_check_errors_full(__FILE__, __LINE__, __func__);

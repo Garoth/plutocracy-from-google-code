@@ -31,8 +31,7 @@ static void setup_tiles(void)
 
         C_debug("Locating tile neighbors");
         for (i = 0; i < r_tiles; i++) {
-                render_tiles[i].terrain = 1 + ((unsigned int)C_rand() % 3);
-                //C_rand() % (R_TILE_SHEET_W * R_TILE_SHEET_H);
+                render_tiles[i].terrain = 1 + (C_rand() % 3);
                 render_tiles[i].height = C_rand_real() * 3;
                 g_tiles[i].render = render_tiles + i;
         }

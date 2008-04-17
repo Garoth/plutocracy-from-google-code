@@ -26,6 +26,8 @@ static struct {
 extern c_var_t r_font_console, r_font_console_pt,
                r_font_gui, r_font_gui_pt;
 
+r_texture_t *r_terrain_tex;
+
 static c_ref_t *root;
 static SDL_PixelFormat sdl_format;
 static int ttf_inited;
@@ -380,6 +382,33 @@ void R_texture_select(r_texture_t *texture)
 }
 
 /******************************************************************************\
+ Renders a plain quad without any sprite effects. Coordinates refer to the
+ upper left-hand corner.
+\******************************************************************************/
+void R_texture_render(r_texture_t *tex, int x, int y)
+{
+        r_vertex2_t verts[4];
+        unsigned short indices[] = {0, 1, 2, 3};
+
+        R_set_mode(R_MODE_2D);
+        verts[0].co = C_vec3(0.f, 0.f, 0.f);
+        verts[0].uv = C_vec2(0.f, 0.f);
+        verts[1].co = C_vec3(0.f, (float)tex->surface->h, 0.f);
+        verts[1].uv = C_vec2(0.f, 1.f);
+        verts[2].co = C_vec3(tex->surface->w, (float)tex->surface->h, 0.f);
+        verts[2].uv = C_vec2(1.f, 1.f);
+        verts[3].co = C_vec3(tex->surface->w, 0.f, 0.f);
+        verts[3].uv = C_vec2(1.f, 0.f);
+        R_texture_select(tex);
+        glPushMatrix();
+        glLoadIdentity();
+        glTranslatef(x, y, 0.f);
+        glInterleavedArrays(R_VERTEX2_FORMAT, 0, verts);
+        glDrawElements(GL_QUADS, 4, GL_UNSIGNED_SHORT, indices);
+        glPopMatrix();
+}
+
+/******************************************************************************\
  Returns the height of the tallest glyph in the font.
 \******************************************************************************/
 int R_font_height(r_font_t font)
@@ -523,7 +552,8 @@ void R_load_assets(void)
         R_load_fonts();
 
         /* Generate procedural content */
-        R_init_prerender();
+        r_terrain_tex = R_texture_load("models/globe/terrain.png", TRUE);
+        R_prerender();
 }
 
 /******************************************************************************\
@@ -544,7 +574,7 @@ void R_free_fonts(void)
 \******************************************************************************/
 void R_free_assets(void)
 {
-        R_cleanup_prerender();
+        R_texture_free(r_terrain_tex);
         R_free_fonts();
         TTF_Quit();
 }

@@ -226,6 +226,8 @@ static int is_comment_end(const char *str, int type)
  The kind of encolosed string (or zero) is returned via [quoted]. Enclosed
  strings are parsed for backslash symbols. Token files support Bash, C, and
  C++ style comments.
+
+ FIXME: Symbols in identifiers should be read as individual tokens.
 \******************************************************************************/
 const char *C_token_file_read_full(c_token_file_t *tf, int *quoted)
 {
