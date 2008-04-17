@@ -434,6 +434,11 @@ static int lang_key_value(const char *key, const char *value)
                 return TRUE;
         }
 
+        /* If this is a freshly generated file and there is no translation yet,
+           the string may be blank */
+        if (!value[0])
+                return TRUE;
+
         /* Always leave one entry in the hash table empty so that the index
            loop will be able to quit if it can't find a match and the table
            is full */
@@ -480,7 +485,7 @@ void C_cleanup_lang(void)
         if (translations_len < 1)
                 return;
         C_debug("Cleaning up translation database");
-        for (i = 0; i < sizeof (translations) / sizeof (*translations); i++)
+        for (i = 0; i < TRANSLATIONS_MAX; i++)
                 C_free(translations[i].value);
 }
 

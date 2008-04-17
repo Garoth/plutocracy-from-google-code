@@ -12,8 +12,7 @@
 # FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
 ################################################################################
 #
-# Note that while SCons supports Windows, this SConstruct file is for POSIX
-# systems only!
+# While SCons supports Windows, this SConstruct file is for POSIX systems only!
 
 import glob, os, sys
 
@@ -56,10 +55,9 @@ else:
         plutocracy_env.Append(CFLAGS = ['-O2'])
 if int(ARGUMENTS.get('gprof', 0)):
         plutocracy_env.Append(CFLAGS = '-pg')
-plutocracy_env.Append(CFLAGS = '-I.')
+plutocracy_env.Append(CPPPATH = '.')
 plutocracy_env.Append(LIBS = ['SDL_image', 'SDL_ttf', 'GL', 'GLU', 'z'])
-plutocracy_env.ParseConfig('sdl-config --cflags')
-plutocracy_env.ParseConfig('sdl-config --libs')
+plutocracy_env.ParseConfig('sdl-config --cflags --libs')
 plutocracy_obj = plutocracy_env.Object(plutocracy_src)
 plutocracy = plutocracy_env.Program(package, plutocracy_obj)
 Default(plutocracy)
@@ -69,9 +67,9 @@ plutocracy_gch = ''
 if int(ARGUMENTS.get('gch', 1)):
         plutocracy_gch = 'src/common/c_shared.h.gch'
         plutocracy_env.Command('src/common/c_shared.h.gch',
-                               'src/common/c_shared.h',
+                               glob.glob('src/common/*.h'),
                                '$CC $CFLAGS $CCFLAGS $_CCCOMCOM -x c-header ' +
-                               '-c $SOURCE -o $TARGET')
+                               '-c src/common/c_shared.h -o $TARGET')
         plutocracy_env.Depends(plutocracy_obj, plutocracy_gch)
 
 # Installing Plutocracy

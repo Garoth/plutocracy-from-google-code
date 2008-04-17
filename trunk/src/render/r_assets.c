@@ -26,24 +26,14 @@ static struct {
 extern c_var_t r_font_console, r_font_console_pt,
                r_font_gui, r_font_gui_pt;
 
-r_texture_t *r_tile_tex;
 static c_ref_t *root;
 static SDL_PixelFormat sdl_format;
 static int ttf_inited;
 
 /******************************************************************************\
- Frees memory associated with a texture.
+ Gets a pixel from an SDL surface. Lock the surface before calling.
 \******************************************************************************/
-static void texture_cleanup(r_texture_t *pt)
-{
-        SDL_FreeSurface(pt->surface);
-        glDeleteTextures(1, &pt->gl_name);
-}
-
-/******************************************************************************\
- Gets a pixel from an SDL surface. Lock the surface before calling this!
-\******************************************************************************/
-c_color_t R_SDL_get_pixel(const SDL_Surface *surf, int x, int y)
+c_color_t R_surface_get(const SDL_Surface *surf, int x, int y)
 {
         Uint8 *p, r, g, b, a;
         Uint32 pixel;
@@ -71,9 +61,9 @@ c_color_t R_SDL_get_pixel(const SDL_Surface *surf, int x, int y)
 
 /******************************************************************************\
  Sets the color of a pixel on an SDL surface. Lock the surface before
- calling this!
+ calling.
 \******************************************************************************/
-void R_SDL_put_pixel(SDL_Surface *surf, int x, int y, c_color_t color)
+void R_surface_put(SDL_Surface *surf, int x, int y, c_color_t color)
 {
         Uint8 *p;
         Uint32 pixel;
@@ -121,7 +111,7 @@ static int surface_uses_alpha(SDL_Surface *surf)
         bpp = surf->format->BytesPerPixel;
         for (y = 0; y < surf->h; y++)
                 for (x = 0; x < surf->w; x++)
-                        if (R_SDL_get_pixel(surf, x, y).a < 1.f) {
+                        if (R_surface_get(surf, x, y).a < 1.f) {
                                 SDL_UnlockSurface(surf);
                                 return TRUE;
                         }
@@ -130,25 +120,110 @@ static int surface_uses_alpha(SDL_Surface *surf)
 }
 
 /******************************************************************************\
- Just allocate a texture object and cleared w by h SDL surface. Does not load
- anything or add the texture to the texture linked list. The texture needs to
- be uploaded after you are done editing it. Don't forget to lock the surface!
+ Inverts a surface. Surface should not be locked when this is called.
+\******************************************************************************/
+void R_surface_invert(SDL_Surface *surf, int rgb, int alpha)
+{
+        c_color_t color;
+        int x, y;
 
- Mip-maps are disabled by default for allocated textures, if you are going to
- use the texture on a 3D object, you will want to enable them for that
- texture.
+        if (SDL_LockSurface(surf) < 0) {
+                C_warning("Failed to lock surface");
+                return;
+        }
+        for (y = 0; y < surf->h; y++)
+                for (x = 0; x < surf->w; x++) {
+                        color = R_surface_get(surf, x, y);
+                        if (rgb) {
+                                color.r = 1.f - color.r;
+                                color.g = 1.f - color.g;
+                                color.b = 1.f - color.b;
+                        }
+                        if (alpha)
+                                color.a = 1.f - color.a;
+                        R_surface_put(surf, x, y, color);
+                }
+        SDL_UnlockSurface(surf);
+}
+
+/******************************************************************************\
+ Overwrite's [dest]'s alpha channel with [src]'s intensity. If [dest] is
+ larger than [src], [src] is tiled. Do not call on locked surfaces.
+\******************************************************************************/
+void R_surface_mask(SDL_Surface *dest, SDL_Surface *src)
+{
+        int x, y;
+
+        if (SDL_LockSurface(dest) < 0) {
+                C_warning("Failed to lock destination surface");
+                return;
+        }
+        if (SDL_LockSurface(src) < 0) {
+                C_warning("Failed to lock source surface");
+                return;
+        }
+        for (y = 0; y < dest->h; y++)
+                for (x = 0; x < dest->w; x++) {
+                        c_color_t color, mask;
+
+                        color = R_surface_get(dest, x, y);
+                        mask = R_surface_get(src, x % src->w, y % src->h);
+                        color.a = C_color_luma(mask);
+                        R_surface_put(dest, x, y, color);
+                }
+        SDL_UnlockSurface(dest);
+        SDL_UnlockSurface(src);
+}
+
+/******************************************************************************\
+ Vertically flip [surf]'s pixels. Do not call on a locked surface.
+\******************************************************************************/
+void R_surface_flip_v(SDL_Surface *surf)
+{
+        int x, y;
+
+        if (SDL_LockSurface(surf) < 0) {
+                C_warning("Failed to lock surface");
+                return;
+        }
+        for (y = 0; y < surf->h / 2; y++)
+                for (x = 0; x < surf->w; x++) {
+                        c_color_t color_top, color_bottom;
+
+                        color_top = R_surface_get(surf, x, y);
+                        color_bottom = R_surface_get(surf, x, surf->h - y - 1);
+                        R_surface_put(surf, x, y, color_bottom);
+                        R_surface_put(surf, x, surf->h - y - 1, color_top);
+                }
+        SDL_UnlockSurface(surf);
+}
+
+/******************************************************************************\
+ Frees memory associated with a texture.
+\******************************************************************************/
+static void texture_cleanup(r_texture_t *pt)
+{
+        SDL_FreeSurface(pt->surface);
+        glDeleteTextures(1, &pt->gl_name);
+}
+
+/******************************************************************************\
+ Just allocate a texture object and cleared [width] by [height] SDL surface.
+ Does not load anything or add the texture to the texture linked list. The
+ texture needs to be uploaded after you are done editing it. Don't forget to
+ lock the surface!
 \******************************************************************************/
 r_texture_t *R_texture_alloc_full(const char *file, int line, const char *func,
-                                  int w, int h, int alpha)
+                                  int width, int height, int alpha)
 {
         static int count;
         SDL_Rect rect;
         r_texture_t *pt;
         int flags;
 
-        if (w < 1 || h < 1)
+        if (width < 1 || height < 1)
                 C_error("Invalid texture dimensions");
-        pt = C_calloc(sizeof (*pt));
+        pt = C_recalloc_full(file, line, func, NULL, sizeof (*pt));
         pt->ref.refs = 1;
         pt->ref.cleanup_func = (c_ref_cleanup_f)texture_cleanup;
         if (c_mem_check.value.n)
@@ -159,14 +234,15 @@ r_texture_t *R_texture_alloc_full(const char *file, int line, const char *func,
         flags = SDL_HWSURFACE;
         if (alpha)
                 flags |= SDL_SRCALPHA;
-        pt->surface = SDL_CreateRGBSurface(flags, w, h, sdl_format.BitsPerPixel,
+        pt->surface = SDL_CreateRGBSurface(flags, width, height,
+                                           sdl_format.BitsPerPixel,
                                            sdl_format.Rmask, sdl_format.Gmask,
                                            sdl_format.Bmask, sdl_format.Amask);
         SDL_SetAlpha(pt->surface, SDL_SRCALPHA, 255);
         rect.x = 0;
         rect.y = 0;
-        rect.w = w;
-        rect.h = h;
+        rect.w = width;
+        rect.h = height;
         SDL_FillRect(pt->surface, &rect, 0);
         glGenTextures(1, &pt->gl_name);
         R_check_errors();
@@ -222,8 +298,8 @@ void R_texture_upload(const r_texture_t *pt, int mipmaps)
 
 /******************************************************************************\
  Loads a texture using SDL_image. If the texture has already been loaded,
- just ups the reference count and returns the loaded surface.
-   TODO: Support loading from sources other than files.
+ just ups the reference count and returns the loaded surface. If the texture
+ failed to load, returns NULL.
 \******************************************************************************/
 r_texture_t *R_texture_load(const char *filename, int mipmaps)
 {
@@ -339,33 +415,6 @@ c_vec2_t R_font_size(r_font_t font, const char *text)
 }
 
 /******************************************************************************\
- Inverts a surface. Surface should not be locked when this is called.
-\******************************************************************************/
-void R_SDL_invert(SDL_Surface *surf, int rgb, int alpha)
-{
-        c_color_t color;
-        int x, y;
-
-        if (SDL_LockSurface(surf) < 0) {
-                C_warning("Failed to lock surface");
-                return;
-        }
-        for (y = 0; y < surf->h; y++)
-                for (x = 0; x < surf->w; x++) {
-                        color = R_SDL_get_pixel(surf, x, y);
-                        if (rgb) {
-                                color.r = 1.f - color.r;
-                                color.g = 1.f - color.g;
-                                color.b = 1.f - color.b;
-                        }
-                        if (alpha)
-                                color.a = 1.f - color.a;
-                        R_SDL_put_pixel(surf, x, y, color);
-                }
-        SDL_UnlockSurface(surf);
-}
-
-/******************************************************************************\
  Renders a line of text onto a newly-allocated SDL surface. This surface must
  be freed by the caller.
 \******************************************************************************/
@@ -473,8 +522,8 @@ void R_load_assets(void)
         ttf_inited = TRUE;
         R_load_fonts();
 
-        /* Load textures */
-        r_tile_tex = R_texture_load("models/globe/terrain.png", TRUE);
+        /* Generate procedural content */
+        R_init_prerender();
 }
 
 /******************************************************************************\
@@ -495,7 +544,7 @@ void R_free_fonts(void)
 \******************************************************************************/
 void R_free_assets(void)
 {
-        R_texture_free(r_tile_tex);
+        R_cleanup_prerender();
         R_free_fonts();
         TTF_Quit();
 }

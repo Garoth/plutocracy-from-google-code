@@ -34,6 +34,10 @@
    worth of tiles */
 #define R_TILES_MAX 20480
 
+/* Tile sheet grid parameters */
+#define R_TILE_SHEET_W 4
+#define R_TILE_SHEET_H 4
+
 /* Opaque texture object */
 typedef struct r_texture r_texture_t;
 
@@ -98,7 +102,6 @@ void R_load_fonts(void);
 void R_configure_globe(r_tile_t *array);
 void R_generate_globe(int seed, int subdiv4);
 void R_get_tile_coords(int index, c_vec3_t verts[3]);
-void R_find_tile_neighbors(int index, int neighbors[3]);
 float R_screen_to_globe(int pixels);
 
 extern int r_tiles;

@@ -349,3 +349,11 @@ static inline c_color_t C_color_32(unsigned int v)
                         (v & 0xff000000) >> 24);
 }
 
+/******************************************************************************\
+ Returns color luma ranging from 0 to 1.
+\******************************************************************************/
+static inline float C_color_luma(c_color_t color)
+{
+        return color.a * (0.21f * color.r + 0.72f * color.g + 0.07f * color.b);
+}
+
