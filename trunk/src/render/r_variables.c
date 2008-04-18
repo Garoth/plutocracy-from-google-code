@@ -20,6 +20,9 @@ c_var_t r_width, r_height, r_color_bits, r_depth_bits, r_windowed, r_vsync,
 c_var_t r_test_model, r_test_prerender, r_test_sprite, r_test_sprite_num,
         r_test_text;
 
+/* Effects parameters */
+c_var_t r_globe_smooth;
+
 /* Fonts */
 c_var_t r_font_console, r_font_console_pt,
         r_font_gui, r_font_gui_pt;
@@ -60,6 +63,10 @@ void R_register_variables(void)
                            "number of test sprites to show");
         C_register_string(&r_test_text, "r_test_text", "",
                           "text to test rendering");
+
+        /* Visual effects parameters */
+        C_register_float(&r_globe_smooth, "r_globe_smooth", 1.f,
+                         "amount to smooth globe normals: 0.0-1.0");
 
         /* Fonts */
         C_register_string(&r_font_console, "r_font_console",

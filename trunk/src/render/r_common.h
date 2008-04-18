@@ -129,7 +129,7 @@ void R_static_mesh_render(r_static_mesh_t *, r_texture_t *);
 void R_static_mesh_free(r_static_mesh_t *);
 
 /* r_variables.c */
-extern c_var_t r_clear, r_color_bits, r_depth_bits, r_gamma, r_gl_errors,
-               r_test_model, r_test_prerender, r_test_sprite_num, r_test_sprite,
-               r_test_text, r_vsync, r_windowed;
+extern c_var_t r_clear, r_color_bits, r_depth_bits, r_gamma, r_globe_smooth,
+               r_gl_errors, r_test_model, r_test_prerender, r_test_sprite_num,
+               r_test_sprite, r_test_text, r_vsync, r_windowed;
 

@@ -27,6 +27,7 @@ typedef struct globe_vertex {
 int r_tiles;
 
 static globe_vertex_t vertices[R_TILES_MAX * 3];
+static c_vec3_t normals[R_TILES_MAX];
 static float radius;
 static int flip_limit;
 static unsigned short indices[R_TILES_MAX * 3];
@@ -339,6 +340,59 @@ static void set_tile_height(int tile, float height)
 }
 
 /******************************************************************************\
+ Smooth globe vertex normals.
+\******************************************************************************/
+static void smooth_normals(void)
+{
+        c_vec3_t normal;
+        int i, j, len;
+
+        C_var_unlatch(&r_globe_smooth);
+        if (r_globe_smooth.value.f <= 0.f)
+                return;
+        if (r_globe_smooth.value.f > 1.f)
+                r_globe_smooth.value.f = 1.f;
+        for (i = 0; i < r_tiles * 3; i++) {
+
+                /* Compute the average normal for this point */
+                normal = C_vec3(0.f, 0.f, 0.f);
+                len = 0;
+                j = vertices[i].next;
+                while (j != i) {
+                        normal = C_vec3_add(normal, vertices[j].no);
+                        j = vertices[j].next;
+                        len++;
+                }
+                normal = C_vec3_scalef(normal, r_globe_smooth.value.f / len);
+
+                /* Set the normal for all vertices in the ring */
+                j = vertices[i].next;
+                while (j != i) {
+                        vertices[j].no = C_vec3_scalef(normals[j / 3], 1.f -
+                                                       r_globe_smooth.value.f);
+                        vertices[j].no = C_vec3_add(vertices[j].no, normal);
+                        j = vertices[j].next;
+                }
+        }
+}
+
+/******************************************************************************\
+ Called when [r_globe_smooth] changes.
+\******************************************************************************/
+static int globe_smooth_update(c_var_t *var, c_var_value_t value)
+{
+        int i;
+
+        if (value.f > 0.f) {
+                r_globe_smooth.value.f = value.f;
+                smooth_normals();
+        } else
+                for (i = 0; i < r_tiles * 3; i++)
+                        vertices[i].no = normals[i / 3];
+        return TRUE;
+}
+
+/******************************************************************************\
  Adjusts globe verices to show the tile's height.
 \******************************************************************************/
 void R_configure_globe(r_tile_t *tiles)
@@ -358,6 +412,21 @@ void R_configure_globe(r_tile_t *tiles)
                 flip = i < flip_limit;
                 vertices[3 * i + 1].uv = C_vec2((tx + flip) * 0.25f, bottom);
                 vertices[3 * i + 2].uv = C_vec2((tx + !flip) * 0.25f, bottom);
+
+                /* Set normal vector */
+                normals[i] = C_vec3_cross(C_vec3_sub(vertices[3 * i].co,
+                                                     vertices[3 * i + 1].co),
+                                          C_vec3_sub(vertices[3 * i].co,
+                                                     vertices[3 * i + 2].co));
+                normals[i] = C_vec3_norm(normals[i]);
+                vertices[3 * i].no = normals[i];
+                vertices[3 * i + 1].no = normals[i];
+                vertices[3 * i + 2].no = normals[i];
         }
+        smooth_normals();
+
+        /* We can update normals dynamically from now on */
+        r_globe_smooth.edit = C_VE_FUNCTION;
+        r_globe_smooth.update = globe_smooth_update;
 }
 
