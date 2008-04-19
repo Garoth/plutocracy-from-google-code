@@ -109,6 +109,11 @@ extern r_texture_t *r_terrain_tex;
 /* r_globe.c */
 void R_render_globe(void);
 
+extern float r_globe_radius;
+
+/* r_mode.c */
+extern GLfloat r_cam_matrix[16], r_proj3_matrix[16];
+
 /* r_prerender.c */
 void R_prerender(void);
 
@@ -121,6 +126,13 @@ extern r_mode_t r_mode;
 extern float r_cam_dist, r_cam_zoom;
 extern int r_extensions[R_EXTENSIONS];
 
+/* r_solar.c */
+void R_cleanup_solar(void);
+void R_disable_light(void);
+void R_enable_light(void);
+void R_init_solar(void);
+void R_render_solar(void);
+
 /* r_static_mesh.c */
 void R_static_mesh_cleanup(r_static_mesh_t *);
 unsigned short R_static_mesh_find_vert(const r_static_mesh_t *mesh,
@@ -128,8 +140,13 @@ unsigned short R_static_mesh_find_vert(const r_static_mesh_t *mesh,
 void R_static_mesh_render(r_static_mesh_t *, r_texture_t *);
 void R_static_mesh_free(r_static_mesh_t *);
 
+/* r_test.c */
+void R_render_tests(void);
+
 /* r_variables.c */
-extern c_var_t r_clear, r_color_bits, r_depth_bits, r_gamma, r_globe_smooth,
-               r_gl_errors, r_test_model, r_test_prerender, r_test_sprite_num,
-               r_test_sprite, r_test_text, r_vsync, r_windowed;
+extern c_var_t r_clear, r_color_bits, r_depth_bits, r_gamma, r_globe_colors[4],
+               r_globe_shininess, r_globe_smooth, r_gl_errors, r_light,
+               r_moon_colors[3], r_moon_atten, r_moon_height, r_sun_colors[3],
+               r_test_sprite_num, r_test_sprite, r_test_model, r_test_prerender,
+               r_test_text, r_vsync, r_windowed;
 

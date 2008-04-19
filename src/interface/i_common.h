@@ -74,6 +74,9 @@ typedef int (*i_event_f)(void *widget, i_event_t);
 /* Simple callback for handling widget-specific events */
 typedef void (*i_callback_f)(void *widget);
 
+/* Entry-widget auto-complete feed function */
+typedef const char *(*i_auto_complete_f)(const char *root);
+
 /* The basic properties all interface widgets need to have. The widget struct
    should be the first member of any derived widget struct.
 
@@ -138,6 +141,7 @@ typedef struct i_entry {
         r_sprite_t text, cursor;
         r_window_t window;
         i_callback_f on_enter;
+        i_auto_complete_f auto_complete;
         float scroll;
         int pos, history_pos, history_size;
         char buffer[256], history[I_ENTRY_HISTORY][256];

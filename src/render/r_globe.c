@@ -24,11 +24,12 @@ typedef struct globe_vertex {
 } globe_vertex_t;
 #pragma pack(pop)
 
+float r_globe_radius;
 int r_tiles;
 
 static globe_vertex_t vertices[R_TILES_MAX * 3];
+static c_color_t globe_colors[4];
 static c_vec3_t normals[R_TILES_MAX];
-static float radius;
 static int flip_limit;
 static unsigned short indices[R_TILES_MAX * 3];
 
@@ -42,7 +43,7 @@ static void sphericize(void)
 
         origin = C_vec3(0.f, 0.f, 0.f);
         for (i = 0; i < r_tiles * 3; i++)
-                vertices[i].co = C_vec3_scalef(vertices[i].co, radius /
+                vertices[i].co = C_vec3_scalef(vertices[i].co, r_globe_radius /
                                                C_vec3_len(vertices[i].co));
 }
 
@@ -123,7 +124,7 @@ static void subdivide4(void)
         }
         flip_limit *= 4;
         r_tiles *= 4;
-        radius *= 2;
+        r_globe_radius *= 2;
         sphericize();
 }
 
@@ -191,7 +192,7 @@ static void generate_icosahedron(void)
 
         flip_limit = 4;
         r_tiles = 20;
-        radius = sqrtf(C_TAU + 2);
+        r_globe_radius = sqrtf(C_TAU + 2);
 
         /* Flipped (over 0 vertex) face vertices */
         vertices[0].co = C_vec3(0, C_TAU, 1);
@@ -244,7 +245,12 @@ void R_generate_globe(int seed, int subdiv4)
                 vertices[i].no = C_vec3_norm(vertices[i].co);
         }
 
-        r_cam_dist = radius + R_ZOOM_MIN;
+        /* Setup globe material properties */
+        for (i = 0; i < 4; i++)
+                C_var_update_data(r_globe_colors + i, C_color_update,
+                                  globe_colors + i);
+
+        r_cam_dist = r_globe_radius + R_ZOOM_MIN;
 }
 
 /******************************************************************************\
@@ -252,14 +258,15 @@ void R_generate_globe(int seed, int subdiv4)
 \******************************************************************************/
 void R_render_globe(void)
 {
-        float left[] = { -1.0, 0.0, 0.0, 0.0 };
-
         R_set_mode(R_MODE_3D);
+        R_enable_light();
 
-        /* Have a light from the left */
-        glEnable(GL_LIGHTING);
-        glEnable(GL_LIGHT0);
-        glLightfv(GL_LIGHT0, GL_POSITION, left);
+        /* Set globe material properties */
+        glMateriali(GL_FRONT, GL_SHININESS, r_globe_shininess.value.n);
+        glMaterialfv(GL_FRONT, GL_AMBIENT, (float *)globe_colors);
+        glMaterialfv(GL_FRONT, GL_DIFFUSE, (float *)(globe_colors + 1));
+        glMaterialfv(GL_FRONT, GL_SPECULAR, (float *)(globe_colors + 2));
+        glMaterialfv(GL_FRONT, GL_EMISSION, (float *)(globe_colors + 3));
 
         /* Setup arrays and render the globe mesh */
         R_texture_select(r_terrain_tex);
@@ -274,6 +281,7 @@ void R_render_globe(void)
         glDisableClientState(GL_VERTEX_ARRAY);
         glDisableClientState(GL_NORMAL_ARRAY);
 
+        R_disable_light();
         R_check_errors();
         C_count_add(&r_count_faces, r_tiles);
 }

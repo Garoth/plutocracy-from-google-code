@@ -181,6 +181,7 @@ typedef int (*c_var_update_f)(c_var_t *, c_var_value_t);
 struct c_var {
         const char *name, *comment;
         struct c_var *next;
+        void *update_data;
         c_var_value_t value, latched, stock;
         c_var_type_t type;
         c_var_edit_t edit;
@@ -355,7 +356,8 @@ extern int c_time_msec, c_frame_msec, c_frame, c_throttle_msec;
 extern float c_frame_sec;
 
 /* c_variables.c */
-const char *C_auto_complete(const char *);
+const char *C_auto_complete_vars(const char *);
+int C_color_update(c_var_t *, c_var_value_t);
 int C_parse_config_file(const char *filename);
 void C_parse_config_string(const char *string);
 void C_register_float(c_var_t *, const char *name, float value,
@@ -369,7 +371,8 @@ c_var_t *C_resolve_var(const char *name);
 void C_translate_vars(void);
 void C_var_set(c_var_t *, const char *value);
 void C_var_unlatch(c_var_t *);
-void C_var_update(c_var_t *, c_var_update_f);
+#define C_var_update(v, u) C_var_update_data(v, u, NULL)
+void C_var_update_data(c_var_t *, c_var_update_f, void *);
 void C_write_autogen(void);
 
 extern c_var_t c_max_fps, c_show_fps;

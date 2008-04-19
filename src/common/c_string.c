@@ -109,7 +109,7 @@ int C_strncpy(char *dest, const char *src, int len)
         src_len = (int)strlen(src);
         if (src_len > --len) {
                 C_debug("dest (%d bytes) too short to hold src (%d bytes)",
-                        len, src_len);
+                        len, src_len, src);
                 src_len = len;
         }
         memmove(dest, src, src_len);
@@ -154,7 +154,9 @@ static struct {
         const char *name;
         unsigned int value;
 } colors[] = {
+        { "", 0x00000000 },
         { "clear", 0x00000000 },
+        { "none", 0x00000000 },
 
         /* Full-bright colors */
         { "white", 0xffffffff },
@@ -198,14 +200,21 @@ static struct {
 
 c_color_t C_color_string(const char *string)
 {
-        int i;
+        int i, value;
 
         if (string[0] == '#')
                 string++;
         for (i = 0; i < sizeof (colors) / sizeof (*colors); i++)
                 if (!strcasecmp(colors[i].name, string))
                         return C_color_32(colors[i].value);
-        return C_color_32(strtoul(string, NULL, 16));
+
+        /* If a string is specified as #xxxxxx the user probably assumed that
+           the alpha channel is opaque */
+        value = strtoul(string, NULL, 16);
+        if (C_strlen(string) < 8)
+                value |= 0xff000000;
+
+        return C_color_32(value);
 }
 
 /******************************************************************************\

@@ -59,6 +59,14 @@ typedef struct r_sprite {
         float angle;
 } r_sprite_t;
 
+/* A point sprite in world space */
+typedef struct r_billboard {
+        r_sprite_t sprite;
+        c_vec3_t world_origin;
+        GLfloat transform[16];
+        int unscaled;
+} r_billboard_t;
+
 /* There is a fixed set of fonts available for the game */
 typedef enum {
         R_FONT_CONSOLE,
@@ -91,11 +99,11 @@ typedef struct r_tile {
 } r_tile_t;
 
 /* r_assets.c */
+void R_free_fonts(void);
 int R_font_height(r_font_t);
 int R_font_line_skip(r_font_t);
 c_vec2_t R_font_size(r_font_t, const char *);
 int R_font_width(r_font_t);
-void R_free_fonts(void);
 void R_load_fonts(void);
 
 /* r_globe.c */
@@ -132,6 +140,9 @@ extern c_count_t r_count_faces;
 extern int r_width_2d, r_height_2d;
 
 /* r_sprite.c */
+#define R_billboard_cleanup(p) R_sprite_cleanup(&(p)->sprite)
+void R_billboard_init(r_billboard_t *, const char *filename);
+void R_billboard_render(r_billboard_t *);
 void R_sprite_cleanup(r_sprite_t *);
 void R_sprite_init(r_sprite_t *, const char *filename);
 void R_sprite_init_text(r_sprite_t *, r_font_t, float wrap, float shadow,
@@ -145,6 +156,10 @@ void R_text_configure(r_text_t *, r_font_t, float wrap, float shadow,
 #define R_window_cleanup(w) R_sprite_cleanup(&(w)->sprite)
 void R_window_init(r_window_t *, const char *filename);
 void R_window_render(r_window_t *);
+
+/* r_tests.c */
+void R_free_test_assets(void);
+void R_load_test_assets(void);
 
 /* r_variables.c */
 void R_register_variables(void);

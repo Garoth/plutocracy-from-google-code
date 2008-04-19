@@ -238,6 +238,7 @@ void I_console_init(i_window_t *window)
         I_entry_init(&entry, "");
         entry.widget.event_func = (i_event_f)entry_event;
         entry.on_enter = (i_callback_f)on_enter;
+        entry.auto_complete = C_auto_complete_vars;
         I_widget_add(&window->widget, &entry.widget);
 }
 

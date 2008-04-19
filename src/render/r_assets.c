@@ -413,6 +413,8 @@ void R_texture_render(r_texture_t *tex, int x, int y)
 \******************************************************************************/
 int R_font_height(r_font_t font)
 {
+        if (!fonts[font].ttf_font)
+                C_error("Forgot to load fonts");
         return fonts[font].height;
 }
 
@@ -421,6 +423,8 @@ int R_font_height(r_font_t font)
 \******************************************************************************/
 int R_font_width(r_font_t font)
 {
+        if (!fonts[font].ttf_font)
+                C_error("Forgot to load fonts");
         return fonts[font].width;
 }
 

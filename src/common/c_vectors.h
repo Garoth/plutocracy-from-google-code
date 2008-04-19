@@ -16,21 +16,21 @@
 #pragma pack(push, 4)
 
 typedef struct {
-        float x, y;
+        GLfloat x, y;
 } c_vec2_t;
 
 typedef struct {
-        float x, y, z;
+        GLfloat x, y, z;
 } c_vec3_t;
 
 typedef struct c_color {
-        float r, g, b, a;
+        GLfloat r, g, b, a;
 } c_color_t;
 
 #pragma pack(pop)
 
 /* Vector types can be converted to float arrays and vice versa */
-#define C_ARRAYF(v) ((float *)&(v))
+#define C_ARRAYF(v) ((GLfloat *)&(v))
 
 /******************************************************************************\
  Constructors.
@@ -291,6 +291,22 @@ static inline c_vec2_t C_vec2_clamp(c_vec2_t v, float u)
 static inline c_vec3_t C_vec3_clamp(c_vec3_t v, float u)
 {
         return C_vec3(C_clamp(v.x, u), C_clamp(v.y, u), C_clamp(v.z, u));
+}
+
+/******************************************************************************\
+ Applies a transformation matrix to a vector. Matrix [m] should be in column
+ major order as OpenGL expects.
+\******************************************************************************/
+static inline c_vec3_t C_vec3_tfm(c_vec3_t v, GLfloat m[16])
+{
+        c_vec3_t r;
+        float w;
+
+        r.x = v.x * m[ 0] + v.y * m[ 4] + v.z * m[ 8] + m[12];
+        r.y = v.x * m[ 1] + v.y * m[ 5] + v.z * m[ 9] + m[13];
+        r.z = v.x * m[ 2] + v.y * m[ 6] + v.z * m[10] + m[14];
+        w =   v.x * m[ 3] + v.y * m[ 7] + v.z * m[11] + m[15];
+        return C_vec3_divf(r, w);
 }
 
 /******************************************************************************\

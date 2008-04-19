@@ -66,7 +66,6 @@ static int sprite_render_start(const r_sprite_t *sprite)
 
         /* Setup transformation matrix */
         glPushMatrix();
-        glLoadIdentity();
         glTranslatef(sprite->origin.x + sprite->size.x / 2,
                      sprite->origin.y + sprite->size.y / 2, 0.f);
         glRotatef(C_rad_to_deg(sprite->angle), 0.0, 0.0, 1.0);
@@ -79,6 +78,7 @@ static int sprite_render_start(const r_sprite_t *sprite)
 \******************************************************************************/
 static void sprite_render_finish(void)
 {
+        glDisable(GL_DEPTH_TEST);
         glColor4f(1.f, 1.f, 1.f, 1.f);
         glDisableClientState(GL_TEXTURE_COORD_ARRAY);
         glDisableClientState(GL_VERTEX_ARRAY);
@@ -413,5 +413,49 @@ void R_window_render(r_window_t *window)
         glDrawElements(GL_QUAD_STRIP, 22, GL_UNSIGNED_SHORT, indices);
 
         sprite_render_finish();
+}
+
+/******************************************************************************\
+ Initializes a billboard point sprite.
+\******************************************************************************/
+void R_billboard_init(r_billboard_t *bb, const char *filename)
+{
+        R_sprite_init(&bb->sprite, filename);
+        C_zero_buf(bb->transform);
+        bb->transform[0] = 1.f;
+        bb->transform[5] = 1.f;
+        bb->transform[10] = 1.f;
+        bb->transform[15] = 1.f;
+        bb->unscaled = FALSE;
+}
+
+/******************************************************************************\
+ Render a billboard point sprite.
+
+ FIXME: Scaling.
+ FIXME: Why do we have to translate by the size times 1.5?
+\******************************************************************************/
+void R_billboard_render(r_billboard_t *bb)
+{
+        c_vec3_t co;
+
+        co = bb->world_origin;
+        co = C_vec3_tfm(co, bb->transform);
+        co = C_vec3_tfm(co, r_cam_matrix);
+        co = C_vec3_tfm(co, r_proj3_matrix);
+        co.x = (co.x + 1.f) * r_width_2d / 2.f + bb->sprite.size.x;
+        co.y = (1.f - co.y) * r_height_2d / 2.f + bb->sprite.size.y;
+        co.z = (co.z + 1.f) / -2.f;
+        if (co.z >= 0.f)
+                return;
+        bb->sprite.origin.x = co.x - bb->sprite.size.x * 1.5f;
+        bb->sprite.origin.y = co.y - bb->sprite.size.y * 1.5f;
+        R_set_mode(R_MODE_2D);
+        glEnable(GL_DEPTH_TEST);
+        glPushMatrix();
+        glTranslatef(0.f, 0.f, co.z);
+        R_sprite_render(&bb->sprite);
+        glPopMatrix();
+        glDisable(GL_DEPTH_TEST);
 }
 
