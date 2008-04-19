@@ -410,7 +410,7 @@ void C_write_autogen(void)
  characters that are shared by all candidates. If there is more than one
  match, the possible matches are printed to the console.
 \******************************************************************************/
-const char *C_auto_complete(const char *str)
+const char *C_auto_complete_vars(const char *str)
 {
         static char buf[128];
         c_var_t *var, *matches[100];
@@ -427,8 +427,15 @@ const char *C_auto_complete(const char *str)
                 }
         if (matches_len < 1)
                 return "";
-        if (matches_len < 2)
-                return matches[0]->name + str_len;
+        if (matches_len < 2) {
+                C_strncpy_buf(buf, matches[0]->name + str_len);
+                str_len = C_strlen(buf);
+                if (str_len > sizeof (buf) - 2)
+                        str_len = sizeof (buf) - 2;
+                buf[str_len] = ' ';
+                buf[str_len + 1] = NUL;
+                return buf;
+        }
 
         /* Check for a longer common root */
         common = C_strlen(matches[0]->name);
@@ -455,12 +462,22 @@ const char *C_auto_complete(const char *str)
  its update function, and finally calls the update function on the current
  value of the variable.
 \******************************************************************************/
-void C_var_update(c_var_t *var, c_var_update_f update)
+void C_var_update_data(c_var_t *var, c_var_update_f update, void *data)
 {
         C_var_unlatch(var);
-        update(var, var->value);
         var->edit = C_VE_FUNCTION;
         var->update = update;
+        var->update_data = data;
+        update(var, var->value);
+}
+
+/******************************************************************************\
+ A generic variable update function that updates a color from a string.
+\******************************************************************************/
+int C_color_update(c_var_t *var, c_var_value_t value)
+{
+        *(c_color_t *)var->update_data = C_color_string(value.s);
+        return TRUE;
 }
 
 /******************************************************************************\

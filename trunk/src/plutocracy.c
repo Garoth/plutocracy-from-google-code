@@ -40,7 +40,7 @@ static void render_status(void)
                            C_count_per_frame(&r_count_faces));
                 R_text_configure(&status_text, R_FONT_CONSOLE,
                                  0, 1.f, FALSE, str);
-                status_text.sprite.origin = C_vec2(4, 4);
+                status_text.sprite.origin = C_vec2(4.f, 4.f);
                 C_count_reset(&c_throttled);
                 C_count_reset(&r_count_faces);
         }
@@ -141,6 +141,7 @@ static void cleanup(void)
         C_status("Cleaning up");
         I_cleanup();
         R_text_cleanup(&status_text);
+        R_free_test_assets();
         R_cleanup();
         SDL_Quit();
         C_cleanup_lang();
@@ -202,6 +203,7 @@ int main(int argc, char *argv[])
         R_init();
         I_init();
         G_init();
+        R_load_test_assets();
 
         /* Run the main loop */
         main_loop();

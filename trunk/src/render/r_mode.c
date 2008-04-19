@@ -25,15 +25,13 @@ int r_width_2d, r_height_2d;
 /* Supported extensions */
 int r_extensions[R_EXTENSIONS];
 
+/* The full camera matrix */
+float r_cam_matrix[16], r_proj3_matrix[16];
+
 /* Camera rotation and zoom */
 float r_cam_dist, r_cam_zoom;
 static c_vec2_t cam_diff;
-static GLfloat cam_matrix[16];
-
-/* Testing assets */
-static r_model_t test_model;
-static r_sprite_t *test_sprites;
-static r_text_t test_text;
+static GLfloat cam_rotation[16];
 
 /* Clipping stack */
 static int clip_stack;
@@ -132,6 +130,8 @@ static void check_gl_extensions(void)
 \******************************************************************************/
 static void set_gl_state(void)
 {
+        c_color_t color;
+
         glAlphaFunc(GL_GREATER, 0);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
         glDepthFunc(GL_LEQUAL);
@@ -159,68 +159,17 @@ static void set_gl_state(void)
         r_mode = R_MODE_NONE;
 
         /* Initialize camera to identity */
-        memset(cam_matrix, 0, sizeof (cam_matrix));
-        cam_matrix[0] = 1.f;
-        cam_matrix[5] = 1.f;
-        cam_matrix[10] = 1.f;
-        cam_matrix[15] = 1.f;
+        memset(cam_rotation, 0, sizeof (cam_rotation));
+        cam_rotation[0] = 1.f;
+        cam_rotation[5] = 1.f;
+        cam_rotation[10] = 1.f;
+        cam_rotation[15] = 1.f;
+
+        /* Setup the lighting model */
+        color = C_color(0.f, 0.f, 0.f, 1.f);
+        glLightModelfv(GL_LIGHT_MODEL_AMBIENT, C_ARRAYF(color));
 
         R_check_errors();
-}
-
-/******************************************************************************\
- Reloads the test model when [r_test_model] changes value.
-\******************************************************************************/
-static int test_model_update(c_var_t *var, c_var_value_t value)
-{
-        R_model_cleanup(&test_model);
-        if (!value.s[0])
-                return TRUE;
-        return R_model_init(&test_model, value.s);
-}
-
-/******************************************************************************\
- Loads all the render testing assets.
-\******************************************************************************/
-static void load_test_assets(void)
-{
-        /* Test model */
-        C_var_unlatch(&r_test_model);
-        if (*r_test_model.value.s)
-                R_model_init(&test_model, r_test_model.value.s);
-        r_test_model.edit = C_VE_FUNCTION;
-        r_test_model.update = test_model_update;
-
-        /* Spinning sprites */
-        C_var_unlatch(&r_test_sprite_num);
-        C_var_unlatch(&r_test_sprite);
-        if (r_test_sprite_num.value.n && r_test_sprite.value.s[0]) {
-                int i;
-
-                C_rand_seed((unsigned int)time(NULL));
-                test_sprites = C_malloc(r_test_sprite_num.value.n *
-                                        sizeof (*test_sprites));
-                R_sprite_init(test_sprites, r_test_sprite.value.s);
-                test_sprites[0].origin = C_vec2(32, 32);
-                for (i = 1; i < r_test_sprite_num.value.n; i++) {
-                        R_sprite_init(test_sprites + i, r_test_sprite.value.s);
-                        test_sprites[i].origin = C_vec2(r_width_2d *
-                                                        C_rand_real(),
-                                                        r_height_2d *
-                                                        C_rand_real());
-                        test_sprites[i].angle = C_rand_real();
-                }
-        }
-
-        /* Spinning text */
-        C_var_unlatch(&r_test_text);
-        R_text_init(&test_text);
-        if (r_test_text.value.s[0]) {
-                R_text_configure(&test_text, R_FONT_CONSOLE, 100.f, 1.f,
-                                 TRUE, r_test_text.value.s);
-                test_text.sprite.origin = C_vec2(r_width_2d / 2.f,
-                                                 r_height_2d / 2.f);
-        }
 }
 
 /******************************************************************************\
@@ -246,24 +195,21 @@ static int clear_update(c_var_t *var, c_var_value_t value)
 /******************************************************************************\
  Creates the client window. Initializes OpenGL settings such view matrices,
  culling, and depth testing. Returns TRUE on success.
+
  TODO: Try backup "safe" video modes when user requested mode fails.
 \******************************************************************************/
 void R_init(void)
 {
         C_status("Opening window");
         C_count_reset(&r_count_faces);
-
-        /* Need to do these initialization steps before loading any assets */
         if (!set_video_mode())
                 C_error("No available video modes");
         check_gl_extensions();
         set_gl_state();
-        R_clip_disable();
         r_cam_zoom = (R_ZOOM_MAX - R_ZOOM_MIN) / 2.f;
-
-        /* Everything should be ready to load assets now */
+        R_clip_disable();
         R_load_assets();
-        load_test_assets();
+        R_init_solar();
 
         /* Set updatable variables */
         C_var_update(&r_clear, clear_update);
@@ -273,77 +219,12 @@ void R_init(void)
 }
 
 /******************************************************************************\
- Cleanup the OpenGL mess.
+ Cleanup the namespace.
 \******************************************************************************/
 void R_cleanup(void)
 {
+        R_cleanup_solar();
         R_free_assets();
-
-        /* Cleanup render testing */
-        R_model_cleanup(&test_model);
-        if (test_sprites) {
-                int i;
-
-                for (i = 0; i < r_test_sprite_num.value.n; i++)
-                        R_sprite_cleanup(test_sprites + i);
-                C_free(test_sprites);
-        }
-        R_text_cleanup(&test_text);
-}
-
-/******************************************************************************\
- Render the test model.
-\******************************************************************************/
-static void render_test_model(void)
-{
-        float left[] = { -1.0, 0.0, 0.0, 0.0 };
-
-        if (!test_model.data)
-                return;
-        glClear(GL_DEPTH_BUFFER_BIT);
-        R_set_mode(R_MODE_3D);
-
-        /* Setup a white light to the left */
-        glMatrixMode(GL_MODELVIEW);
-        glLoadIdentity();
-        glEnable(GL_LIGHT0);
-        glLightfv(GL_LIGHT0, GL_POSITION, left);
-        R_check_errors();
-
-        /* Render the test mesh */
-        test_model.origin.z = -7;
-        R_model_render(&test_model);
-
-        /* Spin the model around a bit */
-        test_model.angles.x += 0.05f * c_frame_sec;
-        test_model.angles.y += 0.30f * c_frame_sec;
-}
-
-/******************************************************************************\
- Render test sprites.
-\******************************************************************************/
-void render_test_sprites(void)
-{
-        int i;
-
-        if (!r_test_sprite.value.s[0] || r_test_sprite_num.value.n < 1)
-                return;
-        for (i = 0; i < r_test_sprite_num.value.n; i++) {
-                R_sprite_render(test_sprites + i);
-                test_sprites[i].angle += i * c_frame_sec /
-                                         r_test_sprite_num.value.n;
-        }
-}
-
-/******************************************************************************\
- Render test text.
-\******************************************************************************/
-void render_test_text(void)
-{
-        if (!r_test_text.value.s[0])
-                return;
-        R_text_render(&test_text);
-        test_text.sprite.angle += 0.5f * c_frame_sec;
 }
 
 /******************************************************************************\
@@ -366,16 +247,6 @@ void R_check_errors_full(const char *file, int line, const char *func)
 }
 
 /******************************************************************************\
- Load the camera matrix.
-\******************************************************************************/
-static void load_camera(void)
-{
-        glLoadIdentity();
-        glTranslatef(0, 0, -r_cam_dist - r_cam_zoom);
-        glMultMatrixf(cam_matrix);
-}
-
-/******************************************************************************\
  Calculates a new camera rotation matrix and reloads the modelview matrix.
 \******************************************************************************/
 static void update_camera(void)
@@ -384,14 +255,22 @@ static void update_camera(void)
 
         R_set_mode(R_MODE_3D);
         glMatrixMode(GL_MODELVIEW);
-        glLoadMatrixf(cam_matrix);
-        x_axis = C_vec3(cam_matrix[0], cam_matrix[4], cam_matrix[8]);
-        y_axis = C_vec3(cam_matrix[1], cam_matrix[5], cam_matrix[9]);
+
+        /* Apply the rotation differences from last frame to the rotation
+           matrix to get view-oriented scrolling */
+        glLoadMatrixf(cam_rotation);
+        x_axis = C_vec3(cam_rotation[0], cam_rotation[4], cam_rotation[8]);
+        y_axis = C_vec3(cam_rotation[1], cam_rotation[5], cam_rotation[9]);
         glRotatef(C_rad_to_deg(cam_diff.y), x_axis.x, x_axis.y, x_axis.z);
         glRotatef(C_rad_to_deg(cam_diff.x), y_axis.x, y_axis.y, y_axis.z);
         cam_diff = C_vec2(0.f, 0.f);
-        glGetFloatv(GL_MODELVIEW_MATRIX, cam_matrix);
-        load_camera();
+        glGetFloatv(GL_MODELVIEW_MATRIX, cam_rotation);
+
+        /* Recreate the full camera matrix with the new rotation */
+        glLoadIdentity();
+        glTranslatef(0, 0, -r_cam_dist - r_cam_zoom);
+        glMultMatrixf(cam_rotation);
+        glGetFloatv(GL_MODELVIEW_MATRIX, r_cam_matrix);
 }
 
 /******************************************************************************\
@@ -427,7 +306,7 @@ void R_set_mode(r_mode_t mode)
 
         /* 2D mode sets up an orthogonal projection to render sprites */
         if (mode == R_MODE_2D) {
-                glOrtho(0.f, r_width_2d, r_height_2d, 0.f, -1.f, 1.f);
+                glOrtho(0.f, r_width_2d, r_height_2d, 0.f, 0.f, 1.f);
                 glMatrixMode(GL_MODELVIEW);
                 glLoadIdentity();
         } else {
@@ -441,13 +320,12 @@ void R_set_mode(r_mode_t mode)
         if (mode == R_MODE_3D) {
                 gluPerspective(90.0, (float)r_width.value.n / r_height.value.n,
                                1.f, 10000.f);
-                glEnable(GL_LIGHTING);
+                glGetFloatv(GL_PROJECTION_MATRIX, r_proj3_matrix);
                 glEnable(GL_CULL_FACE);
                 glEnable(GL_DEPTH_TEST);
                 glMatrixMode(GL_MODELVIEW);
-                load_camera();
+                glLoadMatrixf(r_cam_matrix);
         } else {
-                glDisable(GL_LIGHTING);
                 glDisable(GL_CULL_FACE);
                 glDisable(GL_DEPTH_TEST);
         }
@@ -606,8 +484,8 @@ void R_start_frame(void)
 {
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         update_camera();
+        R_render_solar();
         R_render_globe();
-        render_test_model();
 }
 
 /******************************************************************************\
@@ -615,8 +493,7 @@ void R_start_frame(void)
 \******************************************************************************/
 void R_finish_frame(void)
 {
-        render_test_sprites();
-        render_test_text();
+        R_render_tests();
         SDL_GL_SwapBuffers();
         R_check_errors();
 }

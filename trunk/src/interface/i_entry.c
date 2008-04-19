@@ -199,14 +199,16 @@ static void entry_auto_complete(i_entry_t *entry)
         int pos_i, swap, prehead_chars, head_chars, tail_len,
             token_len, token_chars;
 
+        if (!entry->auto_complete)
+                return;
         pos_i = C_utf8_index(entry->buffer, entry->pos);
 
         /* Isolate and lookup the token we are trying to complete */
         head = tail = entry->buffer + pos_i;
         if (pos_i > 0)
-                do {
+                while (head > entry->buffer && !C_is_space(head[-1])) {
                         head--;
-                } while (head > entry->buffer && !C_is_space(head[-1]));
+                }
         while (*tail && !C_is_space(*tail))
                 tail++;
         swap = *head;
@@ -216,13 +218,15 @@ static void entry_auto_complete(i_entry_t *entry)
         swap = *tail;
         *tail = NUL;
         C_utf8_strlen(head, &head_chars);
-        token = C_auto_complete(head);
+        token = entry->auto_complete(head);
         *tail = swap;
         if (!token[0])
                 return;
 
         /* Add the returned string to the end of the current token */
         token_len = C_utf8_strlen(token, &token_chars);
+        if (token[token_len - 1] == ' ' && *tail == ' ')
+                token_len--;
         tail_len = C_strlen(tail);
         if (tail + token_len + tail_len > entry->buffer +
                                           sizeof (entry->buffer))
