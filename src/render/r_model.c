@@ -424,11 +424,16 @@ void R_model_render(r_model_t *model)
         if (!model || !model->data)
                 return;
         glPushMatrix();
-        glScalef(model->scale, model->scale, model->scale);
-        glTranslatef(model->origin.x, model->origin.y, model->origin.z);
-        glRotatef(C_rad_to_deg(model->angles.x), 1.0, 0.0, 0.0);
-        glRotatef(C_rad_to_deg(model->angles.y), 0.0, 1.0, 0.0);
-        glRotatef(C_rad_to_deg(model->angles.z), 0.0, 0.0, 1.0);
+        if (model->scale != 1.f)
+                glScalef(model->scale, model->scale, model->scale);
+        if (model->origin.x || model->origin.y || model->origin.z)
+                glTranslatef(model->origin.x, model->origin.y, model->origin.z);
+        if (model->angles.x)
+                glRotatef(C_rad_to_deg(model->angles.x), 1.0, 0.0, 0.0);
+        if (model->angles.y)
+                glRotatef(C_rad_to_deg(model->angles.y), 0.0, 1.0, 0.0);
+        if (model->angles.z)
+                glRotatef(C_rad_to_deg(model->angles.z), 0.0, 0.0, 1.0);
         if (model->time_left >= 0)
                 update_animation(model);
         if (model->use_lerp_meshes)
