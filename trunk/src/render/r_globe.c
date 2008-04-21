@@ -268,7 +268,8 @@ void R_render_globe(void)
         glMaterialfv(GL_FRONT, GL_SPECULAR, (float *)(globe_colors + 2));
         glMaterialfv(GL_FRONT, GL_EMISSION, (float *)(globe_colors + 3));
 
-        /* Setup arrays and render the globe mesh */
+        /* Setup arrays and render the globe mesh. These arrays are not
+           interleaved because we will be doing multitexturing in the future. */
         R_texture_select(r_terrain_tex);
         glEnableClientState(GL_VERTEX_ARRAY);
         glEnableClientState(GL_NORMAL_ARRAY);
@@ -288,6 +289,7 @@ void R_render_globe(void)
 
 /******************************************************************************\
  Converts screen pixel distance to globe radians.
+
  FIXME: Hacky and inaccurate.
 \******************************************************************************/
 float R_screen_to_globe(int pixels)

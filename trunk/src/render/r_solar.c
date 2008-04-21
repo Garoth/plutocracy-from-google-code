@@ -15,23 +15,21 @@
 #include "r_common.h"
 
 /* The rotation speed of the sun around the globe has to be fixed so that there
-   are no synchronization errors between players. This sets the day length to
-   be one day every three minutes. */
-#define ROTATION_SPEED 0.0175f
+   are no synchronization errors between players */
+#define MINUTES_PER_DAY 5
 
-#define NUM_STARS 200
-
-static r_billboard_t moon, sun, stars[NUM_STARS];
+static r_model_t sky;
+static r_billboard_t moon, sun;
 static c_color_t moon_colors[3], sun_colors[3];
-static float rotation;
 
 /******************************************************************************\
  Initializes light-related variables.
 \******************************************************************************/
 void R_init_solar(void)
 {
-        float dist, scale;
         int i;
+
+        C_status("Initializing solar objects");
 
         /* Update light colors */
         for (i = 0; i < 3; i++) {
@@ -44,23 +42,12 @@ void R_init_solar(void)
         /* Load solar object sprites */
         R_billboard_init(&moon, "models/solar/moon.png");
         R_billboard_init(&sun, "models/solar/sun.png");
-        sun.world_origin.x = 4900.f;
-        moon.world_origin.x = -4900.f;
+        moon.world_origin.x = -(sun.world_origin.x = 350.f);
         moon.unscaled = sun.unscaled = TRUE;
 
-        /* Create stars */
-        for (i = 0; i < NUM_STARS; i++) {
-                R_billboard_init(stars + i, "models/solar/star.png");
-                stars[i].world_origin = C_vec3(C_rand_real() - 0.5f,
-                                               C_rand_real() - 0.5f,
-                                               C_rand_real() - 0.5f);
-                dist = C_vec3_len(stars[i].world_origin);
-                stars[i].world_origin = C_vec3_scalef(stars[i].world_origin,
-                                                      5000.f / dist);
-                scale = 0.25f + 0.75f * C_rand_real();
-                stars[i].sprite.size.x *= scale;
-                stars[i].sprite.size.y *= scale;
-        }
+        /* Sky is just a model */
+        R_model_init(&sky, "models/solar/sky.plum");
+        sky.scale = 400.f;
 }
 
 /******************************************************************************\
@@ -68,12 +55,9 @@ void R_init_solar(void)
 \******************************************************************************/
 void R_cleanup_solar(void)
 {
-        int i;
-
         R_billboard_cleanup(&moon);
         R_billboard_cleanup(&sun);
-        for (i = 0; i < NUM_STARS; i++)
-                R_billboard_cleanup(stars + i);
+        R_model_cleanup(&sky);
 }
 
 /******************************************************************************\
@@ -87,7 +71,7 @@ void R_enable_light(void)
                 return;
         glEnable(GL_LIGHTING);
         glPushMatrix();
-        glRotatef(C_rad_to_deg(rotation), 0.f, 1.f, 0.f);
+        glRotatef(C_rad_to_deg(sky.angles.y), 0.f, 1.f, 0.f);
 
         /* Sunlight */
         sun_pos[0] = r_globe_radius + r_moon_height.value.f;
@@ -129,24 +113,16 @@ void R_disable_light(void)
 \******************************************************************************/
 void R_render_solar(void)
 {
-        int i;
+        sky.angles.y -= c_frame_sec * M_PI / 60.f / MINUTES_PER_DAY;
+        R_model_render(&sky);
 
-        rotation -= ROTATION_SPEED * c_frame_sec;
+        /* Render the sun and moon point sprites */
         glPushMatrix();
         glLoadIdentity();
-        glRotatef(C_rad_to_deg(rotation), 0.f, 1.f, 0.f);
+        glRotatef(C_rad_to_deg(sky.angles.y), 0.f, 1.f, 0.f);
         glGetFloatv(GL_MODELVIEW_MATRIX, sun.transform);
         glPopMatrix();
         memcpy(moon.transform, sun.transform, sizeof (moon.transform));
-
-        /* Render the stars */
-        for (i = 0; i < NUM_STARS; i++) {
-                memcpy(stars[i].transform, moon.transform,
-                       sizeof (stars[i].transform));
-                R_billboard_render(stars + i);
-        }
-
-        /* Render the sun and moon point sprites */
         R_billboard_render(&moon);
         R_billboard_render(&sun);
 }

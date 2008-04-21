@@ -319,7 +319,7 @@ void R_set_mode(r_mode_t mode)
         /* 3D mode sets up perspective projection and camera view for models */
         if (mode == R_MODE_3D) {
                 gluPerspective(90.0, (float)r_width.value.n / r_height.value.n,
-                               1.f, 10000.f);
+                               1.f, 512.f);
                 glGetFloatv(GL_PROJECTION_MATRIX, r_proj3_matrix);
                 glEnable(GL_CULL_FACE);
                 glEnable(GL_DEPTH_TEST);
@@ -482,10 +482,17 @@ void R_clip_rect(c_vec2_t origin, c_vec2_t size)
 \******************************************************************************/
 void R_start_frame(void)
 {
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        int clear_flags;
+
+        /* Only clear the screen if r_clear is set */
+        clear_flags = GL_DEPTH_BUFFER_BIT;
+        if (r_clear.value.n)
+                clear_flags |= GL_COLOR_BUFFER_BIT;
+        glClear(clear_flags);
+
         update_camera();
-        R_render_solar();
         R_render_globe();
+        R_render_solar();
 }
 
 /******************************************************************************\
