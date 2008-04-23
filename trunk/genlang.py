@@ -39,14 +39,33 @@ if not os.path.isdir(os.path.join(os.getcwd(), sys.argv[1])):
 
 outputWriter = open(sys.argv[2], "w")
 
+#------------------------------------------------------------------------
+# Generates a list of lines delimited by semi colons at the ends of lines
+#------------------------------------------------------------------------
+def getCLines(filereader):
+        lines = []
+        clines = []
+        buildString = ""
+        for line in filereader:
+                lines.append(line.strip())
+        
+        for line in lines:
+                if line.endswith(";"):
+                        buildString += line
+                        clines.append(buildString)
+                        buildString = ""
+                else:
+                        buildString += line+"\n"
+        
+        return clines
+
 #-------------------------------------------------------------------------
 # Read's the file's lines, split by ; not by \n and apply the regex to it.
 # Store the result in lists for processing and writing to file
 #-------------------------------------------------------------------------
 def matchAndStore(fileReader):
         matched = False
-        fileText = fileReader.read()
-        cLines = fileText.split(";")
+        cLines = getCLines(fileReader)
 
         for line in cLines:
                 matchesOne = re.findall(patternOne, line)
