@@ -146,7 +146,7 @@ void R_render_tests(void);
 /* r_variables.c */
 extern c_var_t r_clear, r_color_bits, r_depth_bits, r_gamma, r_globe_colors[4],
                r_globe_shininess, r_globe_smooth, r_gl_errors, r_light,
-               r_moon_colors[3], r_moon_atten, r_moon_height, r_sun_colors[3],
-               r_test_sprite_num, r_test_sprite, r_test_model, r_test_prerender,
-               r_test_text, r_vsync, r_windowed;
+               r_moon_atten, r_moon_colors[3], r_moon_height, r_solar,
+               r_sun_colors[3], r_test_sprite_num, r_test_sprite, r_test_model,
+               r_test_prerender, r_test_text, r_vsync, r_windowed;
 

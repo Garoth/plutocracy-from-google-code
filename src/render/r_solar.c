@@ -113,6 +113,9 @@ void R_disable_light(void)
 \******************************************************************************/
 void R_render_solar(void)
 {
+        if (!r_solar.value.n)
+                return;
+
         sky.angles.y -= c_frame_sec * M_PI / 60.f / MINUTES_PER_DAY;
         R_model_render(&sky);
 

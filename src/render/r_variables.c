@@ -25,7 +25,7 @@ c_var_t r_globe_smooth;
 
 /* Lighting parameters */
 c_var_t r_globe_colors[4], r_globe_shininess, r_light, r_moon_colors[3],
-        r_moon_atten, r_moon_height, r_sun_colors[3];
+        r_moon_atten, r_moon_height, r_solar, r_sun_colors[3];
 
 /* Fonts */
 c_var_t r_font_console, r_font_console_pt,
@@ -50,8 +50,7 @@ void R_register_variables(void)
         C_register_float(&r_gamma, "r_gamma", 1, "brightness gamma correction");
         C_register_float(&r_pixel_scale, "r_pixel_scale", 1,
                          "scales the interface pixel unit");
-        C_register_string(&r_clear, "r_clear", "#0c0c0c",
-                          "background clear color");
+        C_register_string(&r_clear, "r_clear", "", "background clear color");
         C_register_integer(&r_gl_errors, "r_gl_errors", 0,
                            "enable to quit if there is a GL error");
         r_gl_errors.edit = C_VE_ANYTIME;
@@ -76,6 +75,9 @@ void R_register_variables(void)
         C_register_integer(&r_light, "r_light", TRUE,
                           "enable light from the sun and moon");
         r_light.edit = C_VE_ANYTIME;
+        C_register_integer(&r_solar, "r_solar", TRUE,
+                          "render the sky, sun and moon sprites");
+        r_solar.edit = C_VE_ANYTIME;
         C_register_integer(&r_globe_shininess, "r_globe_shininess", 32,
                           "globe specular shininess: 0-128");
         r_globe_shininess.edit = C_VE_ANYTIME;
