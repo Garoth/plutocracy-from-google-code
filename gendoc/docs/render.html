@@ -593,7 +593,7 @@ R_free_test_assets <span class="file">(r_test.c)</span></div>
 R_generate_globe <span class="file">(r_globe.c)</span></div>
 </a>
 <div class="entry_body" id="55_body" style="display:none">
-<pre><b class="keyword0">void</b> R_generate_globe<span class="def_op">(<b class="keyword0">int</b></span> seed<span class="def_op">,</span> <b class="keyword0">int</b> subdiv4<span class="def_op">);</span></pre>
+<pre><b class="keyword0">void</b> R_generate_globe<span class="def_op">(<b class="keyword0">int</b></span> subdiv4<span class="def_op">);</span></pre>
 <p class="comment">
  Generates the globe by subdividing an icosahedron and spacing the vertices
  out at the sphere's surface.</p>
@@ -607,11 +607,40 @@ R_get_tile_coords <span class="file">(r_globe.c)</span></div>
 <p class="comment">
  Returns the vertices associated with a specific tile via <code>verts</code>.</p>
 </div>
-<a name="R_init" href="javascript:toggle(57)">
+<a name="R_get_tile_latitude" href="javascript:toggle(57)">
 <div class="entry" id="57">
-R_init <span class="file">(r_mode.c)</span></div>
+R_get_tile_latitude <span class="file">(r_globe.c)</span></div>
 </a>
 <div class="entry_body" id="57_body" style="display:none">
+<pre><b class="keyword0">float</b> R_get_tile_latitude<span class="def_op">(<b class="keyword0">int</b></span> tile<span class="def_op">);</span></pre>
+<p class="comment">
+ Returns the "geocentric" latitude (in radians) of the tile:<br>
+ http://en.wikipedia.org/wiki/Latitude</p>
+</div>
+<a name="R_get_tile_neighbors" href="javascript:toggle(58)">
+<div class="entry" id="58">
+R_get_tile_neighbors <span class="file">(r_globe.c)</span></div>
+</a>
+<div class="entry_body" id="58_body" style="display:none">
+<pre><b class="keyword0">void</b> R_get_tile_neighbors<span class="def_op">(<b class="keyword0">int</b></span> tile<span class="def_op">,</span> <b class="keyword0">int</b> neighbors<span class="def_op">[</span><span class="def_const">3</span><span class="def_op">]);</span></pre>
+<p class="comment">
+ Returns the tiles this tile shares a face with via <code>neighbors</code>.</p>
+</div>
+<a name="R_get_tile_region" href="javascript:toggle(59)">
+<div class="entry" id="59">
+R_get_tile_region <span class="file">(r_globe.c)</span></div>
+</a>
+<div class="entry_body" id="59_body" style="display:none">
+<pre><b class="keyword0">int</b> R_get_tile_region<span class="def_op">(<b class="keyword0">int</b></span> tile<span class="def_op">,</span> <b class="keyword0">int</b> neighbors<span class="def_op">[</span><span class="def_const">12</span><span class="def_op">]);</span></pre>
+<p class="comment">
+ Returns the tiles this tile shares a vertex with via <code>neighbors</code>. Returns the
+ number of entries used in the array.</p>
+</div>
+<a name="R_init" href="javascript:toggle(60)">
+<div class="entry" id="60">
+R_init <span class="file">(r_mode.c)</span></div>
+</a>
+<div class="entry_body" id="60_body" style="display:none">
 <pre><b class="keyword0">void</b> R_init<span class="def_op">(<b class="keyword0">void</b>);</span></pre>
 <p class="comment">
  Creates the client window. Initializes OpenGL settings such view matrices,
@@ -619,181 +648,182 @@ R_init <span class="file">(r_mode.c)</span></div>
 <br>
  <code>TODO</code>: Try backup "safe" video modes when user requested mode fails.</p>
 </div>
-<a name="R_init_solar" href="javascript:toggle(58)">
-<div class="entry" id="58">
+<a name="R_init_solar" href="javascript:toggle(61)">
+<div class="entry" id="61">
 R_init_solar <span class="file">(r_solar.c)</span></div>
 </a>
-<div class="entry_body" id="58_body" style="display:none">
+<div class="entry_body" id="61_body" style="display:none">
 <pre><b class="keyword0">void</b> R_init_solar<span class="def_op">(<b class="keyword0">void</b>);</span></pre>
 <p class="comment">
  Initializes light-related variables.</p>
 </div>
-<a name="R_load_assets" href="javascript:toggle(59)">
-<div class="entry" id="59">
+<a name="R_load_assets" href="javascript:toggle(62)">
+<div class="entry" id="62">
 R_load_assets <span class="file">(r_assets.c)</span></div>
 </a>
-<div class="entry_body" id="59_body" style="display:none">
+<div class="entry_body" id="62_body" style="display:none">
 <pre><b class="keyword0">void</b> R_load_assets<span class="def_op">(<b class="keyword0">void</b>);</span></pre>
 <p class="comment">
  Loads render assets.</p>
 </div>
-<a name="R_load_fonts" href="javascript:toggle(60)">
-<div class="entry" id="60">
+<a name="R_load_fonts" href="javascript:toggle(63)">
+<div class="entry" id="63">
 R_load_fonts <span class="file">(r_assets.c)</span></div>
 </a>
-<div class="entry_body" id="60_body" style="display:none">
+<div class="entry_body" id="63_body" style="display:none">
 <pre><b class="keyword0">void</b> R_load_fonts<span class="def_op">(<b class="keyword0">void</b>);</span></pre>
 <p class="comment">
  Initialize the <code>SDL</code> <code>TTF</code> library and generate font structures.</p>
 </div>
-<a name="R_load_test_assets" href="javascript:toggle(61)">
-<div class="entry" id="61">
+<a name="R_load_test_assets" href="javascript:toggle(64)">
+<div class="entry" id="64">
 R_load_test_assets <span class="file">(r_test.c)</span></div>
 </a>
-<div class="entry_body" id="61_body" style="display:none">
+<div class="entry_body" id="64_body" style="display:none">
 <pre><b class="keyword0">void</b> R_load_test_assets<span class="def_op">(<b class="keyword0">void</b>);</span></pre>
 <p class="comment">
  Loads all the render testing assets.</p>
 </div>
-<a name="R_model_cleanup" href="javascript:toggle(62)">
-<div class="entry" id="62">
+<a name="R_model_cleanup" href="javascript:toggle(65)">
+<div class="entry" id="65">
 R_model_cleanup <span class="file">(r_model.c)</span></div>
 </a>
-<div class="entry_body" id="62_body" style="display:none">
+<div class="entry_body" id="65_body" style="display:none">
 <pre><b class="keyword0">void</b> R_model_cleanup<span class="def_op">(<a href="#r_model_t">r_model_t</a></span> <span class="def_op">*);</span></pre>
 <p class="comment">
  Decrease reference counts to resources used by a model and free those
  resources if they have no references left.</p>
 </div>
-<a name="R_model_init" href="javascript:toggle(63)">
-<div class="entry" id="63">
+<a name="R_model_init" href="javascript:toggle(66)">
+<div class="entry" id="66">
 R_model_init <span class="file">(r_model.c)</span></div>
 </a>
-<div class="entry_body" id="63_body" style="display:none">
+<div class="entry_body" id="66_body" style="display:none">
 <pre><b class="keyword0">int</b> R_model_init<span class="def_op">(<a href="#r_model_t">r_model_t</a></span> <span class="def_op">*,</span> <b class="keyword0">const</b> <b class="keyword0">char</b> <span class="def_op">*</span>filename<span class="def_op">);</span></pre>
 <p class="comment">
  Initialize a model instance. Model data is loaded if it is not already in
  memory. Returns <code>FALSE</code> and invalidates the model instance if the model data
  failed to load.</p>
 </div>
-<a name="R_model_play" href="javascript:toggle(64)">
-<div class="entry" id="64">
+<a name="R_model_play" href="javascript:toggle(67)">
+<div class="entry" id="67">
 R_model_play <span class="file">(r_model.c)</span></div>
 </a>
-<div class="entry_body" id="64_body" style="display:none">
+<div class="entry_body" id="67_body" style="display:none">
 <pre><b class="keyword0">void</b> R_model_play<span class="def_op">(<a href="#r_model_t">r_model_t</a></span> <span class="def_op">*,</span> <b class="keyword0">const</b> <b class="keyword0">char</b> <span class="def_op">*</span>anim_name<span class="def_op">);</span></pre>
 <p class="comment">
  Set a model animation to play.</p>
 </div>
-<a name="R_model_render" href="javascript:toggle(65)">
-<div class="entry" id="65">
+<a name="R_model_render" href="javascript:toggle(68)">
+<div class="entry" id="68">
 R_model_render <span class="file">(r_model.c)</span></div>
 </a>
-<div class="entry_body" id="65_body" style="display:none">
+<div class="entry_body" id="68_body" style="display:none">
 <pre><b class="keyword0">void</b> R_model_render<span class="def_op">(<a href="#r_model_t">r_model_t</a></span> <span class="def_op">*);</span></pre>
 <p class="comment">
  Render and advance the animation of a model. Applies the model's translation,
  rotation, and scale.</p>
 </div>
-<a name="R_move_cam_by" href="javascript:toggle(66)">
-<div class="entry" id="66">
+<a name="R_move_cam_by" href="javascript:toggle(69)">
+<div class="entry" id="69">
 R_move_cam_by <span class="file">(r_mode.c)</span></div>
 </a>
-<div class="entry_body" id="66_body" style="display:none">
+<div class="entry_body" id="69_body" style="display:none">
 <pre><b class="keyword0">void</b> R_move_cam_by<span class="def_op">(</span>c_vec2_t<span class="def_op">);</span></pre>
 <p class="comment">
  Move the camera incrementally relative to the current orientation.</p>
 </div>
-<a name="R_prerender" href="javascript:toggle(67)">
-<div class="entry" id="67">
+<a name="R_prerender" href="javascript:toggle(70)">
+<div class="entry" id="70">
 R_prerender <span class="file">(r_prerender.c)</span></div>
 </a>
-<div class="entry_body" id="67_body" style="display:none">
+<div class="entry_body" id="70_body" style="display:none">
 <pre><b class="keyword0">void</b> R_prerender<span class="def_op">(<b class="keyword0">void</b>);</span></pre>
 <p class="comment">
  Renders the pre-render textures to the back buffer and reads them back in for
  later use.</p>
 </div>
-<a name="R_register_variables" href="javascript:toggle(68)">
-<div class="entry" id="68">
+<a name="R_register_variables" href="javascript:toggle(71)">
+<div class="entry" id="71">
 R_register_variables <span class="file">(r_variables.c)</span></div>
 </a>
-<div class="entry_body" id="68_body" style="display:none">
+<div class="entry_body" id="71_body" style="display:none">
 <pre><b class="keyword0">void</b> R_register_variables<span class="def_op">(<b class="keyword0">void</b>);</span></pre>
 <p class="comment">
  Registers the render namespace variables.</p>
 </div>
-<a name="R_render_globe" href="javascript:toggle(69)">
-<div class="entry" id="69">
+<a name="R_render_globe" href="javascript:toggle(72)">
+<div class="entry" id="72">
 R_render_globe <span class="file">(r_globe.c)</span></div>
 </a>
-<div class="entry_body" id="69_body" style="display:none">
+<div class="entry_body" id="72_body" style="display:none">
 <pre><b class="keyword0">void</b> R_render_globe<span class="def_op">(<b class="keyword0">void</b>);</span></pre>
 <p class="comment">
  Renders the entire globe.</p>
 </div>
-<a name="R_render_solar" href="javascript:toggle(70)">
-<div class="entry" id="70">
+<a name="R_render_solar" href="javascript:toggle(73)">
+<div class="entry" id="73">
 R_render_solar <span class="file">(r_solar.c)</span></div>
 </a>
-<div class="entry_body" id="70_body" style="display:none">
+<div class="entry_body" id="73_body" style="display:none">
 <pre><b class="keyword0">void</b> R_render_solar<span class="def_op">(<b class="keyword0">void</b>);</span></pre>
 <p class="comment">
  Renders the background behind the globe.</p>
 </div>
-<a name="R_render_tests" href="javascript:toggle(71)">
-<div class="entry" id="71">
+<a name="R_render_tests" href="javascript:toggle(74)">
+<div class="entry" id="74">
 R_render_tests <span class="file">(r_test.c)</span></div>
 </a>
-<div class="entry_body" id="71_body" style="display:none">
+<div class="entry_body" id="74_body" style="display:none">
 <pre><b class="keyword0">void</b> R_render_tests<span class="def_op">(<b class="keyword0">void</b>);</span></pre>
 <p class="comment">
  Render testing models, sprites, etc.</p>
 </div>
-<a name="R_screen_to_globe" href="javascript:toggle(72)">
-<div class="entry" id="72">
+<a name="R_screen_to_globe" href="javascript:toggle(75)">
+<div class="entry" id="75">
 R_screen_to_globe <span class="file">(r_globe.c)</span></div>
 </a>
-<div class="entry_body" id="72_body" style="display:none">
+<div class="entry_body" id="75_body" style="display:none">
 <pre><b class="keyword0">float</b> R_screen_to_globe<span class="def_op">(<b class="keyword0">int</b></span> pixels<span class="def_op">);</span></pre>
 <p class="comment">
  Converts screen pixel distance to globe radians.<br>
+<br>
  <code>FIXME</code>: Hacky and inaccurate.</p>
 </div>
-<a name="R_set_mode" href="javascript:toggle(73)">
-<div class="entry" id="73">
+<a name="R_set_mode" href="javascript:toggle(76)">
+<div class="entry" id="76">
 R_set_mode <span class="file">(r_mode.c)</span></div>
 </a>
-<div class="entry_body" id="73_body" style="display:none">
+<div class="entry_body" id="76_body" style="display:none">
 <pre><b class="keyword0">void</b> R_set_mode<span class="def_op">(<a href="#r_mode_t">r_mode_t</a>);</span></pre>
 <p class="comment">
  Sets up OpenGL to render 3D polygons in world space. If mode is set to
  <code>R_MODE_HOLD</code>, the mode will not be changeable until set to <code>R_MODE_NONE</code>.</p>
 </div>
-<a name="R_sprite_cleanup" href="javascript:toggle(74)">
-<div class="entry" id="74">
+<a name="R_sprite_cleanup" href="javascript:toggle(77)">
+<div class="entry" id="77">
 R_sprite_cleanup <span class="file">(r_sprite.c)</span></div>
 </a>
-<div class="entry_body" id="74_body" style="display:none">
+<div class="entry_body" id="77_body" style="display:none">
 <pre><b class="keyword0">void</b> R_sprite_cleanup<span class="def_op">(<a href="#r_sprite_t">r_sprite_t</a></span> <span class="def_op">*);</span></pre>
 <p class="comment">
  Initialize a sprite structure.</p>
 </div>
-<a name="R_sprite_init" href="javascript:toggle(75)">
-<div class="entry" id="75">
+<a name="R_sprite_init" href="javascript:toggle(78)">
+<div class="entry" id="78">
 R_sprite_init <span class="file">(r_sprite.c)</span></div>
 </a>
-<div class="entry_body" id="75_body" style="display:none">
+<div class="entry_body" id="78_body" style="display:none">
 <pre><b class="keyword0">void</b> R_sprite_init<span class="def_op">(<a href="#r_sprite_t">r_sprite_t</a></span> <span class="def_op">*,</span> <b class="keyword0">const</b> <b class="keyword0">char</b> <span class="def_op">*</span>filename<span class="def_op">);</span></pre>
 <p class="comment">
  Initialize a sprite structure. 2D mode textures are expected to be at the
  maximum pixel scale (2x).</p>
 </div>
-<a name="R_sprite_init_text" href="javascript:toggle(76)">
-<div class="entry" id="76">
+<a name="R_sprite_init_text" href="javascript:toggle(79)">
+<div class="entry" id="79">
 R_sprite_init_text <span class="file">(r_sprite.c)</span></div>
 </a>
-<div class="entry_body" id="76_body" style="display:none">
+<div class="entry_body" id="79_body" style="display:none">
 <pre><b class="keyword0">void</b> R_sprite_init_text<span class="def_op">(<a href="#r_sprite_t">r_sprite_t</a></span> <span class="def_op">*,</span> <a href="#r_font_t">r_font_t</a><span class="def_op">,</span> <b class="keyword0">float</b> wrap<span class="def_op">,</span> <b class="keyword0">float</b> shadow<span class="def_op">,</span>
                         <b class="keyword0">int</b> invert<span class="def_op">,</span> <b class="keyword0">const</b> <b class="keyword0">char</b> <span class="def_op">*</span>text<span class="def_op">);</span></pre>
 <p class="comment">
@@ -802,11 +832,11 @@ R_sprite_init_text <span class="file">(r_sprite.c)</span></div>
  shadow (of variable opacity) can be applied. <code>string</code> does need to persist
  after the function call.</p>
 </div>
-<a name="R_sprite_render" href="javascript:toggle(77)">
-<div class="entry" id="77">
+<a name="R_sprite_render" href="javascript:toggle(80)">
+<div class="entry" id="80">
 R_sprite_render <span class="file">(r_sprite.c)</span></div>
 </a>
-<div class="entry_body" id="77_body" style="display:none">
+<div class="entry_body" id="80_body" style="display:none">
 <pre><b class="keyword0">void</b> R_sprite_render<span class="def_op">(<b class="keyword0">const</b></span> <a href="#r_sprite_t">r_sprite_t</a> <span class="def_op">*);</span></pre>
 <p class="comment">
  Renders a 2D textured quad on screen. If we are rendering a rotated sprite
@@ -820,156 +850,153 @@ R_sprite_render <span class="file">(r_sprite.c)</span></div>
    |   |<br>
    1---2<br>
 <br>
- World-space point sprites can be created by setting the <code>type</code> member to
- <code>R_ST_WORLD</code> and by using world coordinates for <code>origin</code>.<br>
-<br>
  <code>TODO</code>: Disable anti-aliasing here if <code>FSAA</code> is on.<br>
  <code>FIXME</code>: There is a slight overlap between the antialiased edge line and the
         polygon which should probably be fixed if possible.</p>
 </div>
-<a name="R_start_frame" href="javascript:toggle(78)">
-<div class="entry" id="78">
+<a name="R_start_frame" href="javascript:toggle(81)">
+<div class="entry" id="81">
 R_start_frame <span class="file">(r_mode.c)</span></div>
 </a>
-<div class="entry_body" id="78_body" style="display:none">
+<div class="entry_body" id="81_body" style="display:none">
 <pre><b class="keyword0">void</b> R_start_frame<span class="def_op">(<b class="keyword0">void</b>);</span></pre>
 <p class="comment">
  Clears the buffer and starts rendering the scene.</p>
 </div>
-<a name="R_static_mesh_cleanup" href="javascript:toggle(79)">
-<div class="entry" id="79">
+<a name="R_static_mesh_cleanup" href="javascript:toggle(82)">
+<div class="entry" id="82">
 R_static_mesh_cleanup <span class="file">(r_static_mesh.c)</span></div>
 </a>
-<div class="entry_body" id="79_body" style="display:none">
+<div class="entry_body" id="82_body" style="display:none">
 <pre><b class="keyword0">void</b> R_static_mesh_cleanup<span class="def_op">(<a href="#r_static_mesh_t">r_static_mesh_t</a></span> <span class="def_op">*);</span></pre>
 <p class="comment">
  Release the resources for a mesh.</p>
 </div>
-<a name="R_static_mesh_find_vert" href="javascript:toggle(80)">
-<div class="entry" id="80">
+<a name="R_static_mesh_find_vert" href="javascript:toggle(83)">
+<div class="entry" id="83">
 R_static_mesh_find_vert <span class="file">(r_static_mesh.c)</span></div>
 </a>
-<div class="entry_body" id="80_body" style="display:none">
+<div class="entry_body" id="83_body" style="display:none">
 <pre><b class="keyword0">unsigned</b> <b class="keyword0">short</b> R_static_mesh_find_vert<span class="def_op">(<b class="keyword0">const</b></span> <a href="#r_static_mesh_t">r_static_mesh_t</a> <span class="def_op">*</span>mesh<span class="def_op">,</span>
                                        <b class="keyword0">const</b> <a href="#r_vertex3_t">r_vertex3_t</a> <span class="def_op">*</span>vert<span class="def_op">);</span></pre>
 <p class="comment">
  Find a vertex in a static mesh vertex array. Returns the length of the array
  if a matching vertex is not found.</p>
 </div>
-<a name="R_static_mesh_free" href="javascript:toggle(81)">
-<div class="entry" id="81">
+<a name="R_static_mesh_free" href="javascript:toggle(84)">
+<div class="entry" id="84">
 R_static_mesh_free <span class="file">(r_static_mesh.c)</span></div>
 </a>
-<div class="entry_body" id="81_body" style="display:none">
+<div class="entry_body" id="84_body" style="display:none">
 <pre><b class="keyword0">void</b> R_static_mesh_free<span class="def_op">(<a href="#r_static_mesh_t">r_static_mesh_t</a></span> <span class="def_op">*);</span></pre>
 <p class="comment">
  Release the resources for and free an allocated mesh.</p>
 </div>
-<a name="R_static_mesh_render" href="javascript:toggle(82)">
-<div class="entry" id="82">
+<a name="R_static_mesh_render" href="javascript:toggle(85)">
+<div class="entry" id="85">
 R_static_mesh_render <span class="file">(r_static_mesh.c)</span></div>
 </a>
-<div class="entry_body" id="82_body" style="display:none">
+<div class="entry_body" id="85_body" style="display:none">
 <pre><b class="keyword0">void</b> R_static_mesh_render<span class="def_op">(<a href="#r_static_mesh_t">r_static_mesh_t</a></span> <span class="def_op">*,</span> <a href="#r_texture_t">r_texture_t</a> <span class="def_op">*);</span></pre>
 <p class="comment">
  Render a mesh.</p>
 </div>
-<a name="R_surface_flip_v" href="javascript:toggle(83)">
-<div class="entry" id="83">
+<a name="R_surface_flip_v" href="javascript:toggle(86)">
+<div class="entry" id="86">
 R_surface_flip_v <span class="file">(r_assets.c)</span></div>
 </a>
-<div class="entry_body" id="83_body" style="display:none">
+<div class="entry_body" id="86_body" style="display:none">
 <pre><b class="keyword0">void</b> R_surface_flip_v<span class="def_op">(</span>SDL_Surface <span class="def_op">*);</span></pre>
 <p class="comment">
  Vertically flip <code>surf</code>'s pixels. Do not call on a locked surface.</p>
 </div>
-<a name="R_surface_get" href="javascript:toggle(84)">
-<div class="entry" id="84">
+<a name="R_surface_get" href="javascript:toggle(87)">
+<div class="entry" id="87">
 R_surface_get <span class="file">(r_assets.c)</span></div>
 </a>
-<div class="entry_body" id="84_body" style="display:none">
+<div class="entry_body" id="87_body" style="display:none">
 <pre>c_color_t R_surface_get<span class="def_op">(<b class="keyword0">const</b></span> SDL_Surface <span class="def_op">*,</span> <b class="keyword0">int</b> x<span class="def_op">,</span> <b class="keyword0">int</b> y<span class="def_op">);</span></pre>
 <p class="comment">
  Gets a pixel from an <code>SDL</code> surface. Lock the surface before calling.</p>
 </div>
-<a name="R_surface_invert" href="javascript:toggle(85)">
-<div class="entry" id="85">
+<a name="R_surface_invert" href="javascript:toggle(88)">
+<div class="entry" id="88">
 R_surface_invert <span class="file">(r_assets.c)</span></div>
 </a>
-<div class="entry_body" id="85_body" style="display:none">
+<div class="entry_body" id="88_body" style="display:none">
 <pre><b class="keyword0">void</b> R_surface_invert<span class="def_op">(</span>SDL_Surface <span class="def_op">*,</span> <b class="keyword0">int</b> rgb<span class="def_op">,</span> <b class="keyword0">int</b> alpha<span class="def_op">);</span></pre>
 <p class="comment">
  Inverts a surface. Surface should not be locked when this is called.</p>
 </div>
-<a name="R_surface_mask" href="javascript:toggle(86)">
-<div class="entry" id="86">
+<a name="R_surface_mask" href="javascript:toggle(89)">
+<div class="entry" id="89">
 R_surface_mask <span class="file">(r_assets.c)</span></div>
 </a>
-<div class="entry_body" id="86_body" style="display:none">
+<div class="entry_body" id="89_body" style="display:none">
 <pre><b class="keyword0">void</b> R_surface_mask<span class="def_op">(</span>SDL_Surface <span class="def_op">*</span>dest<span class="def_op">,</span> SDL_Surface <span class="def_op">*</span>src<span class="def_op">);</span></pre>
 <p class="comment">
  Overwrite's <code>dest</code>'s alpha channel with <code>src</code>'s intensity. If <code>dest</code> is
  larger than <code>src</code>, <code>src</code> is tiled. Do not call on locked surfaces.</p>
 </div>
-<a name="R_surface_put" href="javascript:toggle(87)">
-<div class="entry" id="87">
+<a name="R_surface_put" href="javascript:toggle(90)">
+<div class="entry" id="90">
 R_surface_put <span class="file">(r_assets.c)</span></div>
 </a>
-<div class="entry_body" id="87_body" style="display:none">
+<div class="entry_body" id="90_body" style="display:none">
 <pre><b class="keyword0">void</b> R_surface_put<span class="def_op">(</span>SDL_Surface <span class="def_op">*,</span> <b class="keyword0">int</b> x<span class="def_op">,</span> <b class="keyword0">int</b> y<span class="def_op">,</span> c_color_t<span class="def_op">);</span></pre>
 <p class="comment">
  Sets the color of a pixel on an <code>SDL</code> surface. Lock the surface before
  calling.</p>
 </div>
-<a name="R_text_cleanup" href="javascript:toggle(88)">
-<div class="entry" id="88">
+<a name="R_text_cleanup" href="javascript:toggle(91)">
+<div class="entry" id="91">
 R_text_cleanup <span class="file">(r_shared.h)</span></div>
 </a>
-<div class="entry_body" id="88_body" style="display:none">
+<div class="entry_body" id="91_body" style="display:none">
 <pre><b class="keyword2">#define</b> R_text_cleanup<span class="def_op">(</span>t<span class="def_op">)</span> R_sprite_cleanup<span class="def_op">(&(</span>t<span class="def_op">)-></span>sprite<span class="def_op">)</span></pre>
 <p class="comment"> r_sprite.c</p>
 </div>
-<a name="R_text_configure" href="javascript:toggle(89)">
-<div class="entry" id="89">
+<a name="R_text_configure" href="javascript:toggle(92)">
+<div class="entry" id="92">
 R_text_configure <span class="file">(r_sprite.c)</span></div>
 </a>
-<div class="entry_body" id="89_body" style="display:none">
+<div class="entry_body" id="92_body" style="display:none">
 <pre><b class="keyword0">void</b> R_text_configure<span class="def_op">(<a href="#r_text_t">r_text_t</a></span> <span class="def_op">*,</span> <a href="#r_font_t">r_font_t</a><span class="def_op">,</span> <b class="keyword0">float</b> wrap<span class="def_op">,</span> <b class="keyword0">float</b> shadow<span class="def_op">,</span>
                       <b class="keyword0">int</b> invert<span class="def_op">,</span> <b class="keyword0">const</b> <b class="keyword0">char</b> <span class="def_op">*</span>text<span class="def_op">);</span></pre>
 <p class="comment">
  Wrapper around the sprite text initializer. Avoids re-rendering the texture
  if the parameters have not changed.</p>
 </div>
-<a name="R_text_init" href="javascript:toggle(90)">
-<div class="entry" id="90">
+<a name="R_text_init" href="javascript:toggle(93)">
+<div class="entry" id="93">
 R_text_init <span class="file">(r_shared.h)</span></div>
 </a>
-<div class="entry_body" id="90_body" style="display:none">
+<div class="entry_body" id="93_body" style="display:none">
 <pre><b class="keyword2">#define</b> R_text_init<span class="def_op">(</span>t<span class="def_op">)</span> C_zero<span class="def_op">(</span>t<span class="def_op">)</span></pre>
 <p class="comment"> r_sprite.c</p>
 </div>
-<a name="R_text_render" href="javascript:toggle(91)">
-<div class="entry" id="91">
+<a name="R_text_render" href="javascript:toggle(94)">
+<div class="entry" id="94">
 R_text_render <span class="file">(r_shared.h)</span></div>
 </a>
-<div class="entry_body" id="91_body" style="display:none">
+<div class="entry_body" id="94_body" style="display:none">
 <pre><b class="keyword2">#define</b> R_text_render<span class="def_op">(</span>t<span class="def_op">)</span> R_sprite_render<span class="def_op">(&(</span>t<span class="def_op">)-></span>sprite<span class="def_op">)</span></pre>
 <p class="comment"> r_sprite.c</p>
 </div>
-<a name="R_texture_alloc" href="javascript:toggle(92)">
-<div class="entry" id="92">
+<a name="R_texture_alloc" href="javascript:toggle(95)">
+<div class="entry" id="95">
 R_texture_alloc <span class="file">(r_common.h)</span></div>
 </a>
-<div class="entry_body" id="92_body" style="display:none">
+<div class="entry_body" id="95_body" style="display:none">
 <pre><b class="keyword2">#define</b> R_texture_alloc<span class="def_op">(</span>w<span class="def_op">,</span> h<span class="def_op">,</span> a<span class="def_op">)</span> R_texture_alloc_full<span class="def_op">(</span>__FILE__<span class="def_op">,</span> __LINE__<span class="def_op">,</span> <span class="def_op">\</span>
                                                       __func__<span class="def_op">,</span> w<span class="def_op">,</span> h<span class="def_op">,</span> a<span class="def_op">)</span></pre>
 <p class="comment"> r_assets.c</p>
 </div>
-<a name="R_texture_alloc_full" href="javascript:toggle(93)">
-<div class="entry" id="93">
+<a name="R_texture_alloc_full" href="javascript:toggle(96)">
+<div class="entry" id="96">
 R_texture_alloc_full <span class="file">(r_assets.c)</span></div>
 </a>
-<div class="entry_body" id="93_body" style="display:none">
+<div class="entry_body" id="96_body" style="display:none">
 <pre><a href="#r_texture_t">r_texture_t</a> <span class="def_op">*</span>R_texture_alloc_full<span class="def_op">(<b class="keyword0">const</b></span> <b class="keyword0">char</b> <span class="def_op">*</span>file<span class="def_op">,</span> <b class="keyword0">int</b> line<span class="def_op">,</span> <b class="keyword0">const</b> <b class="keyword0">char</b> <span class="def_op">*</span>func<span class="def_op">,</span>
                                   <b class="keyword0">int</b> width<span class="def_op">,</span> <b class="keyword0">int</b> height<span class="def_op">,</span> <b class="keyword0">int</b> alpha<span class="def_op">);</span></pre>
 <p class="comment">
@@ -978,58 +1005,58 @@ R_texture_alloc_full <span class="file">(r_assets.c)</span></div>
  texture needs to be uploaded after you are done editing it. Don't forget to
  lock the surface!</p>
 </div>
-<a name="R_texture_free" href="javascript:toggle(94)">
-<div class="entry" id="94">
+<a name="R_texture_free" href="javascript:toggle(97)">
+<div class="entry" id="97">
 R_texture_free <span class="file">(r_common.h)</span></div>
 </a>
-<div class="entry_body" id="94_body" style="display:none">
+<div class="entry_body" id="97_body" style="display:none">
 <pre><b class="keyword2">#define</b> R_texture_free<span class="def_op">(</span>t<span class="def_op">)</span> C_ref_down<span class="def_op">((</span>c_ref_t <span class="def_op">*)(</span>t<span class="def_op">))</span></pre>
 <p class="comment"> r_assets.c</p>
 </div>
-<a name="R_texture_load" href="javascript:toggle(95)">
-<div class="entry" id="95">
+<a name="R_texture_load" href="javascript:toggle(98)">
+<div class="entry" id="98">
 R_texture_load <span class="file">(r_assets.c)</span></div>
 </a>
-<div class="entry_body" id="95_body" style="display:none">
+<div class="entry_body" id="98_body" style="display:none">
 <pre><a href="#r_texture_t">r_texture_t</a> <span class="def_op">*</span>R_texture_load<span class="def_op">(<b class="keyword0">const</b></span> <b class="keyword0">char</b> <span class="def_op">*</span>filename<span class="def_op">,</span> <b class="keyword0">int</b> mipmaps<span class="def_op">);</span></pre>
 <p class="comment">
  Loads a texture using <code>SDL_</code>image. If the texture has already been loaded,
  just ups the reference count and returns the loaded surface. If the texture
  failed to load, returns <code>NULL</code>.</p>
 </div>
-<a name="R_texture_ref" href="javascript:toggle(96)">
-<div class="entry" id="96">
+<a name="R_texture_ref" href="javascript:toggle(99)">
+<div class="entry" id="99">
 R_texture_ref <span class="file">(r_common.h)</span></div>
 </a>
-<div class="entry_body" id="96_body" style="display:none">
+<div class="entry_body" id="99_body" style="display:none">
 <pre><b class="keyword2">#define</b> R_texture_ref<span class="def_op">(</span>t<span class="def_op">)</span> C_ref_up<span class="def_op">((</span>c_ref_t <span class="def_op">*)(</span>t<span class="def_op">))</span></pre>
 <p class="comment"> r_assets.c</p>
 </div>
-<a name="R_texture_render" href="javascript:toggle(97)">
-<div class="entry" id="97">
+<a name="R_texture_render" href="javascript:toggle(100)">
+<div class="entry" id="100">
 R_texture_render <span class="file">(r_assets.c)</span></div>
 </a>
-<div class="entry_body" id="97_body" style="display:none">
+<div class="entry_body" id="100_body" style="display:none">
 <pre><b class="keyword0">void</b> R_texture_render<span class="def_op">(<a href="#r_texture_t">r_texture_t</a></span> <span class="def_op">*,</span> <b class="keyword0">int</b> x<span class="def_op">,</span> <b class="keyword0">int</b> y<span class="def_op">);</span></pre>
 <p class="comment">
  Renders a plain quad without any sprite effects. Coordinates refer to the
  upper left-hand corner.</p>
 </div>
-<a name="R_texture_select" href="javascript:toggle(98)">
-<div class="entry" id="98">
+<a name="R_texture_select" href="javascript:toggle(101)">
+<div class="entry" id="101">
 R_texture_select <span class="file">(r_assets.c)</span></div>
 </a>
-<div class="entry_body" id="98_body" style="display:none">
+<div class="entry_body" id="101_body" style="display:none">
 <pre><b class="keyword0">void</b> R_texture_select<span class="def_op">(<a href="#r_texture_t">r_texture_t</a></span> <span class="def_op">*);</span></pre>
 <p class="comment">
  Selects (binds) a texture for rendering in OpenGL. Also sets whatever options
  are necessary to get the texture to show up properly.</p>
 </div>
-<a name="R_texture_upload" href="javascript:toggle(99)">
-<div class="entry" id="99">
+<a name="R_texture_upload" href="javascript:toggle(102)">
+<div class="entry" id="102">
 R_texture_upload <span class="file">(r_assets.c)</span></div>
 </a>
-<div class="entry_body" id="99_body" style="display:none">
+<div class="entry_body" id="102_body" style="display:none">
 <pre><b class="keyword0">void</b> R_texture_upload<span class="def_op">(<b class="keyword0">const</b></span> <a href="#r_texture_t">r_texture_t</a> <span class="def_op">*,</span> <b class="keyword0">int</b> mipmaps<span class="def_op">);</span></pre>
 <p class="comment">
  If the texture's <code>SDL</code> surface has changed, the image must be reloaded into
@@ -1038,28 +1065,28 @@ R_texture_upload <span class="file">(r_assets.c)</span></div>
  make UI textures look blurry so do not use them for anything that will be
  rendered in 2D mode.</p>
 </div>
-<a name="R_window_cleanup" href="javascript:toggle(100)">
-<div class="entry" id="100">
+<a name="R_window_cleanup" href="javascript:toggle(103)">
+<div class="entry" id="103">
 R_window_cleanup <span class="file">(r_shared.h)</span></div>
 </a>
-<div class="entry_body" id="100_body" style="display:none">
+<div class="entry_body" id="103_body" style="display:none">
 <pre><b class="keyword2">#define</b> R_window_cleanup<span class="def_op">(</span>w<span class="def_op">)</span> R_sprite_cleanup<span class="def_op">(&(</span>w<span class="def_op">)-></span>sprite<span class="def_op">)</span></pre>
 <p class="comment"> r_sprite.c</p>
 </div>
-<a name="R_window_init" href="javascript:toggle(101)">
-<div class="entry" id="101">
+<a name="R_window_init" href="javascript:toggle(104)">
+<div class="entry" id="104">
 R_window_init <span class="file">(r_sprite.c)</span></div>
 </a>
-<div class="entry_body" id="101_body" style="display:none">
+<div class="entry_body" id="104_body" style="display:none">
 <pre><b class="keyword0">void</b> R_window_init<span class="def_op">(<a href="#r_window_t">r_window_t</a></span> <span class="def_op">*,</span> <b class="keyword0">const</b> <b class="keyword0">char</b> <span class="def_op">*</span>filename<span class="def_op">);</span></pre>
 <p class="comment">
  Initializes a window sprite.</p>
 </div>
-<a name="R_window_render" href="javascript:toggle(102)">
-<div class="entry" id="102">
+<a name="R_window_render" href="javascript:toggle(105)">
+<div class="entry" id="105">
 R_window_render <span class="file">(r_sprite.c)</span></div>
 </a>
-<div class="entry_body" id="102_body" style="display:none">
+<div class="entry_body" id="105_body" style="display:none">
 <pre><b class="keyword0">void</b> R_window_render<span class="def_op">(<a href="#r_window_t">r_window_t</a></span> <span class="def_op">*);</span></pre>
 <p class="comment">
  Renders a window sprite. A window sprite is composed of a grid of nine quads
@@ -1080,278 +1107,278 @@ R_window_render <span class="file">(r_sprite.c)</span></div>
  Note that unlike normal sprites, no edge anti-aliasing is done as it is
  assumed that all windows will make use of alpha transparency.</p>
 </div>
-<a name="R_zoom_cam_by" href="javascript:toggle(103)">
-<div class="entry" id="103">
+<a name="R_zoom_cam_by" href="javascript:toggle(106)">
+<div class="entry" id="106">
 R_zoom_cam_by <span class="file">(r_mode.c)</span></div>
 </a>
-<div class="entry_body" id="103_body" style="display:none">
+<div class="entry_body" id="106_body" style="display:none">
 <pre><b class="keyword0">void</b> R_zoom_cam_by<span class="def_op">(<b class="keyword0">float</b>);</span></pre>
 <p class="comment">
  Zoom the camera incrementally.</p>
 </div>
 <a name="Variables"></a>
 <h2>Variables</h2>
-<a name="r_cam_dist" href="javascript:toggle(104)">
-<div class="entry" id="104">
+<a name="r_cam_dist" href="javascript:toggle(107)">
+<div class="entry" id="107">
 r_cam_dist <span class="file">(r_common.h)</span></div>
 </a>
-<div class="entry_body" id="104_body" style="display:none">
+<div class="entry_body" id="107_body" style="display:none">
 <pre><b class="keyword0">extern</b> <b class="keyword0">float</b> r_cam_dist<span class="def_op">,</span> r_cam_zoom<span class="def_op">;</span></pre>
 <p class="comment"> r_render.c</p>
 </div>
-<a name="r_cam_matrix" href="javascript:toggle(105)">
-<div class="entry" id="105">
+<a name="r_cam_matrix" href="javascript:toggle(108)">
+<div class="entry" id="108">
 r_cam_matrix <span class="file">(r_common.h)</span></div>
 </a>
-<div class="entry_body" id="105_body" style="display:none">
+<div class="entry_body" id="108_body" style="display:none">
 <pre><b class="keyword0">extern</b> GLfloat r_cam_matrix<span class="def_op">[</span><span class="def_const">16</span><span class="def_op">],</span> r_proj3_matrix<span class="def_op">[</span><span class="def_const">16</span><span class="def_op">];</span></pre>
 <p class="comment"> r_mode.c</p>
 </div>
-<a name="r_cam_zoom" href="javascript:toggle(106)">
-<div class="entry" id="106">
+<a name="r_cam_zoom" href="javascript:toggle(109)">
+<div class="entry" id="109">
 r_cam_zoom <span class="file">(r_common.h)</span></div>
 </a>
-<div class="entry_body" id="106_body" style="display:none">
+<div class="entry_body" id="109_body" style="display:none">
 <pre><b class="keyword0">extern</b> <b class="keyword0">float</b> r_cam_dist<span class="def_op">,</span> r_cam_zoom<span class="def_op">;</span></pre>
 <p class="comment"> r_render.c</p>
 </div>
-<a name="r_clear" href="javascript:toggle(107)">
-<div class="entry" id="107">
-r_clear <span class="file">(r_common.h)</span></div>
-</a>
-<div class="entry_body" id="107_body" style="display:none">
-<pre><b class="keyword0">extern</b> c_var_t r_clear<span class="def_op">,</span> r_color_bits<span class="def_op">,</span> r_depth_bits<span class="def_op">,</span> r_gamma<span class="def_op">,</span> r_globe_colors<span class="def_op">[</span><span class="def_const">4</span><span class="def_op">],</span>
-               r_globe_shininess<span class="def_op">,</span> r_globe_smooth<span class="def_op">,</span> r_gl_errors<span class="def_op">,</span> r_light<span class="def_op">,</span>
-               r_moon_colors<span class="def_op">[</span><span class="def_const">3</span><span class="def_op">],</span> r_moon_atten<span class="def_op">,</span> r_moon_height<span class="def_op">,</span> r_sun_colors<span class="def_op">[</span><span class="def_const">3</span><span class="def_op">],</span>
-               r_test_sprite_num<span class="def_op">,</span> r_test_sprite<span class="def_op">,</span> r_test_model<span class="def_op">,</span> r_test_prerender<span class="def_op">,</span>
-               r_test_text<span class="def_op">,</span> r_vsync<span class="def_op">,</span> r_windowed<span class="def_op">;</span></pre>
-<p class="comment"> r_variables.c</p>
-</div>
-<a name="r_color_bits" href="javascript:toggle(108)">
-<div class="entry" id="108">
-r_color_bits <span class="file">(r_common.h)</span></div>
-</a>
-<div class="entry_body" id="108_body" style="display:none">
-<pre><b class="keyword0">extern</b> c_var_t r_clear<span class="def_op">,</span> r_color_bits<span class="def_op">,</span> r_depth_bits<span class="def_op">,</span> r_gamma<span class="def_op">,</span> r_globe_colors<span class="def_op">[</span><span class="def_const">4</span><span class="def_op">],</span>
-               r_globe_shininess<span class="def_op">,</span> r_globe_smooth<span class="def_op">,</span> r_gl_errors<span class="def_op">,</span> r_light<span class="def_op">,</span>
-               r_moon_colors<span class="def_op">[</span><span class="def_const">3</span><span class="def_op">],</span> r_moon_atten<span class="def_op">,</span> r_moon_height<span class="def_op">,</span> r_sun_colors<span class="def_op">[</span><span class="def_const">3</span><span class="def_op">],</span>
-               r_test_sprite_num<span class="def_op">,</span> r_test_sprite<span class="def_op">,</span> r_test_model<span class="def_op">,</span> r_test_prerender<span class="def_op">,</span>
-               r_test_text<span class="def_op">,</span> r_vsync<span class="def_op">,</span> r_windowed<span class="def_op">;</span></pre>
-<p class="comment"> r_variables.c</p>
-</div>
-<a name="r_count_faces" href="javascript:toggle(109)">
-<div class="entry" id="109">
-r_count_faces <span class="file">(r_shared.h)</span></div>
-</a>
-<div class="entry_body" id="109_body" style="display:none">
-<pre><b class="keyword0">extern</b> c_count_t r_count_faces<span class="def_op">;</span></pre>
-<p class="comment"> r_render.c</p>
-</div>
-<a name="r_depth_bits" href="javascript:toggle(110)">
+<a name="r_clear" href="javascript:toggle(110)">
 <div class="entry" id="110">
-r_depth_bits <span class="file">(r_common.h)</span></div>
+r_clear <span class="file">(r_common.h)</span></div>
 </a>
 <div class="entry_body" id="110_body" style="display:none">
 <pre><b class="keyword0">extern</b> c_var_t r_clear<span class="def_op">,</span> r_color_bits<span class="def_op">,</span> r_depth_bits<span class="def_op">,</span> r_gamma<span class="def_op">,</span> r_globe_colors<span class="def_op">[</span><span class="def_const">4</span><span class="def_op">],</span>
                r_globe_shininess<span class="def_op">,</span> r_globe_smooth<span class="def_op">,</span> r_gl_errors<span class="def_op">,</span> r_light<span class="def_op">,</span>
-               r_moon_colors<span class="def_op">[</span><span class="def_const">3</span><span class="def_op">],</span> r_moon_atten<span class="def_op">,</span> r_moon_height<span class="def_op">,</span> r_sun_colors<span class="def_op">[</span><span class="def_const">3</span><span class="def_op">],</span>
-               r_test_sprite_num<span class="def_op">,</span> r_test_sprite<span class="def_op">,</span> r_test_model<span class="def_op">,</span> r_test_prerender<span class="def_op">,</span>
-               r_test_text<span class="def_op">,</span> r_vsync<span class="def_op">,</span> r_windowed<span class="def_op">;</span></pre>
+               r_moon_atten<span class="def_op">,</span> r_moon_colors<span class="def_op">[</span><span class="def_const">3</span><span class="def_op">],</span> r_moon_height<span class="def_op">,</span> r_solar<span class="def_op">,</span>
+               r_sun_colors<span class="def_op">[</span><span class="def_const">3</span><span class="def_op">],</span> r_test_sprite_num<span class="def_op">,</span> r_test_sprite<span class="def_op">,</span> r_test_model<span class="def_op">,</span>
+               r_test_prerender<span class="def_op">,</span> r_test_text<span class="def_op">,</span> r_vsync<span class="def_op">,</span> r_windowed<span class="def_op">;</span></pre>
 <p class="comment"> r_variables.c</p>
 </div>
-<a name="r_extensions" href="javascript:toggle(111)">
+<a name="r_color_bits" href="javascript:toggle(111)">
 <div class="entry" id="111">
-r_extensions <span class="file">(r_common.h)</span></div>
+r_color_bits <span class="file">(r_common.h)</span></div>
 </a>
 <div class="entry_body" id="111_body" style="display:none">
-<pre><b class="keyword0">extern</b> <b class="keyword0">int</b> r_extensions<span class="def_op">[</span>R_EXTENSIONS<span class="def_op">];</span></pre>
-<p class="comment"> r_render.c</p>
-</div>
-<a name="r_gamma" href="javascript:toggle(112)">
-<div class="entry" id="112">
-r_gamma <span class="file">(r_common.h)</span></div>
-</a>
-<div class="entry_body" id="112_body" style="display:none">
 <pre><b class="keyword0">extern</b> c_var_t r_clear<span class="def_op">,</span> r_color_bits<span class="def_op">,</span> r_depth_bits<span class="def_op">,</span> r_gamma<span class="def_op">,</span> r_globe_colors<span class="def_op">[</span><span class="def_const">4</span><span class="def_op">],</span>
                r_globe_shininess<span class="def_op">,</span> r_globe_smooth<span class="def_op">,</span> r_gl_errors<span class="def_op">,</span> r_light<span class="def_op">,</span>
-               r_moon_colors<span class="def_op">[</span><span class="def_const">3</span><span class="def_op">],</span> r_moon_atten<span class="def_op">,</span> r_moon_height<span class="def_op">,</span> r_sun_colors<span class="def_op">[</span><span class="def_const">3</span><span class="def_op">],</span>
-               r_test_sprite_num<span class="def_op">,</span> r_test_sprite<span class="def_op">,</span> r_test_model<span class="def_op">,</span> r_test_prerender<span class="def_op">,</span>
-               r_test_text<span class="def_op">,</span> r_vsync<span class="def_op">,</span> r_windowed<span class="def_op">;</span></pre>
+               r_moon_atten<span class="def_op">,</span> r_moon_colors<span class="def_op">[</span><span class="def_const">3</span><span class="def_op">],</span> r_moon_height<span class="def_op">,</span> r_solar<span class="def_op">,</span>
+               r_sun_colors<span class="def_op">[</span><span class="def_const">3</span><span class="def_op">],</span> r_test_sprite_num<span class="def_op">,</span> r_test_sprite<span class="def_op">,</span> r_test_model<span class="def_op">,</span>
+               r_test_prerender<span class="def_op">,</span> r_test_text<span class="def_op">,</span> r_vsync<span class="def_op">,</span> r_windowed<span class="def_op">;</span></pre>
 <p class="comment"> r_variables.c</p>
 </div>
-<a name="r_gl_errors" href="javascript:toggle(113)">
+<a name="r_count_faces" href="javascript:toggle(112)">
+<div class="entry" id="112">
+r_count_faces <span class="file">(r_shared.h)</span></div>
+</a>
+<div class="entry_body" id="112_body" style="display:none">
+<pre><b class="keyword0">extern</b> c_count_t r_count_faces<span class="def_op">;</span></pre>
+<p class="comment"> r_render.c</p>
+</div>
+<a name="r_depth_bits" href="javascript:toggle(113)">
 <div class="entry" id="113">
-r_gl_errors <span class="file">(r_common.h)</span></div>
+r_depth_bits <span class="file">(r_common.h)</span></div>
 </a>
 <div class="entry_body" id="113_body" style="display:none">
 <pre><b class="keyword0">extern</b> c_var_t r_clear<span class="def_op">,</span> r_color_bits<span class="def_op">,</span> r_depth_bits<span class="def_op">,</span> r_gamma<span class="def_op">,</span> r_globe_colors<span class="def_op">[</span><span class="def_const">4</span><span class="def_op">],</span>
                r_globe_shininess<span class="def_op">,</span> r_globe_smooth<span class="def_op">,</span> r_gl_errors<span class="def_op">,</span> r_light<span class="def_op">,</span>
-               r_moon_colors<span class="def_op">[</span><span class="def_const">3</span><span class="def_op">],</span> r_moon_atten<span class="def_op">,</span> r_moon_height<span class="def_op">,</span> r_sun_colors<span class="def_op">[</span><span class="def_const">3</span><span class="def_op">],</span>
-               r_test_sprite_num<span class="def_op">,</span> r_test_sprite<span class="def_op">,</span> r_test_model<span class="def_op">,</span> r_test_prerender<span class="def_op">,</span>
-               r_test_text<span class="def_op">,</span> r_vsync<span class="def_op">,</span> r_windowed<span class="def_op">;</span></pre>
+               r_moon_atten<span class="def_op">,</span> r_moon_colors<span class="def_op">[</span><span class="def_const">3</span><span class="def_op">],</span> r_moon_height<span class="def_op">,</span> r_solar<span class="def_op">,</span>
+               r_sun_colors<span class="def_op">[</span><span class="def_const">3</span><span class="def_op">],</span> r_test_sprite_num<span class="def_op">,</span> r_test_sprite<span class="def_op">,</span> r_test_model<span class="def_op">,</span>
+               r_test_prerender<span class="def_op">,</span> r_test_text<span class="def_op">,</span> r_vsync<span class="def_op">,</span> r_windowed<span class="def_op">;</span></pre>
 <p class="comment"> r_variables.c</p>
 </div>
-<a name="r_globe_colors" href="javascript:toggle(114)">
+<a name="r_extensions" href="javascript:toggle(114)">
 <div class="entry" id="114">
-r_globe_colors <span class="file">(r_common.h)</span></div>
+r_extensions <span class="file">(r_common.h)</span></div>
 </a>
 <div class="entry_body" id="114_body" style="display:none">
-<pre><b class="keyword0">extern</b> c_var_t r_clear<span class="def_op">,</span> r_color_bits<span class="def_op">,</span> r_depth_bits<span class="def_op">,</span> r_gamma<span class="def_op">,</span> r_globe_colors<span class="def_op">[</span><span class="def_const">4</span><span class="def_op">],</span>
-               r_globe_shininess<span class="def_op">,</span> r_globe_smooth<span class="def_op">,</span> r_gl_errors<span class="def_op">,</span> r_light<span class="def_op">,</span>
-               r_moon_colors<span class="def_op">[</span><span class="def_const">3</span><span class="def_op">],</span> r_moon_atten<span class="def_op">,</span> r_moon_height<span class="def_op">,</span> r_sun_colors<span class="def_op">[</span><span class="def_const">3</span><span class="def_op">],</span>
-               r_test_sprite_num<span class="def_op">,</span> r_test_sprite<span class="def_op">,</span> r_test_model<span class="def_op">,</span> r_test_prerender<span class="def_op">,</span>
-               r_test_text<span class="def_op">,</span> r_vsync<span class="def_op">,</span> r_windowed<span class="def_op">;</span></pre>
-<p class="comment"> r_variables.c</p>
+<pre><b class="keyword0">extern</b> <b class="keyword0">int</b> r_extensions<span class="def_op">[</span>R_EXTENSIONS<span class="def_op">];</span></pre>
+<p class="comment"> r_render.c</p>
 </div>
-<a name="r_globe_radius" href="javascript:toggle(115)">
+<a name="r_gamma" href="javascript:toggle(115)">
 <div class="entry" id="115">
-r_globe_radius <span class="file">(r_common.h)</span></div>
+r_gamma <span class="file">(r_common.h)</span></div>
 </a>
 <div class="entry_body" id="115_body" style="display:none">
-<pre><b class="keyword0">extern</b> <b class="keyword0">float</b> r_globe_radius<span class="def_op">;</span></pre>
-<p class="comment"> r_globe.c</p>
+<pre><b class="keyword0">extern</b> c_var_t r_clear<span class="def_op">,</span> r_color_bits<span class="def_op">,</span> r_depth_bits<span class="def_op">,</span> r_gamma<span class="def_op">,</span> r_globe_colors<span class="def_op">[</span><span class="def_const">4</span><span class="def_op">],</span>
+               r_globe_shininess<span class="def_op">,</span> r_globe_smooth<span class="def_op">,</span> r_gl_errors<span class="def_op">,</span> r_light<span class="def_op">,</span>
+               r_moon_atten<span class="def_op">,</span> r_moon_colors<span class="def_op">[</span><span class="def_const">3</span><span class="def_op">],</span> r_moon_height<span class="def_op">,</span> r_solar<span class="def_op">,</span>
+               r_sun_colors<span class="def_op">[</span><span class="def_const">3</span><span class="def_op">],</span> r_test_sprite_num<span class="def_op">,</span> r_test_sprite<span class="def_op">,</span> r_test_model<span class="def_op">,</span>
+               r_test_prerender<span class="def_op">,</span> r_test_text<span class="def_op">,</span> r_vsync<span class="def_op">,</span> r_windowed<span class="def_op">;</span></pre>
+<p class="comment"> r_variables.c</p>
 </div>
-<a name="r_globe_shininess" href="javascript:toggle(116)">
+<a name="r_gl_errors" href="javascript:toggle(116)">
 <div class="entry" id="116">
-r_globe_shininess <span class="file">(r_common.h)</span></div>
+r_gl_errors <span class="file">(r_common.h)</span></div>
 </a>
 <div class="entry_body" id="116_body" style="display:none">
 <pre><b class="keyword0">extern</b> c_var_t r_clear<span class="def_op">,</span> r_color_bits<span class="def_op">,</span> r_depth_bits<span class="def_op">,</span> r_gamma<span class="def_op">,</span> r_globe_colors<span class="def_op">[</span><span class="def_const">4</span><span class="def_op">],</span>
                r_globe_shininess<span class="def_op">,</span> r_globe_smooth<span class="def_op">,</span> r_gl_errors<span class="def_op">,</span> r_light<span class="def_op">,</span>
-               r_moon_colors<span class="def_op">[</span><span class="def_const">3</span><span class="def_op">],</span> r_moon_atten<span class="def_op">,</span> r_moon_height<span class="def_op">,</span> r_sun_colors<span class="def_op">[</span><span class="def_const">3</span><span class="def_op">],</span>
-               r_test_sprite_num<span class="def_op">,</span> r_test_sprite<span class="def_op">,</span> r_test_model<span class="def_op">,</span> r_test_prerender<span class="def_op">,</span>
-               r_test_text<span class="def_op">,</span> r_vsync<span class="def_op">,</span> r_windowed<span class="def_op">;</span></pre>
+               r_moon_atten<span class="def_op">,</span> r_moon_colors<span class="def_op">[</span><span class="def_const">3</span><span class="def_op">],</span> r_moon_height<span class="def_op">,</span> r_solar<span class="def_op">,</span>
+               r_sun_colors<span class="def_op">[</span><span class="def_const">3</span><span class="def_op">],</span> r_test_sprite_num<span class="def_op">,</span> r_test_sprite<span class="def_op">,</span> r_test_model<span class="def_op">,</span>
+               r_test_prerender<span class="def_op">,</span> r_test_text<span class="def_op">,</span> r_vsync<span class="def_op">,</span> r_windowed<span class="def_op">;</span></pre>
 <p class="comment"> r_variables.c</p>
 </div>
-<a name="r_globe_smooth" href="javascript:toggle(117)">
+<a name="r_globe_colors" href="javascript:toggle(117)">
 <div class="entry" id="117">
-r_globe_smooth <span class="file">(r_common.h)</span></div>
+r_globe_colors <span class="file">(r_common.h)</span></div>
 </a>
 <div class="entry_body" id="117_body" style="display:none">
 <pre><b class="keyword0">extern</b> c_var_t r_clear<span class="def_op">,</span> r_color_bits<span class="def_op">,</span> r_depth_bits<span class="def_op">,</span> r_gamma<span class="def_op">,</span> r_globe_colors<span class="def_op">[</span><span class="def_const">4</span><span class="def_op">],</span>
                r_globe_shininess<span class="def_op">,</span> r_globe_smooth<span class="def_op">,</span> r_gl_errors<span class="def_op">,</span> r_light<span class="def_op">,</span>
-               r_moon_colors<span class="def_op">[</span><span class="def_const">3</span><span class="def_op">],</span> r_moon_atten<span class="def_op">,</span> r_moon_height<span class="def_op">,</span> r_sun_colors<span class="def_op">[</span><span class="def_const">3</span><span class="def_op">],</span>
-               r_test_sprite_num<span class="def_op">,</span> r_test_sprite<span class="def_op">,</span> r_test_model<span class="def_op">,</span> r_test_prerender<span class="def_op">,</span>
-               r_test_text<span class="def_op">,</span> r_vsync<span class="def_op">,</span> r_windowed<span class="def_op">;</span></pre>
+               r_moon_atten<span class="def_op">,</span> r_moon_colors<span class="def_op">[</span><span class="def_const">3</span><span class="def_op">],</span> r_moon_height<span class="def_op">,</span> r_solar<span class="def_op">,</span>
+               r_sun_colors<span class="def_op">[</span><span class="def_const">3</span><span class="def_op">],</span> r_test_sprite_num<span class="def_op">,</span> r_test_sprite<span class="def_op">,</span> r_test_model<span class="def_op">,</span>
+               r_test_prerender<span class="def_op">,</span> r_test_text<span class="def_op">,</span> r_vsync<span class="def_op">,</span> r_windowed<span class="def_op">;</span></pre>
 <p class="comment"> r_variables.c</p>
 </div>
-<a name="r_height" href="javascript:toggle(118)">
+<a name="r_globe_radius" href="javascript:toggle(118)">
 <div class="entry" id="118">
-r_height <span class="file">(r_shared.h)</span></div>
+r_globe_radius <span class="file">(r_common.h)</span></div>
 </a>
 <div class="entry_body" id="118_body" style="display:none">
-<pre><b class="keyword0">extern</b> c_var_t r_height<span class="def_op">,</span> r_pixel_scale<span class="def_op">,</span> r_width<span class="def_op">;</span></pre>
-<p class="comment"> r_variables.c</p>
+<pre><b class="keyword0">extern</b> <b class="keyword0">float</b> r_globe_radius<span class="def_op">;</span></pre>
+<p class="comment"> r_globe.c</p>
 </div>
-<a name="r_height_2d" href="javascript:toggle(119)">
+<a name="r_globe_shininess" href="javascript:toggle(119)">
 <div class="entry" id="119">
-r_height_2d <span class="file">(r_shared.h)</span></div>
+r_globe_shininess <span class="file">(r_common.h)</span></div>
 </a>
 <div class="entry_body" id="119_body" style="display:none">
-<pre><b class="keyword0">extern</b> <b class="keyword0">int</b> r_width_2d<span class="def_op">,</span> r_height_2d<span class="def_op">;</span></pre>
-<p class="comment"> r_render.c</p>
+<pre><b class="keyword0">extern</b> c_var_t r_clear<span class="def_op">,</span> r_color_bits<span class="def_op">,</span> r_depth_bits<span class="def_op">,</span> r_gamma<span class="def_op">,</span> r_globe_colors<span class="def_op">[</span><span class="def_const">4</span><span class="def_op">],</span>
+               r_globe_shininess<span class="def_op">,</span> r_globe_smooth<span class="def_op">,</span> r_gl_errors<span class="def_op">,</span> r_light<span class="def_op">,</span>
+               r_moon_atten<span class="def_op">,</span> r_moon_colors<span class="def_op">[</span><span class="def_const">3</span><span class="def_op">],</span> r_moon_height<span class="def_op">,</span> r_solar<span class="def_op">,</span>
+               r_sun_colors<span class="def_op">[</span><span class="def_const">3</span><span class="def_op">],</span> r_test_sprite_num<span class="def_op">,</span> r_test_sprite<span class="def_op">,</span> r_test_model<span class="def_op">,</span>
+               r_test_prerender<span class="def_op">,</span> r_test_text<span class="def_op">,</span> r_vsync<span class="def_op">,</span> r_windowed<span class="def_op">;</span></pre>
+<p class="comment"> r_variables.c</p>
 </div>
-<a name="r_light" href="javascript:toggle(120)">
+<a name="r_globe_smooth" href="javascript:toggle(120)">
 <div class="entry" id="120">
-r_light <span class="file">(r_common.h)</span></div>
+r_globe_smooth <span class="file">(r_common.h)</span></div>
 </a>
 <div class="entry_body" id="120_body" style="display:none">
 <pre><b class="keyword0">extern</b> c_var_t r_clear<span class="def_op">,</span> r_color_bits<span class="def_op">,</span> r_depth_bits<span class="def_op">,</span> r_gamma<span class="def_op">,</span> r_globe_colors<span class="def_op">[</span><span class="def_const">4</span><span class="def_op">],</span>
                r_globe_shininess<span class="def_op">,</span> r_globe_smooth<span class="def_op">,</span> r_gl_errors<span class="def_op">,</span> r_light<span class="def_op">,</span>
-               r_moon_colors<span class="def_op">[</span><span class="def_const">3</span><span class="def_op">],</span> r_moon_atten<span class="def_op">,</span> r_moon_height<span class="def_op">,</span> r_sun_colors<span class="def_op">[</span><span class="def_const">3</span><span class="def_op">],</span>
-               r_test_sprite_num<span class="def_op">,</span> r_test_sprite<span class="def_op">,</span> r_test_model<span class="def_op">,</span> r_test_prerender<span class="def_op">,</span>
-               r_test_text<span class="def_op">,</span> r_vsync<span class="def_op">,</span> r_windowed<span class="def_op">;</span></pre>
+               r_moon_atten<span class="def_op">,</span> r_moon_colors<span class="def_op">[</span><span class="def_const">3</span><span class="def_op">],</span> r_moon_height<span class="def_op">,</span> r_solar<span class="def_op">,</span>
+               r_sun_colors<span class="def_op">[</span><span class="def_const">3</span><span class="def_op">],</span> r_test_sprite_num<span class="def_op">,</span> r_test_sprite<span class="def_op">,</span> r_test_model<span class="def_op">,</span>
+               r_test_prerender<span class="def_op">,</span> r_test_text<span class="def_op">,</span> r_vsync<span class="def_op">,</span> r_windowed<span class="def_op">;</span></pre>
 <p class="comment"> r_variables.c</p>
 </div>
-<a name="r_mode" href="javascript:toggle(121)">
+<a name="r_height" href="javascript:toggle(121)">
 <div class="entry" id="121">
-r_mode <span class="file">(r_common.h)</span></div>
+r_height <span class="file">(r_shared.h)</span></div>
 </a>
 <div class="entry_body" id="121_body" style="display:none">
-<pre><b class="keyword0">extern</b> <a href="#r_mode_t">r_mode_t</a> r_mode<span class="def_op">;</span></pre>
-<p class="comment"> r_render.c</p>
-</div>
-<a name="r_moon_atten" href="javascript:toggle(122)">
-<div class="entry" id="122">
-r_moon_atten <span class="file">(r_common.h)</span></div>
-</a>
-<div class="entry_body" id="122_body" style="display:none">
-<pre><b class="keyword0">extern</b> c_var_t r_clear<span class="def_op">,</span> r_color_bits<span class="def_op">,</span> r_depth_bits<span class="def_op">,</span> r_gamma<span class="def_op">,</span> r_globe_colors<span class="def_op">[</span><span class="def_const">4</span><span class="def_op">],</span>
-               r_globe_shininess<span class="def_op">,</span> r_globe_smooth<span class="def_op">,</span> r_gl_errors<span class="def_op">,</span> r_light<span class="def_op">,</span>
-               r_moon_colors<span class="def_op">[</span><span class="def_const">3</span><span class="def_op">],</span> r_moon_atten<span class="def_op">,</span> r_moon_height<span class="def_op">,</span> r_sun_colors<span class="def_op">[</span><span class="def_const">3</span><span class="def_op">],</span>
-               r_test_sprite_num<span class="def_op">,</span> r_test_sprite<span class="def_op">,</span> r_test_model<span class="def_op">,</span> r_test_prerender<span class="def_op">,</span>
-               r_test_text<span class="def_op">,</span> r_vsync<span class="def_op">,</span> r_windowed<span class="def_op">;</span></pre>
+<pre><b class="keyword0">extern</b> c_var_t r_height<span class="def_op">,</span> r_pixel_scale<span class="def_op">,</span> r_width<span class="def_op">;</span></pre>
 <p class="comment"> r_variables.c</p>
 </div>
-<a name="r_moon_colors" href="javascript:toggle(123)">
+<a name="r_height_2d" href="javascript:toggle(122)">
+<div class="entry" id="122">
+r_height_2d <span class="file">(r_shared.h)</span></div>
+</a>
+<div class="entry_body" id="122_body" style="display:none">
+<pre><b class="keyword0">extern</b> <b class="keyword0">int</b> r_width_2d<span class="def_op">,</span> r_height_2d<span class="def_op">;</span></pre>
+<p class="comment"> r_render.c</p>
+</div>
+<a name="r_light" href="javascript:toggle(123)">
 <div class="entry" id="123">
-r_moon_colors <span class="file">(r_common.h)</span></div>
+r_light <span class="file">(r_common.h)</span></div>
 </a>
 <div class="entry_body" id="123_body" style="display:none">
 <pre><b class="keyword0">extern</b> c_var_t r_clear<span class="def_op">,</span> r_color_bits<span class="def_op">,</span> r_depth_bits<span class="def_op">,</span> r_gamma<span class="def_op">,</span> r_globe_colors<span class="def_op">[</span><span class="def_const">4</span><span class="def_op">],</span>
                r_globe_shininess<span class="def_op">,</span> r_globe_smooth<span class="def_op">,</span> r_gl_errors<span class="def_op">,</span> r_light<span class="def_op">,</span>
-               r_moon_colors<span class="def_op">[</span><span class="def_const">3</span><span class="def_op">],</span> r_moon_atten<span class="def_op">,</span> r_moon_height<span class="def_op">,</span> r_sun_colors<span class="def_op">[</span><span class="def_const">3</span><span class="def_op">],</span>
-               r_test_sprite_num<span class="def_op">,</span> r_test_sprite<span class="def_op">,</span> r_test_model<span class="def_op">,</span> r_test_prerender<span class="def_op">,</span>
-               r_test_text<span class="def_op">,</span> r_vsync<span class="def_op">,</span> r_windowed<span class="def_op">;</span></pre>
+               r_moon_atten<span class="def_op">,</span> r_moon_colors<span class="def_op">[</span><span class="def_const">3</span><span class="def_op">],</span> r_moon_height<span class="def_op">,</span> r_solar<span class="def_op">,</span>
+               r_sun_colors<span class="def_op">[</span><span class="def_const">3</span><span class="def_op">],</span> r_test_sprite_num<span class="def_op">,</span> r_test_sprite<span class="def_op">,</span> r_test_model<span class="def_op">,</span>
+               r_test_prerender<span class="def_op">,</span> r_test_text<span class="def_op">,</span> r_vsync<span class="def_op">,</span> r_windowed<span class="def_op">;</span></pre>
 <p class="comment"> r_variables.c</p>
 </div>
-<a name="r_moon_height" href="javascript:toggle(124)">
+<a name="r_mode" href="javascript:toggle(124)">
 <div class="entry" id="124">
-r_moon_height <span class="file">(r_common.h)</span></div>
+r_mode <span class="file">(r_common.h)</span></div>
 </a>
 <div class="entry_body" id="124_body" style="display:none">
-<pre><b class="keyword0">extern</b> c_var_t r_clear<span class="def_op">,</span> r_color_bits<span class="def_op">,</span> r_depth_bits<span class="def_op">,</span> r_gamma<span class="def_op">,</span> r_globe_colors<span class="def_op">[</span><span class="def_const">4</span><span class="def_op">],</span>
-               r_globe_shininess<span class="def_op">,</span> r_globe_smooth<span class="def_op">,</span> r_gl_errors<span class="def_op">,</span> r_light<span class="def_op">,</span>
-               r_moon_colors<span class="def_op">[</span><span class="def_const">3</span><span class="def_op">],</span> r_moon_atten<span class="def_op">,</span> r_moon_height<span class="def_op">,</span> r_sun_colors<span class="def_op">[</span><span class="def_const">3</span><span class="def_op">],</span>
-               r_test_sprite_num<span class="def_op">,</span> r_test_sprite<span class="def_op">,</span> r_test_model<span class="def_op">,</span> r_test_prerender<span class="def_op">,</span>
-               r_test_text<span class="def_op">,</span> r_vsync<span class="def_op">,</span> r_windowed<span class="def_op">;</span></pre>
-<p class="comment"> r_variables.c</p>
+<pre><b class="keyword0">extern</b> <a href="#r_mode_t">r_mode_t</a> r_mode<span class="def_op">;</span></pre>
+<p class="comment"> r_render.c</p>
 </div>
-<a name="r_pixel_scale" href="javascript:toggle(125)">
+<a name="r_moon_atten" href="javascript:toggle(125)">
 <div class="entry" id="125">
-r_pixel_scale <span class="file">(r_shared.h)</span></div>
+r_moon_atten <span class="file">(r_common.h)</span></div>
 </a>
 <div class="entry_body" id="125_body" style="display:none">
+<pre><b class="keyword0">extern</b> c_var_t r_clear<span class="def_op">,</span> r_color_bits<span class="def_op">,</span> r_depth_bits<span class="def_op">,</span> r_gamma<span class="def_op">,</span> r_globe_colors<span class="def_op">[</span><span class="def_const">4</span><span class="def_op">],</span>
+               r_globe_shininess<span class="def_op">,</span> r_globe_smooth<span class="def_op">,</span> r_gl_errors<span class="def_op">,</span> r_light<span class="def_op">,</span>
+               r_moon_atten<span class="def_op">,</span> r_moon_colors<span class="def_op">[</span><span class="def_const">3</span><span class="def_op">],</span> r_moon_height<span class="def_op">,</span> r_solar<span class="def_op">,</span>
+               r_sun_colors<span class="def_op">[</span><span class="def_const">3</span><span class="def_op">],</span> r_test_sprite_num<span class="def_op">,</span> r_test_sprite<span class="def_op">,</span> r_test_model<span class="def_op">,</span>
+               r_test_prerender<span class="def_op">,</span> r_test_text<span class="def_op">,</span> r_vsync<span class="def_op">,</span> r_windowed<span class="def_op">;</span></pre>
+<p class="comment"> r_variables.c</p>
+</div>
+<a name="r_moon_colors" href="javascript:toggle(126)">
+<div class="entry" id="126">
+r_moon_colors <span class="file">(r_common.h)</span></div>
+</a>
+<div class="entry_body" id="126_body" style="display:none">
+<pre><b class="keyword0">extern</b> c_var_t r_clear<span class="def_op">,</span> r_color_bits<span class="def_op">,</span> r_depth_bits<span class="def_op">,</span> r_gamma<span class="def_op">,</span> r_globe_colors<span class="def_op">[</span><span class="def_const">4</span><span class="def_op">],</span>
+               r_globe_shininess<span class="def_op">,</span> r_globe_smooth<span class="def_op">,</span> r_gl_errors<span class="def_op">,</span> r_light<span class="def_op">,</span>
+               r_moon_atten<span class="def_op">,</span> r_moon_colors<span class="def_op">[</span><span class="def_const">3</span><span class="def_op">],</span> r_moon_height<span class="def_op">,</span> r_solar<span class="def_op">,</span>
+               r_sun_colors<span class="def_op">[</span><span class="def_const">3</span><span class="def_op">],</span> r_test_sprite_num<span class="def_op">,</span> r_test_sprite<span class="def_op">,</span> r_test_model<span class="def_op">,</span>
+               r_test_prerender<span class="def_op">,</span> r_test_text<span class="def_op">,</span> r_vsync<span class="def_op">,</span> r_windowed<span class="def_op">;</span></pre>
+<p class="comment"> r_variables.c</p>
+</div>
+<a name="r_moon_height" href="javascript:toggle(127)">
+<div class="entry" id="127">
+r_moon_height <span class="file">(r_common.h)</span></div>
+</a>
+<div class="entry_body" id="127_body" style="display:none">
+<pre><b class="keyword0">extern</b> c_var_t r_clear<span class="def_op">,</span> r_color_bits<span class="def_op">,</span> r_depth_bits<span class="def_op">,</span> r_gamma<span class="def_op">,</span> r_globe_colors<span class="def_op">[</span><span class="def_const">4</span><span class="def_op">],</span>
+               r_globe_shininess<span class="def_op">,</span> r_globe_smooth<span class="def_op">,</span> r_gl_errors<span class="def_op">,</span> r_light<span class="def_op">,</span>
+               r_moon_atten<span class="def_op">,</span> r_moon_colors<span class="def_op">[</span><span class="def_const">3</span><span class="def_op">],</span> r_moon_height<span class="def_op">,</span> r_solar<span class="def_op">,</span>
+               r_sun_colors<span class="def_op">[</span><span class="def_const">3</span><span class="def_op">],</span> r_test_sprite_num<span class="def_op">,</span> r_test_sprite<span class="def_op">,</span> r_test_model<span class="def_op">,</span>
+               r_test_prerender<span class="def_op">,</span> r_test_text<span class="def_op">,</span> r_vsync<span class="def_op">,</span> r_windowed<span class="def_op">;</span></pre>
+<p class="comment"> r_variables.c</p>
+</div>
+<a name="r_pixel_scale" href="javascript:toggle(128)">
+<div class="entry" id="128">
+r_pixel_scale <span class="file">(r_shared.h)</span></div>
+</a>
+<div class="entry_body" id="128_body" style="display:none">
 <pre><b class="keyword0">extern</b> c_var_t r_height<span class="def_op">,</span> r_pixel_scale<span class="def_op">,</span> r_width<span class="def_op">;</span></pre>
 <p class="comment"> r_variables.c</p>
 </div>
-<a name="r_proj3_matrix" href="javascript:toggle(126)">
-<div class="entry" id="126">
+<a name="r_proj3_matrix" href="javascript:toggle(129)">
+<div class="entry" id="129">
 r_proj3_matrix <span class="file">(r_common.h)</span></div>
 </a>
-<div class="entry_body" id="126_body" style="display:none">
+<div class="entry_body" id="129_body" style="display:none">
 <pre><b class="keyword0">extern</b> GLfloat r_cam_matrix<span class="def_op">[</span><span class="def_const">16</span><span class="def_op">],</span> r_proj3_matrix<span class="def_op">[</span><span class="def_const">16</span><span class="def_op">];</span></pre>
 <p class="comment"> r_mode.c</p>
 </div>
-<a name="r_terrain_tex" href="javascript:toggle(127)">
-<div class="entry" id="127">
+<a name="r_terrain_tex" href="javascript:toggle(130)">
+<div class="entry" id="130">
 r_terrain_tex <span class="file">(r_common.h)</span></div>
 </a>
-<div class="entry_body" id="127_body" style="display:none">
+<div class="entry_body" id="130_body" style="display:none">
 <pre><b class="keyword0">extern</b> <a href="#r_texture_t">r_texture_t</a> <span class="def_op">*</span>r_terrain_tex<span class="def_op">;</span></pre>
 <p class="comment"> r_assets.c</p>
 </div>
-<a name="r_tiles" href="javascript:toggle(128)">
-<div class="entry" id="128">
+<a name="r_tiles" href="javascript:toggle(131)">
+<div class="entry" id="131">
 r_tiles <span class="file">(r_shared.h)</span></div>
 </a>
-<div class="entry_body" id="128_body" style="display:none">
+<div class="entry_body" id="131_body" style="display:none">
 <pre><b class="keyword0">extern</b> <b class="keyword0">int</b> r_tiles<span class="def_op">;</span></pre>
 <p class="comment"> r_globe.c</p>
 </div>
-<a name="r_width" href="javascript:toggle(129)">
-<div class="entry" id="129">
+<a name="r_width" href="javascript:toggle(132)">
+<div class="entry" id="132">
 r_width <span class="file">(r_shared.h)</span></div>
 </a>
-<div class="entry_body" id="129_body" style="display:none">
+<div class="entry_body" id="132_body" style="display:none">
 <pre><b class="keyword0">extern</b> c_var_t r_height<span class="def_op">,</span> r_pixel_scale<span class="def_op">,</span> r_width<span class="def_op">;</span></pre>
 <p class="comment"> r_variables.c</p>
 </div>
-<a name="r_width_2d" href="javascript:toggle(130)">
-<div class="entry" id="130">
+<a name="r_width_2d" href="javascript:toggle(133)">
+<div class="entry" id="133">
 r_width_2d <span class="file">(r_shared.h)</span></div>
 </a>
-<div class="entry_body" id="130_body" style="display:none">
+<div class="entry_body" id="133_body" style="display:none">
 <pre><b class="keyword0">extern</b> <b class="keyword0">int</b> r_width_2d<span class="def_op">,</span> r_height_2d<span class="def_op">;</span></pre>
 <p class="comment"> r_render.c</p>
 </div>
