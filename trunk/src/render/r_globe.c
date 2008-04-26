@@ -17,7 +17,7 @@
 /* Globe vertex type */
 #pragma pack(push, 4)
 typedef struct globe_vertex {
-        c_vec2_t uv, bleed_uv[3];
+        c_vec2_t uv;
         c_vec3_t no;
         c_vec3_t co;
         int next;
@@ -129,8 +129,8 @@ static void subdivide4(void)
 }
 
 /******************************************************************************\
- Returns the [n]th vertex in the face, clock-wise if positive or
- counter-clock-wise if negative.
+ Returns the [n]th vertex in the face, clockwise if positive or counter-
+ clockwise if negative.
 \******************************************************************************/
 static int face_next(int vertex, int n)
 {
@@ -219,7 +219,7 @@ static void generate_icosahedron(void)
  Generates the globe by subdividing an icosahedron and spacing the vertices
  out at the sphere's surface.
 \******************************************************************************/
-void R_generate_globe(int seed, int subdiv4)
+void R_generate_globe(int subdiv4)
 {
         int i;
 
@@ -229,13 +229,9 @@ void R_generate_globe(int seed, int subdiv4)
                 subdiv4 = ITERATIONS_MAX;
                 C_warning("Too many subdivisions requested");
         }
-
-        C_debug("Generating globe with seed 0x%x", seed);
-        C_rand_seed(seed);
+        C_debug("Generating globe with %d subdivisions", subdiv4);
         memset(vertices, 0, sizeof (vertices));
         generate_icosahedron();
-
-        C_debug("Subdividing globe %d times", subdiv4);
         for (i = 0; i < subdiv4; i++)
                 subdivide4();
 
@@ -306,6 +302,46 @@ void R_get_tile_coords(int index, c_vec3_t verts[3])
         verts[0] = vertices[3 * index].co;
         verts[1] = vertices[3 * index + 1].co;
         verts[2] = vertices[3 * index + 2].co;
+}
+
+/******************************************************************************\
+ Returns the tiles this tile shares a face with via [neighbors].
+\******************************************************************************/
+void R_get_tile_neighbors(int tile, int neighbors[3])
+{
+        neighbors[0] = vertices[3 * tile].next / 3;
+        neighbors[1] = vertices[3 * tile + 1].next / 3;
+        neighbors[2] = vertices[3 * tile + 2].next / 3;
+}
+
+/******************************************************************************\
+ Returns the tiles this tile shares a vertex with via [neighbors]. Returns the
+ number of entries used in the array.
+\******************************************************************************/
+int R_get_tile_region(int tile, int neighbors[12])
+{
+        int i, j, n, next_tile;
+
+        for (n = i = 0; i < 3; i++) {
+                next_tile = vertices[face_next(3 * tile + i, -1)].next / 3;
+                for (j = vertices[3 * tile + i].next;
+                     j / 3 != next_tile; j = vertices[j].next)
+                        neighbors[n++] = j / 3;
+        }
+        return n;
+}
+
+/******************************************************************************\
+ Returns the "geocentric" latitude (in radians) of the tile:
+ http://en.wikipedia.org/wiki/Latitude
+\******************************************************************************/
+float R_get_tile_latitude(int tile)
+{
+        float center_y;
+
+        center_y = (vertices[3 * tile].co.y + vertices[3 * tile + 1].co.y +
+                    vertices[3 * tile + 2].co.y) / 3.f;
+        return asinf(center_y / r_globe_radius);
 }
 
 /******************************************************************************\

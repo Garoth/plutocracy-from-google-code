@@ -108,8 +108,11 @@ void R_load_fonts(void);
 
 /* r_globe.c */
 void R_configure_globe(r_tile_t *array);
-void R_generate_globe(int seed, int subdiv4);
+void R_generate_globe(int subdiv4);
 void R_get_tile_coords(int index, c_vec3_t verts[3]);
+float R_get_tile_latitude(int tile);
+void R_get_tile_neighbors(int tile, int neighbors[3]);
+int R_get_tile_region(int tile, int neighbors[12]);
 float R_screen_to_globe(int pixels);
 
 extern int r_tiles;

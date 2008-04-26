@@ -20,6 +20,7 @@ c_count_t r_count_faces;
 
 /* Current OpenGL settings */
 r_mode_t r_mode;
+c_color_t clear_color;
 int r_width_2d, r_height_2d;
 
 /* Supported extensions */
@@ -185,8 +186,6 @@ static int gamma_update(c_var_t *var, c_var_value_t value)
 \******************************************************************************/
 static int clear_update(c_var_t *var, c_var_value_t value)
 {
-        c_color_t clear_color;
-
         clear_color = C_color_string(value.s);
         glClearColor(clear_color.r, clear_color.g, clear_color.b, 1.f);
         return TRUE;
@@ -486,7 +485,7 @@ void R_start_frame(void)
 
         /* Only clear the screen if r_clear is set */
         clear_flags = GL_DEPTH_BUFFER_BIT;
-        if (r_clear.value.n)
+        if (clear_color.a > 0.f)
                 clear_flags |= GL_COLOR_BUFFER_BIT;
         glClear(clear_flags);
 
