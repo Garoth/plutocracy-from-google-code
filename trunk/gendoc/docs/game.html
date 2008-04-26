@@ -32,42 +32,58 @@
 <h2>Definitions</h2>
 <a name="Types"></a>
 <h2>Types</h2>
-<a name="g_tile_t" href="javascript:toggle(0)">
+<a name="g_terrain_t" href="javascript:toggle(0)">
 <div class="entry" id="0">
-g_tile_t <span class="file">(g_common.h)</span></div>
+g_terrain_t <span class="file">(g_common.h)</span></div>
 </a>
 <div class="entry_body" id="0_body" style="display:none">
+<pre><b class="keyword1">typedef</b> <b class="keyword1">enum</b> <span class="def_op">{</span>
+        G_T_WATER <span class="def_op">=</span> <span class="def_const">1</span><span class="def_op">,</span>
+        G_T_SHALLOW <span class="def_op">=</span> <span class="def_const">2</span><span class="def_op">,</span>
+        G_T_SAND <span class="def_op">=</span> <span class="def_const">4</span><span class="def_op">,</span>
+        G_T_GROUND <span class="def_op">=</span> <span class="def_const">5</span><span class="def_op">,</span>
+        G_T_GROUND_HOT <span class="def_op">=</span> <span class="def_const">6</span><span class="def_op">,</span>
+        G_T_GROUND_COLD <span class="def_op">=</span> <span class="def_const">7</span><span class="def_op">,</span>
+<span class="def_op">}</span> g_terrain_t<span class="def_op">;</span></pre>
+<p class="comment"> Terrain enumeration</p>
+</div>
+<a name="g_tile_t" href="javascript:toggle(1)">
+<div class="entry" id="1">
+g_tile_t <span class="file">(g_common.h)</span></div>
+</a>
+<div class="entry_body" id="1_body" style="display:none">
 <pre><b class="keyword1">typedef</b> <b class="keyword1">struct</b> g_tile <span class="def_op">{</span>
-        r_tile_t <span class="def_op">*</span>render<span class="def_op">;</span>
         <b class="keyword1">struct</b> g_tile <span class="def_op">*</span>neighbors<span class="def_op">[</span><span class="def_const">3</span><span class="def_op">];</span>
+        r_tile_t <span class="def_op">*</span>render<span class="def_op">;</span>
+        <b class="keyword0">int</b> island<span class="def_op">;</span>
 <span class="def_op">}</span> g_tile_t<span class="def_op">;</span></pre>
 <p class="comment"> A tile on the globe</p>
 </div>
 <a name="Functions"></a>
 <h2>Functions</h2>
-<a name="G_init" href="javascript:toggle(1)">
-<div class="entry" id="1">
+<a name="G_init" href="javascript:toggle(2)">
+<div class="entry" id="2">
 G_init <span class="file">(g_globe.c)</span></div>
 </a>
-<div class="entry_body" id="1_body" style="display:none">
+<div class="entry_body" id="2_body" style="display:none">
 <pre><b class="keyword0">void</b> G_init<span class="def_op">(<b class="keyword0">void</b>);</span></pre>
 <p class="comment">
  Initialize an idle globe.</p>
 </div>
-<a name="G_register_variables" href="javascript:toggle(2)">
-<div class="entry" id="2">
+<a name="G_register_variables" href="javascript:toggle(3)">
+<div class="entry" id="3">
 G_register_variables <span class="file">(g_variables.c)</span></div>
 </a>
-<div class="entry_body" id="2_body" style="display:none">
+<div class="entry_body" id="3_body" style="display:none">
 <pre><b class="keyword0">void</b> G_register_variables<span class="def_op">(<b class="keyword0">void</b>);</span></pre>
 <p class="comment">
  Registers the game namespace variables.</p>
 </div>
-<a name="G_render" href="javascript:toggle(3)">
-<div class="entry" id="3">
+<a name="G_render" href="javascript:toggle(4)">
+<div class="entry" id="4">
 G_render <span class="file">(g_globe.c)</span></div>
 </a>
-<div class="entry_body" id="3_body" style="display:none">
+<div class="entry_body" id="4_body" style="display:none">
 <pre><b class="keyword0">void</b> G_render<span class="def_op">(<b class="keyword0">void</b>);</span></pre>
 <p class="comment">
  Render the game elements.</p>
