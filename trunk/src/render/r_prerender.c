@@ -16,12 +16,10 @@
 
 #include "r_common.h"
 
-/* Proportion of the tile height that the isoceles triangle face takes up */
-#define ISO_PROP 0.859375f
-
-/* Thanks to OpenGL coordinate weirdness, depending on the orientation of the
-   triangle we need to be off-by-one pixel sometimes */
-static float pixel_h, pixel_v;
+static r_vertex2_t verts[7];
+static c_vec2_t tile, sheet, pixel;
+static unsigned short indices[] = { 0, 1, 2,  0, 2, 3,  0, 3, 4,
+                                    2, 5, 6,  2, 6, 3 };
 
 /******************************************************************************\
  Finishes a buffer of pre-rendered textures. If testing is enabled, flips
@@ -37,12 +35,12 @@ static void finish_buffer(void)
                 for (;;) {
                         while (SDL_PollEvent(&ev)) {
                                 switch(ev.type) {
+                                case SDL_KEYDOWN:
+                                        if (ev.key.keysym.sym != SDLK_ESCAPE)
+                                                goto done;
                                 case SDL_QUIT:
                                         C_error("Interrupted during "
                                                 "prerendering");
-                                case SDL_KEYDOWN:
-                                        if (ev.key.keysym.sym == SDLK_ESCAPE)
-                                                goto done;
                                 default:
                                         break;
                                 }
@@ -79,7 +77,7 @@ static r_texture_t *save_buffer(int w, int h)
 /******************************************************************************\
  Sets up the vertex uv coordinates for rendering a tile.
 \******************************************************************************/
-static void set_tile_verts_uv(r_vertex2_t *verts, int iteration, int tx, int ty)
+static void set_tile_verts_uv(int iteration, int tx, int ty)
 {
         c_vec2_t size, shift;
         int i;
@@ -91,36 +89,36 @@ static void set_tile_verts_uv(r_vertex2_t *verts, int iteration, int tx, int ty)
         case 0: /* Flip over top vertex */
                 verts[0].uv = C_vec2(0.5f, 0.f);
                 verts[1].uv = C_vec2(1.f, 0.f);
-                verts[2].uv = C_vec2(1.f, ISO_PROP);
-                verts[3].uv = C_vec2(0.f, ISO_PROP);
+                verts[2].uv = C_vec2(1.f, R_ISO_PROP);
+                verts[3].uv = C_vec2(0.f, R_ISO_PROP);
                 verts[4].uv = C_vec2(0.f, 0.f);
                 verts[5].uv = C_vec2(1.f, 1.f);
                 verts[6].uv = C_vec2(0.f, 1.f);
                 break;
 
         case 1: /* Flip over bottom-right vertex */
-                verts[0].uv = C_vec2(0.f, ISO_PROP);
+                verts[0].uv = C_vec2(0.f, R_ISO_PROP);
                 verts[1].uv = C_vec2(0.f, 0.f);
                 verts[2].uv = C_vec2(0.5f, 0.f);
-                verts[3].uv = C_vec2(1.f, ISO_PROP);
+                verts[3].uv = C_vec2(1.f, R_ISO_PROP);
                 verts[4].uv = C_vec2(0.25f, 1.f);
                 verts[5].uv = C_vec2(0.25f, 0.f);
-                verts[6].uv = C_vec2(1.f, ISO_PROP - 0.25f);
+                verts[6].uv = C_vec2(1.f, R_ISO_PROP - 0.25f);
                 break;
 
         case 2: /* Flip over bottom-left vertex */
-                verts[0].uv = C_vec2(1.f, ISO_PROP);
+                verts[0].uv = C_vec2(1.f, R_ISO_PROP);
                 verts[1].uv = C_vec2(0.75f, 0.f);
-                verts[2].uv = C_vec2(0.f, ISO_PROP);
+                verts[2].uv = C_vec2(0.f, R_ISO_PROP);
                 verts[3].uv = C_vec2(0.5f, 0.f);
                 verts[4].uv = C_vec2(1.f, 0.f);
-                verts[5].uv = C_vec2(0.f, ISO_PROP - 0.25f);
+                verts[5].uv = C_vec2(0.f, R_ISO_PROP - 0.25f);
                 verts[6].uv = C_vec2(0.25f, 0.f);
                 break;
         }
 
         /* Shift and scale the uv coordinates to cover the tile */
-        size = C_vec2(R_TILE_SHEET_W, R_TILE_SHEET_H);
+        size = C_vec2_div(sheet, tile);
         shift = C_vec2((float)tx / R_TILE_SHEET_W, (float)ty / R_TILE_SHEET_H);
         for (i = 0; i < 7; i++) {
                 verts[i].uv = C_vec2_div(verts[i].uv, size);
@@ -131,7 +129,7 @@ static void set_tile_verts_uv(r_vertex2_t *verts, int iteration, int tx, int ty)
 /******************************************************************************\
  Sets up the vertex uv coordinates for rendering the blending mask.
 \******************************************************************************/
-static void set_mask_verts_uv(r_vertex2_t *verts, int iteration)
+static void set_mask_verts_uv(int iteration)
 {
         switch (iteration) {
         default:
@@ -140,82 +138,67 @@ static void set_mask_verts_uv(r_vertex2_t *verts, int iteration)
         case 0: /* Original rotation */
                 verts[0].uv = C_vec2(0.5f, 0.f);
                 verts[1].uv = C_vec2(0.f, 0.f);
-                verts[2].uv = C_vec2(0.f, ISO_PROP);
-                verts[3].uv = C_vec2(1.f, ISO_PROP);
+                verts[2].uv = C_vec2(0.f, R_ISO_PROP);
+                verts[3].uv = C_vec2(1.f, R_ISO_PROP);
                 verts[4].uv = C_vec2(1.f, 0.f);
                 verts[5].uv = C_vec2(0.f, 1.f);
                 verts[6].uv = C_vec2(1.f, 1.f);
                 break;
 
-        case 1: /* 60 degree rotation */
-                verts[0].uv = C_vec2(pixel_h, ISO_PROP);
-                verts[1].uv = C_vec2(0.5f, 1.f - pixel_v);
-                verts[2].uv = C_vec2(1.f - pixel_h, ISO_PROP);
-                verts[3].uv = C_vec2(0.5f, pixel_v);
-                verts[4].uv = C_vec2(pixel_h, pixel_v);
-                verts[5].uv = C_vec2(1.f - pixel_h, ISO_PROP - 0.25f);
-                verts[6].uv = C_vec2(0.75f, pixel_v);
+        case 1: /* 120 degree rotation */
+                verts[0].uv = C_vec2(1.f - pixel.x, R_ISO_PROP);
+                verts[1].uv = C_vec2(1.f - pixel.x, pixel.y);
+                verts[2].uv = C_vec2(0.5f, pixel.y);
+                verts[3].uv = C_vec2(pixel.x, R_ISO_PROP);
+                verts[4].uv = C_vec2(0.5f, 1.f - pixel.y);
+                verts[5].uv = C_vec2(0.25f, pixel.y);
+                verts[6].uv = C_vec2(pixel.x, R_ISO_PROP - 0.25f);
                 break;
 
-        case 2: /* 120 degree rotation */
-                verts[0].uv = C_vec2(1.f - pixel_h, ISO_PROP);
-                verts[1].uv = C_vec2(1.f - pixel_h, pixel_v);
-                verts[2].uv = C_vec2(0.5f, pixel_v);
-                verts[3].uv = C_vec2(pixel_h, ISO_PROP);
-                verts[4].uv = C_vec2(0.5f, 1.f - pixel_v);
-                verts[5].uv = C_vec2(0.25f, pixel_v);
-                verts[6].uv = C_vec2(pixel_h, ISO_PROP - 0.25f);
+        case 2: /* 60 degree rotation */
+                verts[0].uv = C_vec2(pixel.x, R_ISO_PROP);
+                verts[1].uv = C_vec2(0.5f, 1.f - pixel.y);
+                verts[2].uv = C_vec2(1.f - pixel.x, R_ISO_PROP);
+                verts[3].uv = C_vec2(0.5f, pixel.y);
+                verts[4].uv = C_vec2(pixel.x, pixel.y);
+                verts[5].uv = C_vec2(1.f - pixel.x, R_ISO_PROP - 0.25f);
+                verts[6].uv = C_vec2(0.75f, pixel.y);
+                break;
+
+        case -1:
+                /* Original rotation, vertical flip */
+                verts[0].uv = C_vec2(0.5f, R_ISO_PROP);
+                verts[1].uv = C_vec2(0.f, R_ISO_PROP);
+                verts[2].uv = C_vec2(0.f, 0.f);
+                verts[3].uv = C_vec2(1.f, 0.f);
+                verts[4].uv = C_vec2(1.f, R_ISO_PROP);
+                verts[5].uv = C_vec2(0.f, 0.f);
+                verts[6].uv = C_vec2(1.f, 0.f);
                 break;
         }
 }
 
 /******************************************************************************\
+ Renders the tile vertices.
+\******************************************************************************/
+static void prerender_tile(void)
+{
+        glInterleavedArrays(R_VERTEX2_FORMAT, 0, verts);
+        glDrawElements(GL_TRIANGLES, 15, GL_UNSIGNED_SHORT, indices);
+}
+
+/******************************************************************************\
  Pre-renders the extra rotations of the tile mask and the terrain tile sheets.
- The tiles are rendered on this vertex arrangement:
-
-   1--0--4
-   | / \ |
-   |/   \|
-   2-----3
-   |  \  |
-   5-----6
-
  This function will generate tile textures 1-3.
 \******************************************************************************/
 static void prerender_tiles(void)
 {
-        r_vertex2_t verts[7];
         r_texture_t *blend_mask, *rotated_mask, *masked_terrain;
-        float width, height, sheet_w, sheet_h;
         int i, x, y;
-        unsigned short indices[] = {
-                0, 1, 2,
-                0, 2, 3,
-                0, 3, 4,
-                2, 5, 6,
-                2, 6, 3,
-        };
 
-        blend_mask = R_texture_load("models/globe/mask.png", FALSE);
+        blend_mask = R_texture_load("models/globe/blend_mask.png", FALSE);
         if (!blend_mask || !r_terrain_tex)
                 C_error("Failed to load essential prerendering assets");
-
-        /* Vertices are aligned in the tile so that the top vertex of the
-           triangle touches the top center of the tile */
-        width = (sheet_w = r_terrain_tex->surface->w) / R_TILE_SHEET_W;
-        height = (sheet_h = r_terrain_tex->surface->h) / R_TILE_SHEET_H;
-        verts[0].co = C_vec3(width / 2.f, 0.f, 0.f);
-        verts[1].co = C_vec3(0.f, 0.f, 0.f);
-        verts[2].co = C_vec3(0.f, height * ISO_PROP, 0.f);
-        verts[3].co = C_vec3(width, height * ISO_PROP, 0.f);
-        verts[4].co = C_vec3(width, 0.f, 0.f);
-        verts[5].co = C_vec3(0.f, height, 0.f);
-        verts[6].co = C_vec3(width, height, 0.f);
-
-        /* Get the uv size of a vertical and horizontal pixel before we start
-           messing with the terrain texture */
-        pixel_h = (float)R_TILE_SHEET_W / sheet_w;
-        pixel_v = (float)R_TILE_SHEET_H / sheet_h;
 
         rotated_mask = NULL;
         glPushMatrix();
@@ -223,11 +206,10 @@ static void prerender_tiles(void)
                 glLoadIdentity();
 
                 /* Render the blend mask at tile size and orientation */
-                set_mask_verts_uv(verts, i);
+                set_mask_verts_uv(i);
                 R_texture_select(blend_mask);
-                glInterleavedArrays(R_VERTEX2_FORMAT, 0, verts);
-                glDrawElements(GL_TRIANGLES, 15, GL_UNSIGNED_SHORT, indices);
-                rotated_mask = save_buffer(width, height);
+                prerender_tile();
+                rotated_mask = save_buffer(tile.x, tile.y);
                 R_texture_upload(rotated_mask, TRUE);
                 finish_buffer();
 
@@ -235,16 +217,14 @@ static void prerender_tiles(void)
                 R_texture_select(r_terrain_tex);
                 for (y = 0; y < R_TILE_SHEET_H; y++)
                         for (x = 0; x < R_TILE_SHEET_W; x++) {
-                                set_tile_verts_uv(verts, i, x, y);
+                                set_tile_verts_uv(i, x, y);
                                 glLoadIdentity();
-                                glTranslatef(x * width, y * height, 0.f);
-                                glInterleavedArrays(R_VERTEX2_FORMAT, 0, verts);
-                                glDrawElements(GL_TRIANGLES, 15,
-                                               GL_UNSIGNED_SHORT, indices);
+                                glTranslatef(x * tile.x, y * tile.y, 0.f);
+                                prerender_tile();
                         }
 
                 /* Read the terrain back in and mask it */
-                masked_terrain = save_buffer(sheet_w, sheet_h);
+                masked_terrain = save_buffer(sheet.x, sheet.y);
                 R_surface_mask(masked_terrain->surface, rotated_mask->surface);
                 R_texture_free(rotated_mask);
 
@@ -254,10 +234,10 @@ static void prerender_tiles(void)
                 R_texture_upload(masked_terrain, TRUE);
                 R_texture_render(masked_terrain, 0, 0);
                 if (r_test_prerender.value.n)
-                        R_texture_render(masked_terrain, sheet_w, 0);
+                        R_texture_render(masked_terrain, sheet.x, 0);
                 R_texture_free(masked_terrain);
                 R_texture_free(r_terrain_tex);
-                r_terrain_tex = save_buffer(sheet_w, sheet_h);
+                r_terrain_tex = save_buffer(sheet.x, sheet.y);
                 R_texture_upload(r_terrain_tex, TRUE);
                 finish_buffer();
         }
@@ -268,8 +248,98 @@ static void prerender_tiles(void)
 }
 
 /******************************************************************************\
+ Pre-renders tiles for transition between base tile types.
+\******************************************************************************/
+static void prerender_transitions(void)
+{
+        r_texture_t *trans_mask, *inverted_mask, *large_mask, *masked_terrain;
+        int y, x, tiles_a[] = {0, 1, 1, 2}, tiles_b[] = {1, 0, 2, 1};
+
+        trans_mask = R_texture_load("models/globe/trans_mask.png", FALSE);
+        if (!trans_mask || !r_terrain_tex)
+                C_error("Failed to load essential prerendering assets");
+
+        /* Render an inverted version of the mask */
+        R_texture_select(trans_mask);
+        set_mask_verts_uv(-1);
+        prerender_tile();
+        inverted_mask = save_buffer(tile.x, tile.y);
+        R_surface_invert(inverted_mask->surface, TRUE, FALSE);
+        R_texture_upload(inverted_mask, FALSE);
+        finish_buffer();
+
+        /* Render the transition mask tile sheet */
+        glPushMatrix();
+        for (y = 1; y < 5; y++) {
+                if (y & 1)
+                        R_texture_select(trans_mask);
+                else
+                        R_texture_select(inverted_mask);
+                for (x = 0; x < 3; x++) {
+                        glLoadIdentity();
+                        glTranslatef(x * tile.x, y * tile.y, 0.f);
+                        set_mask_verts_uv(x);
+                        prerender_tile();
+                }
+        }
+        glPopMatrix();
+        large_mask = save_buffer(sheet.x, sheet.y);
+        R_texture_free(trans_mask);
+        R_texture_free(inverted_mask);
+        finish_buffer();
+
+        /* Render the masked layer of the terrain and read it back in */
+        R_texture_select(r_terrain_tex);
+        glPushMatrix();
+        for (y = 1; y < 5; y++)
+                for (x = 0; x < 3; x++) {
+                        glLoadIdentity();
+                        glTranslatef(x * tile.x, y * tile.y, 0.f);
+                        set_tile_verts_uv(x, tiles_b[y - 1], 0);
+                        prerender_tile();
+                }
+        glPopMatrix();
+        masked_terrain = save_buffer(sheet.x, sheet.y);
+        R_surface_mask(masked_terrain->surface, large_mask->surface);
+        R_texture_free(large_mask);
+        R_texture_upload(masked_terrain, FALSE);
+        if (r_test_prerender.value.n)
+                R_texture_render(masked_terrain, sheet.x, 0);
+
+        /* Render the base layer of the terrain */
+        R_texture_render(r_terrain_tex, 0, 0);
+        R_texture_select(r_terrain_tex);
+        glPushMatrix();
+        for (y = 1; y < 5; y++)
+                for (x = 0; x < 3; x++) {
+                        glLoadIdentity();
+                        glTranslatef(x * tile.x, y * tile.y, 0.f);
+                        set_tile_verts_uv(x, tiles_a[y - 1], 0);
+                        prerender_tile();
+                }
+        glPopMatrix();
+
+        /* Render the masked terrain over the tile sheet and read it back in */
+        R_texture_render(masked_terrain, 0, 0);
+        R_texture_free(masked_terrain);
+        R_texture_free(r_terrain_tex);
+        r_terrain_tex = save_buffer(sheet.x, sheet.y);
+        R_texture_upload(r_terrain_tex, TRUE);
+
+        finish_buffer();
+}
+
+/******************************************************************************\
  Renders the pre-render textures to the back buffer and reads them back in for
- later use.
+ later use. The tiles are rendered on this vertex arrangement:
+
+   1--0--4
+   | / \ |
+   |/   \|
+   2-----3
+   |  \  |
+   5-----6
+
 \******************************************************************************/
 void R_prerender(void)
 {
@@ -288,7 +358,27 @@ void R_prerender(void)
         glClearColor(0.f, 0.f, 0.f, 1.f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+        /* Vertices are aligned in the tile so that the top vertex of the
+           triangle touches the top center of the tile */
+        sheet.x = r_terrain_tex->surface->w;
+        sheet.y = r_terrain_tex->surface->h;
+        tile.x = r_terrain_tex->surface->w / R_TILE_SHEET_W;
+        tile.y = r_terrain_tex->surface->h / R_TILE_SHEET_H;
+        verts[0].co = C_vec3(tile.x / 2.f, 0.f, 0.f);
+        verts[1].co = C_vec3(0.f, 0.f, 0.f);
+        verts[2].co = C_vec3(0.f, tile.y * R_ISO_PROP, 0.f);
+        verts[3].co = C_vec3(tile.x, tile.y * R_ISO_PROP, 0.f);
+        verts[4].co = C_vec3(tile.x, 0.f, 0.f);
+        verts[5].co = C_vec3(0.f, tile.y, 0.f);
+        verts[6].co = C_vec3(tile.x, tile.y, 0.f);
+
+        /* Get the uv size of a vertical and horizontal pixel before we start
+           messing with the terrain texture */
+        pixel.x = (float)R_TILE_SHEET_W / sheet.x;
+        pixel.y = (float)R_TILE_SHEET_H / sheet.y;
+
         prerender_tiles();
+        prerender_transitions();
         R_set_mode(R_MODE_NONE);
 }
 

@@ -35,8 +35,11 @@
 #define R_TILES_MAX 20480
 
 /* Tile sheet grid parameters */
-#define R_TILE_SHEET_W 4
-#define R_TILE_SHEET_H 4
+#define R_TILE_SHEET_W 5
+#define R_TILE_SHEET_H 5
+
+/* Proportion of the tile height that the isoceles triangle face takes up */
+#define R_ISO_PROP 0.859375f
 
 /* Opaque texture object */
 typedef struct r_texture r_texture_t;
@@ -92,10 +95,22 @@ typedef struct r_window {
         c_vec2_t corner;
 } r_window_t;
 
+/* Terrain enumeration */
+typedef enum {
+        R_T_SHALLOW = 0,
+        R_T_SAND = 1,
+        R_T_GROUND = 2,
+        R_T_GROUND_HOT = 3,
+        R_T_GROUND_COLD = 4,
+        R_T_WATER = 8,
+        R_T_BASES = 3,
+        R_T_TRANSITION = 5,
+} r_terrain_t;
+
 /* Structure that contains configuration parameters for a tile */
 typedef struct r_tile {
+        r_terrain_t terrain;
         float height;
-        int terrain;
 } r_tile_t;
 
 /* r_assets.c */

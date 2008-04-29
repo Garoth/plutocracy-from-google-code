@@ -439,25 +439,101 @@ static int globe_smooth_update(c_var_t *var, c_var_value_t value)
 }
 
 /******************************************************************************\
+ Returns the base terrain for a terrain variant.
+\******************************************************************************/
+static int terrain_base(r_terrain_t terrain)
+{
+        switch (terrain) {
+        case R_T_GROUND_HOT:
+        case R_T_GROUND_COLD:
+                return R_T_GROUND;
+        case R_T_WATER:
+        case R_T_SHALLOW:
+                return R_T_SHALLOW;
+        default:
+                return terrain;
+        }
+}
+
+/******************************************************************************\
+ Selects a terrain index for a tile depending on its region.
+\******************************************************************************/
+static int get_tile_terrain(int tile, r_tile_t *tiles)
+{
+        int i, j, base, base_num, trans, terrain, vert_terrain[3], row;
+
+        base = terrain_base(tiles[tile].terrain);
+        if (base >= R_T_BASES - 1)
+                return tiles[tile].terrain;
+
+        /* Each tile vertex can only have up to two base terrains on it, we
+           need to find out if the dominant one is present */
+        base_num = 0;
+        for (i = 0; i < 3; i++) {
+                j = vertices[3 * tile + i].next;
+                vert_terrain[i] = base;
+                while (j != 3 * tile + i) {
+                        terrain = terrain_base(tiles[j / 3].terrain);
+                        if (terrain > vert_terrain[i])
+                                trans = vert_terrain[i] = terrain;
+                        j = vertices[j].next;
+                }
+                if (vert_terrain[i] == base)
+                        base_num++;
+        }
+        if (base_num > 2)
+                return tiles[tile].terrain;
+
+        /* Swap the base and single terrain if the base only appears once */
+        row = 2 * base;
+        if (base_num == 1) {
+                trans = base;
+                row++;
+        }
+
+        /* Find the lone terrain and assign the transition tile */
+        for (i = 0; i < 3; i++)
+                if (vert_terrain[i] == trans)
+                        break;
+
+        /* Flipped tiles need reversing */
+        if (tile < flip_limit) {
+                if (i == 1)
+                        i = 2;
+                else if (i == 2)
+                        i = 1;
+        }
+
+        return R_T_TRANSITION + row * R_TILE_SHEET_W + i;
+}
+
+/******************************************************************************\
  Adjusts globe verices to show the tile's height.
 \******************************************************************************/
 void R_configure_globe(r_tile_t *tiles)
 {
+        c_vec2_t tile;
         float bottom;
-        int i, tx, ty, flip;
+        int i, tx, ty, flip, terrain;
 
         C_debug("Configuring globe");
+        tile.x = (float)(r_terrain_tex->surface->w / R_TILE_SHEET_W) /
+                 r_terrain_tex->surface->w;
+        tile.y = (float)(r_terrain_tex->surface->h / R_TILE_SHEET_H) /
+                 r_terrain_tex->surface->h;
         for (i = 0; i < r_tiles; i++) {
                 set_tile_height(i, tiles[i].height);
 
                 /* Tile terrain texture */
-                ty = tiles[i].terrain / R_TILE_SHEET_W;
-                tx = tiles[i].terrain - ty * R_TILE_SHEET_W;
-                bottom = (ty + 1) * 0.25f - 0.0351f;
-                vertices[3 * i].uv = C_vec2(tx * 0.25f + 0.125f, ty * 0.25f);
+                terrain = get_tile_terrain(i, tiles);
+                ty = terrain / R_TILE_SHEET_W;
+                tx = terrain - ty * R_TILE_SHEET_W;
+                bottom = (ty + 1) * tile.y -
+                         (1.f - R_ISO_PROP) / R_TILE_SHEET_H;
+                vertices[3 * i].uv = C_vec2((tx + 0.5f) * tile.x, ty * tile.y);
                 flip = i < flip_limit;
-                vertices[3 * i + 1].uv = C_vec2((tx + flip) * 0.25f, bottom);
-                vertices[3 * i + 2].uv = C_vec2((tx + !flip) * 0.25f, bottom);
+                vertices[3 * i + 1].uv = C_vec2((tx + flip) * tile.x, bottom);
+                vertices[3 * i + 2].uv = C_vec2((tx + !flip) * tile.x, bottom);
 
                 /* Set normal vector */
                 normals[i] = C_vec3_cross(C_vec3_sub(vertices[3 * i].co,

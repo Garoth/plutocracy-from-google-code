@@ -212,8 +212,7 @@ static void texture_cleanup(r_texture_t *pt)
 /******************************************************************************\
  Just allocate a texture object and cleared [width] by [height] SDL surface.
  Does not load anything or add the texture to the texture linked list. The
- texture needs to be uploaded after you are done editing it. Don't forget to
- lock the surface!
+ texture needs to be uploaded after calling this function.
 \******************************************************************************/
 r_texture_t *R_texture_alloc_full(const char *file, int line, const char *func,
                                   int width, int height, int alpha)
@@ -251,6 +250,27 @@ r_texture_t *R_texture_alloc_full(const char *file, int line, const char *func,
         if (c_mem_check.value.n)
                 C_trace_full(file, line, func, "Allocated texture #%d", count);
         return pt;
+}
+
+/******************************************************************************\
+ Allocates a new texture and copies the contents of another texture to it.
+ The texture must be uploaded after calling this function.
+\******************************************************************************/
+r_texture_t *R_texture_clone_full(const char *file, int line, const char *func,
+                                  const r_texture_t *src)
+{
+        r_texture_t *dest;
+
+        if (!src)
+                return NULL;
+        dest = R_texture_alloc_full(file, line, func, src->surface->w,
+                                    src->surface->h, src->alpha);
+        if (!dest)
+                return NULL;
+        if (SDL_BlitSurface(src->surface, NULL, dest->surface, NULL) < 0)
+                C_warning("Failed to clone texture '%s': %s",
+                          src->ref.name, SDL_GetError());
+        return dest;
 }
 
 /******************************************************************************\

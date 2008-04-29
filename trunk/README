@@ -104,13 +104,18 @@
 
     To install run the following command:
 
-      $ scons install prefix=/usr
+      $ scons install PREFIX=/usr
 
-    The 'prefix' argument determines what directory root the program will be
+    The 'PREFIX' argument determines what directory root the program will be
     installed under (defaults to '/usr/local'). For additional build targets
     run scons help:
 
       $ scons -h
+
+    Note that after SCons is run for the first time (even if with the -h flag),
+    it will create 'custom.py', the configuration file, and draw its options
+    from there instead of from the environment. Specify changes over the
+    command-line after this point or remove the configuration file.
 
 
   2.2  Windows

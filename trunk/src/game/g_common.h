@@ -14,16 +14,6 @@
 #include "../render/r_shared.h"
 #include "g_shared.h"
 
-/* Terrain enumeration */
-typedef enum {
-        G_T_WATER = 1,
-        G_T_SHALLOW = 2,
-        G_T_SAND = 4,
-        G_T_GROUND = 5,
-        G_T_GROUND_HOT = 6,
-        G_T_GROUND_COLD = 7,
-} g_terrain_t;
-
 /* A tile on the globe */
 typedef struct g_tile {
         struct g_tile *neighbors[3];

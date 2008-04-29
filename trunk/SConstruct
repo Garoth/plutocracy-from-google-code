@@ -26,35 +26,50 @@ if (sys.platform == 'win32'):
                'Visual Studio project files in the vc8 directory.')
         sys.exit(1)
 
-# Available command-line arguments
-Help("""
-The following command-line parameters are supported:
+# Options are loaded from 'custom.py'. Default values are only provided for
+# the variables that do not get set by SCons itself.
+config_file = ARGUMENTS.get('config', 'custom.py')
+opts = Options(config_file)
+opts.Add('CC', 'Compiler to use')
+opts.Add('CFLAGS', 'Compiler flags')
+opts.Add('PREFIX', 'Installation path prefix',
+         os.environ.get('PREFIX', '/usr/local'))
+opts.Add(BoolOption('gch', 'Build a precompiled header (gcc only)', True))
 
-   debug=1              Enables debug compile flags
-   prefix='/usr/local'  Prefix of installation paths
-   gch=1                Precompile the common header (GCC only)
-   gprof=0              Enables the GNU profiler (GCC only)
+# Create a default environment
+default_env = Environment(ENV = os.environ)
+if ('CC' in os.environ):
+        default_env.Replace(CC = os.environ['CC'])
+if ('CFLAGS' in os.environ):
+        default_env.Replace(CFLAGS = os.environ['CFLAGS'])
+opts.Update(default_env)
+opts.Save(config_file, default_env)
 
-The following build targets are supported:
+# Setup the help information
+Help('\n' + package.title() + ' ' + version +
+""" is built using SCons. See the README file for detailed
+instructions.
 
-   dist                 Create a distribution tarball
-   gendoc               Compile gendoc and generate automatic documentation
-   install              Installs the game binary and media
-   """ + package.ljust(20, ' ') + """ Builds the game binary
+Options are initialized from the environment first and can then be overridden
+using either the command-line or the configuration file. Values only need to
+be specified on the command line once and are then saved to the configuration
+file. The filename of the configuration file can be specified using the
+'config' command-line option:
+
+  scons config='custom.py'
+
+The following options are available:
 """)
+Help(opts.GenerateHelpText(default_env))
 
-# Plutocracy
+################################################################################
+#
+# scons plutocracy -- Compile plutocracy
+#
+################################################################################
 plutocracy_src = ['src/plutocracy.c'] + glob.glob('src/*/*.c')
 plutocracy_src.remove('src/common/c_os_windows.c')
-plutocracy_env = Environment(ENV = os.environ)
-if ('CC' in os.environ):
-        plutocracy_env.Replace(CC = os.environ['CC'])
-if int(ARGUMENTS.get('debug', 1)):
-        plutocracy_env.Append(CFLAGS = ['-g', '-Wall'])
-else:
-        plutocracy_env.Append(CFLAGS = ['-O2'])
-if int(ARGUMENTS.get('gprof', 0)):
-        plutocracy_env.Append(CFLAGS = '-pg')
+plutocracy_env = default_env.Clone()
 plutocracy_env.Append(CPPPATH = '.')
 plutocracy_env.Append(LIBS = ['SDL_image', 'SDL_ttf', 'GL', 'GLU', 'z'])
 plutocracy_env.ParseConfig('sdl-config --cflags --libs')
@@ -64,7 +79,7 @@ Default(plutocracy)
 
 # Build the precompiled header as a dependency of the main program
 plutocracy_gch = ''
-if int(ARGUMENTS.get('gch', 1)):
+if plutocracy_env['gch']:
         plutocracy_gch = 'src/common/c_shared.h.gch'
         plutocracy_env.Command('src/common/c_shared.h.gch',
                                glob.glob('src/common/*.h'),
@@ -72,12 +87,30 @@ if int(ARGUMENTS.get('gch', 1)):
                                '-c src/common/c_shared.h -o $TARGET')
         plutocracy_env.Depends(plutocracy_obj, plutocracy_gch)
 
-# Installing Plutocracy
-install_prefix = os.path.join(os.getcwd(),
-                              ARGUMENTS.get('prefix', '/usr/local'))
+# Generate a config.h with definitions
+def WriteConfigH(target, source, env):
+        config = open('config.h', 'w')
+        config.write('\n/* Package parameters */\n' +
+                     '#define PACKAGE "' + package + '"\n' +
+                     '#define PACKAGE_STRING "' + package.title() +
+                                                  ' ' + version + '"\n' +
+                     '\n/* Configured paths */\n' +
+                     '#define PKGDATADIR "' + install_data + '"\n')
+        config.close()
+plutocracy_config = plutocracy_env.Command('config.h', '', WriteConfigH)
+plutocracy_env.Depends(plutocracy_obj + [plutocracy_gch], plutocracy_config)
+plutocracy_env.Depends(plutocracy_config, config_file)
+
+################################################################################
+#
+# scons install -- Install plutocracy
+#
+################################################################################
+install_prefix = os.path.join(os.getcwd(), plutocracy_env['PREFIX'])
 install_data = os.path.join(install_prefix, 'share/plutocracy')
 Alias('install', install_prefix)
 Depends('install', plutocracy)
+
 def InstallRecursive(dest, src):
         files = os.listdir(src)
         for f in files:
@@ -98,25 +131,14 @@ Install(install_data, ['AUTHORS', 'ChangeLog', 'CC', 'COPYING', 'README',
 InstallRecursive(os.path.join(install_data, 'gui/'), 'gui')
 InstallRecursive(os.path.join(install_data, 'models/'), 'models')
 
-# Generate a config.h with definitions
-def WriteConfigH(target, source, env):
-        config = open('config.h', 'w')
-        config.write('\n/* Package parameters */\n' +
-                     '#define PACKAGE "' + package + '"\n' +
-                     '#define PACKAGE_STRING "' + package.title() +
-                                                  ' ' + version + '"\n' +
-                     '\n/* Configured paths */\n' +
-                     '#define PKGDATADIR "' + install_data + '"\n')
-        config.close()
-plutocracy_env.Depends(plutocracy_obj + [plutocracy_gch], 'config.h')
-AlwaysBuild(plutocracy_env.Command('config.h', '', WriteConfigH))
-
-# Gendoc
-gendoc_env = Environment(ENV = os.environ)
-if ('CC' in os.environ):
-        plutocracy_env.Replace(CC = os.environ['CC'])
-gendoc_env.Append(CFLAGS = ['-g', '-Wall'])
+################################################################################
+#
+# scons gendoc -- Generate automatic documentation
+#
+################################################################################
+gendoc_env = default_env.Clone()
 gendoc = gendoc_env.Program('gendoc/gendoc', glob.glob('gendoc/*.c'))
+
 def GendocOutput(output, path, title, inputs = []):
         inputs = (glob.glob(path + '/*.h') + glob.glob(path + '/*.c') + inputs);
         cmd = gendoc_env.Command(output, inputs, 'gendoc/gendoc ' +
@@ -138,7 +160,11 @@ GendocOutput('gendoc/docs/interface.html', 'src/interface',
 GendocOutput('gendoc/docs/game.html', 'src/game', 'Plutocracy Game')
 GendocOutput('gendoc/docs/network.html', 'src/network', 'Plutocracy Network')
 
-# Distributing the package tarball
+################################################################################
+#
+# scons dist -- Distributing the package tarball
+#
+################################################################################
 dist_name = package + '-' + version
 Depends(dist_name, 'gendoc')
 dist_tarball = dist_name + '.tar.gz'
