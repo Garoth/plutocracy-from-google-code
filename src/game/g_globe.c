@@ -15,7 +15,7 @@
 /* Island parameter limits */
 #define ISLAND_NUM 128
 #define ISLAND_SIZE 256
-#define ISLAND_HEIGHT 2.f
+#define ISLAND_HEIGHT 2.5f
 
 /* Island structure */
 typedef struct g_island {
@@ -40,7 +40,7 @@ void G_render(void)
  Randomly selects a tile ground terrain based on climate approximations.
  FIXME: Does not choose terrain correctly, biased toward 'hot'.
 \******************************************************************************/
-static g_terrain_t choose_terrain(int tile)
+static r_terrain_t choose_terrain(int tile)
 {
         float prop;
 
@@ -50,12 +50,12 @@ static g_terrain_t choose_terrain(int tile)
         prop = 4.f * prop / M_PI - 1.f;
         if (prop >= 0.f) {
                 if (C_rand_real() > prop)
-                        return G_T_GROUND;
-                return G_T_GROUND_COLD;
+                        return R_T_GROUND;
+                return R_T_GROUND_COLD;
         }
-        if (C_rand_real() < -prop)
-                return G_T_GROUND;
-        return G_T_GROUND_HOT;
+        if (C_rand_real() > -prop)
+                return R_T_GROUND;
+        return R_T_GROUND_HOT;
 }
 
 /******************************************************************************\
@@ -68,13 +68,13 @@ static void sanitise_terrain(void)
         /* During the first we convert shallow tiles to sand tiles */
         land = 0;
         for (i = 0; i < r_tiles; i++) {
-                if (render_tiles[i].terrain != G_T_SHALLOW)
+                if (render_tiles[i].terrain != R_T_SHALLOW)
                         continue;
                 region_len = R_get_tile_region(i, region);
                 for (j = 0; j < region_len; j++)
-                        if (render_tiles[region[j]].terrain == G_T_WATER)
+                        if (render_tiles[region[j]].terrain == R_T_WATER)
                                 goto skip_shallow;
-                render_tiles[i].terrain = G_T_SAND;
+                render_tiles[i].terrain = R_T_SAND;
                 islands[g_tiles[i].island].land++;
                 land++;
 skip_shallow:   ;
@@ -83,19 +83,19 @@ skip_shallow:   ;
         /* During the second run, convert sand tiles to ground tiles */
         hot = cold = temp = 0;
         for (i = 0; i < r_tiles; i++) {
-                if (render_tiles[i].terrain != G_T_SAND)
+                if (render_tiles[i].terrain != R_T_SAND)
                         continue;
                 region_len = R_get_tile_region(i, region);
                 for (j = 0; j < region_len; j++)
-                        if (render_tiles[region[j]].terrain == G_T_SHALLOW)
+                        if (render_tiles[region[j]].terrain == R_T_SHALLOW)
                                 goto skip_sand;
                 render_tiles[i].terrain = choose_terrain(i);
                 render_tiles[i].height = C_rand_real() * ISLAND_HEIGHT;
-                if (render_tiles[i].terrain == G_T_GROUND)
+                if (render_tiles[i].terrain == R_T_GROUND)
                         temp++;
-                else if (render_tiles[i].terrain == G_T_GROUND_HOT)
+                else if (render_tiles[i].terrain == R_T_GROUND_HOT)
                         hot++;
-                else if (render_tiles[i].terrain == G_T_GROUND_COLD)
+                else if (render_tiles[i].terrain == R_T_GROUND_COLD)
                         cold++;
 skip_sand:      ;
         }
@@ -173,7 +173,7 @@ static void grow_islands(int num, int island_size)
                                 continue;
                         }
                         if (!border)
-                                edges[index]->render->terrain = G_T_SHALLOW;
+                                edges[index]->render->terrain = R_T_SHALLOW;
                         memmove(edges + index, edges + index + 1,
                                 ((i + 1) * ISLAND_SIZE - index - 1) *
                                 sizeof (*edges));
@@ -191,7 +191,7 @@ static void setup_tiles(void)
 
         C_debug("Locating tile neighbors");
         for (i = 0; i < r_tiles; i++) {
-                render_tiles[i].terrain = G_T_WATER;
+                render_tiles[i].terrain = R_T_WATER;
                 render_tiles[i].height = 0;
                 g_tiles[i].render = render_tiles + i;
                 g_tiles[i].island = -1;

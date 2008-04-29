@@ -5,12 +5,6 @@
 # non-svn files in the src directory. Any additional files should be added
 # to the list below:
 FILES="README"
-
-if [ `stat -c%s TODO` -ge 2 ]
-then
-        echo -e "\n\033[37;7mTODO\033[m"
-        cat TODO
-fi
 SEARCH="`find src/ -not \( -wholename \*.svn\* \) -type f` $FILES"
 for file in $SEARCH
 do
