@@ -120,6 +120,7 @@ void R_render_solar(void)
         R_model_render(&sky);
 
         /* Render the sun and moon point sprites */
+        glDisable(GL_DEPTH_TEST);
         glPushMatrix();
         glLoadIdentity();
         glRotatef(C_rad_to_deg(sky.angles.y), 0.f, 1.f, 0.f);
@@ -128,5 +129,6 @@ void R_render_solar(void)
         memcpy(moon.transform, sun.transform, sizeof (moon.transform));
         R_billboard_render(&moon);
         R_billboard_render(&sun);
+        glEnable(GL_DEPTH_TEST);
 }
 

@@ -41,11 +41,12 @@ R_FONT_SIZE_MIN <span class="file">(r_shared.h)</span></div>
 </div>
 <a name="R_ISO_PROP" href="javascript:toggle(1)">
 <div class="entry" id="1">
-R_ISO_PROP <span class="file">(r_shared.h)</span></div>
+R_ISO_PROP <span class="file">(r_common.h)</span></div>
 </a>
 <div class="entry_body" id="1_body" style="display:none">
-<pre><b class="keyword2">#define</b> R_ISO_PROP <span class="def_const">0.859375f</span></pre>
-<p class="comment"> Proportion of the tile height that the isoceles triangle face takes up</p>
+<pre><b class="keyword2">#define</b> R_ISO_PROP <span class="def_const">0.86602540378443865f</span></pre>
+<p class="comment"> Proportion of the tile height that the isoceles triangle face takes up
+   (sin of PI / 3)</p>
 </div>
 <a name="R_MODEL_ANIM_FPS" href="javascript:toggle(2)">
 <div class="entry" id="2">
@@ -91,7 +92,7 @@ R_TILES_MAX <span class="file">(r_shared.h)</span></div>
 </div>
 <a name="R_TILE_SHEET_H" href="javascript:toggle(6)">
 <div class="entry" id="6">
-R_TILE_SHEET_H <span class="file">(r_shared.h)</span></div>
+R_TILE_SHEET_H <span class="file">(r_common.h)</span></div>
 </a>
 <div class="entry_body" id="6_body" style="display:none">
 <pre><b class="keyword2">#define</b> R_TILE_SHEET_H <span class="def_const">5</span></pre>
@@ -99,7 +100,7 @@ R_TILE_SHEET_H <span class="file">(r_shared.h)</span></div>
 </div>
 <a name="R_TILE_SHEET_W" href="javascript:toggle(7)">
 <div class="entry" id="7">
-R_TILE_SHEET_W <span class="file">(r_shared.h)</span></div>
+R_TILE_SHEET_W <span class="file">(r_common.h)</span></div>
 </a>
 <div class="entry_body" id="7_body" style="display:none">
 <pre><b class="keyword2">#define</b> R_TILE_SHEET_W <span class="def_const">5</span></pre>
@@ -1200,10 +1201,11 @@ r_clear <span class="file">(r_common.h)</span></div>
 </a>
 <div class="entry_body" id="114_body" style="display:none">
 <pre><b class="keyword0">extern</b> c_var_t r_clear<span class="def_op">,</span> r_color_bits<span class="def_op">,</span> r_depth_bits<span class="def_op">,</span> r_gamma<span class="def_op">,</span> r_globe_colors<span class="def_op">[</span><span class="def_const">4</span><span class="def_op">],</span>
-               r_globe_shininess<span class="def_op">,</span> r_globe_smooth<span class="def_op">,</span> r_gl_errors<span class="def_op">,</span> r_light<span class="def_op">,</span>
-               r_moon_atten<span class="def_op">,</span> r_moon_colors<span class="def_op">[</span><span class="def_const">3</span><span class="def_op">],</span> r_moon_height<span class="def_op">,</span> r_solar<span class="def_op">,</span>
-               r_sun_colors<span class="def_op">[</span><span class="def_const">3</span><span class="def_op">],</span> r_test_sprite_num<span class="def_op">,</span> r_test_sprite<span class="def_op">,</span> r_test_model<span class="def_op">,</span>
-               r_test_prerender<span class="def_op">,</span> r_test_text<span class="def_op">,</span> r_vsync<span class="def_op">,</span> r_windowed<span class="def_op">;</span></pre>
+               r_globe_atmosphere<span class="def_op">,</span> r_globe_shininess<span class="def_op">,</span> r_globe_smooth<span class="def_op">,</span>
+               r_gl_errors<span class="def_op">,</span> r_light<span class="def_op">,</span> r_moon_atten<span class="def_op">,</span> r_moon_colors<span class="def_op">[</span><span class="def_const">3</span><span class="def_op">],</span>
+               r_moon_height<span class="def_op">,</span> r_solar<span class="def_op">,</span> r_sun_colors<span class="def_op">[</span><span class="def_const">3</span><span class="def_op">],</span> r_test_sprite_num<span class="def_op">,</span>
+               r_test_sprite<span class="def_op">,</span> r_test_model<span class="def_op">,</span> r_test_prerender<span class="def_op">,</span> r_test_text<span class="def_op">,</span>
+               r_vsync<span class="def_op">,</span> r_windowed<span class="def_op">;</span></pre>
 <p class="comment"> r_variables.c</p>
 </div>
 <a name="r_color_bits" href="javascript:toggle(115)">
@@ -1212,10 +1214,11 @@ r_color_bits <span class="file">(r_common.h)</span></div>
 </a>
 <div class="entry_body" id="115_body" style="display:none">
 <pre><b class="keyword0">extern</b> c_var_t r_clear<span class="def_op">,</span> r_color_bits<span class="def_op">,</span> r_depth_bits<span class="def_op">,</span> r_gamma<span class="def_op">,</span> r_globe_colors<span class="def_op">[</span><span class="def_const">4</span><span class="def_op">],</span>
-               r_globe_shininess<span class="def_op">,</span> r_globe_smooth<span class="def_op">,</span> r_gl_errors<span class="def_op">,</span> r_light<span class="def_op">,</span>
-               r_moon_atten<span class="def_op">,</span> r_moon_colors<span class="def_op">[</span><span class="def_const">3</span><span class="def_op">],</span> r_moon_height<span class="def_op">,</span> r_solar<span class="def_op">,</span>
-               r_sun_colors<span class="def_op">[</span><span class="def_const">3</span><span class="def_op">],</span> r_test_sprite_num<span class="def_op">,</span> r_test_sprite<span class="def_op">,</span> r_test_model<span class="def_op">,</span>
-               r_test_prerender<span class="def_op">,</span> r_test_text<span class="def_op">,</span> r_vsync<span class="def_op">,</span> r_windowed<span class="def_op">;</span></pre>
+               r_globe_atmosphere<span class="def_op">,</span> r_globe_shininess<span class="def_op">,</span> r_globe_smooth<span class="def_op">,</span>
+               r_gl_errors<span class="def_op">,</span> r_light<span class="def_op">,</span> r_moon_atten<span class="def_op">,</span> r_moon_colors<span class="def_op">[</span><span class="def_const">3</span><span class="def_op">],</span>
+               r_moon_height<span class="def_op">,</span> r_solar<span class="def_op">,</span> r_sun_colors<span class="def_op">[</span><span class="def_const">3</span><span class="def_op">],</span> r_test_sprite_num<span class="def_op">,</span>
+               r_test_sprite<span class="def_op">,</span> r_test_model<span class="def_op">,</span> r_test_prerender<span class="def_op">,</span> r_test_text<span class="def_op">,</span>
+               r_vsync<span class="def_op">,</span> r_windowed<span class="def_op">;</span></pre>
 <p class="comment"> r_variables.c</p>
 </div>
 <a name="r_count_faces" href="javascript:toggle(116)">
@@ -1232,10 +1235,11 @@ r_depth_bits <span class="file">(r_common.h)</span></div>
 </a>
 <div class="entry_body" id="117_body" style="display:none">
 <pre><b class="keyword0">extern</b> c_var_t r_clear<span class="def_op">,</span> r_color_bits<span class="def_op">,</span> r_depth_bits<span class="def_op">,</span> r_gamma<span class="def_op">,</span> r_globe_colors<span class="def_op">[</span><span class="def_const">4</span><span class="def_op">],</span>
-               r_globe_shininess<span class="def_op">,</span> r_globe_smooth<span class="def_op">,</span> r_gl_errors<span class="def_op">,</span> r_light<span class="def_op">,</span>
-               r_moon_atten<span class="def_op">,</span> r_moon_colors<span class="def_op">[</span><span class="def_const">3</span><span class="def_op">],</span> r_moon_height<span class="def_op">,</span> r_solar<span class="def_op">,</span>
-               r_sun_colors<span class="def_op">[</span><span class="def_const">3</span><span class="def_op">],</span> r_test_sprite_num<span class="def_op">,</span> r_test_sprite<span class="def_op">,</span> r_test_model<span class="def_op">,</span>
-               r_test_prerender<span class="def_op">,</span> r_test_text<span class="def_op">,</span> r_vsync<span class="def_op">,</span> r_windowed<span class="def_op">;</span></pre>
+               r_globe_atmosphere<span class="def_op">,</span> r_globe_shininess<span class="def_op">,</span> r_globe_smooth<span class="def_op">,</span>
+               r_gl_errors<span class="def_op">,</span> r_light<span class="def_op">,</span> r_moon_atten<span class="def_op">,</span> r_moon_colors<span class="def_op">[</span><span class="def_const">3</span><span class="def_op">],</span>
+               r_moon_height<span class="def_op">,</span> r_solar<span class="def_op">,</span> r_sun_colors<span class="def_op">[</span><span class="def_const">3</span><span class="def_op">],</span> r_test_sprite_num<span class="def_op">,</span>
+               r_test_sprite<span class="def_op">,</span> r_test_model<span class="def_op">,</span> r_test_prerender<span class="def_op">,</span> r_test_text<span class="def_op">,</span>
+               r_vsync<span class="def_op">,</span> r_windowed<span class="def_op">;</span></pre>
 <p class="comment"> r_variables.c</p>
 </div>
 <a name="r_extensions" href="javascript:toggle(118)">
@@ -1252,10 +1256,11 @@ r_gamma <span class="file">(r_common.h)</span></div>
 </a>
 <div class="entry_body" id="119_body" style="display:none">
 <pre><b class="keyword0">extern</b> c_var_t r_clear<span class="def_op">,</span> r_color_bits<span class="def_op">,</span> r_depth_bits<span class="def_op">,</span> r_gamma<span class="def_op">,</span> r_globe_colors<span class="def_op">[</span><span class="def_const">4</span><span class="def_op">],</span>
-               r_globe_shininess<span class="def_op">,</span> r_globe_smooth<span class="def_op">,</span> r_gl_errors<span class="def_op">,</span> r_light<span class="def_op">,</span>
-               r_moon_atten<span class="def_op">,</span> r_moon_colors<span class="def_op">[</span><span class="def_const">3</span><span class="def_op">],</span> r_moon_height<span class="def_op">,</span> r_solar<span class="def_op">,</span>
-               r_sun_colors<span class="def_op">[</span><span class="def_const">3</span><span class="def_op">],</span> r_test_sprite_num<span class="def_op">,</span> r_test_sprite<span class="def_op">,</span> r_test_model<span class="def_op">,</span>
-               r_test_prerender<span class="def_op">,</span> r_test_text<span class="def_op">,</span> r_vsync<span class="def_op">,</span> r_windowed<span class="def_op">;</span></pre>
+               r_globe_atmosphere<span class="def_op">,</span> r_globe_shininess<span class="def_op">,</span> r_globe_smooth<span class="def_op">,</span>
+               r_gl_errors<span class="def_op">,</span> r_light<span class="def_op">,</span> r_moon_atten<span class="def_op">,</span> r_moon_colors<span class="def_op">[</span><span class="def_const">3</span><span class="def_op">],</span>
+               r_moon_height<span class="def_op">,</span> r_solar<span class="def_op">,</span> r_sun_colors<span class="def_op">[</span><span class="def_const">3</span><span class="def_op">],</span> r_test_sprite_num<span class="def_op">,</span>
+               r_test_sprite<span class="def_op">,</span> r_test_model<span class="def_op">,</span> r_test_prerender<span class="def_op">,</span> r_test_text<span class="def_op">,</span>
+               r_vsync<span class="def_op">,</span> r_windowed<span class="def_op">;</span></pre>
 <p class="comment"> r_variables.c</p>
 </div>
 <a name="r_gl_errors" href="javascript:toggle(120)">
@@ -1264,126 +1269,134 @@ r_gl_errors <span class="file">(r_common.h)</span></div>
 </a>
 <div class="entry_body" id="120_body" style="display:none">
 <pre><b class="keyword0">extern</b> c_var_t r_clear<span class="def_op">,</span> r_color_bits<span class="def_op">,</span> r_depth_bits<span class="def_op">,</span> r_gamma<span class="def_op">,</span> r_globe_colors<span class="def_op">[</span><span class="def_const">4</span><span class="def_op">],</span>
-               r_globe_shininess<span class="def_op">,</span> r_globe_smooth<span class="def_op">,</span> r_gl_errors<span class="def_op">,</span> r_light<span class="def_op">,</span>
-               r_moon_atten<span class="def_op">,</span> r_moon_colors<span class="def_op">[</span><span class="def_const">3</span><span class="def_op">],</span> r_moon_height<span class="def_op">,</span> r_solar<span class="def_op">,</span>
-               r_sun_colors<span class="def_op">[</span><span class="def_const">3</span><span class="def_op">],</span> r_test_sprite_num<span class="def_op">,</span> r_test_sprite<span class="def_op">,</span> r_test_model<span class="def_op">,</span>
-               r_test_prerender<span class="def_op">,</span> r_test_text<span class="def_op">,</span> r_vsync<span class="def_op">,</span> r_windowed<span class="def_op">;</span></pre>
+               r_globe_atmosphere<span class="def_op">,</span> r_globe_shininess<span class="def_op">,</span> r_globe_smooth<span class="def_op">,</span>
+               r_gl_errors<span class="def_op">,</span> r_light<span class="def_op">,</span> r_moon_atten<span class="def_op">,</span> r_moon_colors<span class="def_op">[</span><span class="def_const">3</span><span class="def_op">],</span>
+               r_moon_height<span class="def_op">,</span> r_solar<span class="def_op">,</span> r_sun_colors<span class="def_op">[</span><span class="def_const">3</span><span class="def_op">],</span> r_test_sprite_num<span class="def_op">,</span>
+               r_test_sprite<span class="def_op">,</span> r_test_model<span class="def_op">,</span> r_test_prerender<span class="def_op">,</span> r_test_text<span class="def_op">,</span>
+               r_vsync<span class="def_op">,</span> r_windowed<span class="def_op">;</span></pre>
 <p class="comment"> r_variables.c</p>
 </div>
-<a name="r_globe_colors" href="javascript:toggle(121)">
+<a name="r_globe_atmosphere" href="javascript:toggle(121)">
 <div class="entry" id="121">
-r_globe_colors <span class="file">(r_common.h)</span></div>
+r_globe_atmosphere <span class="file">(r_common.h)</span></div>
 </a>
 <div class="entry_body" id="121_body" style="display:none">
 <pre><b class="keyword0">extern</b> c_var_t r_clear<span class="def_op">,</span> r_color_bits<span class="def_op">,</span> r_depth_bits<span class="def_op">,</span> r_gamma<span class="def_op">,</span> r_globe_colors<span class="def_op">[</span><span class="def_const">4</span><span class="def_op">],</span>
-               r_globe_shininess<span class="def_op">,</span> r_globe_smooth<span class="def_op">,</span> r_gl_errors<span class="def_op">,</span> r_light<span class="def_op">,</span>
-               r_moon_atten<span class="def_op">,</span> r_moon_colors<span class="def_op">[</span><span class="def_const">3</span><span class="def_op">],</span> r_moon_height<span class="def_op">,</span> r_solar<span class="def_op">,</span>
-               r_sun_colors<span class="def_op">[</span><span class="def_const">3</span><span class="def_op">],</span> r_test_sprite_num<span class="def_op">,</span> r_test_sprite<span class="def_op">,</span> r_test_model<span class="def_op">,</span>
-               r_test_prerender<span class="def_op">,</span> r_test_text<span class="def_op">,</span> r_vsync<span class="def_op">,</span> r_windowed<span class="def_op">;</span></pre>
+               r_globe_atmosphere<span class="def_op">,</span> r_globe_shininess<span class="def_op">,</span> r_globe_smooth<span class="def_op">,</span>
+               r_gl_errors<span class="def_op">,</span> r_light<span class="def_op">,</span> r_moon_atten<span class="def_op">,</span> r_moon_colors<span class="def_op">[</span><span class="def_const">3</span><span class="def_op">],</span>
+               r_moon_height<span class="def_op">,</span> r_solar<span class="def_op">,</span> r_sun_colors<span class="def_op">[</span><span class="def_const">3</span><span class="def_op">],</span> r_test_sprite_num<span class="def_op">,</span>
+               r_test_sprite<span class="def_op">,</span> r_test_model<span class="def_op">,</span> r_test_prerender<span class="def_op">,</span> r_test_text<span class="def_op">,</span>
+               r_vsync<span class="def_op">,</span> r_windowed<span class="def_op">;</span></pre>
 <p class="comment"> r_variables.c</p>
 </div>
-<a name="r_globe_radius" href="javascript:toggle(122)">
+<a name="r_globe_colors" href="javascript:toggle(122)">
 <div class="entry" id="122">
-r_globe_radius <span class="file">(r_common.h)</span></div>
+r_globe_colors <span class="file">(r_common.h)</span></div>
 </a>
 <div class="entry_body" id="122_body" style="display:none">
+<pre><b class="keyword0">extern</b> c_var_t r_clear<span class="def_op">,</span> r_color_bits<span class="def_op">,</span> r_depth_bits<span class="def_op">,</span> r_gamma<span class="def_op">,</span> r_globe_colors<span class="def_op">[</span><span class="def_const">4</span><span class="def_op">],</span>
+               r_globe_atmosphere<span class="def_op">,</span> r_globe_shininess<span class="def_op">,</span> r_globe_smooth<span class="def_op">,</span>
+               r_gl_errors<span class="def_op">,</span> r_light<span class="def_op">,</span> r_moon_atten<span class="def_op">,</span> r_moon_colors<span class="def_op">[</span><span class="def_const">3</span><span class="def_op">],</span>
+               r_moon_height<span class="def_op">,</span> r_solar<span class="def_op">,</span> r_sun_colors<span class="def_op">[</span><span class="def_const">3</span><span class="def_op">],</span> r_test_sprite_num<span class="def_op">,</span>
+               r_test_sprite<span class="def_op">,</span> r_test_model<span class="def_op">,</span> r_test_prerender<span class="def_op">,</span> r_test_text<span class="def_op">,</span>
+               r_vsync<span class="def_op">,</span> r_windowed<span class="def_op">;</span></pre>
+<p class="comment"> r_variables.c</p>
+</div>
+<a name="r_globe_radius" href="javascript:toggle(123)">
+<div class="entry" id="123">
+r_globe_radius <span class="file">(r_common.h)</span></div>
+</a>
+<div class="entry_body" id="123_body" style="display:none">
 <pre><b class="keyword0">extern</b> <b class="keyword0">float</b> r_globe_radius<span class="def_op">;</span></pre>
 <p class="comment"> r_globe.c</p>
 </div>
-<a name="r_globe_shininess" href="javascript:toggle(123)">
-<div class="entry" id="123">
-r_globe_shininess <span class="file">(r_common.h)</span></div>
-</a>
-<div class="entry_body" id="123_body" style="display:none">
-<pre><b class="keyword0">extern</b> c_var_t r_clear<span class="def_op">,</span> r_color_bits<span class="def_op">,</span> r_depth_bits<span class="def_op">,</span> r_gamma<span class="def_op">,</span> r_globe_colors<span class="def_op">[</span><span class="def_const">4</span><span class="def_op">],</span>
-               r_globe_shininess<span class="def_op">,</span> r_globe_smooth<span class="def_op">,</span> r_gl_errors<span class="def_op">,</span> r_light<span class="def_op">,</span>
-               r_moon_atten<span class="def_op">,</span> r_moon_colors<span class="def_op">[</span><span class="def_const">3</span><span class="def_op">],</span> r_moon_height<span class="def_op">,</span> r_solar<span class="def_op">,</span>
-               r_sun_colors<span class="def_op">[</span><span class="def_const">3</span><span class="def_op">],</span> r_test_sprite_num<span class="def_op">,</span> r_test_sprite<span class="def_op">,</span> r_test_model<span class="def_op">,</span>
-               r_test_prerender<span class="def_op">,</span> r_test_text<span class="def_op">,</span> r_vsync<span class="def_op">,</span> r_windowed<span class="def_op">;</span></pre>
-<p class="comment"> r_variables.c</p>
-</div>
-<a name="r_globe_smooth" href="javascript:toggle(124)">
+<a name="r_globe_shininess" href="javascript:toggle(124)">
 <div class="entry" id="124">
-r_globe_smooth <span class="file">(r_common.h)</span></div>
+r_globe_shininess <span class="file">(r_common.h)</span></div>
 </a>
 <div class="entry_body" id="124_body" style="display:none">
 <pre><b class="keyword0">extern</b> c_var_t r_clear<span class="def_op">,</span> r_color_bits<span class="def_op">,</span> r_depth_bits<span class="def_op">,</span> r_gamma<span class="def_op">,</span> r_globe_colors<span class="def_op">[</span><span class="def_const">4</span><span class="def_op">],</span>
-               r_globe_shininess<span class="def_op">,</span> r_globe_smooth<span class="def_op">,</span> r_gl_errors<span class="def_op">,</span> r_light<span class="def_op">,</span>
-               r_moon_atten<span class="def_op">,</span> r_moon_colors<span class="def_op">[</span><span class="def_const">3</span><span class="def_op">],</span> r_moon_height<span class="def_op">,</span> r_solar<span class="def_op">,</span>
-               r_sun_colors<span class="def_op">[</span><span class="def_const">3</span><span class="def_op">],</span> r_test_sprite_num<span class="def_op">,</span> r_test_sprite<span class="def_op">,</span> r_test_model<span class="def_op">,</span>
-               r_test_prerender<span class="def_op">,</span> r_test_text<span class="def_op">,</span> r_vsync<span class="def_op">,</span> r_windowed<span class="def_op">;</span></pre>
+               r_globe_atmosphere<span class="def_op">,</span> r_globe_shininess<span class="def_op">,</span> r_globe_smooth<span class="def_op">,</span>
+               r_gl_errors<span class="def_op">,</span> r_light<span class="def_op">,</span> r_moon_atten<span class="def_op">,</span> r_moon_colors<span class="def_op">[</span><span class="def_const">3</span><span class="def_op">],</span>
+               r_moon_height<span class="def_op">,</span> r_solar<span class="def_op">,</span> r_sun_colors<span class="def_op">[</span><span class="def_const">3</span><span class="def_op">],</span> r_test_sprite_num<span class="def_op">,</span>
+               r_test_sprite<span class="def_op">,</span> r_test_model<span class="def_op">,</span> r_test_prerender<span class="def_op">,</span> r_test_text<span class="def_op">,</span>
+               r_vsync<span class="def_op">,</span> r_windowed<span class="def_op">;</span></pre>
 <p class="comment"> r_variables.c</p>
 </div>
-<a name="r_height" href="javascript:toggle(125)">
+<a name="r_globe_smooth" href="javascript:toggle(125)">
 <div class="entry" id="125">
-r_height <span class="file">(r_shared.h)</span></div>
+r_globe_smooth <span class="file">(r_common.h)</span></div>
 </a>
 <div class="entry_body" id="125_body" style="display:none">
+<pre><b class="keyword0">extern</b> c_var_t r_clear<span class="def_op">,</span> r_color_bits<span class="def_op">,</span> r_depth_bits<span class="def_op">,</span> r_gamma<span class="def_op">,</span> r_globe_colors<span class="def_op">[</span><span class="def_const">4</span><span class="def_op">],</span>
+               r_globe_atmosphere<span class="def_op">,</span> r_globe_shininess<span class="def_op">,</span> r_globe_smooth<span class="def_op">,</span>
+               r_gl_errors<span class="def_op">,</span> r_light<span class="def_op">,</span> r_moon_atten<span class="def_op">,</span> r_moon_colors<span class="def_op">[</span><span class="def_const">3</span><span class="def_op">],</span>
+               r_moon_height<span class="def_op">,</span> r_solar<span class="def_op">,</span> r_sun_colors<span class="def_op">[</span><span class="def_const">3</span><span class="def_op">],</span> r_test_sprite_num<span class="def_op">,</span>
+               r_test_sprite<span class="def_op">,</span> r_test_model<span class="def_op">,</span> r_test_prerender<span class="def_op">,</span> r_test_text<span class="def_op">,</span>
+               r_vsync<span class="def_op">,</span> r_windowed<span class="def_op">;</span></pre>
+<p class="comment"> r_variables.c</p>
+</div>
+<a name="r_height" href="javascript:toggle(126)">
+<div class="entry" id="126">
+r_height <span class="file">(r_shared.h)</span></div>
+</a>
+<div class="entry_body" id="126_body" style="display:none">
 <pre><b class="keyword0">extern</b> c_var_t r_height<span class="def_op">,</span> r_pixel_scale<span class="def_op">,</span> r_width<span class="def_op">;</span></pre>
 <p class="comment"> r_variables.c</p>
 </div>
-<a name="r_height_2d" href="javascript:toggle(126)">
-<div class="entry" id="126">
+<a name="r_height_2d" href="javascript:toggle(127)">
+<div class="entry" id="127">
 r_height_2d <span class="file">(r_shared.h)</span></div>
 </a>
-<div class="entry_body" id="126_body" style="display:none">
+<div class="entry_body" id="127_body" style="display:none">
 <pre><b class="keyword0">extern</b> <b class="keyword0">int</b> r_width_2d<span class="def_op">,</span> r_height_2d<span class="def_op">;</span></pre>
 <p class="comment"> r_render.c</p>
 </div>
-<a name="r_light" href="javascript:toggle(127)">
-<div class="entry" id="127">
+<a name="r_light" href="javascript:toggle(128)">
+<div class="entry" id="128">
 r_light <span class="file">(r_common.h)</span></div>
 </a>
-<div class="entry_body" id="127_body" style="display:none">
+<div class="entry_body" id="128_body" style="display:none">
 <pre><b class="keyword0">extern</b> c_var_t r_clear<span class="def_op">,</span> r_color_bits<span class="def_op">,</span> r_depth_bits<span class="def_op">,</span> r_gamma<span class="def_op">,</span> r_globe_colors<span class="def_op">[</span><span class="def_const">4</span><span class="def_op">],</span>
-               r_globe_shininess<span class="def_op">,</span> r_globe_smooth<span class="def_op">,</span> r_gl_errors<span class="def_op">,</span> r_light<span class="def_op">,</span>
-               r_moon_atten<span class="def_op">,</span> r_moon_colors<span class="def_op">[</span><span class="def_const">3</span><span class="def_op">],</span> r_moon_height<span class="def_op">,</span> r_solar<span class="def_op">,</span>
-               r_sun_colors<span class="def_op">[</span><span class="def_const">3</span><span class="def_op">],</span> r_test_sprite_num<span class="def_op">,</span> r_test_sprite<span class="def_op">,</span> r_test_model<span class="def_op">,</span>
-               r_test_prerender<span class="def_op">,</span> r_test_text<span class="def_op">,</span> r_vsync<span class="def_op">,</span> r_windowed<span class="def_op">;</span></pre>
+               r_globe_atmosphere<span class="def_op">,</span> r_globe_shininess<span class="def_op">,</span> r_globe_smooth<span class="def_op">,</span>
+               r_gl_errors<span class="def_op">,</span> r_light<span class="def_op">,</span> r_moon_atten<span class="def_op">,</span> r_moon_colors<span class="def_op">[</span><span class="def_const">3</span><span class="def_op">],</span>
+               r_moon_height<span class="def_op">,</span> r_solar<span class="def_op">,</span> r_sun_colors<span class="def_op">[</span><span class="def_const">3</span><span class="def_op">],</span> r_test_sprite_num<span class="def_op">,</span>
+               r_test_sprite<span class="def_op">,</span> r_test_model<span class="def_op">,</span> r_test_prerender<span class="def_op">,</span> r_test_text<span class="def_op">,</span>
+               r_vsync<span class="def_op">,</span> r_windowed<span class="def_op">;</span></pre>
 <p class="comment"> r_variables.c</p>
 </div>
-<a name="r_mode" href="javascript:toggle(128)">
-<div class="entry" id="128">
+<a name="r_mode" href="javascript:toggle(129)">
+<div class="entry" id="129">
 r_mode <span class="file">(r_common.h)</span></div>
 </a>
-<div class="entry_body" id="128_body" style="display:none">
+<div class="entry_body" id="129_body" style="display:none">
 <pre><b class="keyword0">extern</b> <a href="#r_mode_t">r_mode_t</a> r_mode<span class="def_op">;</span></pre>
 <p class="comment"> r_render.c</p>
 </div>
-<a name="r_moon_atten" href="javascript:toggle(129)">
-<div class="entry" id="129">
-r_moon_atten <span class="file">(r_common.h)</span></div>
-</a>
-<div class="entry_body" id="129_body" style="display:none">
-<pre><b class="keyword0">extern</b> c_var_t r_clear<span class="def_op">,</span> r_color_bits<span class="def_op">,</span> r_depth_bits<span class="def_op">,</span> r_gamma<span class="def_op">,</span> r_globe_colors<span class="def_op">[</span><span class="def_const">4</span><span class="def_op">],</span>
-               r_globe_shininess<span class="def_op">,</span> r_globe_smooth<span class="def_op">,</span> r_gl_errors<span class="def_op">,</span> r_light<span class="def_op">,</span>
-               r_moon_atten<span class="def_op">,</span> r_moon_colors<span class="def_op">[</span><span class="def_const">3</span><span class="def_op">],</span> r_moon_height<span class="def_op">,</span> r_solar<span class="def_op">,</span>
-               r_sun_colors<span class="def_op">[</span><span class="def_const">3</span><span class="def_op">],</span> r_test_sprite_num<span class="def_op">,</span> r_test_sprite<span class="def_op">,</span> r_test_model<span class="def_op">,</span>
-               r_test_prerender<span class="def_op">,</span> r_test_text<span class="def_op">,</span> r_vsync<span class="def_op">,</span> r_windowed<span class="def_op">;</span></pre>
-<p class="comment"> r_variables.c</p>
-</div>
-<a name="r_moon_colors" href="javascript:toggle(130)">
+<a name="r_moon_atten" href="javascript:toggle(130)">
 <div class="entry" id="130">
-r_moon_colors <span class="file">(r_common.h)</span></div>
+r_moon_atten <span class="file">(r_common.h)</span></div>
 </a>
 <div class="entry_body" id="130_body" style="display:none">
 <pre><b class="keyword0">extern</b> c_var_t r_clear<span class="def_op">,</span> r_color_bits<span class="def_op">,</span> r_depth_bits<span class="def_op">,</span> r_gamma<span class="def_op">,</span> r_globe_colors<span class="def_op">[</span><span class="def_const">4</span><span class="def_op">],</span>
-               r_globe_shininess<span class="def_op">,</span> r_globe_smooth<span class="def_op">,</span> r_gl_errors<span class="def_op">,</span> r_light<span class="def_op">,</span>
-               r_moon_atten<span class="def_op">,</span> r_moon_colors<span class="def_op">[</span><span class="def_const">3</span><span class="def_op">],</span> r_moon_height<span class="def_op">,</span> r_solar<span class="def_op">,</span>
-               r_sun_colors<span class="def_op">[</span><span class="def_const">3</span><span class="def_op">],</span> r_test_sprite_num<span class="def_op">,</span> r_test_sprite<span class="def_op">,</span> r_test_model<span class="def_op">,</span>
-               r_test_prerender<span class="def_op">,</span> r_test_text<span class="def_op">,</span> r_vsync<span class="def_op">,</span> r_windowed<span class="def_op">;</span></pre>
+               r_globe_atmosphere<span class="def_op">,</span> r_globe_shininess<span class="def_op">,</span> r_globe_smooth<span class="def_op">,</span>
+               r_gl_errors<span class="def_op">,</span> r_light<span class="def_op">,</span> r_moon_atten<span class="def_op">,</span> r_moon_colors<span class="def_op">[</span><span class="def_const">3</span><span class="def_op">],</span>
+               r_moon_height<span class="def_op">,</span> r_solar<span class="def_op">,</span> r_sun_colors<span class="def_op">[</span><span class="def_const">3</span><span class="def_op">],</span> r_test_sprite_num<span class="def_op">,</span>
+               r_test_sprite<span class="def_op">,</span> r_test_model<span class="def_op">,</span> r_test_prerender<span class="def_op">,</span> r_test_text<span class="def_op">,</span>
+               r_vsync<span class="def_op">,</span> r_windowed<span class="def_op">;</span></pre>
 <p class="comment"> r_variables.c</p>
 </div>
-<a name="r_moon_height" href="javascript:toggle(131)">
+<a name="r_moon_colors" href="javascript:toggle(131)">
 <div class="entry" id="131">
-r_moon_height <span class="file">(r_common.h)</span></div>
+r_moon_colors <span class="file">(r_common.h)</span></div>
 </a>
 <div class="entry_body" id="131_body" style="display:none">
 <pre><b class="keyword0">extern</b> c_var_t r_clear<span class="def_op">,</span> r_color_bits<span class="def_op">,</span> r_depth_bits<span class="def_op">,</span> r_gamma<span class="def_op">,</span> r_globe_colors<span class="def_op">[</span><span class="def_const">4</span><span class="def_op">],</span>
-               r_globe_shininess<span class="def_op">,</span> r_globe_smooth<span class="def_op">,</span> r_gl_errors<span class="def_op">,</span> r_light<span class="def_op">,</span>
-               r_moon_atten<span class="def_op">,</span> r_moon_colors<span class="def_op">[</span><span class="def_const">3</span><span class="def_op">],</span> r_moon_height<span class="def_op">,</span> r_solar<span class="def_op">,</span>
-               r_sun_colors<span class="def_op">[</span><span class="def_const">3</span><span class="def_op">],</span> r_test_sprite_num<span class="def_op">,</span> r_test_sprite<span class="def_op">,</span> r_test_model<span class="def_op">,</span>
-               r_test_prerender<span class="def_op">,</span> r_test_text<span class="def_op">,</span> r_vsync<span class="def_op">,</span> r_windowed<span class="def_op">;</span></pre>
+               r_globe_atmosphere<span class="def_op">,</span> r_globe_shininess<span class="def_op">,</span> r_globe_smooth<span class="def_op">,</span>
+               r_gl_errors<span class="def_op">,</span> r_light<span class="def_op">,</span> r_moon_atten<span class="def_op">,</span> r_moon_colors<span class="def_op">[</span><span class="def_const">3</span><span class="def_op">],</span>
+               r_moon_height<span class="def_op">,</span> r_solar<span class="def_op">,</span> r_sun_colors<span class="def_op">[</span><span class="def_const">3</span><span class="def_op">],</span> r_test_sprite_num<span class="def_op">,</span>
+               r_test_sprite<span class="def_op">,</span> r_test_model<span class="def_op">,</span> r_test_prerender<span class="def_op">,</span> r_test_text<span class="def_op">,</span>
+               r_vsync<span class="def_op">,</span> r_windowed<span class="def_op">;</span></pre>
 <p class="comment"> r_variables.c</p>
 </div>
 <a name="r_pixel_scale" href="javascript:toggle(132)">

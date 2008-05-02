@@ -424,10 +424,10 @@ void R_model_render(r_model_t *model)
         if (!model || !model->data)
                 return;
         glPushMatrix();
-        if (model->scale != 1.f)
-                glScalef(model->scale, model->scale, model->scale);
         if (model->origin.x || model->origin.y || model->origin.z)
                 glTranslatef(model->origin.x, model->origin.y, model->origin.z);
+        if (model->scale != 1.f)
+                glScalef(model->scale, model->scale, model->scale);
         if (model->angles.x)
                 glRotatef(C_rad_to_deg(model->angles.x), 1.0, 0.0, 0.0);
         if (model->angles.y)

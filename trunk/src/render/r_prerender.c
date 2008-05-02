@@ -17,7 +17,7 @@
 #include "r_common.h"
 
 static r_vertex2_t verts[7];
-static c_vec2_t tile, sheet, pixel;
+static c_vec2_t tile, sheet;
 static unsigned short indices[] = { 0, 1, 2,  0, 2, 3,  0, 3, 4,
                                     2, 5, 6,  2, 6, 3 };
 
@@ -75,58 +75,6 @@ static r_texture_t *save_buffer(int w, int h)
 }
 
 /******************************************************************************\
- Sets up the vertex uv coordinates for rendering a tile.
-\******************************************************************************/
-static void set_tile_verts_uv(int iteration, int tx, int ty)
-{
-        c_vec2_t size, shift;
-        int i;
-
-        switch (iteration) {
-        default:
-                C_error("Invalid iteration");
-
-        case 0: /* Flip over top vertex */
-                verts[0].uv = C_vec2(0.5f, 0.f);
-                verts[1].uv = C_vec2(1.f, 0.f);
-                verts[2].uv = C_vec2(1.f, R_ISO_PROP);
-                verts[3].uv = C_vec2(0.f, R_ISO_PROP);
-                verts[4].uv = C_vec2(0.f, 0.f);
-                verts[5].uv = C_vec2(1.f, 1.f);
-                verts[6].uv = C_vec2(0.f, 1.f);
-                break;
-
-        case 1: /* Flip over bottom-right vertex */
-                verts[0].uv = C_vec2(0.f, R_ISO_PROP);
-                verts[1].uv = C_vec2(0.f, 0.f);
-                verts[2].uv = C_vec2(0.5f, 0.f);
-                verts[3].uv = C_vec2(1.f, R_ISO_PROP);
-                verts[4].uv = C_vec2(0.25f, 1.f);
-                verts[5].uv = C_vec2(0.25f, 0.f);
-                verts[6].uv = C_vec2(1.f, R_ISO_PROP - 0.25f);
-                break;
-
-        case 2: /* Flip over bottom-left vertex */
-                verts[0].uv = C_vec2(1.f, R_ISO_PROP);
-                verts[1].uv = C_vec2(0.75f, 0.f);
-                verts[2].uv = C_vec2(0.f, R_ISO_PROP);
-                verts[3].uv = C_vec2(0.5f, 0.f);
-                verts[4].uv = C_vec2(1.f, 0.f);
-                verts[5].uv = C_vec2(0.f, R_ISO_PROP - 0.25f);
-                verts[6].uv = C_vec2(0.25f, 0.f);
-                break;
-        }
-
-        /* Shift and scale the uv coordinates to cover the tile */
-        size = C_vec2_div(sheet, tile);
-        shift = C_vec2((float)tx / R_TILE_SHEET_W, (float)ty / R_TILE_SHEET_H);
-        for (i = 0; i < 7; i++) {
-                verts[i].uv = C_vec2_div(verts[i].uv, size);
-                verts[i].uv = C_vec2_add(verts[i].uv, shift);
-        }
-}
-
-/******************************************************************************\
  Sets up the vertex uv coordinates for rendering the blending mask.
 \******************************************************************************/
 static void set_mask_verts_uv(int iteration)
@@ -134,6 +82,17 @@ static void set_mask_verts_uv(int iteration)
         switch (iteration) {
         default:
                 C_error("Invalid iteration");
+
+        case -1:
+                /* Original rotation, vertical flip */
+                verts[0].uv = C_vec2(0.5f, R_ISO_PROP);
+                verts[1].uv = C_vec2(0.f, R_ISO_PROP);
+                verts[2].uv = C_vec2(0.f, 0.f);
+                verts[3].uv = C_vec2(1.f, 0.f);
+                verts[4].uv = C_vec2(1.f, R_ISO_PROP);
+                verts[5].uv = C_vec2(0.f, 0.f);
+                verts[6].uv = C_vec2(1.f, 0.f);
+                break;
 
         case 0: /* Original rotation */
                 verts[0].uv = C_vec2(0.5f, 0.f);
@@ -146,35 +105,83 @@ static void set_mask_verts_uv(int iteration)
                 break;
 
         case 1: /* 120 degree rotation */
-                verts[0].uv = C_vec2(1.f - pixel.x, R_ISO_PROP);
-                verts[1].uv = C_vec2(1.f - pixel.x, pixel.y);
-                verts[2].uv = C_vec2(0.5f, pixel.y);
-                verts[3].uv = C_vec2(pixel.x, R_ISO_PROP);
-                verts[4].uv = C_vec2(0.5f, 1.f - pixel.y);
-                verts[5].uv = C_vec2(0.25f, pixel.y);
-                verts[6].uv = C_vec2(pixel.x, R_ISO_PROP - 0.25f);
+                verts[0].uv = C_vec2(1.f, R_ISO_PROP);
+                verts[1].uv = C_vec2(1.f, 0.f);
+                verts[2].uv = C_vec2(0.5f, 0.f);
+                verts[3].uv = C_vec2(0.f, R_ISO_PROP);
+                verts[4].uv = C_vec2(0.5f, 1.f);
+                verts[5].uv = C_vec2(0.25f, 0.f);
+                verts[6].uv = C_vec2(0.f, R_ISO_PROP - 0.25f);
                 break;
 
         case 2: /* 60 degree rotation */
-                verts[0].uv = C_vec2(pixel.x, R_ISO_PROP);
-                verts[1].uv = C_vec2(0.5f, 1.f - pixel.y);
-                verts[2].uv = C_vec2(1.f - pixel.x, R_ISO_PROP);
-                verts[3].uv = C_vec2(0.5f, pixel.y);
-                verts[4].uv = C_vec2(pixel.x, pixel.y);
-                verts[5].uv = C_vec2(1.f - pixel.x, R_ISO_PROP - 0.25f);
-                verts[6].uv = C_vec2(0.75f, pixel.y);
+                verts[0].uv = C_vec2(0.f, R_ISO_PROP);
+                verts[1].uv = C_vec2(0.5f, 1.f);
+                verts[2].uv = C_vec2(1.f, R_ISO_PROP);
+                verts[3].uv = C_vec2(0.5f, 0.f);
+                verts[4].uv = C_vec2(0.f, 0.f);
+                verts[5].uv = C_vec2(1.f, R_ISO_PROP - 0.25f);
+                verts[6].uv = C_vec2(0.75f, 0.f);
                 break;
+        }
+}
+
+/******************************************************************************\
+ Sets up the vertex uv coordinates for rendering a tile. The indices here
+ have to match with those in set_mask_vertices(), don't change one without
+ the other or the tiles will have seams.
+\******************************************************************************/
+static void set_tile_verts_uv(int iteration, int tx, int ty)
+{
+        c_vec2_t size, shift;
+        int i;
+
+        switch (iteration) {
+        default:
+                C_error("Invalid iteration");
 
         case -1:
-                /* Original rotation, vertical flip */
-                verts[0].uv = C_vec2(0.5f, R_ISO_PROP);
-                verts[1].uv = C_vec2(0.f, R_ISO_PROP);
-                verts[2].uv = C_vec2(0.f, 0.f);
-                verts[3].uv = C_vec2(1.f, 0.f);
-                verts[4].uv = C_vec2(1.f, R_ISO_PROP);
-                verts[5].uv = C_vec2(0.f, 0.f);
-                verts[6].uv = C_vec2(1.f, 0.f);
+                /* Original orientation */
+                set_mask_verts_uv(0);
                 break;
+
+        case 0: /* Flip over top vertex */
+                verts[0].uv = C_vec2(0.5f, 0.f);
+                verts[1].uv = C_vec2(1.f, 0.f);
+                verts[2].uv = C_vec2(1.f, R_ISO_PROP);
+                verts[3].uv = C_vec2(0.f, R_ISO_PROP);
+                verts[4].uv = C_vec2(0.f, 0.f);
+                verts[5].uv = C_vec2(1.f, 1.f);
+                verts[6].uv = C_vec2(0.f, 1.f);
+                break;
+
+        case 1: /* Flip over bottom-left vertex */
+                verts[0].uv = C_vec2(1.f, R_ISO_PROP);
+                verts[1].uv = C_vec2(0.75f, 0.f);
+                verts[2].uv = C_vec2(0.f, R_ISO_PROP);
+                verts[3].uv = C_vec2(0.5f, 0.f);
+                verts[4].uv = C_vec2(1.f, 0.f);
+                verts[5].uv = C_vec2(0.f, R_ISO_PROP - 0.25f);
+                verts[6].uv = C_vec2(0.25f, 0.f);
+                break;
+
+        case 2: /* Flip over bottom-right vertex */
+                verts[0].uv = C_vec2(0.f, R_ISO_PROP);
+                verts[1].uv = C_vec2(0.f, 0.f);
+                verts[2].uv = C_vec2(0.5f, 0.f);
+                verts[3].uv = C_vec2(1.f, R_ISO_PROP);
+                verts[4].uv = C_vec2(0.25f, 1.f);
+                verts[5].uv = C_vec2(0.25f, 0.f);
+                verts[6].uv = C_vec2(1.f, R_ISO_PROP - 0.25f);
+                break;
+        }
+
+        /* Shift and scale the uv coordinates to cover the tile */
+        size = C_vec2_div(sheet, tile);
+        shift = C_vec2((float)tx / R_TILE_SHEET_W, (float)ty / R_TILE_SHEET_H);
+        for (i = 0; i < 7; i++) {
+                verts[i].uv = C_vec2_div(verts[i].uv, size);
+                verts[i].uv = C_vec2_add(verts[i].uv, shift);
         }
 }
 
@@ -295,7 +302,7 @@ static void prerender_transitions(void)
                 for (x = 0; x < 3; x++) {
                         glLoadIdentity();
                         glTranslatef(x * tile.x, y * tile.y, 0.f);
-                        set_tile_verts_uv(x, tiles_b[y - 1], 0);
+                        set_tile_verts_uv(-1, tiles_b[y - 1], 0);
                         prerender_tile();
                 }
         glPopMatrix();
@@ -314,7 +321,7 @@ static void prerender_transitions(void)
                 for (x = 0; x < 3; x++) {
                         glLoadIdentity();
                         glTranslatef(x * tile.x, y * tile.y, 0.f);
-                        set_tile_verts_uv(x, tiles_a[y - 1], 0);
+                        set_tile_verts_uv(-1, tiles_a[y - 1], 0);
                         prerender_tile();
                 }
         glPopMatrix();
@@ -371,11 +378,6 @@ void R_prerender(void)
         verts[4].co = C_vec3(tile.x, 0.f, 0.f);
         verts[5].co = C_vec3(0.f, tile.y, 0.f);
         verts[6].co = C_vec3(tile.x, tile.y, 0.f);
-
-        /* Get the uv size of a vertical and horizontal pixel before we start
-           messing with the terrain texture */
-        pixel.x = (float)R_TILE_SHEET_W / sheet.x;
-        pixel.y = (float)R_TILE_SHEET_H / sheet.y;
 
         prerender_tiles();
         prerender_transitions();
