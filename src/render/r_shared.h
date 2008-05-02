@@ -34,13 +34,6 @@
    worth of tiles */
 #define R_TILES_MAX 20480
 
-/* Tile sheet grid parameters */
-#define R_TILE_SHEET_W 5
-#define R_TILE_SHEET_H 5
-
-/* Proportion of the tile height that the isoceles triangle face takes up */
-#define R_ISO_PROP 0.859375f
-
 /* Opaque texture object */
 typedef struct r_texture r_texture_t;
 

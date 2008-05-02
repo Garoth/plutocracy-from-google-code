@@ -377,6 +377,7 @@ void R_texture_select(r_texture_t *texture)
 
         alpha = FALSE;
         if (texture) {
+                glEnable(GL_TEXTURE_2D);
                 glBindTexture(GL_TEXTURE_2D, texture->gl_name);
                 alpha = texture->alpha;
                 if (r_mode == R_MODE_3D) {
@@ -390,8 +391,10 @@ void R_texture_select(r_texture_t *texture)
                         glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T,
                                         GL_CLAMP);
                 }
-        } else
+        } else {
+                glDisable(GL_TEXTURE_2D);
                 glBindTexture(GL_TEXTURE_2D, 0);
+        }
         if (alpha) {
                 glEnable(GL_BLEND);
                 glEnable(GL_ALPHA_TEST);

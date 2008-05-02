@@ -12,7 +12,14 @@
 
 #include "r_common.h"
 
-#define ITERATIONS_MAX 5
+/* Maximum number of subdivision iterations */
+#define SUBDIV4_MAX 5
+
+/* Atmospheric halo parameters */
+#define FOG_DISTANCE 12.f
+#define HALO_SEGMENTS 32
+#define HALO_LOW_SCALE 0.995f
+#define HALO_HIGH_SCALE 1.1f
 
 /* Globe vertex type */
 #pragma pack(push, 4)
@@ -24,14 +31,24 @@ typedef struct globe_vertex {
 } globe_vertex_t;
 #pragma pack(pop)
 
+/* Atmospheric halo vertex type */
+#pragma pack(push, 4)
+typedef struct halo_vertex {
+        c_color_t color;
+        c_vec3_t co;
+} halo_vertex_t;
+#pragma pack(pop)
+
 float r_globe_radius;
 int r_tiles;
 
 static globe_vertex_t vertices[R_TILES_MAX * 3];
-static c_color_t globe_colors[4];
+static halo_vertex_t halo_verts[2 + HALO_SEGMENTS * 2];
+static c_color_t globe_colors[4], fog_color;
 static c_vec3_t normals[R_TILES_MAX];
 static int flip_limit;
-static unsigned short indices[R_TILES_MAX * 3];
+static unsigned short indices[R_TILES_MAX * 3],
+                      halo_indices[2 + HALO_SEGMENTS * 2];
 
 /******************************************************************************\
  Space out the vertices at even distance from the sphere.
@@ -216,6 +233,46 @@ static void generate_icosahedron(void)
 }
 
 /******************************************************************************\
+ Update function for atmosphere color.
+\******************************************************************************/
+static int globe_atmosphere_update(c_var_t *var, c_var_value_t value)
+{
+        int i;
+
+        fog_color = C_color_string(value.s);
+        for (i = 0; i <= HALO_SEGMENTS; i++)
+                halo_verts[2 * i].color = fog_color;
+        return TRUE;
+}
+
+/******************************************************************************\
+ Generates the halo vertices.
+\******************************************************************************/
+static void generate_halo(void)
+{
+        c_vec3_t unit;
+        halo_vertex_t *vert;
+        float angle;
+        int i;
+
+        for (i = 0; i <= HALO_SEGMENTS; i++) {
+                angle = 2.f * M_PI * i / HALO_SEGMENTS;
+                unit = C_vec3(cosf(angle), sinf(angle), 0.f);
+
+                /* Bottom vertex */
+                halo_indices[2 * i] = 2 * i;
+                vert = halo_verts + 2 * i;
+                vert->co = C_vec3_scalef(unit, HALO_LOW_SCALE);
+
+                /* Top vertex */
+                halo_indices[2 * i + 1] = 2 * i + 1;
+                vert++;
+                vert->color = C_color(0.f, 0.f, 0.f, 0.f);
+                vert->co = C_vec3_scalef(unit, HALO_HIGH_SCALE);
+        }
+}
+
+/******************************************************************************\
  Generates the globe by subdividing an icosahedron and spacing the vertices
  out at the sphere's surface.
 \******************************************************************************/
@@ -225,8 +282,8 @@ void R_generate_globe(int subdiv4)
 
         if (subdiv4 < 0)
                 subdiv4 = 0;
-        else if (subdiv4 > ITERATIONS_MAX) {
-                subdiv4 = ITERATIONS_MAX;
+        else if (subdiv4 > SUBDIV4_MAX) {
+                subdiv4 = SUBDIV4_MAX;
                 C_warning("Too many subdivisions requested");
         }
         C_debug("Generating globe with %d subdivisions", subdiv4);
@@ -245,8 +302,49 @@ void R_generate_globe(int subdiv4)
         for (i = 0; i < 4; i++)
                 C_var_update_data(r_globe_colors + i, C_color_update,
                                   globe_colors + i);
+        C_var_update(&r_globe_atmosphere, globe_atmosphere_update);
+        generate_halo();
 
         r_cam_dist = r_globe_radius + R_ZOOM_MIN;
+}
+
+/******************************************************************************\
+ Renders the halo around the globe.
+\******************************************************************************/
+static void render_halo(void)
+{
+        float scale, dist, z;
+
+        /* Find out how far away and how big the halo is */
+        z = r_cam_dist + r_cam_zoom;
+        dist = r_globe_radius * r_globe_radius / z;
+        scale = sqrtf(r_globe_radius * r_globe_radius - dist * dist);
+
+        /* Render the halo */
+        glDisable(GL_DEPTH_TEST);
+        glDisable(GL_TEXTURE_2D);
+        glDisable(GL_LIGHTING);
+        glEnable(GL_BLEND);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE);
+        glPushMatrix();
+        glLoadIdentity();
+        glTranslatef(0, 0, -r_cam_dist - r_cam_zoom + dist);
+        glScalef(scale, scale, scale);
+        glEnableClientState(GL_VERTEX_ARRAY);
+        glEnableClientState(GL_COLOR_ARRAY);
+        glVertexPointer(3, GL_FLOAT, sizeof (*halo_verts), &halo_verts[0].co);
+        glColorPointer(4, GL_FLOAT, sizeof (*halo_verts), &halo_verts[0].color);
+        glDrawElements(GL_TRIANGLE_STRIP, 2 + 2 * HALO_SEGMENTS,
+                       GL_UNSIGNED_SHORT, halo_indices);
+        glDisableClientState(GL_COLOR_ARRAY);
+        glDisableClientState(GL_VERTEX_ARRAY);
+        glPopMatrix();
+        glEnable(GL_DEPTH_TEST);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+        glColor4f(1.f, 1.f, 1.f, 1.f);
+
+        R_check_errors();
+        C_count_add(&r_count_faces, 2 * HALO_SEGMENTS);
 }
 
 /******************************************************************************\
@@ -255,7 +353,6 @@ void R_generate_globe(int subdiv4)
 void R_render_globe(void)
 {
         R_set_mode(R_MODE_3D);
-        R_enable_light();
 
         /* Set globe material properties */
         glMateriali(GL_FRONT, GL_SHININESS, r_globe_shininess.value.n);
@@ -264,8 +361,23 @@ void R_render_globe(void)
         glMaterialfv(GL_FRONT, GL_SPECULAR, (float *)(globe_colors + 2));
         glMaterialfv(GL_FRONT, GL_EMISSION, (float *)(globe_colors + 3));
 
+        /* Use fog to simulate atmosphere */
+        if (fog_color.a > 0.f) {
+                float fog_start;
+
+                fog_start = r_cam_zoom / 2 + R_ZOOM_MIN +
+                            (1.f - fog_color.a) * r_globe_radius / 2;
+                render_halo();
+                glEnable(GL_FOG);
+                glFogfv(GL_FOG_COLOR, C_ARRAYF(fog_color));
+                glFogf(GL_FOG_MODE, GL_LINEAR);
+                glFogf(GL_FOG_START, fog_start);
+                glFogf(GL_FOG_END, fog_start + FOG_DISTANCE);
+        }
+
         /* Setup arrays and render the globe mesh. These arrays are not
            interleaved because we will be doing multitexturing in the future. */
+        R_enable_light();
         R_texture_select(r_terrain_tex);
         glEnableClientState(GL_VERTEX_ARRAY);
         glEnableClientState(GL_NORMAL_ARRAY);
@@ -278,6 +390,7 @@ void R_render_globe(void)
         glDisableClientState(GL_VERTEX_ARRAY);
         glDisableClientState(GL_NORMAL_ARRAY);
 
+        glDisable(GL_FOG);
         R_disable_light();
         R_check_errors();
         C_count_add(&r_count_faces, r_tiles);
@@ -528,8 +641,7 @@ void R_configure_globe(r_tile_t *tiles)
                 terrain = get_tile_terrain(i, tiles);
                 ty = terrain / R_TILE_SHEET_W;
                 tx = terrain - ty * R_TILE_SHEET_W;
-                bottom = (ty + 1) * tile.y -
-                         (1.f - R_ISO_PROP) / R_TILE_SHEET_H;
+                bottom = (ty + R_ISO_PROP) * tile.y;
                 vertices[3 * i].uv = C_vec2((tx + 0.5f) * tile.x, ty * tile.y);
                 flip = i < flip_limit;
                 vertices[3 * i + 1].uv = C_vec2((tx + flip) * tile.x, bottom);

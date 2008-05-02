@@ -490,8 +490,8 @@ void R_start_frame(void)
         glClear(clear_flags);
 
         update_camera();
-        R_render_globe();
         R_render_solar();
+        R_render_globe();
 }
 
 /******************************************************************************\

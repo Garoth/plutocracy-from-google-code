@@ -21,7 +21,7 @@ c_var_t r_test_model, r_test_prerender, r_test_sprite, r_test_sprite_num,
         r_test_text;
 
 /* Effects parameters */
-c_var_t r_globe_smooth;
+c_var_t r_globe_atmosphere, r_globe_smooth;
 
 /* Lighting parameters */
 c_var_t r_globe_colors[4], r_globe_shininess, r_light, r_moon_colors[3],
@@ -70,6 +70,8 @@ void R_register_variables(void)
         /* Visual effects parameters */
         C_register_float(&r_globe_smooth, "r_globe_smooth", 1.f,
                          "amount to smooth globe normals: 0.0-1.0");
+        C_register_string(&r_globe_atmosphere, "r_globe_atmosphere",
+                          "#d06080a0", "color of the globe atmosphere");
 
         /* Lighting parameters: ambient, diffuse, specular, emissive */
         C_register_integer(&r_light, "r_light", TRUE,
