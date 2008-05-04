@@ -12,8 +12,9 @@
 
 #include "r_common.h"
 
-/* Height limit of the clipping stack */
+/* Stack limits */
 #define CLIP_STACK 32
+#define MODE_STACK 32
 
 /* Keep track of how many faces we render each frame */
 c_count_t r_count_faces;
@@ -21,7 +22,7 @@ c_count_t r_count_faces;
 /* Current OpenGL settings */
 r_mode_t r_mode;
 c_color_t clear_color;
-int r_width_2d, r_height_2d;
+int r_width_2d, r_height_2d, r_mode_hold;
 
 /* Supported extensions */
 int r_extensions[R_EXTENSIONS];
@@ -37,6 +38,10 @@ static GLfloat cam_rotation[16];
 /* Clipping stack */
 static int clip_stack;
 static float clip_values[CLIP_STACK * 4];
+
+/* Mode stack */
+static int mode_stack;
+static r_mode_t mode_values[MODE_STACK];
 
 /******************************************************************************\
  Updates when [r_pixel_scale] changes.
@@ -158,6 +163,8 @@ static void set_gl_state(void)
 
         /* Not configured to a render mode intially */
         r_mode = R_MODE_NONE;
+        mode_stack = 0;
+        mode_values[0] = R_MODE_NONE;
 
         /* Initialize camera to identity */
         memset(cam_rotation, 0, sizeof (cam_rotation));
@@ -252,7 +259,7 @@ static void update_camera(void)
 {
         c_vec3_t x_axis, y_axis;
 
-        R_set_mode(R_MODE_3D);
+        R_push_mode(R_MODE_3D);
         glMatrixMode(GL_MODELVIEW);
 
         /* Apply the rotation differences from last frame to the rotation
@@ -270,6 +277,8 @@ static void update_camera(void)
         glTranslatef(0, 0, -r_cam_dist - r_cam_zoom);
         glMultMatrixf(cam_rotation);
         glGetFloatv(GL_MODELVIEW_MATRIX, r_cam_matrix);
+
+        R_pop_mode();
 }
 
 /******************************************************************************\
@@ -293,47 +302,6 @@ void R_zoom_cam_by(float f)
 }
 
 /******************************************************************************\
- Sets up OpenGL to render 3D polygons in world space. If mode is set to
- R_MODE_HOLD, the mode will not be changeable until set to R_MODE_NONE.
-\******************************************************************************/
-void R_set_mode(r_mode_t mode)
-{
-        if (mode == r_mode || (mode && r_mode == R_MODE_HOLD))
-                return;
-        glMatrixMode(GL_PROJECTION);
-        glLoadIdentity();
-
-        /* 2D mode sets up an orthogonal projection to render sprites */
-        if (mode == R_MODE_2D) {
-                glOrtho(0.f, r_width_2d, r_height_2d, 0.f, 0.f, 1.f);
-                glMatrixMode(GL_MODELVIEW);
-                glLoadIdentity();
-        } else {
-                glDisable(GL_CLIP_PLANE0);
-                glDisable(GL_CLIP_PLANE1);
-                glDisable(GL_CLIP_PLANE2);
-                glDisable(GL_CLIP_PLANE3);
-        }
-
-        /* 3D mode sets up perspective projection and camera view for models */
-        if (mode == R_MODE_3D) {
-                gluPerspective(90.0, (float)r_width.value.n / r_height.value.n,
-                               1.f, 512.f);
-                glGetFloatv(GL_PROJECTION_MATRIX, r_proj3_matrix);
-                glEnable(GL_CULL_FACE);
-                glEnable(GL_DEPTH_TEST);
-                glMatrixMode(GL_MODELVIEW);
-                glLoadMatrixf(r_cam_matrix);
-        } else {
-                glDisable(GL_CULL_FACE);
-                glDisable(GL_DEPTH_TEST);
-        }
-
-        R_check_errors();
-        r_mode = mode;
-}
-
-/******************************************************************************\
  Sets the OpenGL clipping planes to the strictest clipping in each direction.
  This only works in 2D mode. OpenGL takes plane equations as arguments. Points
  that are visible satisfy the following inequality:
@@ -345,14 +313,15 @@ static void set_clipping(void)
         float left, top, right, bottom;
         int i;
 
-        R_set_mode(R_MODE_2D);
+        if (r_mode != R_MODE_2D)
+                return;
 
         /* Find the most restrictive clipping values in each direction */
         left = clip_values[0];
         top = clip_values[1];
         right = clip_values[2];
         bottom = clip_values[3];
-        for (i = 1; i < clip_stack; i++) {
+        for (i = 1; i <= clip_stack; i++) {
                 if (clip_values[4 * i] > left)
                         left = clip_values[4 * i];
                 if (clip_values[4 * i + 1] > top)
@@ -418,21 +387,16 @@ void R_clip_disable(void)
 /******************************************************************************\
  Adjust the clip stack.
 \******************************************************************************/
-void R_clip_push(void)
+void R_push_clip(void)
 {
-        clip_stack++;
-        if (clip_stack >= CLIP_STACK)
+        if (++clip_stack >= CLIP_STACK)
                 C_error("Clip stack overflow");
-        clip_values[4 * clip_stack] = 0.f;
-        clip_values[4 * clip_stack + 1] = 0.f;
-        clip_values[4 * clip_stack + 2] = 0.f;
-        clip_values[4 * clip_stack + 3] = 0.f;
+        R_clip_disable();
 }
 
-void R_clip_pop(void)
+void R_pop_clip(void)
 {
-        clip_stack--;
-        if (clip_stack < 0)
+        if (--clip_stack < 0)
                 C_error("Clip stack underflow");
         set_clipping();
 }
@@ -474,6 +438,69 @@ void R_clip_rect(c_vec2_t origin, c_vec2_t size)
         clip_values[4 * clip_stack + 2] = origin.x + size.x;
         clip_values[4 * clip_stack + 3] = origin.y + size.y;
         set_clipping();
+}
+
+/******************************************************************************\
+ Sets up OpenGL to render 3D polygons in world space. If mode is set to
+ R_MODE_HOLD, the mode will not be changeable until set to R_MODE_NONE.
+\******************************************************************************/
+static void R_set_mode(r_mode_t mode)
+{
+        if (mode == r_mode || r_mode_hold || mode == R_MODE_NONE)
+                return;
+        r_mode = mode;
+        glMatrixMode(GL_PROJECTION);
+        glLoadIdentity();
+
+        /* 2D mode sets up an orthogonal projection to render sprites */
+        if (mode == R_MODE_2D) {
+                glOrtho(0.f, r_width_2d, r_height_2d, 0.f, 0.f, 1.f);
+                glMatrixMode(GL_MODELVIEW);
+                glLoadIdentity();
+                set_clipping();
+        } else {
+                glDisable(GL_CLIP_PLANE0);
+                glDisable(GL_CLIP_PLANE1);
+                glDisable(GL_CLIP_PLANE2);
+                glDisable(GL_CLIP_PLANE3);
+        }
+
+        /* 3D mode sets up perspective projection and camera view for models */
+        if (mode == R_MODE_3D) {
+                gluPerspective(90.0, (float)r_width.value.n / r_height.value.n,
+                               1.f, 512.f);
+                glGetFloatv(GL_PROJECTION_MATRIX, r_proj3_matrix);
+                glEnable(GL_CULL_FACE);
+                glEnable(GL_DEPTH_TEST);
+                glMatrixMode(GL_MODELVIEW);
+                glLoadMatrixf(r_cam_matrix);
+        } else {
+                glDisable(GL_CULL_FACE);
+                glDisable(GL_DEPTH_TEST);
+        }
+
+        R_check_errors();
+}
+
+/******************************************************************************\
+ Save the previous mode and set the mode.
+\******************************************************************************/
+void R_push_mode(r_mode_t mode)
+{
+        if (++mode_stack >= 32)
+                C_error("Mode stack overflow");
+        mode_values[mode_stack] = mode;
+        R_set_mode(mode);
+}
+
+/******************************************************************************\
+ Restore saved mode.
+\******************************************************************************/
+void R_pop_mode(void)
+{
+        if (--mode_stack < 0)
+                C_error("Mode stack underflow");
+        R_set_mode(mode_values[mode_stack]);
 }
 
 /******************************************************************************\

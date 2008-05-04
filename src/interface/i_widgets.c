@@ -47,143 +47,6 @@ void I_widget_inited(const i_widget_t *widget)
 }
 
 /******************************************************************************\
- Window widget event function.
-\******************************************************************************/
-static int window_event(i_window_t *window, i_event_t event)
-{
-        switch (event) {
-        case I_EV_CONFIGURE:
-                R_window_cleanup(&window->window);
-                I_widget_pack(&window->widget, window->pack_children,
-                              window->fit);
-                if (window->decorated) {
-                        R_window_init(&window->window, i_window.value.s);
-                        window->window.sprite.origin = window->widget.origin;
-                        window->window.sprite.size = window->widget.size;
-                        R_sprite_cleanup(&window->hanger);
-                        R_sprite_init(&window->hanger, i_hanger.value.s);
-                        window->hanger.origin.y = window->widget.origin.y +
-                                                  window->widget.size.y;
-                        window->hanger.size.y = (float)i_border.value.n;
-                }
-                return FALSE;
-        case I_EV_MOUSE_IN:
-                i_key_focus = NULL;
-                I_widget_propagate(&window->widget, I_EV_GRAB_FOCUS);
-                break;
-        case I_EV_MOVED:
-                window->window.sprite.origin = window->widget.origin;
-                break;
-        case I_EV_CLEANUP:
-                R_window_cleanup(&window->window);
-                R_sprite_cleanup(&window->hanger);
-                break;
-        case I_EV_RENDER:
-                if (window->decorated) {
-                        if (window->hanger.origin.x) {
-                                window->hanger.modulate.a = window->widget.fade;
-                                R_sprite_render(&window->hanger);
-                        }
-                        window->window.sprite.modulate.a = window->widget.fade;
-                        R_window_render(&window->window);
-                }
-                break;
-        default:
-                break;
-        }
-        return TRUE;
-}
-
-/******************************************************************************\
- Configure a window widget's hanger sprite.
-\******************************************************************************/
-void I_window_hanger(i_window_t *window, i_widget_t *widget, int shown)
-{
-        if (!shown) {
-                window->hanger.origin.x = 0.f;
-                return;
-        }
-        window->hanger.origin.x = widget->origin.x + widget->size.x / 2 -
-                                  window->hanger.size.x / 2;
-}
-
-/******************************************************************************\
- Initializes an window widget.
-\******************************************************************************/
-void I_window_init(i_window_t *window)
-{
-        if (!window)
-                return;
-        C_zero(window);
-        I_widget_set_name(&window->widget, "Window");
-        window->widget.event_func = (i_event_f)window_event;
-        window->widget.state = I_WS_READY;
-        window->widget.clickable = TRUE;
-        window->pack_children = I_PACK_V;
-        window->decorated = TRUE;
-        I_widget_inited(&window->widget);
-}
-
-/******************************************************************************\
- Label widget event function.
-\******************************************************************************/
-static int label_event(i_label_t *label, i_event_t event)
-{
-        switch (event) {
-        case I_EV_CONFIGURE:
-                R_sprite_cleanup(&label->text);
-                R_sprite_init_text(&label->text, label->font,
-                                   label->widget.size.x, i_shadow.value.f,
-                                   FALSE, label->buffer);
-                label->widget.size = label->text.size;
-                label->text.modulate = i_colors[label->color];
-        case I_EV_MOVED:
-                label->text.origin = C_vec2_clamp(label->widget.origin,
-                                                  r_pixel_scale.value.f);
-                break;
-        case I_EV_CLEANUP:
-                R_sprite_cleanup(&label->text);
-                break;
-        case I_EV_RENDER:
-                label->text.modulate.a = label->widget.fade;
-                R_sprite_render(&label->text);
-                break;
-        default:
-                break;
-        }
-        return TRUE;
-}
-
-/******************************************************************************\
- Initializes a label widget.
-\******************************************************************************/
-void I_label_init(i_label_t *label, const char *text)
-{
-        if (!label)
-                return;
-        C_zero(label);
-        I_widget_set_name(&label->widget, "Label");
-        label->widget.event_func = (i_event_f)label_event;
-        label->widget.state = I_WS_READY;
-        label->font = R_FONT_GUI;
-        C_strncpy_buf(label->buffer, text);
-        I_widget_inited(&label->widget);
-}
-
-/******************************************************************************\
- Dynamically allocates a label widget.
-\******************************************************************************/
-i_label_t *I_label_new(const char *text)
-{
-        i_label_t *label;
-
-        label = C_malloc(sizeof (*label));
-        I_label_init(label, text);
-        label->widget.heap = TRUE;
-        return label;
-}
-
-/******************************************************************************\
  Attaches a child widget to another widget to the end of the parent's children
  linked list. Sends the I_EV_ADD_CHILD event.
 \******************************************************************************/
@@ -256,13 +119,13 @@ void I_widget_move(i_widget_t *widget, c_vec2_t origin)
         if (!diff.x && !diff.y)
                 return;
         widget->origin = origin;
-        if (widget->event_func)
-                widget->event_func(widget, I_EV_MOVED);
         child = widget->child;
         while (child) {
                 I_widget_move(child, C_vec2_add(child->origin, diff));
                 child = child->next;
         }
+        if (widget->event_func)
+                widget->event_func(widget, I_EV_MOVED);
 }
 
 /******************************************************************************\
@@ -314,25 +177,31 @@ void I_widget_pack(i_widget_t *widget, i_pack_t pack, i_fit_t fit)
         int expanders;
 
         /* First, let every widget claim the minimum space it requires */
-        size = C_vec2_subf(widget->size, i_border.value.n * 2.f);
-        origin = C_vec2_addf(widget->origin, (float)i_border.value.n);
+        size = C_vec2_subf(widget->size,
+                           widget->padding * i_border.value.n * 2.f);
+        origin = C_vec2_addf(widget->origin,
+                             widget->padding * i_border.value.n);
         expanders = 0;
         child = widget->child;
         while (child) {
-                float padding;
+                float margin_front, margin_rear;
 
-                child->origin = origin;
-                padding = child->padding * i_border.value.n;
+                margin_front = child->margin_front * i_border.value.n;
+                margin_rear = child->margin_rear * i_border.value.n;
                 if (pack == I_PACK_H) {
+                        origin.x += margin_front;
+                        child->origin = origin;
                         child->size = C_vec2(0.f, size.y);
                         I_widget_event(child, I_EV_CONFIGURE);
-                        origin.x += child->size.x + padding;
-                        size.x -= child->size.x + padding;
+                        origin.x += child->size.x + margin_front + margin_rear;
+                        size.x -= child->size.x + margin_front + margin_rear;
                 } else if (pack == I_PACK_V) {
+                        origin.y += child->margin_front * i_border.value.n;
+                        child->origin = origin;
                         child->size = C_vec2(size.x, 0.f);
                         I_widget_event(child, I_EV_CONFIGURE);
-                        origin.y += child->size.y + padding;
-                        size.y -= child->size.y + padding;
+                        origin.y += child->size.y + margin_front + margin_rear;
+                        size.y -= child->size.y + margin_front + margin_rear;
                 }
                 if (child->expand)
                         expanders++;
@@ -368,6 +237,48 @@ void I_widget_pack(i_widget_t *widget, i_pack_t pack, i_fit_t fit)
                         I_widget_move(widget, origin);
                 }
         }
+}
+
+/******************************************************************************\
+ Returns the width and height of a rectangle that would encompass the widget
+ including margins.
+\******************************************************************************/
+c_vec2_t I_widget_bounds(const i_widget_t *widget, i_pack_t pack)
+{
+        c_vec2_t size;
+        float margin_front, margin_rear;
+
+        size = widget->size;
+        margin_front = widget->margin_front * i_border.value.n;
+        margin_rear = widget->margin_rear * i_border.value.n;
+        if (pack == I_PACK_H)
+                size.x += margin_front + margin_rear;
+        else if (pack == I_PACK_V)
+                size.y += margin_front + margin_rear;
+        return size;
+}
+
+/******************************************************************************\
+ Returns the width and height of a rectangle from the widget's origin that
+ would encompass it's child widgets.
+\******************************************************************************/
+c_vec2_t I_widget_child_bounds(const i_widget_t *widget)
+{
+        c_vec2_t bounds, corner;
+        i_widget_t *child;
+
+        child = widget->child;
+        bounds = C_vec2(0.f, 0.f);
+        while (child) {
+                corner = C_vec2_add(C_vec2_sub(child->origin, widget->origin),
+                                    child->size);
+                if (bounds.x < corner.x)
+                        bounds.x = corner.x;
+                if (bounds.y < corner.y)
+                        bounds.y = corner.y;
+                child = child->next;
+        }
+        return bounds;
 }
 
 /******************************************************************************\

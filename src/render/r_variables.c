@@ -28,8 +28,8 @@ c_var_t r_globe_colors[4], r_globe_shininess, r_light, r_moon_colors[3],
         r_moon_atten, r_moon_height, r_solar, r_sun_colors[3];
 
 /* Fonts */
-c_var_t r_font_console, r_font_console_pt,
-        r_font_gui, r_font_gui_pt;
+c_var_t r_font_console, r_font_console_pt, r_font_gui, r_font_gui_pt,
+        r_font_title, r_font_title_pt;
 
 /******************************************************************************\
  Registers the render namespace variables.
@@ -118,11 +118,18 @@ void R_register_variables(void)
         C_register_integer(&r_font_console_pt, "r_font_console_pt", 12,
                            "size of console font in points");
         r_font_console_pt.archive = FALSE;
-        C_register_string(&r_font_gui, "r_font_gui", "gui/fonts/BLKCHCRY.TTF",
+        C_register_string(&r_font_gui, "r_font_gui", "gui/fonts/DejaVuSans.ttf",
                           "path to GUI font TTF file");
         r_font_gui.archive = FALSE;
-        C_register_integer(&r_font_gui_pt, "r_font_gui_pt", 19,
+        C_register_integer(&r_font_gui_pt, "r_font_gui_pt", 12,
                            "size of GUI font in points");
         r_font_gui_pt.archive = FALSE;
+        C_register_string(&r_font_title, "r_font_title",
+                          "gui/fonts/BLKCHCRY.TTF",
+                          "path to title font TTF file");
+        r_font_title.archive = FALSE;
+        C_register_integer(&r_font_title_pt, "r_font_title_pt", 18,
+                           "size of title font in points");
+        r_font_title_pt.archive = FALSE;
 }
 

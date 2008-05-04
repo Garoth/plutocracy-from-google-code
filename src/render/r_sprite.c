@@ -55,7 +55,7 @@ static int sprite_render_start(const r_sprite_t *sprite)
 {
         if (!sprite || !sprite->texture)
                 return FALSE;
-        R_set_mode(R_MODE_2D);
+        R_push_mode(R_MODE_2D);
         R_texture_select(sprite->texture);
 
         /* Modulate color */
@@ -84,6 +84,7 @@ static void sprite_render_finish(void)
         glDisableClientState(GL_VERTEX_ARRAY);
         glPopMatrix();
         R_check_errors();
+        R_pop_mode();
 }
 
 /******************************************************************************\
@@ -298,6 +299,8 @@ void R_sprite_init_text(r_sprite_t *sprite, r_font_t font, float wrap,
 /******************************************************************************\
  Wrapper around the sprite text initializer. Avoids re-rendering the texture
  if the parameters have not changed.
+ FIXME: If the pixel scale has changed on a text sprite the previous frame we
+        need to re-render it.
 \******************************************************************************/
 void R_text_configure(r_text_t *text, r_font_t font, float wrap, float shadow,
                       int invert, const char *string)
@@ -450,12 +453,13 @@ void R_billboard_render(r_billboard_t *bb)
                 return;
         bb->sprite.origin.x = co.x - bb->sprite.size.x * 1.5f;
         bb->sprite.origin.y = co.y - bb->sprite.size.y * 1.5f;
-        R_set_mode(R_MODE_2D);
+        R_push_mode(R_MODE_2D);
         glEnable(GL_DEPTH_TEST);
         glPushMatrix();
         glTranslatef(0.f, 0.f, co.z);
         R_sprite_render(&bb->sprite);
         glPopMatrix();
         glDisable(GL_DEPTH_TEST);
+        R_pop_mode();
 }
 

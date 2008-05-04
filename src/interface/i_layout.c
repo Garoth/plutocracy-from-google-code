@@ -12,14 +12,25 @@
 
 #include "i_common.h"
 
-void I_console_init(i_window_t *);
-void I_game_init(i_window_t *);
+/* Number of windows defined */
+#define WINDOWS 3
+
+/* Windows */
+static struct property_t {
+        void (*init)(i_window_t *);
+        char *icon;
+        c_vec2_t size;
+} properties[] = {
+        {I_game_init, "gui/icons/game.png", {240.f, 0.f}},
+        {I_console_init, "gui/icons/console.png", {480.f, 240.f}},
+        {I_video_init, "gui/icons/video.png", {240.f, 0.f}},
+};
 
 i_widget_t i_root;
 
 static c_vec2_t root_scroll;
-static i_window_t left_toolbar, console_window, game_window, *open_window;
-static i_button_t console_button, game_button;
+static i_window_t left_toolbar, *open_window, windows[WINDOWS];
+static i_button_t buttons[WINDOWS];
 static int grabbing, grab_x, grab_y;
 
 /******************************************************************************\
@@ -27,6 +38,8 @@ static int grabbing, grab_x, grab_y;
 \******************************************************************************/
 static int root_event(i_widget_t *root, i_event_t event)
 {
+        int i;
+
         switch (event) {
         case I_EV_KEY_DOWN:
                 if (i_key == SDLK_RIGHT && root_scroll.x > -1.f)
@@ -82,8 +95,8 @@ static int root_event(i_widget_t *root, i_event_t event)
                 I_widget_propagate(root, event);
 
                 /* Position window hangers */
-                I_window_hanger(&game_window, &game_button.widget, TRUE);
-                I_window_hanger(&console_window, &console_button.widget, TRUE);
+                for (i = 0; i < WINDOWS; i++)
+                        I_window_hanger(windows + i, &buttons[i].widget, TRUE);
 
                 return FALSE;
         case I_EV_RENDER:
@@ -100,6 +113,9 @@ static int root_event(i_widget_t *root, i_event_t event)
 \******************************************************************************/
 static void theme_configure(void)
 {
+        float offset;
+        int i;
+
         C_var_unlatch(&i_border);
         C_var_unlatch(&i_button);
         C_var_unlatch(&i_button_active);
@@ -123,21 +139,15 @@ static void theme_configure(void)
                                             left_toolbar.widget.size.y -
                                             i_border.value.n);
 
-        /* Game window */
-        game_window.widget.size = C_vec2(240.f, 0.f);
-        game_window.widget.origin = C_vec2((float)i_border.value.n,
-                                           r_height_2d -
-                                           game_window.widget.size.y -
-                                           left_toolbar.widget.size.y -
-                                           i_border.value.n * 2);
-
-        /* Console window */
-        console_window.widget.size = C_vec2(480.f, 240.f);
-        console_window.widget.origin = C_vec2((float)i_border.value.n,
-                                              r_height_2d -
-                                              console_window.widget.size.y -
-                                              left_toolbar.widget.size.y -
-                                              i_border.value.n * 2);
+        /* Windows */
+        offset = r_height_2d - left_toolbar.widget.size.y -
+                 i_border.value.n * 2;
+        for (i = 0; i < WINDOWS; i++) {
+                windows[i].widget.size = properties[i].size;
+                windows[i].widget.origin = C_vec2((float)i_border.value.n,
+                                                  offset -
+                                                  windows[i].widget.size.y);
+        }
 }
 
 /******************************************************************************\
@@ -170,14 +180,9 @@ static void left_toolbar_open(i_window_t *window)
         open_window = window;
 }
 
-static void game_button_click(i_button_t *button)
+static void button_click(i_button_t *button)
 {
-        left_toolbar_open(&game_window);
-}
-
-static void console_button_click(i_button_t *button)
-{
-        left_toolbar_open(&console_window);
+        left_toolbar_open(button->data);
 }
 
 /******************************************************************************\
@@ -194,6 +199,8 @@ void I_parse_config(void)
 \******************************************************************************/
 void I_init(void)
 {
+        int i;
+
         C_status("Initializing interface");
 
         /* Enable key repeats so held keys generate key-down events */
@@ -219,27 +226,17 @@ void I_init(void)
         left_toolbar.pack_children = I_PACK_H;
         I_widget_add(&i_root, &left_toolbar.widget);
 
-        /* Game button */
-        I_button_init(&game_button, "gui/icons/game.png", NULL, FALSE);
-        game_button.on_click = (i_callback_f)game_button_click;
-        game_button.widget.padding = 0.5f;
-        I_widget_add(&left_toolbar.widget, &game_button.widget);
-
-        /* Console button */
-        I_button_init(&console_button, "gui/icons/console.png", NULL, FALSE);
-        console_button.on_click = (i_callback_f)console_button_click;
-        I_widget_add(&left_toolbar.widget, &console_button.widget);
-
-        /* Game window */
-        I_window_init(&game_window);
-        game_window.fit = I_FIT_TOP;
-        I_game_init(&game_window);
-        I_widget_add(&i_root, &game_window.widget);
-
-        /* Console window */
-        I_window_init(&console_window);
-        I_console_init(&console_window);
-        I_widget_add(&i_root, &console_window.widget);
+        /* Window and buttons */
+        for (i = 0; i < WINDOWS; i++) {
+                properties[i].init(windows + i);
+                I_widget_add(&i_root, &windows[i].widget);
+                I_button_init(buttons + i, properties[i].icon, NULL, FALSE);
+                buttons[i].on_click = (i_callback_f)button_click;
+                buttons[i].data = windows + i;
+                if (i < WINDOWS - 1)
+                        buttons[i].widget.margin_rear = 0.5f;
+                I_widget_add(&left_toolbar.widget, &buttons[i].widget);
+        }
 
         /* Theme can now be modified dynamically */
         theme_configure();

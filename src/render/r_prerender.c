@@ -354,7 +354,7 @@ void R_prerender(void)
         C_var_unlatch(&r_test_prerender);
 
         /* Initialize with a custom 2D mode */
-        R_set_mode(R_MODE_HOLD);
+        r_mode_hold = TRUE;
         glMatrixMode(GL_PROJECTION);
         glLoadIdentity();
         glOrtho(0.f, r_width.value.n, r_height.value.n, 0.f, -1.f, 1.f);
@@ -381,6 +381,6 @@ void R_prerender(void)
 
         prerender_tiles();
         prerender_transitions();
-        R_set_mode(R_MODE_NONE);
+        r_mode_hold = FALSE;
 }
 

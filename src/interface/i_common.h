@@ -93,7 +93,7 @@ typedef struct i_widget {
         c_vec2_t origin, size;
         i_event_f event_func;
         i_widget_state_t state;
-        float fade, padding;
+        float fade, margin_front, margin_rear, padding;
         int configured, entry, clickable, expand, shown, heap;
 } i_widget_t;
 
@@ -115,6 +115,7 @@ typedef struct i_button {
         r_window_t normal, hover, active;
         r_sprite_t icon, text, light, prelight;
         i_callback_f on_click;
+        void *data;
         int decorated;
         char buffer[64];
 } i_button_t;
@@ -132,6 +133,7 @@ typedef struct i_label {
         r_sprite_t text;
         r_font_t font;
         i_color_t color;
+        float width;
         char buffer[256];
 } i_label_t;
 
@@ -157,21 +159,56 @@ typedef struct i_scrollback {
         int children, limit;
 } i_scrollback_t;
 
+/* Displays a label and a selection widget which can select text items from
+   a list to the right of it */
+typedef struct i_select {
+        i_widget_t widget;
+        i_label_t label, item;
+        i_button_t left, right;
+        i_callback_f on_change;
+        r_window_t window;
+        void *data;
+        const char **list;
+        int list_len, index;
+} i_select_t;
+
+/* i_button.c */
+void I_button_init(i_button_t *, const char *icon, const char *text, int bg);
+
+/* i_console.c */
+void I_console_init(i_window_t *);
+
+/* i_entry.c */
+int I_entry_event(i_entry_t *, i_event_t);
+void I_entry_init(i_entry_t *, const char *);
+void I_entry_configure(i_entry_t *, const char *);
+
+/* i_game.c */
+void I_game_init(i_window_t *);
+
+/* i_label.c */
+void I_label_init(i_label_t *, const char *);
+void I_label_configure(i_label_t *, const char *);
+i_label_t *I_label_new(const char *);
+
+/* i_select.c */
+void I_select_init(i_select_t *, const char *label, const char **list,
+                   int initial);
+
 /* i_variables.c */
 extern c_var_t i_border, i_button, i_button_active, i_button_hover,
                i_button_light, i_button_prelight, i_color, i_color2,
                i_debug, i_fade, i_hanger, i_scroll_speed, i_shadow, i_theme,
                i_window, i_work_area, i_zoom_speed;
 
+/* i_video.c */
+void I_video_init(i_window_t *);
+
 /* i_widgets.c */
-void I_button_init(i_button_t *, const char *icon, const char *text, int bg);
-int I_entry_event(i_entry_t *, i_event_t);
-void I_entry_init(i_entry_t *, const char *);
-void I_entry_configure(i_entry_t *, const char *);
-void I_label_init(i_label_t *, const char *);
-i_label_t *I_label_new(const char *);
-const char *I_event_string(i_event_t event);
+const char *I_event_string(i_event_t);
 void I_widget_add(i_widget_t *parent, i_widget_t *child);
+c_vec2_t I_widget_bounds(const i_widget_t *, i_pack_t);
+c_vec2_t I_widget_child_bounds(const i_widget_t *);
 #define I_widget_cleanup(w) I_widget_event(w, I_EV_CLEANUP)
 void I_widget_event(i_widget_t *, i_event_t);
 void I_widget_inited(const i_widget_t *);
@@ -181,10 +218,12 @@ void I_widget_propagate(i_widget_t *, i_event_t);
 void I_widget_remove(i_widget_t *);
 void I_widget_set_name(i_widget_t *, const char *class_name);
 void I_widget_show(i_widget_t *, int show);
-void I_window_init(i_window_t *);
-void I_window_hanger(i_window_t *, i_widget_t *align, int shown);
 
 extern c_color_t i_colors[I_COLORS];
 extern i_widget_t *i_key_focus, *i_child;
 extern int i_key, i_key_shift, i_key_unicode, i_mouse_x, i_mouse_y, i_mouse;
+
+/* i_window.c */
+void I_window_init(i_window_t *);
+void I_window_hanger(i_window_t *, i_widget_t *align, int shown);
 

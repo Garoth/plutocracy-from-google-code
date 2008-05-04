@@ -46,7 +46,7 @@ int I_button_event(i_button_t *button, i_event_t event)
                 button->text.modulate = i_colors[I_COLOR];
 
                 /* Size requisition */
-                if (!button->widget.size.y) {
+                if (button->widget.size.y < 1) {
                         button->widget.size.y = button->text.size.y;
                         if (button->icon.texture &&
                             button->icon.size.y > button->widget.size.y)
@@ -54,7 +54,7 @@ int I_button_event(i_button_t *button, i_event_t event)
                         if (button->decorated)
                                 button->widget.size.y += i_border.value.n * 2;
                 }
-                if (!button->widget.size.x) {
+                if (button->widget.size.x < 1) {
                         button->widget.size.x = button->text.size.x +
                                                 button->icon.size.x;
                         if (button->decorated)
@@ -77,9 +77,15 @@ int I_button_event(i_button_t *button, i_event_t event)
                         button->active.sprite.size = size;
                 } else {
                         c_vec2_t origin2, size2;
+                        float border;
 
-                        origin2 = C_vec2_subf(origin, (float)i_border.value.n);
-                        size2 = C_vec2_addf(size, i_border.value.n * 2.f);
+                        border = i_border.value.n;
+                        if (border > size.x / 4)
+                                border = size.x / 4;
+                        if (border > size.y / 4)
+                                border = size.y / 4;
+                        origin2 = C_vec2_subf(origin, border);
+                        size2 = C_vec2_addf(size, border * 2.f);
                         button->light.origin = origin2;
                         button->light.size = size2;
                         button->prelight.origin = origin2;
@@ -130,8 +136,10 @@ int I_button_event(i_button_t *button, i_event_t event)
                         button->widget.state = I_WS_ACTIVE;
                 break;
         case I_EV_MOUSE_UP:
-                if (button->widget.state == I_WS_ACTIVE && button->on_click)
+                if (button->widget.state == I_WS_ACTIVE && button->on_click) {
                         button->on_click(button);
+                        button->widget.state = I_WS_HOVER;
+                }
                 break;
         case I_EV_RENDER:
                 button->icon.modulate.a = button->widget.fade;
@@ -150,10 +158,11 @@ int I_button_event(i_button_t *button, i_event_t event)
                         button->normal.sprite.modulate.a = button->widget.fade;
                         R_window_render(&button->normal);
                 }
+                R_push_clip();
                 R_clip_rect(button->widget.origin, button->widget.size);
                 R_sprite_render(&button->icon);
                 R_sprite_render(&button->text);
-                R_clip_disable();
+                R_pop_clip();
                 break;
         default:
                 break;
