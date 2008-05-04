@@ -418,14 +418,15 @@ void R_texture_render(r_texture_t *tex, int x, int y)
         verts[0].uv = C_vec2(0.f, 0.f);
         verts[1].co = C_vec3(0.f, (float)tex->surface->h, 0.f);
         verts[1].uv = C_vec2(0.f, 1.f);
-        verts[2].co = C_vec3(tex->surface->w, (float)tex->surface->h, 0.f);
+        verts[2].co = C_vec3((float)tex->surface->w, 
+                             (float)tex->surface->h, 0.f);
         verts[2].uv = C_vec2(1.f, 1.f);
-        verts[3].co = C_vec3(tex->surface->w, 0.f, 0.f);
+        verts[3].co = C_vec3((float)tex->surface->w, 0.f, 0.f);
         verts[3].uv = C_vec2(1.f, 0.f);
         R_texture_select(tex);
         glPushMatrix();
         glLoadIdentity();
-        glTranslatef(x, y, 0.f);
+        glTranslatef((GLfloat)x, (GLfloat)y, 0.f);
         glInterleavedArrays(R_VERTEX2_FORMAT, 0, verts);
         glDrawElements(GL_QUADS, 4, GL_UNSIGNED_SHORT, indices);
         glPopMatrix();
