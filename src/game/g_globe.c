@@ -47,7 +47,7 @@ static r_terrain_t choose_terrain(int tile)
         prop = R_get_tile_latitude(tile);
         if (prop < 0.f)
                 prop = -prop;
-        prop = 4.f * prop / M_PI - 1.f;
+        prop = 4.f * prop / C_PI - 1.f;
         if (prop >= 0.f) {
                 if (C_rand_real() > prop)
                         return R_T_GROUND;
@@ -139,7 +139,7 @@ static void grow_islands(int num, int island_size)
                 }
                 sizes[i] = 1;
                 edges[i * ISLAND_SIZE] = islands[i].root;
-                limits[i] = (0.5 + C_rand_real()) * island_size;
+                limits[i] = (int)((0.5f + C_rand_real()) * island_size);
                 islands[i].root->island = i;
                 islands[i].tiles = 1;
                 islands[i].land = 0;

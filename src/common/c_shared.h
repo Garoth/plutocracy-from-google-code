@@ -57,6 +57,9 @@
 #define INFINITY 2147483647
 #endif
 
+/* Floating-point PI */
+#define C_PI 3.14159265358979323846f
+
 /* Golden ratio */
 #define C_TAU 1.61803398874989f
 
@@ -73,8 +76,8 @@
 
 /* All angles should be in radians but there are some cases (OpenGL) where
    conversions are necessary */
-#define C_rad_to_deg(a) ((a) * 180.f / (float)M_PI)
-#define C_deg_to_rad(a) ((a) * (float)M_PI / 180.f)
+#define C_rad_to_deg(a) ((a) * 180.f / C_PI)
+#define C_deg_to_rad(a) ((a) * C_PI / 180.f)
 
 /* Certain functions should not be used. Files that legitimately use these
    should undefine these replacements. This is a bad thing to do because some

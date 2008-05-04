@@ -84,14 +84,16 @@ static void set_mask_verts_uv(int iteration)
                 C_error("Invalid iteration");
 
         case -1:
-                /* Original rotation, vertical flip */
+                /* Original rotation, vertical flip. Note that the 0.01
+                   coordinates are necessary here to prevent distortion on
+                   Windows. */
                 verts[0].uv = C_vec2(0.5f, R_ISO_PROP);
                 verts[1].uv = C_vec2(0.f, R_ISO_PROP);
-                verts[2].uv = C_vec2(0.f, 0.f);
-                verts[3].uv = C_vec2(1.f, 0.f);
+                verts[2].uv = C_vec2(0.f, 0.01f);
+                verts[3].uv = C_vec2(1.f, 0.01f);
                 verts[4].uv = C_vec2(1.f, R_ISO_PROP);
-                verts[5].uv = C_vec2(0.f, 0.f);
-                verts[6].uv = C_vec2(1.f, 0.f);
+                verts[5].uv = C_vec2(0.f, 0.01f);
+                verts[6].uv = C_vec2(1.f, 0.01f);
                 break;
 
         case 0: /* Original rotation */
@@ -216,7 +218,7 @@ static void prerender_tiles(void)
                 set_mask_verts_uv(i);
                 R_texture_select(blend_mask);
                 prerender_tile();
-                rotated_mask = save_buffer(tile.x, tile.y);
+                rotated_mask = save_buffer((int)tile.x, (int)tile.y);
                 R_texture_upload(rotated_mask, TRUE);
                 finish_buffer();
 
@@ -231,7 +233,7 @@ static void prerender_tiles(void)
                         }
 
                 /* Read the terrain back in and mask it */
-                masked_terrain = save_buffer(sheet.x, sheet.y);
+                masked_terrain = save_buffer((int)sheet.x, (int)sheet.y);
                 R_surface_mask(masked_terrain->surface, rotated_mask->surface);
                 R_texture_free(rotated_mask);
 
@@ -241,10 +243,10 @@ static void prerender_tiles(void)
                 R_texture_upload(masked_terrain, TRUE);
                 R_texture_render(masked_terrain, 0, 0);
                 if (r_test_prerender.value.n)
-                        R_texture_render(masked_terrain, sheet.x, 0);
+                        R_texture_render(masked_terrain, (int)sheet.x, 0);
                 R_texture_free(masked_terrain);
                 R_texture_free(r_terrain_tex);
-                r_terrain_tex = save_buffer(sheet.x, sheet.y);
+                r_terrain_tex = save_buffer((int)sheet.x, (int)sheet.y);
                 R_texture_upload(r_terrain_tex, TRUE);
                 finish_buffer();
         }
@@ -270,7 +272,7 @@ static void prerender_transitions(void)
         R_texture_select(trans_mask);
         set_mask_verts_uv(-1);
         prerender_tile();
-        inverted_mask = save_buffer(tile.x, tile.y);
+        inverted_mask = save_buffer((int)tile.x, (int)tile.y);
         R_surface_invert(inverted_mask->surface, TRUE, FALSE);
         R_texture_upload(inverted_mask, FALSE);
         finish_buffer();
@@ -290,7 +292,7 @@ static void prerender_transitions(void)
                 }
         }
         glPopMatrix();
-        large_mask = save_buffer(sheet.x, sheet.y);
+        large_mask = save_buffer((int)sheet.x, (int)sheet.y);
         R_texture_free(trans_mask);
         R_texture_free(inverted_mask);
         finish_buffer();
@@ -306,12 +308,12 @@ static void prerender_transitions(void)
                         prerender_tile();
                 }
         glPopMatrix();
-        masked_terrain = save_buffer(sheet.x, sheet.y);
+        masked_terrain = save_buffer((int)sheet.x, (int)sheet.y);
         R_surface_mask(masked_terrain->surface, large_mask->surface);
         R_texture_free(large_mask);
         R_texture_upload(masked_terrain, FALSE);
         if (r_test_prerender.value.n)
-                R_texture_render(masked_terrain, sheet.x, 0);
+                R_texture_render(masked_terrain, (int)sheet.x, 0);
 
         /* Render the base layer of the terrain */
         R_texture_render(r_terrain_tex, 0, 0);
@@ -330,7 +332,7 @@ static void prerender_transitions(void)
         R_texture_render(masked_terrain, 0, 0);
         R_texture_free(masked_terrain);
         R_texture_free(r_terrain_tex);
-        r_terrain_tex = save_buffer(sheet.x, sheet.y);
+        r_terrain_tex = save_buffer((int)sheet.x, (int)sheet.y);
         R_texture_upload(r_terrain_tex, TRUE);
 
         finish_buffer();
@@ -367,10 +369,10 @@ void R_prerender(void)
 
         /* Vertices are aligned in the tile so that the top vertex of the
            triangle touches the top center of the tile */
-        sheet.x = r_terrain_tex->surface->w;
-        sheet.y = r_terrain_tex->surface->h;
-        tile.x = r_terrain_tex->surface->w / R_TILE_SHEET_W;
-        tile.y = r_terrain_tex->surface->h / R_TILE_SHEET_H;
+        sheet.x = (GLfloat)r_terrain_tex->surface->w;
+        sheet.y = (GLfloat)r_terrain_tex->surface->h;
+        tile.x = (GLfloat)(r_terrain_tex->surface->w / R_TILE_SHEET_W);
+        tile.y = (GLfloat)(r_terrain_tex->surface->h / R_TILE_SHEET_H);
         verts[0].co = C_vec3(tile.x / 2.f, 0.f, 0.f);
         verts[1].co = C_vec3(0.f, 0.f, 0.f);
         verts[2].co = C_vec3(0.f, tile.y * R_ISO_PROP, 0.f);

@@ -256,7 +256,7 @@ static void generate_halo(void)
         int i;
 
         for (i = 0; i <= HALO_SEGMENTS; i++) {
-                angle = 2.f * M_PI * i / HALO_SEGMENTS;
+                angle = 2.f * C_PI * i / HALO_SEGMENTS;
                 unit = C_vec3(cosf(angle), sinf(angle), 0.f);
 
                 /* Bottom vertex */

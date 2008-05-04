@@ -79,7 +79,7 @@ int I_button_event(i_button_t *button, i_event_t event)
                         c_vec2_t origin2, size2;
                         float border;
 
-                        border = i_border.value.n;
+                        border = (float)i_border.value.n;
                         if (border > size.x / 4)
                                 border = size.x / 4;
                         if (border > size.y / 4)
