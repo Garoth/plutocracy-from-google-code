@@ -297,6 +297,7 @@ int I_entry_event(i_entry_t *entry, i_event_t event)
                 entry->text.modulate.a = entry->widget.fade;
                 entry->cursor.modulate.a = entry->widget.fade;
                 R_window_render(&entry->window);
+                R_push_clip();
                 if (i_key_focus == (i_widget_t *)entry) {
                         R_clip_left(entry->cursor.origin.x +
                                     entry->cursor.size.x - 2.f);
@@ -318,6 +319,7 @@ int I_entry_event(i_entry_t *entry, i_event_t event)
                         R_sprite_render(&entry->text);
                         R_clip_disable();
                 }
+                R_pop_clip();
                 break;
         default:
                 break;

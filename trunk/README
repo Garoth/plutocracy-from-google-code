@@ -185,11 +185,15 @@
 
     The following files are excepted from the GPL license:
 
+      gui/fonts/DejaVuSans-Bold.ttf
       gui/fonts/DejaVuSansMono-Bold.ttf
 
     To see the full license for the DejaVu fonts, please see:
 
       http://dejavu.sourceforge.net/wiki/index.php/License
+
+    Note that when packaged for a specific distribution, these files may already
+    be present on the system rather than come with the program.
 
 
   4.4  SDL Notice
@@ -213,7 +217,7 @@
     details:
 
       vc8/glext.h (© 2007 The Khronos Group Inc)
-      gui/fonts/BLKCHCRY.TTF (Earl Allen and Doug Miles, Public Domain)
+      gui/fonts/BLKCHCRY.TTF (public domain, Earl Allen and Doug Miles)
       gui/fonts/SF ARchery Black.ttf (© 2001 ShyFonts Type Foundry)
 
 

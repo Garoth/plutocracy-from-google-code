@@ -13,33 +13,40 @@
 #include "i_common.h"
 
 static i_label_t label;
-static i_button_t quit_button;
+static i_button_t apply_button;
+static i_select_t windowed;
+static const char *list_bool[] = {"No", "Yes", NULL};
 
 /******************************************************************************\
- Button callbacks.
+ Apply modified settings.
 \******************************************************************************/
-static void quit_button_clicked(i_button_t *button)
+static void apply_button_clicked(i_button_t *button)
 {
-        C_debug("Exit button clicked");
-        c_exit = TRUE;
 }
 
 /******************************************************************************\
  Initializes game window widgets on the given window.
 \******************************************************************************/
-void I_game_init(i_window_t *window)
+void I_video_init(i_window_t *window)
 {
         I_window_init(window);
         window->fit = I_FIT_TOP;
 
         /* Label */
-        I_label_init(&label, C_str("i-menu", "Game Menu:"));
+        I_label_init(&label, C_str("i-video", "Video Settings:"));
         label.font = R_FONT_TITLE;
         I_widget_add(&window->widget, &label.widget);
 
-        /* Quit button */
-        I_button_init(&quit_button, NULL, C_str("i-quit", "Quit"), TRUE);
-        quit_button.on_click = (i_callback_f)quit_button_clicked;
-        I_widget_add(&window->widget, &quit_button.widget);
+        /* Select windowed */
+        I_select_init(&windowed, C_str("i-video-windowed", "Windowed:"),
+                      list_bool, 0);
+        I_widget_add(&window->widget, &windowed.widget);
+
+        /* Apply button */
+        I_button_init(&apply_button, NULL,
+                      C_str("i-video-apply", "Apply"), TRUE);
+        apply_button.on_click = (i_callback_f)apply_button_clicked;
+        apply_button.widget.margin_front = 1.f;
+        I_widget_add(&window->widget, &apply_button.widget);
 }
 

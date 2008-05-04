@@ -34,7 +34,7 @@ unsigned short R_static_mesh_find_vert(const r_static_mesh_t *mesh,
 \******************************************************************************/
 void R_static_mesh_render(r_static_mesh_t *mesh, r_texture_t *texture)
 {
-        R_set_mode(R_MODE_3D);
+        R_push_mode(R_MODE_3D);
         R_texture_select(texture);
         C_count_add(&r_count_faces, mesh->indices_len / 3);
         glInterleavedArrays(R_VERTEX3_FORMAT, 0, mesh->verts);
@@ -44,6 +44,7 @@ void R_static_mesh_render(r_static_mesh_t *mesh, r_texture_t *texture)
         glDisableClientState(GL_NORMAL_ARRAY);
         glDisableClientState(GL_VERTEX_ARRAY);
         R_check_errors();
+        R_pop_mode();
 }
 
 /******************************************************************************\

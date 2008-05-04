@@ -352,7 +352,7 @@ static void render_halo(void)
 \******************************************************************************/
 void R_render_globe(void)
 {
-        R_set_mode(R_MODE_3D);
+        R_push_mode(R_MODE_3D);
 
         /* Set globe material properties */
         glMateriali(GL_FRONT, GL_SHININESS, r_globe_shininess.value.n);
@@ -393,6 +393,7 @@ void R_render_globe(void)
         glDisable(GL_FOG);
         R_disable_light();
         R_check_errors();
+        R_pop_mode();
         C_count_add(&r_count_faces, r_tiles);
 }
 

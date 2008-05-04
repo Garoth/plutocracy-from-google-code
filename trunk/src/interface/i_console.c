@@ -102,11 +102,10 @@ int I_scrollback_event(i_scrollback_t *sb, i_event_t event)
         case I_EV_RENDER:
                 sb->window.sprite.modulate.a = sb->widget.fade;
                 R_window_render(&sb->window);
+                R_push_clip();
                 R_clip_rect(sb->widget.origin, sb->widget.size);
-                R_clip_push();
                 I_widget_propagate(&sb->widget, event);
-                R_clip_pop();
-                R_clip_disable();
+                R_pop_clip();
                 return FALSE;
         default:
                 break;
@@ -221,17 +220,20 @@ static void log_handler(c_log_level_t level, int margin, const char *string)
 \******************************************************************************/
 void I_console_init(i_window_t *window)
 {
+        I_window_init(window);
+
         /* Set log handler */
         c_log_func = log_handler;
 
         /* Label */
         I_label_init(&label, C_str("i-console", "Console:"));
+        label.font = R_FONT_TITLE;
         I_widget_add(&window->widget, &label.widget);
 
         /* Scrollback area */
         I_scrollback_init(&scrollback);
         scrollback.widget.event_func = (i_event_f)scrollback_event;
-        scrollback.widget.padding = 0.5f;
+        scrollback.widget.margin_rear = 0.5f;
         I_widget_add(&window->widget, &scrollback.widget);
 
         /* Entry */

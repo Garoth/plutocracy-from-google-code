@@ -119,7 +119,7 @@ static void render_test_model(void)
         if (!test_model.data)
                 return;
         glClear(GL_DEPTH_BUFFER_BIT);
-        R_set_mode(R_MODE_3D);
+        R_push_mode(R_MODE_3D);
 
         /* Setup a white light to the left */
         glMatrixMode(GL_MODELVIEW);
@@ -135,6 +135,8 @@ static void render_test_model(void)
         /* Spin the model around a bit */
         test_model.angles.x += 0.05f * c_frame_sec;
         test_model.angles.y += 0.30f * c_frame_sec;
+
+        R_pop_mode();
 }
 
 /******************************************************************************\

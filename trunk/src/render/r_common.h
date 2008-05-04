@@ -87,7 +87,6 @@ typedef struct r_model_data {
 /* Render modes */
 typedef enum {
         R_MODE_NONE,
-        R_MODE_HOLD,
         R_MODE_2D,
         R_MODE_3D,
 } r_mode_t;
@@ -125,6 +124,7 @@ extern float r_globe_radius;
 
 /* r_mode.c */
 extern GLfloat r_cam_matrix[16], r_proj3_matrix[16];
+extern int r_mode_hold;
 
 /* r_prerender.c */
 void R_prerender(void);
@@ -132,7 +132,8 @@ void R_prerender(void);
 /* r_render.c */
 #define R_check_errors() R_check_errors_full(__FILE__, __LINE__, __func__);
 void R_check_errors_full(const char *file, int line, const char *func);
-void R_set_mode(r_mode_t);
+void R_push_mode(r_mode_t);
+void R_pop_mode(void);
 
 extern r_mode_t r_mode;
 extern float r_cam_dist, r_cam_zoom;

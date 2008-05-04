@@ -423,6 +423,7 @@ void R_model_render(r_model_t *model)
 
         if (!model || !model->data)
                 return;
+        R_push_mode(R_MODE_3D);
         glPushMatrix();
         if (model->origin.x || model->origin.y || model->origin.z)
                 glTranslatef(model->origin.x, model->origin.y, model->origin.z);
@@ -446,6 +447,7 @@ void R_model_render(r_model_t *model)
                                      model->data->objects[i].texture);
         glPopMatrix();
         R_check_errors();
+        R_pop_mode();
 }
 
 /******************************************************************************\

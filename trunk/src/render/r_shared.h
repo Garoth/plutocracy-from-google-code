@@ -67,6 +67,7 @@ typedef struct r_billboard {
 typedef enum {
         R_FONT_CONSOLE,
         R_FONT_GUI,
+        R_FONT_TITLE,
         R_FONTS
 } r_font_t;
 
@@ -137,15 +138,15 @@ void R_clip_left(float);
 void R_clip_top(float);
 void R_clip_right(float);
 void R_clip_bottom(float);
-void R_clip_push(void);
-void R_clip_pop(void);
 void R_clip_rect(c_vec2_t origin, c_vec2_t size);
 void R_clip_disable(void);
 void R_finish_frame(void);
 void R_init(void);
 void R_move_cam_by(c_vec2_t);
-void R_zoom_cam_by(float);
+void R_pop_clip(void);
+void R_push_clip(void);
 void R_start_frame(void);
+void R_zoom_cam_by(float);
 
 extern c_count_t r_count_faces;
 extern int r_width_2d, r_height_2d;

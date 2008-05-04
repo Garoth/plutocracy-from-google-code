@@ -23,8 +23,8 @@ static struct {
 } fonts[R_FONTS];
 
 /* Font configuration variables */
-extern c_var_t r_font_console, r_font_console_pt,
-               r_font_gui, r_font_gui_pt;
+extern c_var_t r_font_console, r_font_console_pt, r_font_gui, r_font_gui_pt,
+               r_font_title, r_font_title_pt;
 
 r_texture_t *r_terrain_tex;
 
@@ -413,7 +413,7 @@ void R_texture_render(r_texture_t *tex, int x, int y)
         r_vertex2_t verts[4];
         unsigned short indices[] = {0, 1, 2, 3};
 
-        R_set_mode(R_MODE_2D);
+        R_push_mode(R_MODE_2D);
         verts[0].co = C_vec3(0.f, 0.f, 0.f);
         verts[0].uv = C_vec2(0.f, 0.f);
         verts[1].co = C_vec3(0.f, (float)tex->surface->h, 0.f);
@@ -429,6 +429,7 @@ void R_texture_render(r_texture_t *tex, int x, int y)
         glInterleavedArrays(R_VERTEX2_FORMAT, 0, verts);
         glDrawElements(GL_QUADS, 4, GL_UNSIGNED_SHORT, indices);
         glPopMatrix();
+        R_pop_mode();
 }
 
 /******************************************************************************\
@@ -537,9 +538,14 @@ void R_load_fonts(void)
         C_var_unlatch(&r_font_gui_pt);
         load_font(R_FONT_GUI, r_font_gui.value.s, r_font_gui_pt.value.n);
 
+        /* Title font */
+        C_var_unlatch(&r_font_title);
+        C_var_unlatch(&r_font_title_pt);
+        load_font(R_FONT_TITLE, r_font_title.value.s, r_font_title_pt.value.n);
+
         for (i = 0; i < R_FONTS; i++)
                 if (!fonts[i].ttf_font)
-                        C_error("Forgot to load font %d", i);
+                        C_error("Forgot to load font %d", i + 1);
 }
 
 /******************************************************************************\
