@@ -32,9 +32,11 @@ int I_label_event(i_label_t *label, i_event_t event)
         case I_EV_MOVED:
                 label->text.origin = C_vec2_clamp(label->widget.origin,
                                                   r_pixel_scale.value.f);
-                if (label->text.size.x < label->width)
-                        label->text.origin.x += (label->width -
-                                                 label->text.size.x) / 2;
+                if (label->text.size.x >= label->width)
+                        break;
+                label->text.origin.x += (label->width - label->text.size.x) / 2;
+                label->text.origin = C_vec2_clamp(label->text.origin,
+                                                  r_pixel_scale.value.f);
                 break;
         case I_EV_CLEANUP:
                 R_sprite_cleanup(&label->text);

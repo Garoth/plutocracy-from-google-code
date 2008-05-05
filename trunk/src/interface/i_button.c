@@ -144,20 +144,19 @@ int I_button_event(i_button_t *button, i_event_t event)
         case I_EV_RENDER:
                 button->icon.modulate.a = button->widget.fade;
                 button->text.modulate.a = button->widget.fade;
+                button->hover.sprite.modulate.a = button->widget.fade;
+                button->active.sprite.modulate.a = button->widget.fade;
+                button->normal.sprite.modulate.a = button->widget.fade;
                 if (button->widget.state == I_WS_HOVER) {
-                        button->hover.sprite.modulate.a = button->widget.fade;
                         R_window_render(&button->hover);
                         button->prelight.modulate.a = button->widget.fade;
                         R_sprite_render(&button->prelight);
                 } else if (button->widget.state == I_WS_ACTIVE) {
-                        button->active.sprite.modulate.a = button->widget.fade;
                         R_window_render(&button->active);
                         button->light.modulate.a = button->widget.fade;
                         R_sprite_render(&button->light);
-                } else {
-                        button->normal.sprite.modulate.a = button->widget.fade;
+                } else
                         R_window_render(&button->normal);
-                }
                 R_push_clip();
                 R_clip_rect(button->widget.origin, button->widget.size);
                 R_sprite_render(&button->icon);

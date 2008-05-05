@@ -67,6 +67,13 @@ typedef enum {
         I_FIT_BOTTOM,
 } i_fit_t;
 
+/* The interface uses a limited number of colors */
+typedef enum {
+        I_COLOR,
+        I_COLOR_ALT,
+        I_COLORS
+} i_color_t;
+
 /* Function to handle mouse, keyboard, or other events. Return FALSE to
    prevent the automatic propagation of an event to the widget's children. */
 typedef int (*i_event_f)(void *widget, i_event_t);
@@ -120,13 +127,6 @@ typedef struct i_button {
         char buffer[64];
 } i_button_t;
 
-/* The interface uses a limited number of colors */
-typedef enum {
-        I_COLOR,
-        I_COLOR_ALT,
-        I_COLORS
-} i_color_t;
-
 /* Labels only have text */
 typedef struct i_label {
         i_widget_t widget;
@@ -166,7 +166,6 @@ typedef struct i_select {
         i_label_t label, item;
         i_button_t left, right;
         i_callback_f on_change;
-        r_window_t window;
         void *data;
         const char **list;
         int list_len, index;

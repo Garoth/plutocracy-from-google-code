@@ -77,7 +77,7 @@ typedef struct r_text {
         r_sprite_t sprite;
         r_font_t font;
         float wrap, shadow;
-        int invert;
+        int invert, frame;
         char buffer[256];
 } r_text_t;
 
@@ -126,13 +126,7 @@ float R_screen_to_globe(int pixels);
 
 extern int r_tiles;
 
-/* r_model.c */
-void R_model_cleanup(r_model_t *);
-int R_model_init(r_model_t *, const char *filename);
-void R_model_play(r_model_t *, const char *anim_name);
-void R_model_render(r_model_t *);
-
-/* r_render.c */
+/* r_mode.c */
 void R_cleanup(void);
 void R_clip_left(float);
 void R_clip_top(float);
@@ -149,7 +143,13 @@ void R_start_frame(void);
 void R_zoom_cam_by(float);
 
 extern c_count_t r_count_faces;
-extern int r_width_2d, r_height_2d;
+extern int r_width_2d, r_height_2d, r_restart;
+
+/* r_model.c */
+void R_model_cleanup(r_model_t *);
+int R_model_init(r_model_t *, const char *filename);
+void R_model_play(r_model_t *, const char *anim_name);
+void R_model_render(r_model_t *);
 
 /* r_sprite.c */
 #define R_billboard_cleanup(p) R_sprite_cleanup(&(p)->sprite)
@@ -164,7 +164,7 @@ void R_sprite_render(const r_sprite_t *);
 void R_text_configure(r_text_t *, r_font_t, float wrap, float shadow,
                       int invert, const char *text);
 #define R_text_cleanup(t) R_sprite_cleanup(&(t)->sprite)
-#define R_text_render(t) R_sprite_render(&(t)->sprite)
+void R_text_render(r_text_t *);
 #define R_window_cleanup(w) R_sprite_cleanup(&(w)->sprite)
 void R_window_init(r_window_t *, const char *filename);
 void R_window_render(r_window_t *);
@@ -176,5 +176,6 @@ void R_load_test_assets(void);
 /* r_variables.c */
 void R_register_variables(void);
 
-extern c_var_t r_height, r_pixel_scale, r_width;
+extern c_var_t r_color_bits, r_gamma, r_height, r_pixel_scale, r_width,
+               r_windowed;
 

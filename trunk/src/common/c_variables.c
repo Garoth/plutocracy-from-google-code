@@ -157,35 +157,60 @@ c_var_t *C_resolve_var(const char *name)
 \******************************************************************************/
 void C_var_set(c_var_t *var, const char *string)
 {
-        c_var_value_t *var_value, new_value;
+        c_var_value_t new_value;
         const char *set_string;
 
-        /* Variable editing rules */
         if (var->edit == C_VE_LOCKED) {
                 C_warning("Cannot set '%s' to '%s', variable is locked",
                           var->name, string);
                 return;
         }
-        var_value = &var->value;
-        if (var->edit == C_VE_LATCHED)
-                var_value = &var->latched;
+        if (var->edit != C_VE_LATCHED)
+                var->has_latched = FALSE;
 
         /* Get the new value and see if it changed */
         switch (var->type) {
         case C_VT_INTEGER:
                 new_value.n = atoi(string);
-                if (new_value.n == var_value->n)
+                if (!C_is_digit(string[0]) &&
+                    (!strcasecmp(string, "yes") || !strcasecmp(string, "true")))
+                        new_value.n = 1;
+                if (var->has_latched && new_value.n == var->latched.n)
                         return;
+                if (new_value.n == var->value.n) {
+                        if (var->has_latched) {
+                                C_debug("Variable '%s' unlatched %d",
+                                        var->name, var->latched.n);
+                                var->has_latched = FALSE;
+                        }
+                        return;
+                }
                 break;
         case C_VT_FLOAT:
                 new_value.f = (float)atof(string);
-                if (new_value.f == var_value->f)
+                if (var->has_latched && new_value.f == var->latched.f)
                         return;
+                if (new_value.f == var->value.f) {
+                        if (var->has_latched) {
+                                C_debug("Variable '%s' unlatched %g",
+                                        var->name, var->latched.f);
+                                var->has_latched = FALSE;
+                        }
+                        return;
+                }
                 break;
         case C_VT_STRING:
                 C_strncpy_buf(new_value.s, string);
-                if (!strcmp(var_value->s, string))
+                if (var->has_latched && !strcmp(var->latched.s, string))
                         return;
+                if (!strcmp(var->value.s, string)) {
+                        if (var->has_latched) {
+                                C_debug("Variable '%s' unlatched '%s'",
+                                        var->name, var->latched.s);
+                                var->has_latched = FALSE;
+                        }
+                        return;
+                }
                 break;
         default:
                 C_error("Variable '%s' is uninitialized", var->name);
@@ -203,10 +228,12 @@ void C_var_set(c_var_t *var, const char *string)
         set_string = "set to";
         if (var->edit == C_VE_LATCHED) {
                 var->has_latched = TRUE;
+                var->latched = new_value;
                 set_string = "latched";
+        } else {
+                var->value = new_value;
+                var->changed = c_frame;
         }
-        *var_value = new_value;
-        var->changed = c_frame;
         switch (var->type) {
         case C_VT_INTEGER:
                 C_debug("Integer '%s' %s %d", var->name,
@@ -223,16 +250,18 @@ void C_var_set(c_var_t *var, const char *string)
 }
 
 /******************************************************************************\
- If the variable has a latched value.
+ If the variable has a latched value, propagate it to the actual value.
 \******************************************************************************/
-void C_var_unlatch(c_var_t *var)
+int C_var_unlatch(c_var_t *var)
 {
         if (var->type == C_VT_UNREGISTERED)
                 C_error("Tried to unlatch an unregistered variable");
         if (!var->has_latched || var->edit != C_VE_LATCHED)
-                return;
+                return FALSE;
         var->value = var->latched;
         var->has_latched = FALSE;
+        var->changed = c_frame;
+        return TRUE;
 }
 
 /******************************************************************************\

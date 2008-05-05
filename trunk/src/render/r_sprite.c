@@ -299,8 +299,6 @@ void R_sprite_init_text(r_sprite_t *sprite, r_font_t font, float wrap,
 /******************************************************************************\
  Wrapper around the sprite text initializer. Avoids re-rendering the texture
  if the parameters have not changed.
- FIXME: If the pixel scale has changed on a text sprite the previous frame we
-        need to re-render it.
 \******************************************************************************/
 void R_text_configure(r_text_t *text, r_font_t font, float wrap, float shadow,
                       int invert, const char *string)
@@ -311,11 +309,32 @@ void R_text_configure(r_text_t *text, r_font_t font, float wrap, float shadow,
                 return;
         R_sprite_cleanup(&text->sprite);
         R_sprite_init_text(&text->sprite, font, wrap, shadow, invert, string);
+        text->frame = c_frame;
         text->font = font;
         text->wrap = wrap;
         text->shadow = shadow;
         text->invert = invert;
         C_strncpy_buf(text->buffer, string);
+}
+
+/******************************************************************************\
+ Renders a text sprite. Will re-configure the text sprite when necessary.
+\******************************************************************************/
+void R_text_render(r_text_t *text)
+{
+        /* Pixel scale changes require re-initialization */
+        if (r_pixel_scale.changed > text->frame) {
+                c_vec2_t origin;
+
+                text->frame = c_frame;
+                origin = text->sprite.origin;
+                R_sprite_cleanup(&text->sprite);
+                R_sprite_init_text(&text->sprite, text->font, text->wrap,
+                                   text->shadow, text->invert, text->buffer);
+                text->sprite.origin = origin;
+        }
+
+        R_sprite_render(&text->sprite);
 }
 
 /******************************************************************************\
@@ -434,9 +453,9 @@ void R_billboard_init(r_billboard_t *bb, const char *filename)
 
 /******************************************************************************\
  Render a billboard point sprite.
-
  FIXME: Scaling.
  FIXME: Why do we have to translate by the size times 1.5?
+ FIXME: Should not be affected by r_pixel_scale.
 \******************************************************************************/
 void R_billboard_render(r_billboard_t *bb)
 {

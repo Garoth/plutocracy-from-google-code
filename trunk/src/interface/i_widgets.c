@@ -211,10 +211,10 @@ void I_widget_pack(i_widget_t *widget, i_pack_t pack, i_fit_t fit)
         /* If there is left over space and we are not collapsing, assign it
            to any expandable widgets */
         if (fit == I_FIT_NONE) {
-                if (pack == I_PACK_H && expanders && size.x > 0.f) {
+                if (pack == I_PACK_H && expanders) {
                         size.y = 0.f;
                         expand_children(widget, size, expanders);
-                } else if (pack == I_PACK_V && expanders && size.y > 0.f) {
+                } else if (pack == I_PACK_V && expanders) {
                         size.x = 0.f;
                         expand_children(widget, size, expanders);
                 }
@@ -462,17 +462,29 @@ void I_widget_event(i_widget_t *widget, i_event_t event)
                                       widget->parent->origin,
                                       widget->parent->size))
                         return;
-                if (widget->shown) {
-                        widget->fade += i_fade.value.f * c_frame_sec;
-                        if (widget->fade > 1.f)
-                                widget->fade = 1.f;
-                } else {
-                        widget->fade -= i_fade.value.f * c_frame_sec;
-                        if (widget->fade < 0.f) {
-                                widget->fade = 0.f;
-                                return;
+                if (i_fade.value.f > 0.f) {
+                        float target, rate;
+
+                        target = widget->shown ? 1.f : 0.f;
+                        rate = i_fade.value.f * c_frame_sec;
+                        if (widget->state == I_WS_DISABLED) {
+                                target /= 4.f;
+                                if (widget->fade <= 0.25f)
+                                        rate /= 4.f;
                         }
-                }
+                        if (widget->fade < target) {
+                                widget->fade += rate;
+                                if (widget->fade > target)
+                                        widget->fade = target;
+                        } else if (widget->fade > target) {
+                                widget->fade -= rate;
+                                if (widget->fade < target)
+                                        widget->fade = target;
+                        }
+                        if (widget->fade <= 0.f)
+                                return;
+                } else if (!widget->shown)
+                        return;
                 break;
         case I_EV_SHOW:
                 widget->shown = TRUE;

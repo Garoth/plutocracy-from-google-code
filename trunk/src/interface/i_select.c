@@ -13,47 +13,34 @@
 #include "i_common.h"
 
 /******************************************************************************\
- Configure the select widget's window.
-\******************************************************************************/
-static void select_moved(i_select_t *select)
-{
-        c_vec2_t label_bounds;
-
-        label_bounds = I_widget_bounds(&select->label.widget, I_PACK_H);
-        select->window.sprite.size = I_widget_child_bounds(&select->widget);
-        select->window.sprite.size.x -= label_bounds.x;
-        select->window.sprite.size.y = select->left.widget.size.y;
-        select->window.sprite.origin = select->widget.origin;
-        select->window.sprite.origin.x += label_bounds.x;
-}
-
-/******************************************************************************\
  Selection widget event function.
 \******************************************************************************/
 int I_select_event(i_select_t *select, i_event_t event)
 {
-        switch (event) {
-        case I_EV_CONFIGURE:
+        if (event == I_EV_CONFIGURE) {
+                float width;
+                int i;
+
+                /* Find the length of the longest option */
+                if (select->list) {
+                        for (i = 0, width = 0.f; select->list[i]; i++) {
+                                c_vec2_t size;
+
+                                size = R_font_size(R_FONT_GUI, select->list[i]);
+                                size = C_vec2_divf(size, r_pixel_scale.value.f);
+                                if (size.x > width)
+                                        width = size.x;
+                        }
+                        select->item.width = width;
+                        select->list_len = i;
+                }
+
+                select->widget.size.y = R_font_height(R_FONT_GUI) /
+                                        r_pixel_scale.value.f;
                 I_widget_pack(&select->widget, I_PACK_H, I_FIT_NONE);
                 select->widget.size = I_widget_child_bounds(&select->widget);
-                R_window_cleanup(&select->window);
-                R_window_init(&select->window, i_work_area.value.s);
-                select_moved(select);
                 return FALSE;
-        case I_EV_MOVED:
-                select_moved(select);
-                break;
-        case I_EV_CLEANUP:
-                R_window_cleanup(&select->window);
-                break;
-        case I_EV_RENDER:
-                select->window.sprite.modulate.a = select->widget.fade;
-                R_window_render(&select->window);
-                break;
-        default:
-                break;
         }
-
         return TRUE;
 }
 
@@ -68,6 +55,8 @@ static void select_change(i_select_t *select, int index)
                 index = 0;
         I_label_configure(&select->item, select->list[index]);
         select->index = index;
+        if (select->on_change)
+                select->on_change(select);
 }
 
 /******************************************************************************\
@@ -78,7 +67,7 @@ static void left_arrow_clicked(i_button_t *button)
         i_select_t *select;
 
         select = (i_select_t *)button->data;
-        select_change(select, ++select->index);
+        select_change(select, --select->index);
 }
 
 /******************************************************************************\
@@ -89,7 +78,7 @@ static void right_arrow_clicked(i_button_t *button)
         i_select_t *select;
 
         select = (i_select_t *)button->data;
-        select_change(select, --select->index);
+        select_change(select, ++select->index);
 }
 
 /******************************************************************************\
@@ -98,8 +87,6 @@ static void right_arrow_clicked(i_button_t *button)
 void I_select_init(i_select_t *select, const char *label, const char **list,
                    int initial)
 {
-        float width;
-
         if (!select)
                 return;
         C_zero(select);
@@ -110,20 +97,17 @@ void I_select_init(i_select_t *select, const char *label, const char **list,
         select->list = list;
         select->index = initial;
 
-        /* Find the length of the longest option */
-        for (width = 0.f; list[select->list_len]; select->list_len++) {
-                c_vec2_t size;
-
-                size = R_font_size(R_FONT_GUI, list[select->list_len]);
-                size = C_vec2_divf(size, r_pixel_scale.value.f);
-                if (size.x > width)
-                        width = size.x;
-        }
-
         /* Description label */
         I_label_init(&select->label, label);
-        I_widget_add(&select->widget, &select->label.widget);
+        select->label.widget.expand = TRUE;
         select->label.widget.margin_rear = 0.5f;
+        I_widget_add(&select->widget, &select->label.widget);
+
+        /* Don't add buttons or item list if there is no list */
+        if (!list || !list[0]) {
+                I_widget_inited(&select->widget);
+                return;
+        }
 
         /* Left button */
         I_button_init(&select->left, "gui/icons/arrow-left.png", NULL, FALSE);
@@ -134,7 +118,7 @@ void I_select_init(i_select_t *select, const char *label, const char **list,
 
         /* Selected item label */
         I_label_init(&select->item, list[initial]);
-        select->item.width = width;
+        select->item.color = I_COLOR_ALT;
         I_widget_add(&select->widget, &select->item.widget);
 
         /* Right button */
