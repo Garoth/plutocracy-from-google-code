@@ -23,7 +23,7 @@ static struct property_t {
 } properties[] = {
         {I_game_init, "gui/icons/game.png", {240.f, 0.f}},
         {I_console_init, "gui/icons/console.png", {480.f, 240.f}},
-        {I_video_init, "gui/icons/video.png", {240.f, 0.f}},
+        {I_video_init, "gui/icons/video.png", {260.f, 0.f}},
 };
 
 i_widget_t i_root;
@@ -31,7 +31,7 @@ i_widget_t i_root;
 static c_vec2_t root_scroll;
 static i_window_t left_toolbar, *open_window, windows[WINDOWS];
 static i_button_t buttons[WINDOWS];
-static int grabbing, grab_x, grab_y;
+static int grabbing, grab_x, grab_y, layout_frame;
 
 /******************************************************************************\
  Root window event function.
@@ -261,11 +261,12 @@ void I_cleanup(void)
 void I_render(void)
 {
         /* If video parameters changed last frame, we need to reconfigure */
-        if (r_pixel_scale.changed == c_frame - 1 ||
-            r_width.changed == c_frame - 1 ||
-            r_height.changed == c_frame - 1) {
+        if (r_pixel_scale.changed > layout_frame ||
+            r_width.changed > layout_frame ||
+            r_height.changed > layout_frame) {
                 theme_configure();
                 I_widget_event(&i_root, I_EV_CONFIGURE);
+                layout_frame = c_frame;
         }
 
         I_widget_event(&i_root, I_EV_RENDER);

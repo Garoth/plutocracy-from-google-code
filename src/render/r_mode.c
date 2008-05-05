@@ -22,7 +22,7 @@ c_count_t r_count_faces;
 /* Current OpenGL settings */
 r_mode_t r_mode;
 c_color_t clear_color;
-int r_width_2d, r_height_2d, r_mode_hold;
+int r_width_2d, r_height_2d, r_mode_hold, r_restart;
 
 /* Supported extensions */
 int r_extensions[R_EXTENSIONS];
@@ -46,19 +46,17 @@ static r_mode_t mode_values[MODE_STACK];
 /******************************************************************************\
  Updates when [r_pixel_scale] changes.
 \******************************************************************************/
-static int pixel_scale_update(c_var_t *var, c_var_value_t value)
+static void pixel_scale_update(void)
 {
-        if (value.f < R_PIXEL_SCALE_MIN)
-                value.f = R_PIXEL_SCALE_MIN;
-        if (value.f > R_PIXEL_SCALE_MAX)
-                value.f = R_PIXEL_SCALE_MAX;
-        r_width_2d = (int)(r_width.value.n / value.f + 0.5f);
-        r_height_2d = (int)(r_height.value.n / value.f + 0.5f);
-        r_pixel_scale.value = value;
+        if (r_pixel_scale.value.f < R_PIXEL_SCALE_MIN)
+                r_pixel_scale.value.f = R_PIXEL_SCALE_MIN;
+        if (r_pixel_scale.value.f > R_PIXEL_SCALE_MAX)
+                r_pixel_scale.value.f = R_PIXEL_SCALE_MAX;
+        r_width_2d = (int)(r_width.value.n / r_pixel_scale.value.f + 0.5f);
+        r_height_2d = (int)(r_height.value.n / r_pixel_scale.value.f + 0.5f);
         R_free_fonts();
         R_load_fonts();
         C_debug("2D area %dx%d", r_width_2d, r_height_2d);
-        return TRUE;
 }
 
 /******************************************************************************\
@@ -99,19 +97,18 @@ static int set_video_mode(void)
                 SDL_HWSURFACE;
         if (!r_windowed.value.n)
                 flags |= SDL_FULLSCREEN;
-        screen = SDL_SetVideoMode(r_width.value.n, r_height.value.n, 0, flags);
+        screen = SDL_SetVideoMode(r_width.value.n, r_height.value.n,
+                                  r_color_bits.value.n, flags);
         if (!screen) {
                 C_warning("Failed to set video mode: %s", SDL_GetError());
                 return FALSE;
         }
 
-        /* Update 2D area */
-        C_var_update(&r_pixel_scale, pixel_scale_update);
-
         /* Set screen view */
         glViewport(0, 0, r_width.value.n, r_height.value.n);
         R_check_errors();
 
+        pixel_scale_update();
         return TRUE;
 }
 
@@ -220,8 +217,6 @@ void R_init(void)
         /* Set updatable variables */
         C_var_update(&r_clear, clear_update);
         C_var_update(&r_gamma, gamma_update);
-        r_pixel_scale.edit = C_VE_FUNCTION;
-        r_pixel_scale.update = pixel_scale_update;
 }
 
 /******************************************************************************\
@@ -509,6 +504,16 @@ void R_pop_mode(void)
 void R_start_frame(void)
 {
         int clear_flags;
+
+        /* Video can only be restarted at the start of the frame */
+        if (r_restart) {
+                set_video_mode();
+                r_restart = FALSE;
+        }
+
+        /* Pixel scale should only be updated at the start of the frame */
+        if (C_var_unlatch(&r_pixel_scale))
+                pixel_scale_update();
 
         /* Only clear the screen if r_clear is set */
         clear_flags = GL_DEPTH_BUFFER_BIT;
