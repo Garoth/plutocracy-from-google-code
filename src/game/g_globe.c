@@ -12,9 +12,16 @@
 
 #include "g_common.h"
 
-/* Island parameter limits */
+/* Maximum number of islands */
 #define ISLAND_NUM 128
-#define ISLAND_SIZE 256
+
+/* Maximum island size */
+#define ISLAND_SIZE 384
+
+/* Island size will vary up to this proportion */
+#define ISLAND_VARIANCE 0.5f
+
+/* Maximum height off the globe surface of a tile */
 #define ISLAND_HEIGHT 2.5f
 
 /* Island structure */
@@ -23,6 +30,7 @@ typedef struct g_island {
         int tiles, land;
 } g_island_t;
 
+/* Island tiles with game data */
 g_tile_t g_tiles[R_TILES_MAX];
 
 static r_tile_t render_tiles[R_TILES_MAX];
@@ -139,7 +147,8 @@ static void grow_islands(int num, int island_size)
                 }
                 sizes[i] = 1;
                 edges[i * ISLAND_SIZE] = islands[i].root;
-                limits[i] = (int)((0.5f + C_rand_real()) * island_size);
+                limits[i] = (int)((ISLAND_VARIANCE * (C_rand_real() - 0.5f) +
+                                   1.f) * island_size);
                 islands[i].root->island = i;
                 islands[i].tiles = 1;
                 islands[i].land = 0;
