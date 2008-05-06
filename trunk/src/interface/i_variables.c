@@ -12,9 +12,10 @@
 
 #include "i_common.h"
 
+/* Debug output level (0-2) */
 c_var_t i_debug;
 
-/* Theme varables */
+/* Theme variables */
 c_var_t i_border, i_button, i_button_active, i_button_hover, i_button_light,
         i_button_prelight, i_color, i_color2, i_fade, i_hanger, i_shadow,
         i_theme, i_window, i_work_area;

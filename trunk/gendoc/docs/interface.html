@@ -18,7 +18,8 @@
 <a href="render.html" target="frame">Render</a> |
 <a href="interface.html" target="frame">Interface</a> |
 <a href="network.html" target="frame">Network</a> |
-<a href="game.html" target="frame">Game</a>
+<a href="game.html" target="frame">Game</a> |
+<a href="game.html" target="frame">GenDoc</a>
 </div>
 
 <div class="menu">
@@ -70,7 +71,7 @@ i_button_t <span class="file">(i_common.h)</span></div>
         <b class="keyword0">int</b> decorated<span class="def_op">;</span>
         <b class="keyword0">char</b> buffer<span class="def_op">[</span><span class="def_const">64</span><span class="def_op">];</span>
 <span class="def_op">}</span> i_button_t<span class="def_op">;</span></pre>
-<p class="comment"> Buttons can have an icon and/or text</p>
+<p class="comment"> Buttons can have an icon and/or text</code></p>
 </div>
 <a name="i_callback_f" href="javascript:toggle(4)">
 <div class="entry" id="4">
@@ -90,7 +91,7 @@ i_color_t <span class="file">(i_common.h)</span></div>
         I_COLOR_ALT<span class="def_op">,</span>
         I_COLORS
 <span class="def_op">}</span> i_color_t<span class="def_op">;</span></pre>
-<p class="comment"> The interface uses a limited number of colors</p>
+<p class="comment"> The interface uses a limited number of colors</code></p>
 </div>
 <a name="i_entry_t" href="javascript:toggle(6)">
 <div class="entry" id="6">
@@ -107,7 +108,7 @@ i_entry_t <span class="file">(i_common.h)</span></div>
         <b class="keyword0">int</b> pos<span class="def_op">,</span> history_pos<span class="def_op">,</span> history_size<span class="def_op">;</span>
         <b class="keyword0">char</b> buffer<span class="def_op">[</span><span class="def_const">256</span><span class="def_op">],</span> history<span class="def_op">[</span>I_ENTRY_HISTORY<span class="def_op">][</span><span class="def_const">256</span><span class="def_op">];</span>
 <span class="def_op">}</span> i_entry_t<span class="def_op">;</span></pre>
-<p class="comment"> A one-line text field</p>
+<p class="comment"> A one-line text field</code></p>
 </div>
 <a name="i_event_f" href="javascript:toggle(7)">
 <div class="entry" id="7">
@@ -116,7 +117,7 @@ i_event_f <span class="file">(i_common.h)</span></div>
 <div class="entry_body" id="7_body" style="display:none">
 <pre><b class="keyword1">typedef</b> <b class="keyword0">int</b> <span class="def_op">(*</span>i_event_f<span class="def_op">)(<b class="keyword0">void</b></span> <span class="def_op">*</span>widget<span class="def_op">,</span> <a href="#i_event_t">i_event_t</a><span class="def_op">);</span></pre>
 <p class="comment"> Function to handle mouse, keyboard, or other events. Return <code>FALSE</code> to
-   prevent the automatic propagation of an event to the widget's children.</p>
+   <code>  prevent the automatic propagation of an event to the widget's children.</code></p>
 </div>
 <a name="i_event_t" href="javascript:toggle(8)">
 <div class="entry" id="8">
@@ -143,8 +144,8 @@ i_event_t <span class="file">(i_common.h)</span></div>
         I_EVENTS
 <span class="def_op">}</span> i_event_t<span class="def_op">;</span></pre>
 <p class="comment"> Possible events. The arguments (mouse position etc) for the events are
-   stored in global variables, so the interface system only processes one
-   event at a time.</p>
+   <code>  stored in global variables, so the interface system only processes one</code>
+   <code>  event at a time.</code></p>
 </div>
 <a name="i_fit_t" href="javascript:toggle(9)">
 <div class="entry" id="9">
@@ -156,7 +157,7 @@ i_fit_t <span class="file">(i_common.h)</span></div>
         I_FIT_TOP<span class="def_op">,</span>
         I_FIT_BOTTOM<span class="def_op">,</span>
 <span class="def_op">}</span> i_fit_t<span class="def_op">;</span></pre>
-<p class="comment"> Determines how a widget will use any extra space it has been assigned</p>
+<p class="comment"> Determines how a widget will use any extra space it has been assigned</code></p>
 </div>
 <a name="i_label_t" href="javascript:toggle(10)">
 <div class="entry" id="10">
@@ -171,7 +172,7 @@ i_label_t <span class="file">(i_common.h)</span></div>
         <b class="keyword0">float</b> width<span class="def_op">;</span>
         <b class="keyword0">char</b> buffer<span class="def_op">[</span><span class="def_const">256</span><span class="def_op">];</span>
 <span class="def_op">}</span> i_label_t<span class="def_op">;</span></pre>
-<p class="comment"> Labels only have text</p>
+<p class="comment"> Labels only have text</code></p>
 </div>
 <a name="i_pack_t" href="javascript:toggle(11)">
 <div class="entry" id="11">
@@ -184,7 +185,7 @@ i_pack_t <span class="file">(i_common.h)</span></div>
         I_PACK_V<span class="def_op">,</span>
         I_PACK_TYPES
 <span class="def_op">}</span> i_pack_t<span class="def_op">;</span></pre>
-<p class="comment"> Widgets can only be packed as lists horizontally or vertically</p>
+<p class="comment"> Widgets can only be packed as lists horizontally or vertically</code></p>
 </div>
 <a name="i_scrollback_t" href="javascript:toggle(12)">
 <div class="entry" id="12">
@@ -198,8 +199,8 @@ i_scrollback_t <span class="file">(i_common.h)</span></div>
         <b class="keyword0">int</b> children<span class="def_op">,</span> limit<span class="def_op">;</span>
 <span class="def_op">}</span> i_scrollback_t<span class="def_op">;</span></pre>
 <p class="comment"> A fixed-size, work-area widget that can dynamically add new components
-   vertically and scroll up and down. Widgets will begin to be removed after
-   a specified limit is reached.</p>
+   <code>  vertically and scroll up and down. Widgets will begin to be removed after</code>
+   <code>  a specified limit is reached.</code></p>
 </div>
 <a name="i_select_t" href="javascript:toggle(13)">
 <div class="entry" id="13">
@@ -216,7 +217,7 @@ i_select_t <span class="file">(i_common.h)</span></div>
         <b class="keyword0">int</b> list_len<span class="def_op">,</span> index<span class="def_op">;</span>
 <span class="def_op">}</span> i_select_t<span class="def_op">;</span></pre>
 <p class="comment"> Displays a label and a selection widget which can select text items from
-   a list to the right of it</p>
+   <code>  a list to the right of it</code></p>
 </div>
 <a name="i_widget_state_t" href="javascript:toggle(14)">
 <div class="entry" id="14">
@@ -230,7 +231,7 @@ i_widget_state_t <span class="file">(i_common.h)</span></div>
         I_WS_ACTIVE<span class="def_op">,</span>
         I_WIDGET_STATES
 <span class="def_op">}</span> i_widget_state_t<span class="def_op">;</span></pre>
-<p class="comment"> Widget input states</p>
+<p class="comment"> Widget input states</code></p>
 </div>
 <a name="i_widget_t" href="javascript:toggle(15)">
 <div class="entry" id="15">
@@ -247,15 +248,15 @@ i_widget_t <span class="file">(i_common.h)</span></div>
         <b class="keyword0">int</b> configured<span class="def_op">,</span> entry<span class="def_op">,</span> clickable<span class="def_op">,</span> expand<span class="def_op">,</span> shown<span class="def_op">,</span> heap<span class="def_op">;</span>
 <span class="def_op">}</span> i_widget_t<span class="def_op">;</span></pre>
 <p class="comment"> The basic properties all interface widgets need to have. The widget struct
-   should be the first member of any derived widget struct.<br>
+   <code>  should be the first member of any derived widget struct.</code><br>
 <br>
-   When a widget receives the <code>I_EV_CONFIGURE</code> event it, its parent has set its
-   origin and size to the maximum available space. The widget must then change
-   its size to its actual size.<br>
+   <code>  When a widget receives the I_EV_CONFIGURE event it, its parent has set its</code>
+   <code>  origin and size to the maximum available space. The widget must then change</code>
+   <code>  its size to its actual size.</code><br>
 <br>
-   The reason for keeping <code>name</code> as a buffer rather than a pointer to a
-   statically-allocated string is to assist in memory leak detection. The
-   leak detector thinks the memory is a string and prints the widget name.</p>
+   <code>  The reason for keeping [name] as a buffer rather than a pointer to a</code>
+   <code>  statically-allocated string is to assist in memory leak detection. The</code>
+   <code>  leak detector thinks the memory is a string and prints the widget name.</code></p>
 </div>
 <a name="i_window_t" href="javascript:toggle(16)">
 <div class="entry" id="16">
@@ -272,7 +273,7 @@ i_window_t <span class="file">(i_common.h)</span></div>
         <b class="keyword0">float</b> hanger_x<span class="def_op">;</span>
         <b class="keyword0">int</b> hanger_shown<span class="def_op">,</span> decorated<span class="def_op">;</span>
 <span class="def_op">}</span> i_window_t<span class="def_op">;</span></pre>
-<p class="comment"> Windows are decorated containers</p>
+<p class="comment"> Windows are decorated containers</code></p>
 </div>
 <a name="Functions"></a>
 <h2>Functions</h2>
@@ -595,240 +596,248 @@ I_window_init <span class="file">(i_window.c)</span></div>
 <h2>Variables</h2>
 <a name="i_border" href="javascript:toggle(49)">
 <div class="entry" id="49">
-i_border <span class="file">(i_common.h)</span></div>
+i_border <span class="file">(i_variables.c)</span></div>
 </a>
 <div class="entry_body" id="49_body" style="display:none">
 <pre><b class="keyword0">extern</b> c_var_t i_border<span class="def_op">,</span> i_button<span class="def_op">,</span> i_button_active<span class="def_op">,</span> i_button_hover<span class="def_op">,</span>
                i_button_light<span class="def_op">,</span> i_button_prelight<span class="def_op">,</span> i_color<span class="def_op">,</span> i_color2<span class="def_op">,</span>
                i_debug<span class="def_op">,</span> i_fade<span class="def_op">,</span> i_hanger<span class="def_op">,</span> i_scroll_speed<span class="def_op">,</span> i_shadow<span class="def_op">,</span> i_theme<span class="def_op">,</span>
                i_window<span class="def_op">,</span> i_work_area<span class="def_op">,</span> i_zoom_speed<span class="def_op">;</span></pre>
-<p class="comment"> i_variables.c</p>
+<p class="comment"> Theme variables</p>
 </div>
 <a name="i_button" href="javascript:toggle(50)">
 <div class="entry" id="50">
-i_button <span class="file">(i_common.h)</span></div>
+i_button <span class="file">(i_variables.c)</span></div>
 </a>
 <div class="entry_body" id="50_body" style="display:none">
 <pre><b class="keyword0">extern</b> c_var_t i_border<span class="def_op">,</span> i_button<span class="def_op">,</span> i_button_active<span class="def_op">,</span> i_button_hover<span class="def_op">,</span>
                i_button_light<span class="def_op">,</span> i_button_prelight<span class="def_op">,</span> i_color<span class="def_op">,</span> i_color2<span class="def_op">,</span>
                i_debug<span class="def_op">,</span> i_fade<span class="def_op">,</span> i_hanger<span class="def_op">,</span> i_scroll_speed<span class="def_op">,</span> i_shadow<span class="def_op">,</span> i_theme<span class="def_op">,</span>
                i_window<span class="def_op">,</span> i_work_area<span class="def_op">,</span> i_zoom_speed<span class="def_op">;</span></pre>
-<p class="comment"> i_variables.c</p>
+<p class="comment"> Theme variables</p>
 </div>
 <a name="i_button_active" href="javascript:toggle(51)">
 <div class="entry" id="51">
-i_button_active <span class="file">(i_common.h)</span></div>
+i_button_active <span class="file">(i_variables.c)</span></div>
 </a>
 <div class="entry_body" id="51_body" style="display:none">
 <pre><b class="keyword0">extern</b> c_var_t i_border<span class="def_op">,</span> i_button<span class="def_op">,</span> i_button_active<span class="def_op">,</span> i_button_hover<span class="def_op">,</span>
                i_button_light<span class="def_op">,</span> i_button_prelight<span class="def_op">,</span> i_color<span class="def_op">,</span> i_color2<span class="def_op">,</span>
                i_debug<span class="def_op">,</span> i_fade<span class="def_op">,</span> i_hanger<span class="def_op">,</span> i_scroll_speed<span class="def_op">,</span> i_shadow<span class="def_op">,</span> i_theme<span class="def_op">,</span>
                i_window<span class="def_op">,</span> i_work_area<span class="def_op">,</span> i_zoom_speed<span class="def_op">;</span></pre>
-<p class="comment"> i_variables.c</p>
+<p class="comment"> Theme variables</p>
 </div>
 <a name="i_button_hover" href="javascript:toggle(52)">
 <div class="entry" id="52">
-i_button_hover <span class="file">(i_common.h)</span></div>
+i_button_hover <span class="file">(i_variables.c)</span></div>
 </a>
 <div class="entry_body" id="52_body" style="display:none">
 <pre><b class="keyword0">extern</b> c_var_t i_border<span class="def_op">,</span> i_button<span class="def_op">,</span> i_button_active<span class="def_op">,</span> i_button_hover<span class="def_op">,</span>
                i_button_light<span class="def_op">,</span> i_button_prelight<span class="def_op">,</span> i_color<span class="def_op">,</span> i_color2<span class="def_op">,</span>
                i_debug<span class="def_op">,</span> i_fade<span class="def_op">,</span> i_hanger<span class="def_op">,</span> i_scroll_speed<span class="def_op">,</span> i_shadow<span class="def_op">,</span> i_theme<span class="def_op">,</span>
                i_window<span class="def_op">,</span> i_work_area<span class="def_op">,</span> i_zoom_speed<span class="def_op">;</span></pre>
-<p class="comment"> i_variables.c</p>
+<p class="comment"> Theme variables</p>
 </div>
 <a name="i_button_light" href="javascript:toggle(53)">
 <div class="entry" id="53">
-i_button_light <span class="file">(i_common.h)</span></div>
+i_button_light <span class="file">(i_variables.c)</span></div>
 </a>
 <div class="entry_body" id="53_body" style="display:none">
 <pre><b class="keyword0">extern</b> c_var_t i_border<span class="def_op">,</span> i_button<span class="def_op">,</span> i_button_active<span class="def_op">,</span> i_button_hover<span class="def_op">,</span>
                i_button_light<span class="def_op">,</span> i_button_prelight<span class="def_op">,</span> i_color<span class="def_op">,</span> i_color2<span class="def_op">,</span>
                i_debug<span class="def_op">,</span> i_fade<span class="def_op">,</span> i_hanger<span class="def_op">,</span> i_scroll_speed<span class="def_op">,</span> i_shadow<span class="def_op">,</span> i_theme<span class="def_op">,</span>
                i_window<span class="def_op">,</span> i_work_area<span class="def_op">,</span> i_zoom_speed<span class="def_op">;</span></pre>
-<p class="comment"> i_variables.c</p>
+<p class="comment"> Theme variables</p>
 </div>
 <a name="i_button_prelight" href="javascript:toggle(54)">
 <div class="entry" id="54">
-i_button_prelight <span class="file">(i_common.h)</span></div>
+i_button_prelight <span class="file">(i_variables.c)</span></div>
 </a>
 <div class="entry_body" id="54_body" style="display:none">
 <pre><b class="keyword0">extern</b> c_var_t i_border<span class="def_op">,</span> i_button<span class="def_op">,</span> i_button_active<span class="def_op">,</span> i_button_hover<span class="def_op">,</span>
                i_button_light<span class="def_op">,</span> i_button_prelight<span class="def_op">,</span> i_color<span class="def_op">,</span> i_color2<span class="def_op">,</span>
                i_debug<span class="def_op">,</span> i_fade<span class="def_op">,</span> i_hanger<span class="def_op">,</span> i_scroll_speed<span class="def_op">,</span> i_shadow<span class="def_op">,</span> i_theme<span class="def_op">,</span>
                i_window<span class="def_op">,</span> i_work_area<span class="def_op">,</span> i_zoom_speed<span class="def_op">;</span></pre>
-<p class="comment"> i_variables.c</p>
+<p class="comment"> Theme variables</p>
 </div>
 <a name="i_child" href="javascript:toggle(55)">
 <div class="entry" id="55">
-i_child <span class="file">(i_common.h)</span></div>
+i_child <span class="file">(i_widgets.c)</span></div>
 </a>
 <div class="entry_body" id="55_body" style="display:none">
 <pre><b class="keyword0">extern</b> <a href="#i_widget_t">i_widget_t</a> <span class="def_op">*</span>i_key_focus<span class="def_op">,</span> <span class="def_op">*</span>i_child<span class="def_op">;</span></pre>
-<p class="comment"> i_widgets.c</p>
+<p class="comment"> This is the child widget for an <code>I_EV_ADD_CHILD</code> event</p>
 </div>
 <a name="i_color" href="javascript:toggle(56)">
 <div class="entry" id="56">
-i_color <span class="file">(i_common.h)</span></div>
+i_color <span class="file">(i_variables.c)</span></div>
 </a>
 <div class="entry_body" id="56_body" style="display:none">
 <pre><b class="keyword0">extern</b> c_var_t i_border<span class="def_op">,</span> i_button<span class="def_op">,</span> i_button_active<span class="def_op">,</span> i_button_hover<span class="def_op">,</span>
                i_button_light<span class="def_op">,</span> i_button_prelight<span class="def_op">,</span> i_color<span class="def_op">,</span> i_color2<span class="def_op">,</span>
                i_debug<span class="def_op">,</span> i_fade<span class="def_op">,</span> i_hanger<span class="def_op">,</span> i_scroll_speed<span class="def_op">,</span> i_shadow<span class="def_op">,</span> i_theme<span class="def_op">,</span>
                i_window<span class="def_op">,</span> i_work_area<span class="def_op">,</span> i_zoom_speed<span class="def_op">;</span></pre>
-<p class="comment"> i_variables.c</p>
+<p class="comment"> Theme variables</p>
 </div>
 <a name="i_color2" href="javascript:toggle(57)">
 <div class="entry" id="57">
-i_color2 <span class="file">(i_common.h)</span></div>
+i_color2 <span class="file">(i_variables.c)</span></div>
 </a>
 <div class="entry_body" id="57_body" style="display:none">
 <pre><b class="keyword0">extern</b> c_var_t i_border<span class="def_op">,</span> i_button<span class="def_op">,</span> i_button_active<span class="def_op">,</span> i_button_hover<span class="def_op">,</span>
                i_button_light<span class="def_op">,</span> i_button_prelight<span class="def_op">,</span> i_color<span class="def_op">,</span> i_color2<span class="def_op">,</span>
                i_debug<span class="def_op">,</span> i_fade<span class="def_op">,</span> i_hanger<span class="def_op">,</span> i_scroll_speed<span class="def_op">,</span> i_shadow<span class="def_op">,</span> i_theme<span class="def_op">,</span>
                i_window<span class="def_op">,</span> i_work_area<span class="def_op">,</span> i_zoom_speed<span class="def_op">;</span></pre>
-<p class="comment"> i_variables.c</p>
+<p class="comment"> Theme variables</p>
 </div>
 <a name="i_colors" href="javascript:toggle(58)">
 <div class="entry" id="58">
-i_colors <span class="file">(i_common.h)</span></div>
+i_colors <span class="file">(i_widgets.c)</span></div>
 </a>
 <div class="entry_body" id="58_body" style="display:none">
 <pre><b class="keyword0">extern</b> c_color_t i_colors<span class="def_op">[</span>I_COLORS<span class="def_op">];</span></pre>
-<p class="comment"> i_widgets.c</p>
+<p class="comment"> Colors in this array are kept up to date when the theme changes</p>
 </div>
 <a name="i_debug" href="javascript:toggle(59)">
 <div class="entry" id="59">
-i_debug <span class="file">(i_common.h)</span></div>
+i_debug <span class="file">(i_variables.c)</span></div>
 </a>
 <div class="entry_body" id="59_body" style="display:none">
 <pre><b class="keyword0">extern</b> c_var_t i_border<span class="def_op">,</span> i_button<span class="def_op">,</span> i_button_active<span class="def_op">,</span> i_button_hover<span class="def_op">,</span>
                i_button_light<span class="def_op">,</span> i_button_prelight<span class="def_op">,</span> i_color<span class="def_op">,</span> i_color2<span class="def_op">,</span>
                i_debug<span class="def_op">,</span> i_fade<span class="def_op">,</span> i_hanger<span class="def_op">,</span> i_scroll_speed<span class="def_op">,</span> i_shadow<span class="def_op">,</span> i_theme<span class="def_op">,</span>
                i_window<span class="def_op">,</span> i_work_area<span class="def_op">,</span> i_zoom_speed<span class="def_op">;</span></pre>
-<p class="comment"> i_variables.c</p>
+<p class="comment"> Debug output level (0-2)</p>
 </div>
 <a name="i_fade" href="javascript:toggle(60)">
 <div class="entry" id="60">
-i_fade <span class="file">(i_common.h)</span></div>
+i_fade <span class="file">(i_variables.c)</span></div>
 </a>
 <div class="entry_body" id="60_body" style="display:none">
 <pre><b class="keyword0">extern</b> c_var_t i_border<span class="def_op">,</span> i_button<span class="def_op">,</span> i_button_active<span class="def_op">,</span> i_button_hover<span class="def_op">,</span>
                i_button_light<span class="def_op">,</span> i_button_prelight<span class="def_op">,</span> i_color<span class="def_op">,</span> i_color2<span class="def_op">,</span>
                i_debug<span class="def_op">,</span> i_fade<span class="def_op">,</span> i_hanger<span class="def_op">,</span> i_scroll_speed<span class="def_op">,</span> i_shadow<span class="def_op">,</span> i_theme<span class="def_op">,</span>
                i_window<span class="def_op">,</span> i_work_area<span class="def_op">,</span> i_zoom_speed<span class="def_op">;</span></pre>
-<p class="comment"> i_variables.c</p>
+<p class="comment"> Theme variables</p>
 </div>
 <a name="i_hanger" href="javascript:toggle(61)">
 <div class="entry" id="61">
-i_hanger <span class="file">(i_common.h)</span></div>
+i_hanger <span class="file">(i_variables.c)</span></div>
 </a>
 <div class="entry_body" id="61_body" style="display:none">
 <pre><b class="keyword0">extern</b> c_var_t i_border<span class="def_op">,</span> i_button<span class="def_op">,</span> i_button_active<span class="def_op">,</span> i_button_hover<span class="def_op">,</span>
                i_button_light<span class="def_op">,</span> i_button_prelight<span class="def_op">,</span> i_color<span class="def_op">,</span> i_color2<span class="def_op">,</span>
                i_debug<span class="def_op">,</span> i_fade<span class="def_op">,</span> i_hanger<span class="def_op">,</span> i_scroll_speed<span class="def_op">,</span> i_shadow<span class="def_op">,</span> i_theme<span class="def_op">,</span>
                i_window<span class="def_op">,</span> i_work_area<span class="def_op">,</span> i_zoom_speed<span class="def_op">;</span></pre>
-<p class="comment"> i_variables.c</p>
+<p class="comment"> Theme variables</p>
 </div>
 <a name="i_key" href="javascript:toggle(62)">
 <div class="entry" id="62">
-i_key <span class="file">(i_common.h)</span></div>
+i_key <span class="file">(i_widgets.c)</span></div>
 </a>
 <div class="entry_body" id="62_body" style="display:none">
 <pre><b class="keyword0">extern</b> <b class="keyword0">int</b> i_key<span class="def_op">,</span> i_key_shift<span class="def_op">,</span> i_key_unicode<span class="def_op">,</span> i_mouse_x<span class="def_op">,</span> i_mouse_y<span class="def_op">,</span> i_mouse<span class="def_op">;</span></pre>
-<p class="comment"> i_widgets.c</p>
+<p class="comment"> Event parameters</p>
 </div>
 <a name="i_key_focus" href="javascript:toggle(63)">
 <div class="entry" id="63">
-i_key_focus <span class="file">(i_common.h)</span></div>
+i_key_focus <span class="file">(i_widgets.c)</span></div>
 </a>
 <div class="entry_body" id="63_body" style="display:none">
 <pre><b class="keyword0">extern</b> <a href="#i_widget_t">i_widget_t</a> <span class="def_op">*</span>i_key_focus<span class="def_op">,</span> <span class="def_op">*</span>i_child<span class="def_op">;</span></pre>
-<p class="comment"> i_widgets.c</p>
+<p class="comment"> Points to the widget that currently holds keyboard focus</p>
 </div>
 <a name="i_key_shift" href="javascript:toggle(64)">
 <div class="entry" id="64">
-i_key_shift <span class="file">(i_common.h)</span></div>
+i_key_shift <span class="file">(i_widgets.c)</span></div>
 </a>
 <div class="entry_body" id="64_body" style="display:none">
 <pre><b class="keyword0">extern</b> <b class="keyword0">int</b> i_key<span class="def_op">,</span> i_key_shift<span class="def_op">,</span> i_key_unicode<span class="def_op">,</span> i_mouse_x<span class="def_op">,</span> i_mouse_y<span class="def_op">,</span> i_mouse<span class="def_op">;</span></pre>
-<p class="comment"> i_widgets.c</p>
+<p class="comment"> Event parameters</p>
 </div>
 <a name="i_key_unicode" href="javascript:toggle(65)">
 <div class="entry" id="65">
-i_key_unicode <span class="file">(i_common.h)</span></div>
+i_key_unicode <span class="file">(i_widgets.c)</span></div>
 </a>
 <div class="entry_body" id="65_body" style="display:none">
 <pre><b class="keyword0">extern</b> <b class="keyword0">int</b> i_key<span class="def_op">,</span> i_key_shift<span class="def_op">,</span> i_key_unicode<span class="def_op">,</span> i_mouse_x<span class="def_op">,</span> i_mouse_y<span class="def_op">,</span> i_mouse<span class="def_op">;</span></pre>
-<p class="comment"> i_widgets.c</p>
+<p class="comment"> Event parameters</p>
 </div>
 <a name="i_mouse" href="javascript:toggle(66)">
 <div class="entry" id="66">
-i_mouse <span class="file">(i_common.h)</span></div>
+i_mouse <span class="file">(i_widgets.c)</span></div>
 </a>
 <div class="entry_body" id="66_body" style="display:none">
 <pre><b class="keyword0">extern</b> <b class="keyword0">int</b> i_key<span class="def_op">,</span> i_key_shift<span class="def_op">,</span> i_key_unicode<span class="def_op">,</span> i_mouse_x<span class="def_op">,</span> i_mouse_y<span class="def_op">,</span> i_mouse<span class="def_op">;</span></pre>
-<p class="comment"> i_widgets.c</p>
+<p class="comment"> Event parameters</p>
 </div>
 <a name="i_mouse_x" href="javascript:toggle(67)">
 <div class="entry" id="67">
-i_mouse_x <span class="file">(i_common.h)</span></div>
+i_mouse_x <span class="file">(i_widgets.c)</span></div>
 </a>
 <div class="entry_body" id="67_body" style="display:none">
 <pre><b class="keyword0">extern</b> <b class="keyword0">int</b> i_key<span class="def_op">,</span> i_key_shift<span class="def_op">,</span> i_key_unicode<span class="def_op">,</span> i_mouse_x<span class="def_op">,</span> i_mouse_y<span class="def_op">,</span> i_mouse<span class="def_op">;</span></pre>
-<p class="comment"> i_widgets.c</p>
+<p class="comment"> Event parameters</p>
 </div>
 <a name="i_mouse_y" href="javascript:toggle(68)">
 <div class="entry" id="68">
-i_mouse_y <span class="file">(i_common.h)</span></div>
+i_mouse_y <span class="file">(i_widgets.c)</span></div>
 </a>
 <div class="entry_body" id="68_body" style="display:none">
 <pre><b class="keyword0">extern</b> <b class="keyword0">int</b> i_key<span class="def_op">,</span> i_key_shift<span class="def_op">,</span> i_key_unicode<span class="def_op">,</span> i_mouse_x<span class="def_op">,</span> i_mouse_y<span class="def_op">,</span> i_mouse<span class="def_op">;</span></pre>
-<p class="comment"> i_widgets.c</p>
+<p class="comment"> Event parameters</p>
 </div>
-<a name="i_scroll_speed" href="javascript:toggle(69)">
+<a name="i_root" href="javascript:toggle(69)">
 <div class="entry" id="69">
-i_scroll_speed <span class="file">(i_common.h)</span></div>
+i_root <span class="file">(i_layout.c)</span></div>
 </a>
 <div class="entry_body" id="69_body" style="display:none">
-<pre><b class="keyword0">extern</b> c_var_t i_border<span class="def_op">,</span> i_button<span class="def_op">,</span> i_button_active<span class="def_op">,</span> i_button_hover<span class="def_op">,</span>
-               i_button_light<span class="def_op">,</span> i_button_prelight<span class="def_op">,</span> i_color<span class="def_op">,</span> i_color2<span class="def_op">,</span>
-               i_debug<span class="def_op">,</span> i_fade<span class="def_op">,</span> i_hanger<span class="def_op">,</span> i_scroll_speed<span class="def_op">,</span> i_shadow<span class="def_op">,</span> i_theme<span class="def_op">,</span>
-               i_window<span class="def_op">,</span> i_work_area<span class="def_op">,</span> i_zoom_speed<span class="def_op">;</span></pre>
-<p class="comment"> i_variables.c</p>
+<pre><b class="keyword0">extern</b> <a href="#i_widget_t">i_widget_t</a> i_root<span class="def_op">;</span></pre>
+<p class="comment"> Root widget contains all other widgets</p>
 </div>
-<a name="i_shadow" href="javascript:toggle(70)">
+<a name="i_scroll_speed" href="javascript:toggle(70)">
 <div class="entry" id="70">
-i_shadow <span class="file">(i_common.h)</span></div>
+i_scroll_speed <span class="file">(i_variables.c)</span></div>
 </a>
 <div class="entry_body" id="70_body" style="display:none">
 <pre><b class="keyword0">extern</b> c_var_t i_border<span class="def_op">,</span> i_button<span class="def_op">,</span> i_button_active<span class="def_op">,</span> i_button_hover<span class="def_op">,</span>
                i_button_light<span class="def_op">,</span> i_button_prelight<span class="def_op">,</span> i_color<span class="def_op">,</span> i_color2<span class="def_op">,</span>
                i_debug<span class="def_op">,</span> i_fade<span class="def_op">,</span> i_hanger<span class="def_op">,</span> i_scroll_speed<span class="def_op">,</span> i_shadow<span class="def_op">,</span> i_theme<span class="def_op">,</span>
                i_window<span class="def_op">,</span> i_work_area<span class="def_op">,</span> i_zoom_speed<span class="def_op">;</span></pre>
-<p class="comment"> i_variables.c</p>
+<p class="comment"> Interface usability variables</p>
 </div>
-<a name="i_theme" href="javascript:toggle(71)">
+<a name="i_shadow" href="javascript:toggle(71)">
 <div class="entry" id="71">
-i_theme <span class="file">(i_common.h)</span></div>
+i_shadow <span class="file">(i_variables.c)</span></div>
 </a>
 <div class="entry_body" id="71_body" style="display:none">
 <pre><b class="keyword0">extern</b> c_var_t i_border<span class="def_op">,</span> i_button<span class="def_op">,</span> i_button_active<span class="def_op">,</span> i_button_hover<span class="def_op">,</span>
                i_button_light<span class="def_op">,</span> i_button_prelight<span class="def_op">,</span> i_color<span class="def_op">,</span> i_color2<span class="def_op">,</span>
                i_debug<span class="def_op">,</span> i_fade<span class="def_op">,</span> i_hanger<span class="def_op">,</span> i_scroll_speed<span class="def_op">,</span> i_shadow<span class="def_op">,</span> i_theme<span class="def_op">,</span>
                i_window<span class="def_op">,</span> i_work_area<span class="def_op">,</span> i_zoom_speed<span class="def_op">;</span></pre>
-<p class="comment"> i_variables.c</p>
+<p class="comment"> Theme variables</p>
 </div>
-<a name="i_window" href="javascript:toggle(72)">
+<a name="i_theme" href="javascript:toggle(72)">
 <div class="entry" id="72">
-i_window <span class="file">(i_common.h)</span></div>
+i_theme <span class="file">(i_variables.c)</span></div>
 </a>
 <div class="entry_body" id="72_body" style="display:none">
 <pre><b class="keyword0">extern</b> c_var_t i_border<span class="def_op">,</span> i_button<span class="def_op">,</span> i_button_active<span class="def_op">,</span> i_button_hover<span class="def_op">,</span>
                i_button_light<span class="def_op">,</span> i_button_prelight<span class="def_op">,</span> i_color<span class="def_op">,</span> i_color2<span class="def_op">,</span>
                i_debug<span class="def_op">,</span> i_fade<span class="def_op">,</span> i_hanger<span class="def_op">,</span> i_scroll_speed<span class="def_op">,</span> i_shadow<span class="def_op">,</span> i_theme<span class="def_op">,</span>
                i_window<span class="def_op">,</span> i_work_area<span class="def_op">,</span> i_zoom_speed<span class="def_op">;</span></pre>
-<p class="comment"> i_variables.c</p>
+<p class="comment"> Theme variables</p>
+</div>
+<a name="i_window" href="javascript:toggle(73)">
+<div class="entry" id="73">
+i_window <span class="file">(i_variables.c)</span></div>
+</a>
+<div class="entry_body" id="73_body" style="display:none">
+<pre><b class="keyword0">extern</b> c_var_t i_border<span class="def_op">,</span> i_button<span class="def_op">,</span> i_button_active<span class="def_op">,</span> i_button_hover<span class="def_op">,</span>
+               i_button_light<span class="def_op">,</span> i_button_prelight<span class="def_op">,</span> i_color<span class="def_op">,</span> i_color2<span class="def_op">,</span>
+               i_debug<span class="def_op">,</span> i_fade<span class="def_op">,</span> i_hanger<span class="def_op">,</span> i_scroll_speed<span class="def_op">,</span> i_shadow<span class="def_op">,</span> i_theme<span class="def_op">,</span>
+               i_window<span class="def_op">,</span> i_work_area<span class="def_op">,</span> i_zoom_speed<span class="def_op">;</span></pre>
+<p class="comment"> Theme variables</p>
 </div>
 </body>
 </html>

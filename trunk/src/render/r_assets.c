@@ -16,17 +16,18 @@
 
 #include "r_common.h"
 
+/* Font configuration variables */
+extern c_var_t r_font_console, r_font_console_pt, r_font_gui, r_font_gui_pt,
+               r_font_title, r_font_title_pt;
+
+/* Terrain tile sheet */
+r_texture_t *r_terrain_tex;
+
 /* Font asset array */
 static struct {
         TTF_Font *ttf_font;
         int line_skip, width, height;
 } fonts[R_FONTS];
-
-/* Font configuration variables */
-extern c_var_t r_font_console, r_font_console_pt, r_font_gui, r_font_gui_pt,
-               r_font_title, r_font_title_pt;
-
-r_texture_t *r_terrain_tex;
 
 static c_ref_t *root;
 static SDL_PixelFormat sdl_format;
@@ -413,23 +414,21 @@ void R_texture_render(r_texture_t *tex, int x, int y)
         r_vertex2_t verts[4];
         unsigned short indices[] = {0, 1, 2, 3};
 
-        R_push_mode(R_MODE_2D);
         verts[0].co = C_vec3(0.f, 0.f, 0.f);
         verts[0].uv = C_vec2(0.f, 0.f);
         verts[1].co = C_vec3(0.f, (float)tex->surface->h, 0.f);
         verts[1].uv = C_vec2(0.f, 1.f);
-        verts[2].co = C_vec3((float)tex->surface->w, 
+        verts[2].co = C_vec3((float)tex->surface->w,
                              (float)tex->surface->h, 0.f);
         verts[2].uv = C_vec2(1.f, 1.f);
         verts[3].co = C_vec3((float)tex->surface->w, 0.f, 0.f);
         verts[3].uv = C_vec2(1.f, 0.f);
+        R_push_mode(R_MODE_2D);
         R_texture_select(tex);
-        glPushMatrix();
         glLoadIdentity();
         glTranslatef((GLfloat)x, (GLfloat)y, 0.f);
         glInterleavedArrays(R_VERTEX2_FORMAT, 0, verts);
         glDrawElements(GL_QUADS, 4, GL_UNSIGNED_SHORT, indices);
-        glPopMatrix();
         R_pop_mode();
 }
 

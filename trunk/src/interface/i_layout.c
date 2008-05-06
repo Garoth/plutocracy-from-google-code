@@ -26,6 +26,7 @@ static struct property_t {
         {I_video_init, "gui/icons/video.png", {260.f, 0.f}},
 };
 
+/* Root widget contains all other widgets */
 i_widget_t i_root;
 
 static c_vec2_t root_scroll;

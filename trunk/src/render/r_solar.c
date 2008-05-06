@@ -18,6 +18,9 @@
    are no synchronization errors between players */
 #define MINUTES_PER_DAY 5
 
+/* Distance of the solar objects from the center of the globe */
+#define SOLAR_DISTANCE 350.f
+
 static r_model_t sky;
 static r_billboard_t moon, sun;
 static c_color_t moon_colors[3], sun_colors[3];
@@ -42,8 +45,6 @@ void R_init_solar(void)
         /* Load solar object sprites */
         R_billboard_init(&moon, "models/solar/moon.png");
         R_billboard_init(&sun, "models/solar/sun.png");
-        moon.world_origin.x = -(sun.world_origin.x = 350.f);
-        moon.unscaled = sun.unscaled = TRUE;
 
         /* Sky is just a model */
         R_model_init(&sky, "models/solar/sky.plum");
@@ -120,15 +121,11 @@ void R_render_solar(void)
         R_model_render(&sky);
 
         /* Render the sun and moon point sprites */
-        glDisable(GL_DEPTH_TEST);
-        glPushMatrix();
-        glLoadIdentity();
-        glRotatef(C_rad_to_deg(sky.angles.y), 0.f, 1.f, 0.f);
-        glGetFloatv(GL_MODELVIEW_MATRIX, sun.transform);
-        glPopMatrix();
-        memcpy(moon.transform, sun.transform, sizeof (moon.transform));
-        R_billboard_render(&moon);
+        sun.world_origin.x = cosf(-sky.angles.y) * SOLAR_DISTANCE;
+        sun.world_origin.z = sinf(-sky.angles.y) * SOLAR_DISTANCE;
         R_billboard_render(&sun);
-        glEnable(GL_DEPTH_TEST);
+        moon.world_origin.x = -sun.world_origin.x;
+        moon.world_origin.z = -sun.world_origin.z;
+        R_billboard_render(&moon);
 }
 

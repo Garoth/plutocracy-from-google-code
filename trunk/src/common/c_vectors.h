@@ -305,7 +305,7 @@ static inline c_vec3_t C_vec3_tfm(c_vec3_t v, GLfloat m[16])
         r.x = v.x * m[ 0] + v.y * m[ 4] + v.z * m[ 8] + m[12];
         r.y = v.x * m[ 1] + v.y * m[ 5] + v.z * m[ 9] + m[13];
         r.z = v.x * m[ 2] + v.y * m[ 6] + v.z * m[10] + m[14];
-        w =   v.x * m[ 3] + v.y * m[ 7] + v.z * m[11] + m[15];
+        w   = v.x * m[ 3] + v.y * m[ 7] + v.z * m[11] + m[15];
         return C_vec3_divf(r, w);
 }
 
