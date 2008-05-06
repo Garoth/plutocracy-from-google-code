@@ -28,7 +28,7 @@ int r_width_2d, r_height_2d, r_mode_hold, r_restart;
 int r_extensions[R_EXTENSIONS];
 
 /* The full camera matrix */
-float r_cam_matrix[16], r_proj3_matrix[16];
+static float cam_matrix[16];
 
 /* Camera rotation and zoom */
 float r_cam_dist, r_cam_zoom;
@@ -126,6 +126,10 @@ static void check_gl_extensions(void)
         glGetIntegerv(GL_MAX_TEXTURE_UNITS_ARB, &gl_int);
         r_extensions[R_EXT_MULTITEXTURE] = gl_int;
         C_debug("%d texture units supported", gl_int);
+
+        /* Point sprites
+           FIXME: Actually check for this extension */
+        r_extensions[R_EXT_POINT_SPRITE] = TRUE;
 }
 
 /******************************************************************************\
@@ -135,13 +139,11 @@ static void set_gl_state(void)
 {
         c_color_t color;
 
+        glEnable(GL_TEXTURE_2D);
         glAlphaFunc(GL_GREATER, 0);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
         glDepthFunc(GL_LEQUAL);
         glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
-
-        /* We never render untextured vertices */
-        glEnable(GL_TEXTURE_2D);
 
         /* We use lines to do 2D edge anti-aliasing although there is probably
            a better way so we need to always smooth lines (requires alpha
@@ -158,9 +160,10 @@ static void set_gl_state(void)
            account rather than one solid color per face */
         glShadeModel(GL_SMOOTH);
 
-        /* Not configured to a render mode intially */
+        /* Not configured to a render mode intially. The stack is initialized
+           with no modes on it (index of -1). */
         r_mode = R_MODE_NONE;
-        mode_stack = 0;
+        mode_stack = -1;
         mode_values[0] = R_MODE_NONE;
 
         /* Initialize camera to identity */
@@ -173,6 +176,12 @@ static void set_gl_state(void)
         /* Setup the lighting model */
         color = C_color(0.f, 0.f, 0.f, 1.f);
         glLightModelfv(GL_LIGHT_MODEL_AMBIENT, C_ARRAYF(color));
+
+        /* Point sprites */
+        if (r_extensions[R_EXT_POINT_SPRITE]) {
+                glEnable(GL_POINT_SPRITE);
+                glTexEnvi(GL_POINT_SPRITE, GL_COORD_REPLACE, GL_TRUE);
+        }
 
         R_check_errors();
 }
@@ -271,7 +280,7 @@ static void update_camera(void)
         glLoadIdentity();
         glTranslatef(0, 0, -r_cam_dist - r_cam_zoom);
         glMultMatrixf(cam_rotation);
-        glGetFloatv(GL_MODELVIEW_MATRIX, r_cam_matrix);
+        glGetFloatv(GL_MODELVIEW_MATRIX, cam_matrix);
 
         R_pop_mode();
 }
@@ -436,12 +445,20 @@ void R_clip_rect(c_vec2_t origin, c_vec2_t size)
 }
 
 /******************************************************************************\
- Sets up OpenGL to render 3D polygons in world space. If mode is set to
- R_MODE_HOLD, the mode will not be changeable until set to R_MODE_NONE.
+ Sets up OpenGL to render 3D polygons in world space.
 \******************************************************************************/
-static void R_set_mode(r_mode_t mode)
+void R_set_mode(r_mode_t mode)
 {
-        if (mode == r_mode || r_mode_hold || mode == R_MODE_NONE)
+        if (r_mode_hold)
+                return;
+
+        /* Reset model-view matrices even if the mode didn't change */
+        if (mode == R_MODE_3D)
+                glLoadMatrixf(cam_matrix);
+        else if (mode == R_MODE_2D)
+                glLoadIdentity();
+
+        if (mode == r_mode)
                 return;
         r_mode = mode;
         glMatrixMode(GL_PROJECTION);
@@ -464,11 +481,10 @@ static void R_set_mode(r_mode_t mode)
         if (mode == R_MODE_3D) {
                 gluPerspective(90.0, (float)r_width.value.n / r_height.value.n,
                                1.f, 512.f);
-                glGetFloatv(GL_PROJECTION_MATRIX, r_proj3_matrix);
                 glEnable(GL_CULL_FACE);
                 glEnable(GL_DEPTH_TEST);
                 glMatrixMode(GL_MODELVIEW);
-                glLoadMatrixf(r_cam_matrix);
+                glLoadMatrixf(cam_matrix);
         } else {
                 glDisable(GL_CULL_FACE);
                 glDisable(GL_DEPTH_TEST);
@@ -478,28 +494,33 @@ static void R_set_mode(r_mode_t mode)
 }
 
 /******************************************************************************\
- Save the previous mode and set the mode.
+ Save the previous mode and set the mode. Will also push an OpenGL model view
+ matrix on the stack.
 \******************************************************************************/
 void R_push_mode(r_mode_t mode)
 {
         if (++mode_stack >= 32)
                 C_error("Mode stack overflow");
         mode_values[mode_stack] = mode;
+        glPushMatrix();
         R_set_mode(mode);
 }
 
 /******************************************************************************\
- Restore saved mode.
+ Restore saved mode. Will also pop an OpenGL model view matrix off the stack.
 \******************************************************************************/
 void R_pop_mode(void)
 {
-        if (--mode_stack < 0)
+        if (--mode_stack < -1)
                 C_error("Mode stack underflow");
-        R_set_mode(mode_values[mode_stack]);
+        glPopMatrix();
+        if (mode_stack >= 0)
+                R_set_mode(mode_values[mode_stack]);
 }
 
 /******************************************************************************\
  Clears the buffer and starts rendering the scene.
+ TODO: If r_color_bits changed, re-upload textures to OpenGL.
 \******************************************************************************/
 void R_start_frame(void)
 {

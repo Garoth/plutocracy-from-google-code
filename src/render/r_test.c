@@ -73,7 +73,6 @@ static int test_sprite_update(c_var_t *var, c_var_value_t value)
                                 r_globe_radius * (C_rand_real() - 0.5f),
                                 r_globe_radius + 3.f);
                 test_sprites[i].world_origin = origin;
-                test_sprites[i].unscaled = TRUE;
                 test_sprites[i].sprite.angle = C_rand_real();
         }
 
@@ -128,7 +127,7 @@ static void render_test_model(void)
         glLightfv(GL_LIGHT0, GL_POSITION, left);
         R_check_errors();
 
-        /* Render the test mesh */
+        /* Render the test model */
         test_model.origin.z = -7;
         R_model_render(&test_model);
 

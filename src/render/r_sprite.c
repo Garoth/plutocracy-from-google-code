@@ -53,7 +53,7 @@ void R_sprite_cleanup(r_sprite_t *sprite)
 \******************************************************************************/
 static int sprite_render_start(const r_sprite_t *sprite)
 {
-        if (!sprite || !sprite->texture)
+        if (!sprite || !sprite->texture || sprite->z > 0.f)
                 return FALSE;
         R_push_mode(R_MODE_2D);
         R_texture_select(sprite->texture);
@@ -64,10 +64,14 @@ static int sprite_render_start(const r_sprite_t *sprite)
         if (sprite->modulate.a < 1.f)
                 glEnable(GL_BLEND);
 
+        /* If z-offset is enabled (non-zero), depth test the sprite */
+        if (sprite->z < 0.f)
+                glEnable(GL_DEPTH_TEST);
+
         /* Setup transformation matrix */
         glPushMatrix();
         glTranslatef(sprite->origin.x + sprite->size.x / 2,
-                     sprite->origin.y + sprite->size.y / 2, 0.f);
+                     sprite->origin.y + sprite->size.y / 2, sprite->z);
         glRotatef(C_rad_to_deg(sprite->angle), 0.0, 0.0, 1.0);
 
         return TRUE;
@@ -443,42 +447,56 @@ void R_window_render(r_window_t *window)
 void R_billboard_init(r_billboard_t *bb, const char *filename)
 {
         R_sprite_init(&bb->sprite, filename);
-        C_zero_buf(bb->transform);
-        bb->transform[0] = 1.f;
-        bb->transform[5] = 1.f;
-        bb->transform[10] = 1.f;
-        bb->transform[15] = 1.f;
-        bb->unscaled = FALSE;
+        bb->size = (bb->sprite.size.x + bb->sprite.size.y) / 2;
+        bb->world_origin = C_vec3(0.f, 0.f, 0.f);
 }
 
 /******************************************************************************\
  Render a billboard point sprite.
- FIXME: Scaling.
- FIXME: Why do we have to translate by the size times 1.5?
- FIXME: Should not be affected by r_pixel_scale.
 \******************************************************************************/
 void R_billboard_render(r_billboard_t *bb)
 {
+        GLfloat model_view[16], projection[16];
         c_vec3_t co;
 
+        /* If the point sprite extension is available we can use it instead
+           of doing all of the math on the CPU */
+        if (r_extensions[R_EXT_POINT_SPRITE]) {
+                R_push_mode(R_MODE_3D);
+                R_texture_select(bb->sprite.texture);
+                glPointSize(bb->size);
+                glBegin(GL_POINTS);
+                glVertex3f(bb->world_origin.x, bb->world_origin.y,
+                           bb->world_origin.z);
+                glEnd();
+                R_pop_mode();
+                return;
+        }
+
+        /* Get the transformation matrices from 3D mode */
+        R_push_mode(R_MODE_3D);
+        glGetFloatv(GL_MODELVIEW_MATRIX, model_view);
+        glGetFloatv(GL_PROJECTION_MATRIX, projection);
+        R_pop_mode();
+
+        /* Push a point through the transformation matrices */
         co = bb->world_origin;
-        co = C_vec3_tfm(co, bb->transform);
-        co = C_vec3_tfm(co, r_cam_matrix);
-        co = C_vec3_tfm(co, r_proj3_matrix);
+        co = C_vec3_tfm(co, model_view);
+        co = C_vec3_tfm(co, projection);
         co.x = (co.x + 1.f) * r_width_2d / 2.f + bb->sprite.size.x;
         co.y = (1.f - co.y) * r_height_2d / 2.f + bb->sprite.size.y;
         co.z = (co.z + 1.f) / -2.f;
         if (co.z >= 0.f)
                 return;
+
+        /* Render the billboard as a regular sprite but pushed back in the z
+           direction and with depth testing.
+           FIXME: Why do we have to translate by the size times 1.5? */
         bb->sprite.origin.x = co.x - bb->sprite.size.x * 1.5f;
         bb->sprite.origin.y = co.y - bb->sprite.size.y * 1.5f;
-        R_push_mode(R_MODE_2D);
-        glEnable(GL_DEPTH_TEST);
-        glPushMatrix();
-        glTranslatef(0.f, 0.f, co.z);
+        bb->sprite.size.x = bb->size / r_pixel_scale.value.f;
+        bb->sprite.size.y = bb->sprite.size.x;
+        bb->sprite.z = co.z;
         R_sprite_render(&bb->sprite);
-        glPopMatrix();
-        glDisable(GL_DEPTH_TEST);
-        R_pop_mode();
 }
 

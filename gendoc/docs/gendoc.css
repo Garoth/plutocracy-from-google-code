@@ -108,3 +108,7 @@ span.no_file {
         padding: 4pt;
 }
 
+code {
+        white-space: pre;
+}
+

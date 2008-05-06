@@ -126,7 +126,7 @@ void C_log(c_log_level_t level, const char *file, int line,
 {
         const char *wrapped;
         int margin, len;
-        char fmt2[128], buffer[320];
+        char fmt2[128], buffer[640];
         va_list va;
 
         if (level >= C_LOG_DEBUG && (!fmt || !fmt[0]))
@@ -181,7 +181,7 @@ void C_log(c_log_level_t level, const char *file, int line,
                         snprintf(fmt2, sizeof(fmt2), "*** %s:%d, %s():\n%s",
                                  file, line, function, fmt);
         }
-        vsprintf(buffer, fmt2, va);
+        vsnprintf(buffer, sizeof (buffer), fmt2, va);
         va_end(va);
         wrapped = C_wrap_log(buffer, margin, C_LOG_WRAP_COLS, &len);
         if (log_file.type)

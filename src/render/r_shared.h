@@ -39,8 +39,8 @@ typedef struct r_texture r_texture_t;
 
 /* Model instance type */
 typedef struct r_model {
-        struct r_static_mesh *lerp_meshes;
         c_vec3_t origin, angles;
+        struct r_mesh *lerp_meshes;
         struct r_model_data *data;
         float scale;
         int anim, frame, last_frame, last_frame_time, time_left,
@@ -52,15 +52,14 @@ typedef struct r_sprite {
         r_texture_t *texture;
         c_vec2_t origin, size;
         c_color_t modulate;
-        float angle;
+        float angle, z;
 } r_sprite_t;
 
 /* A point sprite in world space */
 typedef struct r_billboard {
         r_sprite_t sprite;
         c_vec3_t world_origin;
-        GLfloat transform[16];
-        int unscaled;
+        float size;
 } r_billboard_t;
 
 /* There is a fixed set of fonts available for the game */

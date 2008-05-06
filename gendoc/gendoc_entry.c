@@ -78,48 +78,70 @@ void D_entry_add(const entry_t *current, entry_t **root)
 \******************************************************************************/
 static void output_comment(const char *buf)
 {
-        int i, j, last_nl, brackets, macro;
+        int i, j, last_nl, spaces;
+        enum {
+                CODE_NONE,
+                CODE_BRACKETS,
+                CODE_MACRO,
+                CODE_DIAGRAM,
+        } code;
 
         if (!buf[0])
                 return;
         printf("<p class=\"comment\">");
-        macro = FALSE;
-        for (last_nl = -100, brackets = i = 0; buf[i]; i++) {
+        for (last_nl = -100, spaces = i = 0; buf[i]; i++) {
+
+                /* Codify diagrams */
+                if (buf[i] == ' ' || buf[i] == '\t') {
+                        if (spaces >= 0)
+                                spaces++;
+                } else {
+                        if (spaces >= 2) {
+                                printf("<code>  ");
+                                code = CODE_DIAGRAM;
+                        }
+                        spaces = -1;
+                }
 
                 /* Convert newlines to tags */
                 if (buf[i] == '\n') {
+                        if (code == CODE_DIAGRAM) {
+                                printf("</code>");
+                                code = CODE_NONE;
+                        }
                         if (i - last_nl < 64)
                                 printf("<br>");
                         last_nl = i;
+                        spaces = 0;
                 }
 
                 /* Codify anything specifically tagged */
-                if (buf[i] == '[' && brackets <= 0 && !macro) {
+                if (buf[i] == '[' && !code) {
                         printf("<code>");
-                        brackets++;
+                        code = CODE_BRACKETS;
                         continue;
                 }
-                if (buf[i] == ']' && brackets > 0) {
+                if (buf[i] == ']' && code == CODE_BRACKETS) {
                         printf("</code>");
-                        brackets--;
+                        code = CODE_NONE;
                         continue;
                 }
 
                 /* Codify any potential macro references */
-                if (!macro && is_macro(buf[i], TRUE)) {
+                if (!code && is_macro(buf[i], TRUE)) {
                         for (j = i + 1; buf[j] && is_macro(buf[j], FALSE); j++);
                         if (j - i > 2) {
                                 printf("<code>");
-                                macro = TRUE;
+                                code = CODE_MACRO;
                         }
-                } else if (macro && !is_macro(buf[i], FALSE)) {
+                } else if (code == CODE_MACRO && !is_macro(buf[i], FALSE)) {
                         printf("</code>");
-                        macro = FALSE;
+                        code = CODE_NONE;
                 }
 
                 putchar(buf[i]);
         }
-        if (brackets || macro)
+        if (code)
                 printf("</code>");
         printf("</p>\n");
 }

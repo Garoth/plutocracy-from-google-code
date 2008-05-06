@@ -17,6 +17,23 @@ entry_t *d_types;
 static entry_t *functions, *defines, *variables;
 
 /******************************************************************************\
+ Returns TRUE if [token] is a type specifier.
+\******************************************************************************/
+static int is_type(const char *token)
+{
+        const char **type, *types[] = {"signed", "unsigned", "char", "int",
+                                       "short", "long", "float", "single",
+                                       "double", "size_t", NULL};
+
+        for (type = types; *type; type++)
+                if (!strcmp(token, *type))
+                        return TRUE;
+        if (D_entry_find(d_types, token))
+                return TRUE;
+        return FALSE;
+}
+
+/******************************************************************************\
  Parse a C header file for declarations.
 \******************************************************************************/
 static void parse_header(const char *filename)
@@ -35,7 +52,8 @@ static void parse_header(const char *filename)
                         D_strncpy_buf(current.comment, D_comment());
                         for (i = 2; i < d_num_tokens - 1; i++) {
                                 if (D_token(i)[0] == '*' ||
-                                    D_token(i)[0] == ',')
+                                    D_token(i)[0] == ',' ||
+                                    is_type(D_token(i)))
                                         continue;
                                 if (D_token(i)[0] == '[') {
                                         for (; i < d_num_tokens - 1; i++)
@@ -43,6 +61,7 @@ static void parse_header(const char *filename)
                                                         break;
                                         continue;
                                 }
+                                current.file[0] = -1;
                                 D_strncpy_buf(current.name, D_token(i));
                                 D_entry_add(&current, &variables);
                         }
@@ -130,25 +149,57 @@ static void parse_source(const char *filename)
 
         while (D_parse_def()) {
 
-                /* Must be a non-static function body */
+                /* Must be a non-static function body or variable list */
                 if (!strcmp(D_token(0), "static") ||
                     !strcmp(D_token(0), "enum") ||
-                    D_token(d_num_tokens - 1)[0] != '{')
+                    !strcmp(D_token(0), "typedef") ||
+                    !strcmp(D_token(0), "struct") ||
+                    !strcmp(D_token(0), "extern") ||
+                    D_token(0)[0] == '#')
                         continue;
 
-                /* Find the function */
-                for (i = 2; i < d_num_tokens; i++)
-                        if (D_token(i)[0] == '(')
-                                break;
-                if (i >= d_num_tokens)
-                        continue;
-                entry = D_entry_find(functions, D_token(i - 1));
-                if (!entry)
-                        continue;
+                /* Function */
+                if (D_token(d_num_tokens - 1)[0] == '{') {
 
-                /* Update the comment */
-                D_strncpy_buf(entry->comment, D_comment());
-                D_strncpy_buf(entry->file, filename);
+                        /* Find the function name */
+                        for (i = 2; i < d_num_tokens; i++)
+                                if (D_token(i)[0] == '(')
+                                        break;
+                        if (i >= d_num_tokens)
+                                continue;
+                        entry = D_entry_find(functions, D_token(i - 1));
+                        if (!entry)
+                                continue;
+
+                        /* Update the comment */
+                        D_strncpy_buf(entry->comment, D_comment());
+                        D_strncpy_buf(entry->file, filename);
+                        continue;
+                }
+
+                /* Variable list */
+                for (i = 1; i < d_num_tokens - 1; i++) {
+                        if (D_token(i)[0] == '=') {
+                                i++;
+                                continue;
+                        }
+                        if (D_token(i)[0] == '*' || D_token(i)[0] == ',' ||
+                            D_token(i)[0] == '{' || is_type(D_token(i)))
+                                continue;
+                        if (D_token(i)[0] == '[') {
+                                for (; i < d_num_tokens - 1; i++)
+                                        if (D_token(i)[0] == ']')
+                                                break;
+                                continue;
+                        }
+                        entry = D_entry_find(variables, D_token(i));
+                        if (!entry)
+                                continue;
+
+                        /* Update the comment */
+                        D_strncpy_buf(entry->comment, D_comment());
+                        D_strncpy_buf(entry->file, filename);
+                }
         }
 }
 

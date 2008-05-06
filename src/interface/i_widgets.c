@@ -12,10 +12,16 @@
 
 #include "i_common.h"
 
-extern i_widget_t i_root;
-
+/* Colors in this array are kept up to date when the theme changes */
 c_color_t i_colors[I_COLORS];
-i_widget_t *i_key_focus, *i_child;
+
+/* Points to the widget that currently holds keyboard focus */
+i_widget_t *i_key_focus;
+
+/* This is the child widget for an I_EV_ADD_CHILD event */
+i_widget_t *i_child;
+
+/* Event parameters */
 int i_key, i_key_shift, i_key_unicode, i_mouse_x, i_mouse_y, i_mouse;
 
 static i_widget_t *mouse_focus;

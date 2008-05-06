@@ -18,7 +18,8 @@
 <a href="render.html" target="frame">Render</a> |
 <a href="interface.html" target="frame">Interface</a> |
 <a href="network.html" target="frame">Network</a> |
-<a href="game.html" target="frame">Game</a>
+<a href="game.html" target="frame">Game</a> |
+<a href="game.html" target="frame">GenDoc</a>
 </div>
 
 <div class="menu">
@@ -69,10 +70,10 @@ C_VA_BUFFERS <span class="file">(c_shared.h)</span></div>
 <div class="entry_body" id="4_body" style="display:none">
 <pre><b class="keyword2">#define</b> C_VA_BUFFERS <span class="def_const">16</span></pre>
 <p class="comment"> If you are going to use the C_va* functions, keep in mind that after calling
-   any of those functions <code><code>C_VA_BUFFERS</code></code> times, you will begin overwriting
-   the buffers starting from the first. Each buffer also has a fixed size.
-   Note that <code><code>C_VA_BUFFERS</code></code> * <code><code>C_VA_BUFFER_SIZE</code></code> has to be less than 32k or
-   the function will not compile on some systems.</p>
+   <code>  any of those functions [C_VA_BUFFERS] times, you will begin overwriting</code>
+   <code>  the buffers starting from the first. Each buffer also has a fixed size.</code>
+   <code>  Note that [C_VA_BUFFERS] * [C_VA_BUFFER_SIZE] has to be less than 32k or</code>
+   <code>  the function will not compile on some systems.</code></p>
 </div>
 <a name="C_VA_BUFFER_SIZE" href="javascript:toggle(5)">
 <div class="entry" id="5">
@@ -81,10 +82,10 @@ C_VA_BUFFER_SIZE <span class="file">(c_shared.h)</span></div>
 <div class="entry_body" id="5_body" style="display:none">
 <pre><b class="keyword2">#define</b> C_VA_BUFFER_SIZE <span class="def_const">2000</span></pre>
 <p class="comment"> If you are going to use the C_va* functions, keep in mind that after calling
-   any of those functions <code><code>C_VA_BUFFERS</code></code> times, you will begin overwriting
-   the buffers starting from the first. Each buffer also has a fixed size.
-   Note that <code><code>C_VA_BUFFERS</code></code> * <code><code>C_VA_BUFFER_SIZE</code></code> has to be less than 32k or
-   the function will not compile on some systems.</p>
+   <code>  any of those functions [C_VA_BUFFERS] times, you will begin overwriting</code>
+   <code>  the buffers starting from the first. Each buffer also has a fixed size.</code>
+   <code>  Note that [C_VA_BUFFERS] * [C_VA_BUFFER_SIZE] has to be less than 32k or</code>
+   <code>  the function will not compile on some systems.</code></p>
 </div>
 <a name="FALSE" href="javascript:toggle(6)">
 <div class="entry" id="6">
@@ -101,10 +102,10 @@ FILE <span class="file">(c_shared.h)</span></div>
 <div class="entry_body" id="7_body" style="display:none">
 <pre><b class="keyword2">#define</b> FILE ERROR_use_c_file_t</pre>
 <p class="comment"> Certain functions should not be used. Files that legitimately use these
-   should undefine these replacements. This is a bad thing to do because some
-   standard library implementations will have strange definitions for these
-   functions which may call each other. For instance, strcmp() which calls
-   strlen().</p>
+   <code>  should undefine these replacements. This is a bad thing to do because some</code>
+   <code>  standard library implementations will have strange definitions for these</code>
+   <code>  functions which may call each other. For instance, strcmp() which calls</code>
+   <code>  strlen().</code></p>
 </div>
 <a name="GL_GLEXT_PROTOTYPES" href="javascript:toggle(8)">
 <div class="entry" id="8">
@@ -145,7 +146,7 @@ R_FONT_SIZE_MIN <span class="file">(r_shared.h)</span></div>
 <div class="entry_body" id="12_body" style="display:none">
 <pre><b class="keyword2">#define</b> R_FONT_SIZE_MIN <span class="def_const">10</span></pre>
 <p class="comment"> The wide range of 2D scaling can shrink fonts too small to be viewable,
-   so we need to set a minimum (in points).</p>
+   <code>  so we need to set a minimum (in points).</code></p>
 </div>
 <a name="R_MODEL_ANIM_FPS" href="javascript:toggle(13)">
 <div class="entry" id="13">
@@ -154,7 +155,7 @@ R_MODEL_ANIM_FPS <span class="file">(r_shared.h)</span></div>
 <div class="entry_body" id="13_body" style="display:none">
 <pre><b class="keyword2">#define</b> R_MODEL_ANIM_FPS <span class="def_const">30</span></pre>
 <p class="comment"> This is the minimum <code>FPS</code> that model animations must maintain. If they are
-   slower than this, frames are interpolated.</p>
+   <code>  slower than this, frames are interpolated.</code></p>
 </div>
 <a name="R_PIXEL_SCALE_MAX" href="javascript:toggle(14)">
 <div class="entry" id="14">
@@ -163,10 +164,10 @@ R_PIXEL_SCALE_MAX <span class="file">(r_shared.h)</span></div>
 <div class="entry_body" id="14_body" style="display:none">
 <pre><b class="keyword2">#define</b> R_PIXEL_SCALE_MAX <span class="def_const">2.0f</span></pre>
 <p class="comment"> This is the largest value that pixels can be stretched. This means that all
-   <code>GUI</code> textures need to be created this many times larger than normal. The
-   largest supported resoluton is <code>WQXGA</code> 2560x1600 (nVidia Geforce 8800GT)
-   which requires a pixel scale of 2 to have a 2D display area of approximately
-   1280x800.</p>
+   <code>  GUI textures need to be created this many times larger than normal. The</code>
+   <code>  largest supported resoluton is WQXGA 2560x1600 (nVidia Geforce 8800GT)</code>
+   <code>  which requires a pixel scale of 2 to have a 2D display area of approximately</code>
+   <code>  1280x800.</code></p>
 </div>
 <a name="R_PIXEL_SCALE_MIN" href="javascript:toggle(15)">
 <div class="entry" id="15">
@@ -175,10 +176,10 @@ R_PIXEL_SCALE_MIN <span class="file">(r_shared.h)</span></div>
 <div class="entry_body" id="15_body" style="display:none">
 <pre><b class="keyword2">#define</b> R_PIXEL_SCALE_MIN <span class="def_const">0.5f</span></pre>
 <p class="comment"> This is the largest value that pixels can be stretched. This means that all
-   <code>GUI</code> textures need to be created this many times larger than normal. The
-   largest supported resoluton is <code>WQXGA</code> 2560x1600 (nVidia Geforce 8800GT)
-   which requires a pixel scale of 2 to have a 2D display area of approximately
-   1280x800.</p>
+   <code>  GUI textures need to be created this many times larger than normal. The</code>
+   <code>  largest supported resoluton is WQXGA 2560x1600 (nVidia Geforce 8800GT)</code>
+   <code>  which requires a pixel scale of 2 to have a 2D display area of approximately</code>
+   <code>  1280x800.</code></p>
 </div>
 <a name="R_TILES_MAX" href="javascript:toggle(16)">
 <div class="entry" id="16">
@@ -187,7 +188,7 @@ R_TILES_MAX <span class="file">(r_shared.h)</span></div>
 <div class="entry_body" id="16_body" style="display:none">
 <pre><b class="keyword2">#define</b> R_TILES_MAX <span class="def_const">20480</span></pre>
 <p class="comment"> OpenGL cannot address enough vertices to render more than 5 subdivisons'
-   worth of tiles</p>
+   <code>  worth of tiles</code></p>
 </div>
 <a name="R_ZOOM_MAX" href="javascript:toggle(17)">
 <div class="entry" id="17">
@@ -224,7 +225,7 @@ c_array_t <span class="file">(c_shared.h)</span></div>
         <b class="keyword0">int</b> capacity<span class="def_op">,</span> len<span class="def_op">,</span> item_size<span class="def_op">;</span>
         <b class="keyword0">void</b> <span class="def_op">*</span>elems<span class="def_op">;</span>
 <span class="def_op">}</span> c_array_t<span class="def_op">;</span></pre>
-<p class="comment"> Resizing arrays</p>
+<p class="comment"> Resizing arrays</code></p>
 </div>
 <a name="c_color_t" href="javascript:toggle(21)">
 <div class="entry" id="21">
@@ -235,7 +236,7 @@ c_color_t <span class="file">(c_vectors.h)</span></div>
         GLfloat r<span class="def_op">,</span> g<span class="def_op">,</span> b<span class="def_op">,</span> a<span class="def_op">;</span>
 <span class="def_op">}</span> c_color_t<span class="def_op">;</span></pre>
 <p class="comment"> Vector type declarations and static inline definitions for the vector
-   operations. Requires math.h to be included.</p>
+   <code>  operations. Requires math.h to be included.</code></p>
 </div>
 <a name="c_count_t" href="javascript:toggle(22)">
 <div class="entry" id="22">
@@ -246,7 +247,7 @@ c_count_t <span class="file">(c_shared.h)</span></div>
         <b class="keyword0">int</b> start_frame<span class="def_op">,</span> start_time<span class="def_op">,</span> last_time<span class="def_op">;</span>
         <b class="keyword0">float</b> value<span class="def_op">;</span>
 <span class="def_op">}</span> c_count_t<span class="def_op">;</span></pre>
-<p class="comment"> A counter for counting how often something happens per frame</p>
+<p class="comment"> A counter for counting how often something happens per frame</code></p>
 </div>
 <a name="c_file_t" href="javascript:toggle(23)">
 <div class="entry" id="23">
@@ -257,7 +258,7 @@ c_file_t <span class="file">(c_shared.h)</span></div>
         <a href="#c_file_type_t">c_file_type_t</a> type<span class="def_op">;</span>
         <b class="keyword0">void</b> <span class="def_op">*</span>stream<span class="def_op">;</span>
 <span class="def_op">}</span> c_file_t<span class="def_op">;</span></pre>
-<p class="comment"> Wrap multiple file I/O libraries</p>
+<p class="comment"> Wrap multiple file I/O libraries</code></p>
 </div>
 <a name="c_file_type_t" href="javascript:toggle(24)">
 <div class="entry" id="24">
@@ -269,7 +270,7 @@ c_file_type_t <span class="file">(c_shared.h)</span></div>
         C_FT_LIBC<span class="def_op">,</span>
         C_FT_ZLIB<span class="def_op">,</span>
 <span class="def_op">}</span> c_file_type_t<span class="def_op">;</span></pre>
-<p class="comment"> File I/O types</p>
+<p class="comment"> File I/O types</code></p>
 </div>
 <a name="c_key_value_f" href="javascript:toggle(25)">
 <div class="entry" id="25">
@@ -300,7 +301,7 @@ c_log_level_t <span class="file">(c_shared.h)</span></div>
         C_LOG_DEBUG<span class="def_op">,</span>
         C_LOG_TRACE<span class="def_op">,</span>
 <span class="def_op">}</span> c_log_level_t<span class="def_op">;</span></pre>
-<p class="comment"> Debug log levels, errors are fatal and will always abort</p>
+<p class="comment"> Debug log levels, errors are fatal and will always abort</code></p>
 </div>
 <a name="c_log_mode_t" href="javascript:toggle(28)">
 <div class="entry" id="28">
@@ -312,7 +313,7 @@ c_log_mode_t <span class="file">(c_shared.h)</span></div>
         C_LM_HANDLER<span class="def_op">,</span>
         C_LM_CLEANUP<span class="def_op">,</span>
 <span class="def_op">}</span> c_log_mode_t<span class="def_op">;</span></pre>
-<p class="comment"> Log modes</p>
+<p class="comment"> Log modes</code></p>
 </div>
 <a name="c_ref_cleanup_f" href="javascript:toggle(29)">
 <div class="entry" id="29">
@@ -334,7 +335,7 @@ c_ref_t <span class="file">(c_shared.h)</span></div>
         <b class="keyword0">int</b> refs<span class="def_op">;</span>
 <span class="def_op">}</span> c_ref_t<span class="def_op">;</span></pre>
 <p class="comment"> Reference-counted linked-list. Memory allocated using the referenced
-   memory allocator must have this structure as the first member!</p>
+   <code>  memory allocator must have this structure as the first member!</code></p>
 </div>
 <a name="c_token_file_t" href="javascript:toggle(31)">
 <div class="entry" id="31">
@@ -346,7 +347,7 @@ c_token_file_t <span class="file">(c_shared.h)</span></div>
         <a href="#c_file_t">c_file_t</a> file<span class="def_op">;</span>
         <b class="keyword0">int</b> eof<span class="def_op">;</span>
 <span class="def_op">}</span> c_token_file_t<span class="def_op">;</span></pre>
-<p class="comment"> A structure to hold the data for a file that is being read in tokens</p>
+<p class="comment"> A structure to hold the data for a file that is being read in tokens</code></p>
 </div>
 <a name="c_var" href="javascript:toggle(32)">
 <div class="entry" id="32">
@@ -377,7 +378,7 @@ c_var_edit_t <span class="file">(c_shared.h)</span></div>
         C_VE_LATCHED<span class="def_op">,</span>
         C_VE_FUNCTION<span class="def_op">,</span>
 <span class="def_op">}</span> c_var_edit_t<span class="def_op">;</span></pre>
-<p class="comment"> Variables can be set at different times</p>
+<p class="comment"> Variables can be set at different times</code></p>
 </div>
 <a name="c_var_t" href="javascript:toggle(34)">
 <div class="entry" id="34">
@@ -385,7 +386,7 @@ c_var_t <span class="file">(c_shared.h)</span></div>
 </a>
 <div class="entry_body" id="34_body" style="display:none">
 <pre><b class="keyword1">typedef</b> <b class="keyword1">struct</b> <a href="#c_var">c_var</a> c_var_t<span class="def_op">;</span></pre>
-<p class="comment"> Callback for modified variables. Return <code>TRUE</code> to set the value.</p>
+<p class="comment"> Callback for modified variables. Return TRUE to set the value.</code></p>
 </div>
 <a name="c_var_type_t" href="javascript:toggle(35)">
 <div class="entry" id="35">
@@ -399,7 +400,7 @@ c_var_type_t <span class="file">(c_shared.h)</span></div>
         C_VT_STRING<span class="def_op">,</span>
 <span class="def_op">}</span> c_var_type_t<span class="def_op">;</span></pre>
 <p class="comment"> Variable value types. Note that there is a difference between statically and
-   dynamically allocated strings.</p>
+   <code>  dynamically allocated strings.</code></p>
 </div>
 <a name="c_var_update_f" href="javascript:toggle(36)">
 <div class="entry" id="36">
@@ -419,7 +420,7 @@ c_var_value_t <span class="file">(c_shared.h)</span></div>
         <b class="keyword0">float</b> f<span class="def_op">;</span>
         <b class="keyword0">char</b> s<span class="def_op">[</span><span class="def_const">256</span><span class="def_op">];</span>
 <span class="def_op">}</span> c_var_value_t<span class="def_op">;</span></pre>
-<p class="comment"> Holds all possible variable types</p>
+<p class="comment"> Holds all possible variable types</code></p>
 </div>
 <a name="c_vec2_t" href="javascript:toggle(38)">
 <div class="entry" id="38">
@@ -430,7 +431,7 @@ c_vec2_t <span class="file">(c_vectors.h)</span></div>
         GLfloat x<span class="def_op">,</span> y<span class="def_op">;</span>
 <span class="def_op">}</span> c_vec2_t<span class="def_op">;</span></pre>
 <p class="comment"> Vector type declarations and static inline definitions for the vector
-   operations. Requires math.h to be included.</p>
+   <code>  operations. Requires math.h to be included.</code></p>
 </div>
 <a name="c_vec3_t" href="javascript:toggle(39)">
 <div class="entry" id="39">
@@ -441,7 +442,7 @@ c_vec3_t <span class="file">(c_vectors.h)</span></div>
         GLfloat x<span class="def_op">,</span> y<span class="def_op">,</span> z<span class="def_op">;</span>
 <span class="def_op">}</span> c_vec3_t<span class="def_op">;</span></pre>
 <p class="comment"> Vector type declarations and static inline definitions for the vector
-   operations. Requires math.h to be included.</p>
+   <code>  operations. Requires math.h to be included.</code></p>
 </div>
 <a name="r_billboard_t" href="javascript:toggle(40)">
 <div class="entry" id="40">
@@ -451,10 +452,9 @@ r_billboard_t <span class="file">(r_shared.h)</span></div>
 <pre><b class="keyword1">typedef</b> <b class="keyword1">struct</b> r_billboard <span class="def_op">{</span>
         <a href="#r_sprite_t">r_sprite_t</a> sprite<span class="def_op">;</span>
         <a href="#c_vec3_t">c_vec3_t</a> world_origin<span class="def_op">;</span>
-        GLfloat transform<span class="def_op">[</span><span class="def_const">16</span><span class="def_op">];</span>
-        <b class="keyword0">int</b> unscaled<span class="def_op">;</span>
+        <b class="keyword0">float</b> size<span class="def_op">;</span>
 <span class="def_op">}</span> r_billboard_t<span class="def_op">;</span></pre>
-<p class="comment"> A point sprite in world space</p>
+<p class="comment"> A point sprite in world space</code></p>
 </div>
 <a name="r_font_t" href="javascript:toggle(41)">
 <div class="entry" id="41">
@@ -467,7 +467,7 @@ r_font_t <span class="file">(r_shared.h)</span></div>
         R_FONT_TITLE<span class="def_op">,</span>
         R_FONTS
 <span class="def_op">}</span> r_font_t<span class="def_op">;</span></pre>
-<p class="comment"> There is a fixed set of fonts available for the game</p>
+<p class="comment"> There is a fixed set of fonts available for the game</code></p>
 </div>
 <a name="r_model_t" href="javascript:toggle(42)">
 <div class="entry" id="42">
@@ -475,14 +475,14 @@ r_model_t <span class="file">(r_shared.h)</span></div>
 </a>
 <div class="entry_body" id="42_body" style="display:none">
 <pre><b class="keyword1">typedef</b> <b class="keyword1">struct</b> r_model <span class="def_op">{</span>
-        <b class="keyword1">struct</b> r_static_mesh <span class="def_op">*</span>lerp_meshes<span class="def_op">;</span>
         <a href="#c_vec3_t">c_vec3_t</a> origin<span class="def_op">,</span> angles<span class="def_op">;</span>
+        <b class="keyword1">struct</b> r_mesh <span class="def_op">*</span>lerp_meshes<span class="def_op">;</span>
         <b class="keyword1">struct</b> r_model_data <span class="def_op">*</span>data<span class="def_op">;</span>
         <b class="keyword0">float</b> scale<span class="def_op">;</span>
         <b class="keyword0">int</b> anim<span class="def_op">,</span> frame<span class="def_op">,</span> last_frame<span class="def_op">,</span> last_frame_time<span class="def_op">,</span> time_left<span class="def_op">,</span>
             use_lerp_meshes<span class="def_op">;</span>
 <span class="def_op">}</span> r_model_t<span class="def_op">;</span></pre>
-<p class="comment"> Model instance type</p>
+<p class="comment"> Model instance type</code></p>
 </div>
 <a name="r_sprite_t" href="javascript:toggle(43)">
 <div class="entry" id="43">
@@ -493,9 +493,9 @@ r_sprite_t <span class="file">(r_shared.h)</span></div>
         <a href="#r_texture_t">r_texture_t</a> <span class="def_op">*</span>texture<span class="def_op">;</span>
         <a href="#c_vec2_t">c_vec2_t</a> origin<span class="def_op">,</span> size<span class="def_op">;</span>
         <a href="#c_color_t">c_color_t</a> modulate<span class="def_op">;</span>
-        <b class="keyword0">float</b> angle<span class="def_op">;</span>
+        <b class="keyword0">float</b> angle<span class="def_op">,</span> z<span class="def_op">;</span>
 <span class="def_op">}</span> r_sprite_t<span class="def_op">;</span></pre>
-<p class="comment"> 2D textured quad sprite, can only be rendered in 2D mode</p>
+<p class="comment"> 2D textured quad sprite, can only be rendered in 2D mode</code></p>
 </div>
 <a name="r_terrain_t" href="javascript:toggle(44)">
 <div class="entry" id="44">
@@ -512,7 +512,7 @@ r_terrain_t <span class="file">(r_shared.h)</span></div>
         R_T_BASES <span class="def_op">=</span> <span class="def_const">3</span><span class="def_op">,</span>
         R_T_TRANSITION <span class="def_op">=</span> <span class="def_const">5</span><span class="def_op">,</span>
 <span class="def_op">}</span> r_terrain_t<span class="def_op">;</span></pre>
-<p class="comment"> Terrain enumeration</p>
+<p class="comment"> Terrain enumeration</code></p>
 </div>
 <a name="r_text_t" href="javascript:toggle(45)">
 <div class="entry" id="45">
@@ -527,7 +527,7 @@ r_text_t <span class="file">(r_shared.h)</span></div>
         <b class="keyword0">char</b> buffer<span class="def_op">[</span><span class="def_const">256</span><span class="def_op">];</span>
 <span class="def_op">}</span> r_text_t<span class="def_op">;</span></pre>
 <p class="comment"> Sometimes it is convenient to store the source text for a text sprite in a
-   generic buffer and only re-render it if it has changed</p>
+   <code>  generic buffer and only re-render it if it has changed</code></p>
 </div>
 <a name="r_texture_t" href="javascript:toggle(46)">
 <div class="entry" id="46">
@@ -535,7 +535,7 @@ r_texture_t <span class="file">(r_shared.h)</span></div>
 </a>
 <div class="entry_body" id="46_body" style="display:none">
 <pre><b class="keyword1">typedef</b> <b class="keyword1">struct</b> r_texture r_texture_t<span class="def_op">;</span></pre>
-<p class="comment"> Opaque texture object</p>
+<p class="comment"> Opaque texture object</code></p>
 </div>
 <a name="r_tile_t" href="javascript:toggle(47)">
 <div class="entry" id="47">
@@ -546,7 +546,7 @@ r_tile_t <span class="file">(r_shared.h)</span></div>
         <a href="#r_terrain_t">r_terrain_t</a> terrain<span class="def_op">;</span>
         <b class="keyword0">float</b> height<span class="def_op">;</span>
 <span class="def_op">}</span> r_tile_t<span class="def_op">;</span></pre>
-<p class="comment"> Structure that contains configuration parameters for a tile</p>
+<p class="comment"> Structure that contains configuration parameters for a tile</code></p>
 </div>
 <a name="r_window_t" href="javascript:toggle(48)">
 <div class="entry" id="48">
@@ -558,8 +558,8 @@ r_window_t <span class="file">(r_shared.h)</span></div>
         <a href="#c_vec2_t">c_vec2_t</a> corner<span class="def_op">;</span>
 <span class="def_op">}</span> r_window_t<span class="def_op">;</span></pre>
 <p class="comment"> A quad strip composed of nine quads that stretch with the size parameter
-   of the sprite. Adjust sprite parameters to change how the window is
-   displayed.</p>
+   <code>  of the sprite. Adjust sprite parameters to change how the window is</code>
+   <code>  displayed.</code></p>
 </div>
 <a name="Functions"></a>
 <h2>Functions</h2>
@@ -1005,7 +1005,7 @@ C_deg_to_rad <span class="file">(c_shared.h)</span></div>
 <div class="entry_body" id="90_body" style="display:none">
 <pre><b class="keyword2">#define</b> C_deg_to_rad<span class="def_op">(</span>a<span class="def_op">)</span> <span class="def_op">((</span>a<span class="def_op">)</span> <span class="def_op">*</span> C_PI <span class="def_op">/</span> <span class="def_const">180.f</span><span class="def_op">)</span></pre>
 <p class="comment"> All angles should be in radians but there are some cases (OpenGL) where
-   conversions are necessary</p>
+   <code>  conversions are necessary</code></p>
 </div>
 <a name="C_error" href="javascript:toggle(91)">
 <div class="entry" id="91">
@@ -1230,7 +1230,7 @@ C_rad_to_deg <span class="file">(c_shared.h)</span></div>
 <div class="entry_body" id="114_body" style="display:none">
 <pre><b class="keyword2">#define</b> C_rad_to_deg<span class="def_op">(</span>a<span class="def_op">)</span> <span class="def_op">((</span>a<span class="def_op">)</span> <span class="def_op">*</span> <span class="def_const">180.f</span> <span class="def_op">/</span> C_PI<span class="def_op">)</span></pre>
 <p class="comment"> All angles should be in radians but there are some cases (OpenGL) where
-   conversions are necessary</p>
+   <code>  conversions are necessary</code></p>
 </div>
 <a name="C_rand" href="javascript:toggle(115)">
 <div class="entry" id="115">
@@ -1588,10 +1588,10 @@ C_token_file_parse_pairs <span class="file">(c_file.c)</span></div>
 <p class="comment">
  Reads a string in Quake-like key/value pair format:<br>
 <br>
-   // C and C++ comments allowed<br>
-   c_my_var_has_no_spaces "values always in quotes"<br>
-                          "can be concatenated"<br>
-   c_numbers_not_in_quotes -123.5<br>
+   <code>  // C and C++ comments allowed</code><br>
+   <code>  c_my_var_has_no_spaces "values always in quotes"</code><br>
+                          <code>  "can be concatenated"</code><br>
+   <code>  c_numbers_not_in_quotes -123.5</code><br>
 <br>
  Ignores newlines and spaces. Variable names entered without values will have
  their current values printed out.<br>
@@ -2228,7 +2228,7 @@ C_vec3_tfm <span class="file">(c_vectors.h)</span></div>
         r<span class="def_op">.</span>x <span class="def_op">=</span> v<span class="def_op">.</span>x <span class="def_op">*</span> m<span class="def_op">[</span> <span class="def_const">0</span><span class="def_op">]</span> <span class="def_op">+</span> v<span class="def_op">.</span>y <span class="def_op">*</span> m<span class="def_op">[</span> <span class="def_const">4</span><span class="def_op">]</span> <span class="def_op">+</span> v<span class="def_op">.</span>z <span class="def_op">*</span> m<span class="def_op">[</span> <span class="def_const">8</span><span class="def_op">]</span> <span class="def_op">+</span> m<span class="def_op">[</span><span class="def_const">12</span><span class="def_op">];</span>
         r<span class="def_op">.</span>y <span class="def_op">=</span> v<span class="def_op">.</span>x <span class="def_op">*</span> m<span class="def_op">[</span> <span class="def_const">1</span><span class="def_op">]</span> <span class="def_op">+</span> v<span class="def_op">.</span>y <span class="def_op">*</span> m<span class="def_op">[</span> <span class="def_const">5</span><span class="def_op">]</span> <span class="def_op">+</span> v<span class="def_op">.</span>z <span class="def_op">*</span> m<span class="def_op">[</span> <span class="def_const">9</span><span class="def_op">]</span> <span class="def_op">+</span> m<span class="def_op">[</span><span class="def_const">13</span><span class="def_op">];</span>
         r<span class="def_op">.</span>z <span class="def_op">=</span> v<span class="def_op">.</span>x <span class="def_op">*</span> m<span class="def_op">[</span> <span class="def_const">2</span><span class="def_op">]</span> <span class="def_op">+</span> v<span class="def_op">.</span>y <span class="def_op">*</span> m<span class="def_op">[</span> <span class="def_const">6</span><span class="def_op">]</span> <span class="def_op">+</span> v<span class="def_op">.</span>z <span class="def_op">*</span> m<span class="def_op">[</span><span class="def_const">10</span><span class="def_op">]</span> <span class="def_op">+</span> m<span class="def_op">[</span><span class="def_const">14</span><span class="def_op">];</span>
-        w <span class="def_op">=</span>   v<span class="def_op">.</span>x <span class="def_op">*</span> m<span class="def_op">[</span> <span class="def_const">3</span><span class="def_op">]</span> <span class="def_op">+</span> v<span class="def_op">.</span>y <span class="def_op">*</span> m<span class="def_op">[</span> <span class="def_const">7</span><span class="def_op">]</span> <span class="def_op">+</span> v<span class="def_op">.</span>z <span class="def_op">*</span> m<span class="def_op">[</span><span class="def_const">11</span><span class="def_op">]</span> <span class="def_op">+</span> m<span class="def_op">[</span><span class="def_const">15</span><span class="def_op">];</span>
+        w   <span class="def_op">=</span> v<span class="def_op">.</span>x <span class="def_op">*</span> m<span class="def_op">[</span> <span class="def_const">3</span><span class="def_op">]</span> <span class="def_op">+</span> v<span class="def_op">.</span>y <span class="def_op">*</span> m<span class="def_op">[</span> <span class="def_const">7</span><span class="def_op">]</span> <span class="def_op">+</span> v<span class="def_op">.</span>z <span class="def_op">*</span> m<span class="def_op">[</span><span class="def_const">11</span><span class="def_op">]</span> <span class="def_op">+</span> m<span class="def_op">[</span><span class="def_const">15</span><span class="def_op">];</span>
         <b class="keyword1">return</b> C_vec3_divf<span class="def_op">(</span>r<span class="def_op">,</span> w<span class="def_op">);</span>
 <span class="def_op">}</span></pre>
 <p class="comment">
@@ -2396,10 +2396,7 @@ R_billboard_render <span class="file">(r_sprite.c)</span></div>
 <div class="entry_body" id="220_body" style="display:none">
 <pre><b class="keyword0">void</b> R_billboard_render<span class="def_op">(<a href="#r_billboard_t">r_billboard_t</a></span> <span class="def_op">*);</span></pre>
 <p class="comment">
- Render a billboard point sprite.<br>
- <code>FIXME</code>: Scaling.<br>
- <code>FIXME</code>: Why do we have to translate by the size times 1.5?<br>
- <code>FIXME</code>: Should not be affected by r_pixel_scale.</p>
+ Render a billboard point sprite.</p>
 </div>
 <a name="R_cleanup" href="javascript:toggle(221)">
 <div class="entry" id="221">
@@ -2747,13 +2744,13 @@ R_sprite_render <span class="file">(r_sprite.c)</span></div>
 <br>
  The vertices are arranged in the following order:<br>
 <br>
-   0---3<br>
-   |   |<br>
-   1---2<br>
+   <code>  0---3</code><br>
+   <code>  |   |</code><br>
+   <code>  1---2</code><br>
 <br>
  <code>TODO</code>: Disable anti-aliasing here if <code>FSAA</code> is on.<br>
  <code>FIXME</code>: There is a slight overlap between the antialiased edge line and the
-        polygon which should probably be fixed if possible.</p>
+        <code>  polygon which should probably be fixed if possible.</code></p>
 </div>
 <a name="R_start_frame" href="javascript:toggle(257)">
 <div class="entry" id="257">
@@ -2762,7 +2759,8 @@ R_start_frame <span class="file">(r_mode.c)</span></div>
 <div class="entry_body" id="257_body" style="display:none">
 <pre><b class="keyword0">void</b> R_start_frame<span class="def_op">(<b class="keyword0">void</b>);</span></pre>
 <p class="comment">
- Clears the buffer and starts rendering the scene.</p>
+ Clears the buffer and starts rendering the scene.<br>
+ <code>TODO</code>: If r_color_bits changed, re-upload textures to OpenGL.</p>
 </div>
 <a name="R_text_cleanup" href="javascript:toggle(258)">
 <div class="entry" id="258">
@@ -2830,14 +2828,14 @@ R_window_render <span class="file">(r_sprite.c)</span></div>
 <br>
  The array is indexed this way:<br>
 <br>
-   0---2------4---6<br>
-   |   |      |   |<br>
-   1---3------5---7<br>
-   |   |      |   |<br>
-   |   |      |   |<br>
-   11--10-----9---8<br>
-   |   |      |   |<br>
-   12--13-----14--15<br>
+   <code>  0---2------4---6</code><br>
+   <code>  |   |      |   |</code><br>
+   <code>  1---3------5---7</code><br>
+   <code>  |   |      |   |</code><br>
+   <code>  |   |      |   |</code><br>
+   <code>  11--10-----9---8</code><br>
+   <code>  |   |      |   |</code><br>
+   <code>  12--13-----14--15</code><br>
 <br>
  Note that unlike normal sprites, no edge anti-aliasing is done as it is
  assumed that all windows will make use of alpha transparency.</p>
@@ -2858,10 +2856,10 @@ calloc <span class="file">(c_shared.h)</span></div>
 <div class="entry_body" id="266_body" style="display:none">
 <pre><b class="keyword2">#define</b> calloc<span class="def_op">(</span>s<span class="def_op">)</span> ERROR_use_C_calloc</pre>
 <p class="comment"> Certain functions should not be used. Files that legitimately use these
-   should undefine these replacements. This is a bad thing to do because some
-   standard library implementations will have strange definitions for these
-   functions which may call each other. For instance, strcmp() which calls
-   strlen().</p>
+   <code>  should undefine these replacements. This is a bad thing to do because some</code>
+   <code>  standard library implementations will have strange definitions for these</code>
+   <code>  functions which may call each other. For instance, strcmp() which calls</code>
+   <code>  strlen().</code></p>
 </div>
 <a name="fclose" href="javascript:toggle(267)">
 <div class="entry" id="267">
@@ -2870,10 +2868,10 @@ fclose <span class="file">(c_shared.h)</span></div>
 <div class="entry_body" id="267_body" style="display:none">
 <pre><b class="keyword2">#define</b> fclose<span class="def_op">(</span>f<span class="def_op">)</span> ERROR_use_C_file_close</pre>
 <p class="comment"> Certain functions should not be used. Files that legitimately use these
-   should undefine these replacements. This is a bad thing to do because some
-   standard library implementations will have strange definitions for these
-   functions which may call each other. For instance, strcmp() which calls
-   strlen().</p>
+   <code>  should undefine these replacements. This is a bad thing to do because some</code>
+   <code>  standard library implementations will have strange definitions for these</code>
+   <code>  functions which may call each other. For instance, strcmp() which calls</code>
+   <code>  strlen().</code></p>
 </div>
 <a name="fopen" href="javascript:toggle(268)">
 <div class="entry" id="268">
@@ -2882,10 +2880,10 @@ fopen <span class="file">(c_shared.h)</span></div>
 <div class="entry_body" id="268_body" style="display:none">
 <pre><b class="keyword2">#define</b> fopen<span class="def_op">(</span>n<span class="def_op">,</span> m<span class="def_op">)</span> ERROR_use_C_file_open</pre>
 <p class="comment"> Certain functions should not be used. Files that legitimately use these
-   should undefine these replacements. This is a bad thing to do because some
-   standard library implementations will have strange definitions for these
-   functions which may call each other. For instance, strcmp() which calls
-   strlen().</p>
+   <code>  should undefine these replacements. This is a bad thing to do because some</code>
+   <code>  standard library implementations will have strange definitions for these</code>
+   <code>  functions which may call each other. For instance, strcmp() which calls</code>
+   <code>  strlen().</code></p>
 </div>
 <a name="free" href="javascript:toggle(269)">
 <div class="entry" id="269">
@@ -2894,10 +2892,10 @@ free <span class="file">(c_shared.h)</span></div>
 <div class="entry_body" id="269_body" style="display:none">
 <pre><b class="keyword2">#define</b> free<span class="def_op">(</span>s<span class="def_op">)</span> ERROR_use_C_free</pre>
 <p class="comment"> Certain functions should not be used. Files that legitimately use these
-   should undefine these replacements. This is a bad thing to do because some
-   standard library implementations will have strange definitions for these
-   functions which may call each other. For instance, strcmp() which calls
-   strlen().</p>
+   <code>  should undefine these replacements. This is a bad thing to do because some</code>
+   <code>  standard library implementations will have strange definitions for these</code>
+   <code>  functions which may call each other. For instance, strcmp() which calls</code>
+   <code>  strlen().</code></p>
 </div>
 <a name="malloc" href="javascript:toggle(270)">
 <div class="entry" id="270">
@@ -2906,10 +2904,10 @@ malloc <span class="file">(c_shared.h)</span></div>
 <div class="entry_body" id="270_body" style="display:none">
 <pre><b class="keyword2">#define</b> malloc<span class="def_op">(</span>s<span class="def_op">)</span> ERROR_use_C_malloc</pre>
 <p class="comment"> Certain functions should not be used. Files that legitimately use these
-   should undefine these replacements. This is a bad thing to do because some
-   standard library implementations will have strange definitions for these
-   functions which may call each other. For instance, strcmp() which calls
-   strlen().</p>
+   <code>  should undefine these replacements. This is a bad thing to do because some</code>
+   <code>  standard library implementations will have strange definitions for these</code>
+   <code>  functions which may call each other. For instance, strcmp() which calls</code>
+   <code>  strlen().</code></p>
 </div>
 <a name="realloc" href="javascript:toggle(271)">
 <div class="entry" id="271">
@@ -2918,10 +2916,10 @@ realloc <span class="file">(c_shared.h)</span></div>
 <div class="entry_body" id="271_body" style="display:none">
 <pre><b class="keyword2">#define</b> realloc<span class="def_op">(</span>p<span class="def_op">,</span> s<span class="def_op">)</span> ERROR_use_C_realloc</pre>
 <p class="comment"> Certain functions should not be used. Files that legitimately use these
-   should undefine these replacements. This is a bad thing to do because some
-   standard library implementations will have strange definitions for these
-   functions which may call each other. For instance, strcmp() which calls
-   strlen().</p>
+   <code>  should undefine these replacements. This is a bad thing to do because some</code>
+   <code>  standard library implementations will have strange definitions for these</code>
+   <code>  functions which may call each other. For instance, strcmp() which calls</code>
+   <code>  strlen().</code></p>
 </div>
 <a name="strdup" href="javascript:toggle(272)">
 <div class="entry" id="272">
@@ -2930,10 +2928,10 @@ strdup <span class="file">(c_shared.h)</span></div>
 <div class="entry_body" id="272_body" style="display:none">
 <pre><b class="keyword2">#define</b> strdup<span class="def_op">(</span>s<span class="def_op">)</span> ERROR_use_C_strdup</pre>
 <p class="comment"> Certain functions should not be used. Files that legitimately use these
-   should undefine these replacements. This is a bad thing to do because some
-   standard library implementations will have strange definitions for these
-   functions which may call each other. For instance, strcmp() which calls
-   strlen().</p>
+   <code>  should undefine these replacements. This is a bad thing to do because some</code>
+   <code>  standard library implementations will have strange definitions for these</code>
+   <code>  functions which may call each other. For instance, strcmp() which calls</code>
+   <code>  strlen().</code></p>
 </div>
 <a name="strlen" href="javascript:toggle(273)">
 <div class="entry" id="273">
@@ -2942,10 +2940,10 @@ strlen <span class="file">(c_shared.h)</span></div>
 <div class="entry_body" id="273_body" style="display:none">
 <pre><b class="keyword2">#define</b> strlen<span class="def_op">(</span>s<span class="def_op">)</span> ERROR_use_C_strlen</pre>
 <p class="comment"> Certain functions should not be used. Files that legitimately use these
-   should undefine these replacements. This is a bad thing to do because some
-   standard library implementations will have strange definitions for these
-   functions which may call each other. For instance, strcmp() which calls
-   strlen().</p>
+   <code>  should undefine these replacements. This is a bad thing to do because some</code>
+   <code>  standard library implementations will have strange definitions for these</code>
+   <code>  functions which may call each other. For instance, strcmp() which calls</code>
+   <code>  strlen().</code></p>
 </div>
 <a name="strncpy" href="javascript:toggle(274)">
 <div class="entry" id="274">
@@ -2954,210 +2952,214 @@ strncpy <span class="file">(c_shared.h)</span></div>
 <div class="entry_body" id="274_body" style="display:none">
 <pre><b class="keyword2">#define</b> strncpy<span class="def_op">(</span>d<span class="def_op">,</span> s<span class="def_op">,</span> n<span class="def_op">)</span> ERROR_use_C_strncpy</pre>
 <p class="comment"> Certain functions should not be used. Files that legitimately use these
-   should undefine these replacements. This is a bad thing to do because some
-   standard library implementations will have strange definitions for these
-   functions which may call each other. For instance, strcmp() which calls
-   strlen().</p>
+   <code>  should undefine these replacements. This is a bad thing to do because some</code>
+   <code>  standard library implementations will have strange definitions for these</code>
+   <code>  functions which may call each other. For instance, strcmp() which calls</code>
+   <code>  strlen().</code></p>
 </div>
 <a name="Variables"></a>
 <h2>Variables</h2>
 <a name="c_exit" href="javascript:toggle(275)">
 <div class="entry" id="275">
-c_exit <span class="file">(c_shared.h)</span></div>
+c_exit <span class="file">(c_variables.c)</span></div>
 </a>
 <div class="entry_body" id="275_body" style="display:none">
 <pre><b class="keyword0">extern</b> <b class="keyword0">int</b> c_exit<span class="def_op">;</span></pre>
-<p class="comment"> c_variables.c</p>
+<p class="comment"> This should be set to <code>TRUE</code> when the main loop needs to exit properly</p>
 </div>
 <a name="c_frame" href="javascript:toggle(276)">
 <div class="entry" id="276">
-c_frame <span class="file">(c_shared.h)</span></div>
+c_frame <span class="file">(c_time.c)</span></div>
 </a>
 <div class="entry_body" id="276_body" style="display:none">
 <pre><b class="keyword0">extern</b> <b class="keyword0">int</b> c_time_msec<span class="def_op">,</span> c_frame_msec<span class="def_op">,</span> c_frame<span class="def_op">,</span> c_throttle_msec<span class="def_op">;</span></pre>
-<p class="comment"> c_time.c</p>
+<p class="comment"> Contains code that uses <code>SDL</code> timers for various purposes</p>
 </div>
 <a name="c_frame_msec" href="javascript:toggle(277)">
 <div class="entry" id="277">
-c_frame_msec <span class="file">(c_shared.h)</span></div>
+c_frame_msec <span class="file">(c_time.c)</span></div>
 </a>
 <div class="entry_body" id="277_body" style="display:none">
 <pre><b class="keyword0">extern</b> <b class="keyword0">int</b> c_time_msec<span class="def_op">,</span> c_frame_msec<span class="def_op">,</span> c_frame<span class="def_op">,</span> c_throttle_msec<span class="def_op">;</span></pre>
-<p class="comment"> c_time.c</p>
+<p class="comment"> Contains code that uses <code>SDL</code> timers for various purposes</p>
 </div>
 <a name="c_frame_sec" href="javascript:toggle(278)">
 <div class="entry" id="278">
-c_frame_sec <span class="file">(c_shared.h)</span></div>
+c_frame_sec <span class="file">(c_time.c)</span></div>
 </a>
 <div class="entry_body" id="278_body" style="display:none">
 <pre><b class="keyword0">extern</b> <b class="keyword0">float</b> c_frame_sec<span class="def_op">;</span></pre>
-<p class="comment"> c_time.c</p>
+<p class="comment"> Contains code that uses <code>SDL</code> timers for various purposes</p>
 </div>
 <a name="c_lang" href="javascript:toggle(279)">
 <div class="entry" id="279">
-c_lang <span class="file">(c_shared.h)</span></div>
+c_lang <span class="file">(c_variables.c)</span></div>
 </a>
 <div class="entry_body" id="279_body" style="display:none">
 <pre><b class="keyword0">extern</b> <a href="#c_var_t">c_var_t</a> c_lang<span class="def_op">;</span></pre>
-<p class="comment"> c_string.c</p>
+<p class="comment"> Language that should be used for translations, must restart game to apply
+   <code>  changes</code></p>
 </div>
 <a name="c_log_func" href="javascript:toggle(280)">
 <div class="entry" id="280">
-c_log_func <span class="file">(c_shared.h)</span></div>
+c_log_func <span class="file">(c_log.c)</span></div>
 </a>
 <div class="entry_body" id="280_body" style="display:none">
 <pre><b class="keyword0">extern</b> <a href="#c_log_event_f">c_log_event_f</a> c_log_func<span class="def_op">;</span></pre>
-<p class="comment"> c_log.c</p>
+<p class="comment"> This file implements the logging system</p>
 </div>
 <a name="c_log_mode" href="javascript:toggle(281)">
 <div class="entry" id="281">
-c_log_mode <span class="file">(c_shared.h)</span></div>
+c_log_mode <span class="file">(c_log.c)</span></div>
 </a>
 <div class="entry_body" id="281_body" style="display:none">
 <pre><b class="keyword0">extern</b> <a href="#c_log_mode_t">c_log_mode_t</a> c_log_mode<span class="def_op">;</span></pre>
-<p class="comment"> c_log.c</p>
+<p class="comment"> This file implements the logging system</p>
 </div>
 <a name="c_max_fps" href="javascript:toggle(282)">
 <div class="entry" id="282">
-c_max_fps <span class="file">(c_shared.h)</span></div>
+c_max_fps <span class="file">(c_variables.c)</span></div>
 </a>
 <div class="entry_body" id="282_body" style="display:none">
 <pre><b class="keyword0">extern</b> <a href="#c_var_t">c_var_t</a> c_max_fps<span class="def_op">,</span> c_show_fps<span class="def_op">;</span></pre>
-<p class="comment"> c_variables.c</p>
+<p class="comment"> Never burn the user's <code>CPU</code>, if we are running through frames too quickly
+   <code>  (faster than this rate), we need to take a nap</code></p>
 </div>
 <a name="c_mem_check" href="javascript:toggle(283)">
 <div class="entry" id="283">
-c_mem_check <span class="file">(c_shared.h)</span></div>
+c_mem_check <span class="file">(c_os_windows.c)</span></div>
 </a>
 <div class="entry_body" id="283_body" style="display:none">
 <pre><b class="keyword0">extern</b> <a href="#c_var_t">c_var_t</a> c_mem_check<span class="def_op">;</span></pre>
-<p class="comment"> c_memory.c</p>
+<p class="comment">
+ Returns the path to the user's writeable Plutocracy directory.</p>
 </div>
 <a name="c_show_fps" href="javascript:toggle(284)">
 <div class="entry" id="284">
-c_show_fps <span class="file">(c_shared.h)</span></div>
+c_show_fps <span class="file">(c_variables.c)</span></div>
 </a>
 <div class="entry_body" id="284_body" style="display:none">
 <pre><b class="keyword0">extern</b> <a href="#c_var_t">c_var_t</a> c_max_fps<span class="def_op">,</span> c_show_fps<span class="def_op">;</span></pre>
-<p class="comment"> c_variables.c</p>
+<p class="comment"> Never burn the user's <code>CPU</code>, if we are running through frames too quickly
+   <code>  (faster than this rate), we need to take a nap</code></p>
 </div>
 <a name="c_throttle_msec" href="javascript:toggle(285)">
 <div class="entry" id="285">
-c_throttle_msec <span class="file">(c_shared.h)</span></div>
+c_throttle_msec <span class="file">(c_time.c)</span></div>
 </a>
 <div class="entry_body" id="285_body" style="display:none">
 <pre><b class="keyword0">extern</b> <b class="keyword0">int</b> c_time_msec<span class="def_op">,</span> c_frame_msec<span class="def_op">,</span> c_frame<span class="def_op">,</span> c_throttle_msec<span class="def_op">;</span></pre>
-<p class="comment"> c_time.c</p>
+<p class="comment"> Contains code that uses <code>SDL</code> timers for various purposes</p>
 </div>
 <a name="c_throttled" href="javascript:toggle(286)">
 <div class="entry" id="286">
-c_throttled <span class="file">(c_shared.h)</span></div>
+c_throttled <span class="file">(c_time.c)</span></div>
 </a>
 <div class="entry_body" id="286_body" style="display:none">
 <pre><b class="keyword0">extern</b> <a href="#c_count_t">c_count_t</a> c_throttled<span class="def_op">;</span></pre>
-<p class="comment"> c_time.c</p>
+<p class="comment"> Contains code that uses <code>SDL</code> timers for various purposes</p>
 </div>
 <a name="c_time_msec" href="javascript:toggle(287)">
 <div class="entry" id="287">
-c_time_msec <span class="file">(c_shared.h)</span></div>
+c_time_msec <span class="file">(c_time.c)</span></div>
 </a>
 <div class="entry_body" id="287_body" style="display:none">
 <pre><b class="keyword0">extern</b> <b class="keyword0">int</b> c_time_msec<span class="def_op">,</span> c_frame_msec<span class="def_op">,</span> c_frame<span class="def_op">,</span> c_throttle_msec<span class="def_op">;</span></pre>
-<p class="comment"> c_time.c</p>
+<p class="comment"> Contains code that uses <code>SDL</code> timers for various purposes</p>
 </div>
 <a name="r_color_bits" href="javascript:toggle(288)">
 <div class="entry" id="288">
-r_color_bits <span class="file">(r_shared.h)</span></div>
+r_color_bits <span class="file">(r_variables.c)</span></div>
 </a>
 <div class="entry_body" id="288_body" style="display:none">
 <pre><b class="keyword0">extern</b> <a href="#c_var_t">c_var_t</a> r_color_bits<span class="def_op">,</span> r_gamma<span class="def_op">,</span> r_height<span class="def_op">,</span> r_pixel_scale<span class="def_op">,</span> r_width<span class="def_op">,</span>
                r_windowed<span class="def_op">;</span></pre>
-<p class="comment"> r_variables.c</p>
+<p class="comment"> Video parameters</p>
 </div>
 <a name="r_count_faces" href="javascript:toggle(289)">
 <div class="entry" id="289">
-r_count_faces <span class="file">(r_shared.h)</span></div>
+r_count_faces <span class="file">(r_mode.c)</span></div>
 </a>
 <div class="entry_body" id="289_body" style="display:none">
 <pre><b class="keyword0">extern</b> <a href="#c_count_t">c_count_t</a> r_count_faces<span class="def_op">;</span></pre>
-<p class="comment"> r_mode.c</p>
+<p class="comment"> Keep track of how many faces we render each frame</p>
 </div>
 <a name="r_gamma" href="javascript:toggle(290)">
 <div class="entry" id="290">
-r_gamma <span class="file">(r_shared.h)</span></div>
+r_gamma <span class="file">(r_variables.c)</span></div>
 </a>
 <div class="entry_body" id="290_body" style="display:none">
 <pre><b class="keyword0">extern</b> <a href="#c_var_t">c_var_t</a> r_color_bits<span class="def_op">,</span> r_gamma<span class="def_op">,</span> r_height<span class="def_op">,</span> r_pixel_scale<span class="def_op">,</span> r_width<span class="def_op">,</span>
                r_windowed<span class="def_op">;</span></pre>
-<p class="comment"> r_variables.c</p>
+<p class="comment"> Video parameters</p>
 </div>
 <a name="r_height" href="javascript:toggle(291)">
 <div class="entry" id="291">
-r_height <span class="file">(r_shared.h)</span></div>
+r_height <span class="file">(r_variables.c)</span></div>
 </a>
 <div class="entry_body" id="291_body" style="display:none">
 <pre><b class="keyword0">extern</b> <a href="#c_var_t">c_var_t</a> r_color_bits<span class="def_op">,</span> r_gamma<span class="def_op">,</span> r_height<span class="def_op">,</span> r_pixel_scale<span class="def_op">,</span> r_width<span class="def_op">,</span>
                r_windowed<span class="def_op">;</span></pre>
-<p class="comment"> r_variables.c</p>
+<p class="comment"> Video parameters</p>
 </div>
 <a name="r_height_2d" href="javascript:toggle(292)">
 <div class="entry" id="292">
-r_height_2d <span class="file">(r_shared.h)</span></div>
+r_height_2d <span class="file">(r_mode.c)</span></div>
 </a>
 <div class="entry_body" id="292_body" style="display:none">
 <pre><b class="keyword0">extern</b> <b class="keyword0">int</b> r_width_2d<span class="def_op">,</span> r_height_2d<span class="def_op">,</span> r_restart<span class="def_op">;</span></pre>
-<p class="comment"> r_mode.c</p>
+<p class="comment"> Current OpenGL settings</p>
 </div>
 <a name="r_pixel_scale" href="javascript:toggle(293)">
 <div class="entry" id="293">
-r_pixel_scale <span class="file">(r_shared.h)</span></div>
+r_pixel_scale <span class="file">(r_variables.c)</span></div>
 </a>
 <div class="entry_body" id="293_body" style="display:none">
 <pre><b class="keyword0">extern</b> <a href="#c_var_t">c_var_t</a> r_color_bits<span class="def_op">,</span> r_gamma<span class="def_op">,</span> r_height<span class="def_op">,</span> r_pixel_scale<span class="def_op">,</span> r_width<span class="def_op">,</span>
                r_windowed<span class="def_op">;</span></pre>
-<p class="comment"> r_variables.c</p>
+<p class="comment"> Video parameters</p>
 </div>
 <a name="r_restart" href="javascript:toggle(294)">
 <div class="entry" id="294">
-r_restart <span class="file">(r_shared.h)</span></div>
+r_restart <span class="file">(r_mode.c)</span></div>
 </a>
 <div class="entry_body" id="294_body" style="display:none">
 <pre><b class="keyword0">extern</b> <b class="keyword0">int</b> r_width_2d<span class="def_op">,</span> r_height_2d<span class="def_op">,</span> r_restart<span class="def_op">;</span></pre>
-<p class="comment"> r_mode.c</p>
+<p class="comment"> Current OpenGL settings</p>
 </div>
 <a name="r_tiles" href="javascript:toggle(295)">
 <div class="entry" id="295">
-r_tiles <span class="file">(r_shared.h)</span></div>
+r_tiles <span class="file">(r_globe.c)</span></div>
 </a>
 <div class="entry_body" id="295_body" style="display:none">
 <pre><b class="keyword0">extern</b> <b class="keyword0">int</b> r_tiles<span class="def_op">;</span></pre>
-<p class="comment"> r_globe.c</p>
+<p class="comment"> Atmospheric halo vertex type</p>
 </div>
 <a name="r_width" href="javascript:toggle(296)">
 <div class="entry" id="296">
-r_width <span class="file">(r_shared.h)</span></div>
+r_width <span class="file">(r_variables.c)</span></div>
 </a>
 <div class="entry_body" id="296_body" style="display:none">
 <pre><b class="keyword0">extern</b> <a href="#c_var_t">c_var_t</a> r_color_bits<span class="def_op">,</span> r_gamma<span class="def_op">,</span> r_height<span class="def_op">,</span> r_pixel_scale<span class="def_op">,</span> r_width<span class="def_op">,</span>
                r_windowed<span class="def_op">;</span></pre>
-<p class="comment"> r_variables.c</p>
+<p class="comment"> Video parameters</p>
 </div>
 <a name="r_width_2d" href="javascript:toggle(297)">
 <div class="entry" id="297">
-r_width_2d <span class="file">(r_shared.h)</span></div>
+r_width_2d <span class="file">(r_mode.c)</span></div>
 </a>
 <div class="entry_body" id="297_body" style="display:none">
 <pre><b class="keyword0">extern</b> <b class="keyword0">int</b> r_width_2d<span class="def_op">,</span> r_height_2d<span class="def_op">,</span> r_restart<span class="def_op">;</span></pre>
-<p class="comment"> r_mode.c</p>
+<p class="comment"> Current OpenGL settings</p>
 </div>
 <a name="r_windowed" href="javascript:toggle(298)">
 <div class="entry" id="298">
-r_windowed <span class="file">(r_shared.h)</span></div>
+r_windowed <span class="file">(r_variables.c)</span></div>
 </a>
 <div class="entry_body" id="298_body" style="display:none">
 <pre><b class="keyword0">extern</b> <a href="#c_var_t">c_var_t</a> r_color_bits<span class="def_op">,</span> r_gamma<span class="def_op">,</span> r_height<span class="def_op">,</span> r_pixel_scale<span class="def_op">,</span> r_width<span class="def_op">,</span>
                r_windowed<span class="def_op">;</span></pre>
-<p class="comment"> r_variables.c</p>
+<p class="comment"> Video parameters</p>
 </div>
 </body>
 </html>

@@ -190,6 +190,9 @@ void I_label_init(i_label_t *, const char *);
 void I_label_configure(i_label_t *, const char *);
 i_label_t *I_label_new(const char *);
 
+/* i_layout.c */
+extern i_widget_t i_root;
+
 /* i_select.c */
 void I_select_init(i_select_t *, const char *label, const char **list,
                    int initial);

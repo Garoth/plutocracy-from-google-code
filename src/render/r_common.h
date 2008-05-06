@@ -24,6 +24,7 @@
 /* Supported extensions */
 typedef enum {
         R_EXT_MULTITEXTURE,
+        R_EXT_POINT_SPRITE,
         R_EXTENSIONS,
 } r_extension_t;
 
@@ -53,36 +54,6 @@ struct r_texture {
         GLuint gl_name;
         int alpha;
 };
-
-/* Non-animated mesh */
-typedef struct r_static_mesh {
-        r_vertex3_t *verts;
-        unsigned short *indices;
-        int verts_len, indices_len;
-} r_static_mesh_t;
-
-/* Model animation type */
-typedef struct r_model_anim {
-        int from, to, delay;
-        char name[64], end_anim[64];
-} r_model_anim_t;
-
-/* Model object type */
-typedef struct r_model_object {
-        r_texture_t *texture;
-        char name[64];
-} r_model_object_t;
-
-/* Animated, textured, multi-mesh model. The matrix contains enough room to
-   store every object's static mesh for every frame, it is indexed by frame
-   then by object. */
-typedef struct r_model_data {
-        c_ref_t ref;
-        r_static_mesh_t *matrix;
-        r_model_anim_t *anims;
-        r_model_object_t *objects;
-        int anims_len, objects_len, frames;
-} r_model_data_t;
 
 /* Render modes */
 typedef enum {
@@ -123,7 +94,6 @@ void R_render_globe(void);
 extern float r_globe_radius;
 
 /* r_mode.c */
-extern GLfloat r_cam_matrix[16], r_proj3_matrix[16];
 extern int r_mode_hold;
 
 /* r_prerender.c */
@@ -132,8 +102,9 @@ void R_prerender(void);
 /* r_render.c */
 #define R_check_errors() R_check_errors_full(__FILE__, __LINE__, __func__);
 void R_check_errors_full(const char *file, int line, const char *func);
-void R_push_mode(r_mode_t);
 void R_pop_mode(void);
+void R_push_mode(r_mode_t);
+void R_set_mode(r_mode_t);
 
 extern r_mode_t r_mode;
 extern float r_cam_dist, r_cam_zoom;
@@ -145,13 +116,6 @@ void R_disable_light(void);
 void R_enable_light(void);
 void R_init_solar(void);
 void R_render_solar(void);
-
-/* r_static_mesh.c */
-void R_static_mesh_cleanup(r_static_mesh_t *);
-unsigned short R_static_mesh_find_vert(const r_static_mesh_t *mesh,
-                                       const r_vertex3_t *vert);
-void R_static_mesh_render(r_static_mesh_t *, r_texture_t *);
-void R_static_mesh_free(r_static_mesh_t *);
 
 /* r_test.c */
 void R_render_tests(void);

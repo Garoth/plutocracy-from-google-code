@@ -15,15 +15,90 @@
 
 #include "r_common.h"
 
+/* Non-animated mesh */
+typedef struct r_mesh {
+        r_vertex3_t *verts;
+        unsigned short *indices;
+        int verts_len, indices_len;
+} mesh_t;
+
+/* Model animation type */
+typedef struct model_anim {
+        int from, to, delay;
+        char name[64], end_anim[64];
+} model_anim_t;
+
+/* Model object type */
+typedef struct model_object {
+        r_texture_t *texture;
+        char name[64];
+} model_object_t;
+
+/* Animated, textured, multi-mesh model. The matrix contains enough room to
+   store every object's static mesh for every frame, it is indexed by frame
+   then by object. */
+typedef struct r_model_data {
+        c_ref_t ref;
+        mesh_t *matrix;
+        model_anim_t *anims;
+        model_object_t *objects;
+        int anims_len, objects_len, frames;
+} model_data_t;
+
+/* Linked list of loaded model data */
 static c_ref_t *data_root;
+
+/******************************************************************************\
+ Find a vertex in a static mesh vertex array. Returns the length of the array
+ if a matching vertex is not found.
+\******************************************************************************/
+static unsigned short mesh_find_vert(const mesh_t *mesh,
+                                     const r_vertex3_t *vert)
+{
+        int i;
+
+        for (i = 0; i < mesh->verts_len; i++)
+                if (C_vec3_eq(vert->co, mesh->verts[i].co) &&
+                    C_vec3_eq(vert->no, mesh->verts[i].no) &&
+                    C_vec2_eq(vert->uv, mesh->verts[i].uv))
+                        break;
+        return (unsigned short)i;
+}
+
+/******************************************************************************\
+ Render a mesh.
+\******************************************************************************/
+static void mesh_render(mesh_t *mesh, r_texture_t *texture)
+{
+        R_texture_select(texture);
+        C_count_add(&r_count_faces, mesh->indices_len / 3);
+        glInterleavedArrays(R_VERTEX3_FORMAT, 0, mesh->verts);
+        glDrawElements(GL_TRIANGLES, mesh->indices_len,
+                       GL_UNSIGNED_SHORT, mesh->indices);
+        glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+        glDisableClientState(GL_NORMAL_ARRAY);
+        glDisableClientState(GL_VERTEX_ARRAY);
+        R_check_errors();
+}
+
+/******************************************************************************\
+ Release the resources for a mesh.
+\******************************************************************************/
+static void mesh_cleanup(mesh_t *mesh)
+{
+        if (!mesh)
+                return;
+        C_free(mesh->verts);
+        C_free(mesh->indices);
+}
 
 /******************************************************************************\
  Finish parsing an object.
 \******************************************************************************/
-static int finish_object(r_model_data_t *data, int frame, int object,
+static int finish_object(model_data_t *data, int frame, int object,
                          c_array_t *verts, c_array_t *indices)
 {
-        r_static_mesh_t *mesh;
+        mesh_t *mesh;
         int index, index_last;
 
         if (object < 0 || frame < 0)
@@ -52,7 +127,7 @@ static int finish_object(r_model_data_t *data, int frame, int object,
 /******************************************************************************\
  Free resources associated with the model private structure.
 \******************************************************************************/
-static void model_data_cleanup(r_model_data_t *data)
+static void model_data_cleanup(model_data_t *data)
 {
         int i;
 
@@ -60,7 +135,7 @@ static void model_data_cleanup(r_model_data_t *data)
                 return;
         if (data->matrix) {
                 for (i = 0; i < data->objects_len * data->frames; i++)
-                        R_static_mesh_cleanup(data->matrix + i);
+                        mesh_cleanup(data->matrix + i);
                 C_free(data->matrix);
         }
         for (i = 0; i < data->objects_len; i++)
@@ -75,11 +150,11 @@ static void model_data_cleanup(r_model_data_t *data)
 
  FIXME: Does not account for material properties.
 \******************************************************************************/
-static r_model_data_t *model_data_load(const char *filename)
+static model_data_t *model_data_load(const char *filename)
 {
         c_token_file_t token_file;
         c_array_t anims, objects, verts, indices;
-        r_model_data_t *data;
+        model_data_t *data;
         const char *token;
         int found, quoted, object, frame;
 
@@ -100,9 +175,9 @@ static r_model_data_t *model_data_load(const char *filename)
         /* Load 'anims:' block */
         token = C_token_file_read(&token_file);
         if (!strcmp(token, "anims:")) {
-                C_array_init(&anims, r_model_anim_t, 8);
+                C_array_init(&anims, model_anim_t, 8);
                 for (;;) {
-                        r_model_anim_t anim;
+                        model_anim_t anim;
 
                         /* Syntax: [name] [from] [to] [fps] [end-anim] */
                         token = C_token_file_read_full(&token_file, &quoted);
@@ -136,9 +211,9 @@ static r_model_data_t *model_data_load(const char *filename)
         }
 
         /* Define objects */
-        C_array_init(&objects, r_model_object_t, 8);
+        C_array_init(&objects, model_object_t, 8);
         for (;;) {
-                r_model_object_t obj;
+                model_object_t obj;
 
                 token = C_token_file_read_full(&token_file, &quoted);
                 if (strcmp(token, "object"))
@@ -154,7 +229,7 @@ static r_model_data_t *model_data_load(const char *filename)
 
         /* Load frames into matrix */
         data->matrix = C_calloc(data->frames * data->objects_len *
-                                sizeof (r_static_mesh_t));
+                                sizeof (mesh_t));
         for (frame = -1, object = -1; token[0] || quoted;
              token = C_token_file_read_full(&token_file, &quoted)) {
                 int verts_parsed;
@@ -317,7 +392,7 @@ void R_model_cleanup(r_model_t *model)
                 return;
         if (model->lerp_meshes) {
                 for (i = 0; i < model->data->objects_len; i++)
-                        R_static_mesh_cleanup(model->lerp_meshes + i);
+                        mesh_cleanup(model->lerp_meshes + i);
                 C_free(model->lerp_meshes);
         }
         C_ref_down(&model->data->ref);
@@ -331,9 +406,9 @@ void R_model_cleanup(r_model_t *model)
  allocated with enough room to hold the largest possible interpolated frame.
  Textures are not interpolated.
 \******************************************************************************/
-static void interpolate_mesh(r_static_mesh_t *dest, float lerp,
-                             const r_static_mesh_t *from,
-                             const r_static_mesh_t *to)
+static void interpolate_mesh(mesh_t *dest, float lerp,
+                             const mesh_t *from,
+                             const mesh_t *to)
 {
         int j;
 
@@ -356,7 +431,7 @@ static void interpolate_mesh(r_static_mesh_t *dest, float lerp,
                 vert.co = C_vec3_lerp(from_vert->co, lerp, to_vert->co);
                 vert.no = C_vec3_lerp(from_vert->no, lerp, to_vert->no);
                 vert.uv = C_vec2_lerp(from_vert->uv, lerp, to_vert->uv);
-                index = R_static_mesh_find_vert(dest, &vert);
+                index = mesh_find_vert(dest, &vert);
                 if (index >= dest->verts_len)
                         dest->verts[dest->verts_len++] = vert;
                 dest->indices[j] = index;
@@ -369,7 +444,7 @@ static void interpolate_mesh(r_static_mesh_t *dest, float lerp,
 \******************************************************************************/
 static void update_animation(r_model_t *model)
 {
-        r_model_anim_t *anim;
+        model_anim_t *anim;
         float lerp;
         int i;
 
@@ -418,13 +493,12 @@ static void update_animation(r_model_t *model)
 \******************************************************************************/
 void R_model_render(r_model_t *model)
 {
-        r_static_mesh_t *meshes;
+        mesh_t *meshes;
         int i;
 
         if (!model || !model->data)
                 return;
         R_push_mode(R_MODE_3D);
-        glPushMatrix();
         if (model->origin.x || model->origin.y || model->origin.z)
                 glTranslatef(model->origin.x, model->origin.y, model->origin.z);
         if (model->scale != 1.f)
@@ -443,9 +517,7 @@ void R_model_render(r_model_t *model)
                 meshes = model->data->matrix +
                          model->data->objects_len * model->last_frame;
         for (i = 0; i < model->data->objects_len; i++)
-                R_static_mesh_render(meshes + i,
-                                     model->data->objects[i].texture);
-        glPopMatrix();
+                mesh_render(meshes + i, model->data->objects[i].texture);
         R_check_errors();
         R_pop_mode();
 }
