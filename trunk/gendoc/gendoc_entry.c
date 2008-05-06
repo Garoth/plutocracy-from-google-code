@@ -78,7 +78,7 @@ void D_entry_add(const entry_t *current, entry_t **root)
 \******************************************************************************/
 static void output_comment(const char *buf)
 {
-        int i, j, last_nl, spaces;
+        int i, j, last_nl, blank_nl, spaces, in_p;
         enum {
                 CODE_NONE,
                 CODE_BRACKETS,
@@ -88,31 +88,43 @@ static void output_comment(const char *buf)
 
         if (!buf[0])
                 return;
-        printf("<p class=\"comment\">");
+        in_p = FALSE;
+        blank_nl = TRUE;
         for (last_nl = -100, spaces = i = 0; buf[i]; i++) {
-
-                /* Codify diagrams */
-                if (buf[i] == ' ' || buf[i] == '\t') {
-                        if (spaces >= 0)
-                                spaces++;
-                } else {
-                        if (spaces >= 2) {
-                                printf("<code>  ");
-                                code = CODE_DIAGRAM;
-                        }
-                        spaces = -1;
-                }
 
                 /* Convert newlines to tags */
                 if (buf[i] == '\n') {
-                        if (code == CODE_DIAGRAM) {
-                                printf("</code>");
-                                code = CODE_NONE;
+                        blank_nl = spaces >= 0;
+                        if (blank_nl && in_p) {
+                                printf("</p>");
+                                in_p = FALSE;
                         }
-                        if (i - last_nl < 64)
-                                printf("<br>");
+                        if (code == CODE_DIAGRAM) {
+                                printf("</code><br>");
+                                code = CODE_NONE;
+                                blank_nl = TRUE;
+                        } else if (i - last_nl < 64 && in_p) {
+                                printf("</p>");
+                                in_p = FALSE;
+                        }
                         last_nl = i;
                         spaces = 0;
+                } else if (buf[i] == ' ' || buf[i] == '\t') {
+                        if (spaces >= 0)
+                                spaces++;
+                } else {
+                        if (!in_p) {
+                                printf("<p class=\"comment\">");
+                                in_p = TRUE;
+                        }
+
+                        /* Codify diagrams */
+                        if (spaces >= 2 && blank_nl) {
+                                printf("<code>  ");
+                                code = CODE_DIAGRAM;
+                        }
+
+                        spaces = -1;
                 }
 
                 /* Codify anything specifically tagged */
@@ -143,7 +155,8 @@ static void output_comment(const char *buf)
         }
         if (code)
                 printf("</code>");
-        printf("</p>\n");
+        if (in_p)
+                printf("</p>\n");
 }
 
 /******************************************************************************\

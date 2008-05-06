@@ -9,7 +9,7 @@ SEARCH="`find src/ -not \( -wholename \*.svn\* \) -type f` $FILES"
 for file in $SEARCH
 do
         COUNT=`grep -c -E "TODO|FIXME" $file`
-        if [ $COUNT == 0 ]
+        if [ "$COUNT" == 0 ]
         then
                 continue
         fi
