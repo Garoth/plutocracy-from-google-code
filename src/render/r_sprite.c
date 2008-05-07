@@ -290,7 +290,7 @@ void R_sprite_init_text(r_sprite_t *sprite, r_font_t font, float wrap,
                 last_break = i + 1;
                 y += line_skip;
         }
-        R_texture_upload(tex, FALSE);
+        R_texture_upload(tex);
 
         /* Text is actually just a sprite and after this function has finished
            the sprite itself can be manipulated as expected */

@@ -156,7 +156,7 @@ static model_data_t *model_data_load(const char *filename)
         c_array_t anims, objects, verts, indices;
         model_data_t *data;
         const char *token;
-        int found, quoted, object, frame;
+        int found, quoted, object, frame, verts_parsed;
 
         data = C_ref_alloc(sizeof (*data), &data_root,
                            (c_ref_cleanup_f)model_data_cleanup,
@@ -230,9 +230,8 @@ static model_data_t *model_data_load(const char *filename)
         /* Load frames into matrix */
         data->matrix = C_calloc(data->frames * data->objects_len *
                                 sizeof (mesh_t));
-        for (frame = -1, object = -1; token[0] || quoted;
+        for (frame = -1, object = -1, verts_parsed = 0; token[0] || quoted;
              token = C_token_file_read_full(&token_file, &quoted)) {
-                int verts_parsed;
 
                 /* Each frame starts with 'frame #' where # is the frame
                    index numbered from 1 */

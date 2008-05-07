@@ -27,8 +27,8 @@ const char *C_user_dir(void)
         if (!user_dir[0]) {
                 TCHAR app_data[MAX_PATH];
         
-                if (SHGetFolderPath(NULL, CSIDL_APPDATA, NULL,
-                                    SHGFP_TYPE_CURRENT, app_data) != S_OK) {
+                if (SHGetFolderPath(NULL, CSIDL_APPDATA, NULL, 0, app_data) != 
+                    S_OK) {
                         C_warning("Failed to get Application Data directory");
                         return "";
                 }
@@ -42,4 +42,3 @@ const char *C_user_dir(void)
         }
         return user_dir;
 }
-

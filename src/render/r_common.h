@@ -52,7 +52,7 @@ struct r_texture {
         c_ref_t ref;
         SDL_Surface *surface;
         GLuint gl_name;
-        int alpha;
+        int alpha, mipmaps;
 };
 
 /* Render modes */
@@ -84,7 +84,7 @@ r_texture_t *R_texture_load(const char *filename, int mipmaps);
 #define R_texture_ref(t) C_ref_up((c_ref_t *)(t))
 void R_texture_render(r_texture_t *, int x, int y);
 void R_texture_select(r_texture_t *);
-void R_texture_upload(const r_texture_t *, int mipmaps);
+void R_texture_upload(const r_texture_t *);
 
 extern r_texture_t *r_terrain_tex;
 

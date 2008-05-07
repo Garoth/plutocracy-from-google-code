@@ -44,9 +44,9 @@ void C_file_cleanup(c_file_t *file)
 \******************************************************************************/
 int C_file_init_read(c_file_t *file, const char *name)
 {
-        file->stream = gzopen(name, "r");
+        file->stream = gzopen(name, "rb");
         if (!file->stream)
-                file->stream = gzopen(C_va("%s.gz", name), "r");
+                file->stream = gzopen(C_va("%s.gz", name), "rb");
         if (!file->stream) {
                 file->type = C_FT_NONE;
                 return FALSE;

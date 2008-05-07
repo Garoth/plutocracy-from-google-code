@@ -20,30 +20,72 @@ import glob, os, sys
 package = 'plutocracy'
 version = '0.0.0'
 
-# Incompatible with Windows, use the Visual Studio project files
-if (sys.platform == 'win32'):
-        print ('\nWindows is not supported by the SCons script. Use the ' +
-               'Visual Studio project files in the vc8 directory.')
-        sys.exit(1)
+# Platform considerations
+windows = sys.platform == 'win32'
+
+# Convert a POSIX path to OS-independent
+def path(p):
+        if windows:
+                p = p.replace('/', '\\')
+        return p
+
+# Create a default environment. Have to set environment variables after
+# initialization so that SCons doesn't mess them up.
+default_env = Environment(ENV = os.environ)
+
+# Adds an option that may have been set via environment flags
+def AddEnvOption(env, opts, opt_name, opt_desc, env_name = None, value = None):
+        if env_name == None:
+                env_name = opt_name;
+        if env_name == opt_name:
+                opt_desc += ' (environment variable)'
+        else:
+                opt_desc += ' (environment variable ' + env_name + ')'
+        if env_name in os.environ:
+                opts.Add(opt_name, opt_desc, os.environ[env_name])
+        elif value == None:
+                opts.Add(opt_name, opt_desc, env.get(opt_name))
+        else:
+                opts.Add(opt_name, opt_desc, value)
 
 # Options are loaded from 'custom.py'. Default values are only provided for
 # the variables that do not get set by SCons itself.
 config_file = ARGUMENTS.get('config', 'custom.py')
 opts = Options(config_file)
-opts.Add('CC', 'Compiler to use')
-opts.Add('CFLAGS', 'Compiler flags')
-opts.Add('PREFIX', 'Installation path prefix',
-         os.environ.get('PREFIX', '/usr/local'))
-opts.Add(BoolOption('gch', 'Build a precompiled header (gcc only)', True))
 
-# Create a default environment
-default_env = Environment(ENV = os.environ)
-if ('CC' in os.environ):
-        default_env.Replace(CC = os.environ['CC'])
-if ('CFLAGS' in os.environ):
-        default_env.Replace(CFLAGS = os.environ['CFLAGS'])
+# First load the mingw variable because it affects default variables
+opts.Add(BoolOption('mingw', 'Set to True if compiling with MinGW', False))
+opts.Update(default_env)
+mingw = default_env.get('mingw')
+if mingw:
+        default_env = Environment(tools = ['mingw'], ENV = os.environ)
+
+# Now load the rest of the options
+AddEnvOption(default_env, opts, 'CC', 'Compiler to use')
+AddEnvOption(default_env, opts, 'CFLAGS', 'Compiler flags')
+AddEnvOption(default_env, opts, 'LINK', 'Linker to use')
+AddEnvOption(default_env, opts, 'LINKFLAGS', 'Linker flags', 'LDFLAGS')
+AddEnvOption(default_env, opts, 'PREFIX', 'Installation path prefix', 
+             'PREFIX', '/usr/local/')
+opts.Add(BoolOption('gch', 'Build a precompiled header (gcc only)', True))
+opts.Add(BoolOption('dump_env', 'Dump SCons Environment contents', False))
+opts.Add(BoolOption('dump_path', 'Dump path enviornment variable', False))
 opts.Update(default_env)
 opts.Save(config_file, default_env)
+
+# Windows compiler and linker need some extra flags
+if windows:
+        default_env.AppendUnique(CPPDEFINES = ['WIN32', '_CONSOLE'])
+        if default_env['CC'] == 'cl':
+                default_env.PrependUnique(CFLAGS = '/MD')
+        if default_env['LINK'] == 'link':
+                default_env.PrependUnique(LINKFLAGS = '/SUBSYSTEM:CONSOLE')
+
+# Dump Environment
+if default_env['dump_env']:
+        print default_env.Dump()
+if default_env['dump_path']:
+        print default_env['ENV']['PATH']
 
 # Setup the help information
 Help('\n' + package.title() + ' ' + version +
@@ -67,19 +109,38 @@ Help(opts.GenerateHelpText(default_env))
 # scons plutocracy -- Compile plutocracy
 #
 ################################################################################
-plutocracy_src = ['src/plutocracy.c'] + glob.glob('src/*/*.c')
-plutocracy_src.remove('src/common/c_os_windows.c')
+plutocracy_src = ([path('src/plutocracy.c')] + glob.glob(path('src/*/*.c')))
 plutocracy_env = default_env.Clone()
-plutocracy_env.Append(CPPPATH = '.')
-plutocracy_env.Append(LIBS = ['SDL_image', 'SDL_ttf', 'GL', 'GLU', 'z'])
-plutocracy_env.ParseConfig('sdl-config --cflags --libs')
+plutocracy_objlibs = ''
+if windows:
+        plutocracy_src.remove(path('src/common/c_os_posix.c'))
+        plutocracy_env.Append(CPPPATH = 'windows/include')
+        plutocracy_env.Append(LIBPATH = 'windows/lib')
+        plutocracy_env.Append(LIBS = ['SDL', 'SDLmain', 'OpenGL32', 'GlU32', 
+                                      'user32', 'shell32'])
+        if mingw:
+                plutocracy_env.ParseConfig('sh sdl-config --prefix=windows' +
+                                                        ' --cflags --libs')
+                plutocracy_objlibs = [path('windows/lib/zdll.lib'),
+                                      path('windows/lib/SDL_ttf.lib'),
+                                      path('windows/lib/SDL_image.lib')]
+        else:
+                plutocracy_env.Append(LIBS = ['SDL_image', 'SDL_ttf', 'zdll'])
+else:
+        plutocracy_src.remove(path('src/common/c_os_windows.c'))
+        plutocracy_env.Append(CPPPATH = '.')
+        plutocracy_env.Append(LIBS = ['SDL_image', 'SDL_ttf', 'GL', 'GLU', 'z'])
+        plutocracy_env.ParseConfig('sdl-config --cflags --libs')
 plutocracy_obj = plutocracy_env.Object(plutocracy_src)
-plutocracy = plutocracy_env.Program(package, plutocracy_obj)
+plutocracy = plutocracy_env.Program(package, plutocracy_obj +
+                                             plutocracy_objlibs)
+if windows:
+        plutocracy_env.Clean(plutocracy, 'plutocracy.exe.manifest')
 Default(plutocracy)
 
 # Build the precompiled header as a dependency of the main program
 plutocracy_gch = ''
-if plutocracy_env['gch']:
+if plutocracy_env['gch'] and not windows:
         plutocracy_gch = 'src/common/c_shared.h.gch'
         plutocracy_env.Command('src/common/c_shared.h.gch',
                                glob.glob('src/common/*.h'),
@@ -87,49 +148,60 @@ if plutocracy_env['gch']:
                                '-c src/common/c_shared.h -o $TARGET')
         plutocracy_env.Depends(plutocracy_obj, plutocracy_gch)
 
-# Generate a config.h with definitions
-def WriteConfigH(target, source, env):
-        config = open('config.h', 'w')
-        config.write('\n/* Package parameters */\n' +
-                     '#define PACKAGE "' + package + '"\n' +
-                     '#define PACKAGE_STRING "' + package.title() +
-                                                  ' ' + version + '"\n' +
-                     '\n/* Configured paths */\n' +
-                     '#define PKGDATADIR "' + install_data + '"\n')
-        config.close()
-plutocracy_config = plutocracy_env.Command('config.h', '', WriteConfigH)
-plutocracy_env.Depends(plutocracy_obj + [plutocracy_gch], plutocracy_config)
-plutocracy_env.Depends(plutocracy_config, config_file)
+# Windows has a prebuilt config
+if windows:
+        plutocracy_config = 'windows/include/config.h'
 
+# Generate a config.h with definitions
+else:
+        def WriteConfigH(target, source, env):
+                config = open('config.h', 'w')
+                config.write('\n/* Package parameters */\n' +
+                             '#define PACKAGE "' + package + '"\n' +
+                             '#define PACKAGE_STRING "' + package.title() +
+                                                          ' ' + version + '"\n' +
+                             '\n/* Configured paths */\n' +
+                             '#define PKGDATADIR "' + install_data + '"\n')
+                config.close()
+        plutocracy_config = plutocracy_env.Command('config.h', '', WriteConfigH)
+
+plutocracy_env.Depends(plutocracy_obj + [plutocracy_gch], 
+                       plutocracy_config)
+plutocracy_env.Depends(plutocracy_config, config_file)
+        
 ################################################################################
 #
 # scons install -- Install plutocracy
 #
 ################################################################################
 install_prefix = os.path.join(os.getcwd(), plutocracy_env['PREFIX'])
-install_data = os.path.join(install_prefix, 'share/plutocracy')
-Alias('install', install_prefix)
-Depends('install', plutocracy)
+install_data = os.path.join(install_prefix, 'share', 'plutocracy')
+default_env.Alias('install', install_prefix)
+default_env.Depends('install', plutocracy)
 
-def InstallRecursive(dest, src):
+def InstallRecursive(dest, src, exclude = []):
+        bad_exts = ['exe', 'o', 'obj', 'gch', 'pch', 'user', 'ncb', 'suo', 
+                    'manifest']
         files = os.listdir(src)
         for f in files:
                 ext = f.rsplit('.')
                 ext = ext[len(ext) - 1]
-                if (f[0] == '.' or ext == 'o' or ext == 'obj' or ext == 'gch'):
+                if (f[0] == '.' or ext in bad_exts):
                         continue
                 src_path = os.path.join(src, f)
+                if src_path in exclude:
+                        continue
                 if (os.path.isdir(src_path)):
                         InstallRecursive(os.path.join(dest, f), src_path)
                         continue
-                Install(dest, src_path)
+                default_env.Install(dest, src_path)
 
 # Files that get installed
-Install(os.path.join(install_prefix, 'bin'), plutocracy)
-Install(install_data, ['AUTHORS', 'ChangeLog', 'CC', 'COPYING', 'README',
-                       'TODO'])
-InstallRecursive(os.path.join(install_data, 'gui/'), 'gui')
-InstallRecursive(os.path.join(install_data, 'models/'), 'models')
+default_env.Install(os.path.join(install_prefix, 'bin'), plutocracy)
+default_env.Install(install_data, ['AUTHORS', 'ChangeLog', 'CC', 'COPYING', 
+                                   'README'])
+InstallRecursive(os.path.join(install_data, 'gui'), 'gui')
+InstallRecursive(os.path.join(install_data, 'models'), 'models')
 
 ################################################################################
 #
@@ -137,28 +209,39 @@ InstallRecursive(os.path.join(install_data, 'models/'), 'models')
 #
 ################################################################################
 gendoc_env = default_env.Clone()
-gendoc = gendoc_env.Program('gendoc/gendoc', glob.glob('gendoc/*.c'))
+gendoc_header = path('gendoc/header.txt')
+gendoc = gendoc_env.Program(path('gendoc/gendoc'),
+                            glob.glob(path('gendoc/*.c')))
+if windows:
+        gendoc_env.Clean(gendoc, path('gendoc/gendoc.exe.manifest'))
 
-def GendocOutput(output, path, title, inputs = []):
-        inputs = (glob.glob(path + '/*.h') + glob.glob(path + '/*.c') + inputs);
-        cmd = gendoc_env.Command(output, inputs, 'gendoc/gendoc ' +
-                                 '--header "gendoc/header.txt" ' +
-                                 '--title "' + title + '" ' +
-                                 ' '.join(inputs) + ' > $TARGET')
+def GendocOutput(output, in_path, title, inputs = []):
+        output = os.path.join('gendoc', 'docs', output)
+        inputs = (glob.glob(os.path.join(in_path, '*.h')) +
+                  glob.glob(os.path.join(in_path, '*.c')) + inputs);
+        cmd = gendoc_env.Command(output, inputs, path('gendoc/gendoc') +
+                                 ' --file $TARGET --header "' + 
+                                 gendoc_header + '" --title "' + title + '" ' +
+                                 ' '.join(inputs))
         gendoc_env.Depends(cmd, gendoc)
+        gendoc_env.Depends(cmd, gendoc_header)
 
 # Gendoc HTML files
-GendocOutput('gendoc/docs/gendoc.html', 'gendoc', 'GenDoc')
-GendocOutput('gendoc/docs/shared.html', 'src/common', 'Plutocracy Common',
-             ['src/render/r_shared.h', 'src/interface/i_shared.h',
-              'src/game/g_shared.h', 'src/network/n_shared.h'] +
-             glob.glob('src/render/*.c') + glob.glob('src/interface/*.c') +
-             glob.glob('src/game/*.c') + glob.glob('src/network/*.c'))
-GendocOutput('gendoc/docs/render.html', 'src/render', 'Plutocracy Render')
-GendocOutput('gendoc/docs/interface.html', 'src/interface',
+GendocOutput('gendoc.html', 'gendoc', 'GenDoc')
+GendocOutput('shared.html', path('src/common'), 'Plutocracy Common',
+             [path('src/render/r_shared.h'),
+              path('src/interface/i_shared.h'),
+              path('src/game/g_shared.h'),
+              path('src/network/n_shared.h')] +
+             glob.glob(path('src/render/*.c')) +
+             glob.glob(path('src/interface/*.c')) +
+             glob.glob(path('src/game/*.c')) +
+             glob.glob(path('src/network/*.c')))
+GendocOutput('render.html', path('src/render'), 'Plutocracy Render')
+GendocOutput('interface.html', path('src/interface'),
              'Plutocracy Interface')
-GendocOutput('gendoc/docs/game.html', 'src/game', 'Plutocracy Game')
-GendocOutput('gendoc/docs/network.html', 'src/network', 'Plutocracy Network')
+GendocOutput('game.html', path('src/game'), 'Plutocracy Game')
+GendocOutput('network.html', path('src/network'), 'Plutocracy Network')
 
 ################################################################################
 #
@@ -166,21 +249,21 @@ GendocOutput('gendoc/docs/network.html', 'src/network', 'Plutocracy Network')
 #
 ################################################################################
 dist_name = package + '-' + version
-Depends(dist_name, 'gendoc')
 dist_tarball = dist_name + '.tar.gz'
-Command(dist_tarball, dist_name,
-        [Delete(os.path.join(dist_name, 'gendoc/gendoc')),
-         'tar -czf ' + dist_tarball + ' ' + dist_name])
-Alias('dist', dist_tarball)
-AddPostAction(dist_tarball, Delete(dist_name))
+default_env.Depends(dist_name, 'gendoc')
+default_env.Command(dist_tarball, dist_name,
+                    ['tar -czf ' + dist_tarball + ' ' + dist_name])
+default_env.Alias('dist', dist_tarball)
+default_env.AddPostAction(dist_tarball, Delete(dist_name))
 
 # Files that get distributed
-Install(dist_name, ['AUTHORS', 'ChangeLog', 'CC', 'COPYING', 'README',
-                    'SConstruct', 'todo.sh', 'TODO'])
-InstallRecursive(os.path.join(dist_name, 'blender/'), 'blender')
-InstallRecursive(os.path.join(dist_name, 'gendoc/'), 'gendoc')
-InstallRecursive(os.path.join(dist_name, 'gui/'), 'gui')
-InstallRecursive(os.path.join(dist_name, 'models/'), 'models')
-InstallRecursive(os.path.join(dist_name, 'src/'), 'src')
-InstallRecursive(os.path.join(dist_name, 'vc8/'), 'vc8')
-
+default_env.Install(dist_name, ['AUTHORS', 'ChangeLog', 'CC', 'COPYING', 
+                                'README', 'SConstruct', 'todo.sh'])
+InstallRecursive(os.path.join(dist_name, 'blender'), 'blender')
+InstallRecursive(os.path.join(dist_name, 'gendoc'), 'gendoc', 
+                 [path('gendoc/gendoc')])
+InstallRecursive(os.path.join(dist_name, 'gui'), 'gui')
+InstallRecursive(os.path.join(dist_name, 'models'), 'models')
+InstallRecursive(os.path.join(dist_name, 'src'), 'src')
+InstallRecursive(os.path.join(dist_name, 'vc8'), 'vc8',
+                 ['src/vc8/Debug', 'src/vc8/Release'])

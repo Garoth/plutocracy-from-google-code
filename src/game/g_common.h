@@ -22,5 +22,4 @@ typedef struct g_tile {
 } g_tile_t;
 
 /* g_globe.c */
-c_var_t g_globe_seed, g_globe_subdiv4;
-
+extern c_var_t g_globe_seed, g_globe_subdiv4;

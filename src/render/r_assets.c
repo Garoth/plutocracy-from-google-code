@@ -271,6 +271,7 @@ r_texture_t *R_texture_clone_full(const char *file, int line, const char *func,
         if (SDL_BlitSurface(src->surface, NULL, dest->surface, NULL) < 0)
                 C_warning("Failed to clone texture '%s': %s",
                           src->ref.name, SDL_GetError());
+        dest->mipmaps = src->mipmaps;
         return dest;
 }
 
@@ -281,7 +282,7 @@ r_texture_t *R_texture_clone_full(const char *file, int line, const char *func,
  make UI textures look blurry so do not use them for anything that will be
  rendered in 2D mode.
 \******************************************************************************/
-void R_texture_upload(const r_texture_t *pt, int mipmaps)
+void R_texture_upload(const r_texture_t *pt)
 {
         int flags, gl_internal;
 
@@ -301,7 +302,7 @@ void R_texture_upload(const r_texture_t *pt, int mipmaps)
                         gl_internal = GL_RGB8;
         }
         glBindTexture(GL_TEXTURE_2D, pt->gl_name);
-        if (mipmaps) {
+        if (pt->mipmaps) {
                 gluBuild2DMipmaps(GL_TEXTURE_2D, gl_internal,
                                   pt->surface->w, pt->surface->h,
                                   GL_RGBA, GL_UNSIGNED_BYTE,
@@ -317,6 +318,14 @@ void R_texture_upload(const r_texture_t *pt, int mipmaps)
         }
         glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
         R_check_errors();
+}
+
+/******************************************************************************\
+ Reuploads all textures in the linked list to OpenGL.
+ TODO: Implement
+\******************************************************************************/
+void R_upload_textures(void)
+{
 }
 
 /******************************************************************************\
@@ -359,10 +368,11 @@ r_texture_t *R_texture_load(const char *filename, int mipmaps)
                 return NULL;
         }
         pt->surface = surface_new;
+        pt->mipmaps = mipmaps;
 
         /* Load the texture into OpenGL */
         glGenTextures(1, &pt->gl_name);
-        R_texture_upload(pt, mipmaps);
+        R_texture_upload(pt);
         R_check_errors();
 
         return pt;

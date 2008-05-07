@@ -1,8 +1,8 @@
 <div class="header">
-<a href="shared.html" target="frame">Shared</a> |
-<a href="render.html" target="frame">Render</a> |
-<a href="interface.html" target="frame">Interface</a> |
-<a href="network.html" target="frame">Network</a> |
-<a href="game.html" target="frame">Game</a> |
-<a href="gendoc.html" target="frame">GenDoc</a>
+<a href="shared.html">Shared</a> |
+<a href="render.html">Render</a> |
+<a href="interface.html">Interface</a> |
+<a href="network.html">Network</a> |
+<a href="game.html">Game</a> |
+<a href="gendoc.html">GenDoc</a>
 </div>

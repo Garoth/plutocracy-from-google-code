@@ -93,7 +93,7 @@ static int closest_index(float value, const char **list)
         int i, index;
 
         for (i = index = 0, index_diff = 100000.f; list[i]; i++) {
-                diff = atof(list[i]) - value;
+                diff = (float)atof(list[i]) - value;
                 if (!diff)
                         return i;
                 if (diff < 0.f)
@@ -118,7 +118,7 @@ static void populate_modes(void)
                                           SDL_FULLSCREEN);
 
         /* FIXME: SDL_ListModes() won't always return a list */
-        if (!video_modes || (int)video_modes == -1) {
+        if (!video_modes || video_modes == (void *)-1) {
                 C_warning("SDL_ListModes() did not return a list of modes");
                 list_modes[0] = NULL;
                 orig_indices[0] = 0;
@@ -163,7 +163,7 @@ void I_video_init(i_window_t *window)
         I_widget_add(&window->widget, &options[opt].widget);
 
         /* Select color bits */
-        orig_indices[++opt] = closest_index(r_color_bits.latched.n,
+        orig_indices[++opt] = closest_index((float)r_color_bits.latched.n,
                                             list_color_bits);
         I_select_init(options + opt,
                       C_str("i-video-color", "Color bits:"),

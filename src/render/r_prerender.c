@@ -219,7 +219,7 @@ static void prerender_tiles(void)
                 R_texture_select(blend_mask);
                 prerender_tile();
                 rotated_mask = save_buffer((int)tile.x, (int)tile.y);
-                R_texture_upload(rotated_mask, TRUE);
+                R_texture_upload(rotated_mask);
                 finish_buffer();
 
                 /* Render the tiles at this orientation */
@@ -240,14 +240,15 @@ static void prerender_tiles(void)
                 /* Render the masked terrain on top of the terrain texture
                    and read it back in to replace the old terrain texture */
                 R_texture_render(r_terrain_tex, 0, 0);
-                R_texture_upload(masked_terrain, TRUE);
+                R_texture_upload(masked_terrain);
                 R_texture_render(masked_terrain, 0, 0);
                 if (r_test_prerender.value.n)
                         R_texture_render(masked_terrain, (int)sheet.x, 0);
                 R_texture_free(masked_terrain);
                 R_texture_free(r_terrain_tex);
                 r_terrain_tex = save_buffer((int)sheet.x, (int)sheet.y);
-                R_texture_upload(r_terrain_tex, TRUE);
+                r_terrain_tex->mipmaps = TRUE;
+                R_texture_upload(r_terrain_tex);
                 finish_buffer();
         }
         R_texture_free(blend_mask);
@@ -274,7 +275,7 @@ static void prerender_transitions(void)
         prerender_tile();
         inverted_mask = save_buffer((int)tile.x, (int)tile.y);
         R_surface_invert(inverted_mask->surface, TRUE, FALSE);
-        R_texture_upload(inverted_mask, FALSE);
+        R_texture_upload(inverted_mask);
         finish_buffer();
 
         /* Render the transition mask tile sheet */
@@ -311,7 +312,7 @@ static void prerender_transitions(void)
         masked_terrain = save_buffer((int)sheet.x, (int)sheet.y);
         R_surface_mask(masked_terrain->surface, large_mask->surface);
         R_texture_free(large_mask);
-        R_texture_upload(masked_terrain, FALSE);
+        R_texture_upload(masked_terrain);
         if (r_test_prerender.value.n)
                 R_texture_render(masked_terrain, (int)sheet.x, 0);
 
@@ -333,7 +334,8 @@ static void prerender_transitions(void)
         R_texture_free(masked_terrain);
         R_texture_free(r_terrain_tex);
         r_terrain_tex = save_buffer((int)sheet.x, (int)sheet.y);
-        R_texture_upload(r_terrain_tex, TRUE);
+        r_terrain_tex->mipmaps = TRUE;
+        R_texture_upload(r_terrain_tex);
 
         finish_buffer();
 }
