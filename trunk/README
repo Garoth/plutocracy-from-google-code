@@ -15,18 +15,20 @@
   2. Compiling and Installing Plutocracy
 
      2.1  POSIX systems
-     2.2  Windows
+     2.2  Windows with Visual Studio
+     2.3  Windows with MinGW
 
   3. Playing Plutocracy
 
   4. License and Copying
 
      4.1  GPL License
-     4.2  CC License Exceptions
-     4.3  Bitstream Vera Fonts
-     4.4  Additional Fonts
-     4.5  SDL Notice
-     4.6  GPL-Compatible Exceptions
+     4.2  GPL-Compatible Exceptions
+     4.3  CC License Exceptions
+     4.4  Bitstream Vera Fonts
+     4.5  Additional Fonts
+     4.6  SDL Notice
+     4.7  zlib Notice
 
 
 
@@ -118,15 +120,13 @@
     command-line after this point or remove the configuration file.
 
 
-  2.2  Windows
-  ------------
+  2.2  Windows with Visual Studio
+  -------------------------------
 
-    Plutocracy cannot compiled for Windows using SCons and MinGW because the
-    supporting SDL libraries are not available for MinGW.
-
-    The vc8 directory contains a solution and project file setup for compiling
-    Plutocracy with Visual Studio 2005. You will need to download and setup the
-    following SDKs:
+    The windows\vc8 directory contains a solution and project file setup for 
+    compiling Plutocracy with Visual Studio 2005. The windows directory
+    includes the following SDKs and the project file is already setup to
+    use them:
 
       SDL         http://libsdl.org/
       SDL_image   http://www.libsdl.org/projects/SDL_image/
@@ -136,6 +136,49 @@
     To run Plutocracy after compiling, download the runtime DLLs:
 
       http://pub.risujin.org/plutocracy/plutocracy_win32_dlls.zip
+
+
+  2.2  Windows with MinGW
+  -----------------------
+
+    Plutocracy can be compiled for MinGW using SCons. You will need to install
+    and setup the following programs:
+    
+      Python      http://www.python.org/download/
+      SCons       http://www.scons.org/
+      MinGW       http://www.mingw.org/download.shtml
+    
+    Note that MinGW is required, MSys is not necessary. You will need to
+    configure the PATH environment variable to contain the path of the
+    MinGW bin directory:
+    
+      1.) Right click on 'My Computer'
+      2.) Select 'Properties'
+      3.) Select 'Advanced' tab
+      4.) Press 'Environment Variables'
+      5.) Select 'PATH' in the top listbox
+      6.) Press 'Edit'
+      7.) Enter the path to the Python, Python Scripts, and MinGW bin 
+          directories followed by a semicolon before any paths that are 
+          already there:
+      
+            C:\Program Files\Python 2.5;
+            C:\Program Files\Python 2.5\Scripts;
+            C:\MSys\MinGW\bin;
+
+    You should now be able to open a command prompt, navigate to the
+    Plutocracy directory and compile using scons:
+    
+      C:\plutocracy> scons
+
+    For additional build targets run scons help:
+
+      C:\plutocracy> scons -h
+
+    Note that after SCons is run for the first time (even if with the -h flag),
+    it will create 'custom.py', the configuration file, and draw its options
+    from there instead of from the environment. Specify changes over the
+    command-line after this point or remove the configuration file.
 
 
 
@@ -164,7 +207,19 @@
     The full text of the license may be found in the COPYING file.
 
 
-  4.2  CC License Exceptions
+  4.2  GPL-Compatible Exceptions
+  ------------------------------
+
+    The following files are not licensed under the GPL, but can be freely
+    distributed. See the each individual file's copyright notice for specific
+    details:
+
+      vc8/glext.h (© 2007 The Khronos Group Inc)
+      gui/fonts/BLKCHCRY.TTF (public domain, Earl Allen and Doug Miles)
+      gui/fonts/SF ARchery Black.ttf (© 2001 ShyFonts Type Foundry)
+     
+      
+  4.3  CC License Exceptions
   --------------------------
 
     The following files are licensed under the CREATIVE COMMONS ATTRIBUTION-
@@ -180,7 +235,7 @@
       models/test/granger.plum
 
 
-  4.3  Deja Vu Fonts
+  4.4  Deja Vu Fonts
   ------------------
 
     The following files are excepted from the GPL license:
@@ -196,7 +251,7 @@
     be present on the system rather than come with the program.
 
 
-  4.4  SDL Notice
+  4.5  SDL Notice
   ---------------
 
     Please include this notice with the SDL runtime environment. This library is
@@ -209,16 +264,29 @@
       http://www.libsdl.org/
 
 
-  4.5  GPL-Compatible Exceptions
-  ------------------------------
+  4.6  zlib Notice
+  ----------------
 
-    The following files are not licensed under the GPL, but can be freely
-    distributed. See the each individual file's copyright notice for specific
-    details:
+    zlib is (C) 1995-2005 Jean-loup Gailly and Mark Adler
 
-      vc8/glext.h (© 2007 The Khronos Group Inc)
-      gui/fonts/BLKCHCRY.TTF (public domain, Earl Allen and Doug Miles)
-      gui/fonts/SF ARchery Black.ttf (© 2001 ShyFonts Type Foundry)
+    This software is provided 'as-is', without any express or implied
+    warranty.  In no event will the authors be held liable for any damages
+    arising from the use of this software.
+
+    Permission is granted to anyone to use this software for any purpose,
+    including commercial applications, and to alter it and redistribute it
+    freely, subject to the following restrictions:
+
+    1. The origin of this software must not be misrepresented; you must not
+       claim that you wrote the original software. If you use this software
+       in a product, an acknowledgment in the product documentation would be
+       appreciated but is not required.
+    2. Altered source versions must be plainly marked as such, and must not be
+       misrepresented as being the original software.
+    3. This notice may not be removed or altered from any source distribution.
+
+    Jean-loup Gailly        Mark Adler
+    jloup@gzip.org          madler@alumni.caltech.edu
 
 
 

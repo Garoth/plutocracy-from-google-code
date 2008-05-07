@@ -10,12 +10,16 @@
  FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
 \******************************************************************************/
 
+/* Prevents deprecation warnings on Windows */
+#define _CRT_SECURE_NO_DEPRECATE 1
+
+/* Standard library headers */
 #include <stdio.h>
 #include <string.h>
 #include <ctype.h>
 #include <stdlib.h>
 
-/* Boolean defines */
+/* Common defines */
 #ifndef TRUE
 #define TRUE 1
 #endif
@@ -55,5 +59,6 @@ void D_strncpy(char *dest, const char *src, size_t);
 const char *D_token(int n);
 int D_token_space(int n);
 
+extern FILE *d_file;
 extern int d_num_tokens;
 

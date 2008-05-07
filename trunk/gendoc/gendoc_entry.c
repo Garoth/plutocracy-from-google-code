@@ -90,21 +90,22 @@ static void output_comment(const char *buf)
                 return;
         in_p = FALSE;
         blank_nl = TRUE;
+        code = CODE_NONE;
         for (last_nl = -100, spaces = i = 0; buf[i]; i++) {
 
                 /* Convert newlines to tags */
                 if (buf[i] == '\n') {
                         blank_nl = spaces >= 0;
                         if (blank_nl && in_p) {
-                                printf("</p>");
+                                fprintf(d_file, "</p>");
                                 in_p = FALSE;
                         }
                         if (code == CODE_DIAGRAM) {
-                                printf("</code><br>");
+                                fprintf(d_file, "</code><br>");
                                 code = CODE_NONE;
                                 blank_nl = TRUE;
                         } else if (i - last_nl < 64 && in_p) {
-                                printf("</p>");
+                                fprintf(d_file, "</p>");
                                 in_p = FALSE;
                         }
                         last_nl = i;
@@ -114,13 +115,13 @@ static void output_comment(const char *buf)
                                 spaces++;
                 } else {
                         if (!in_p) {
-                                printf("<p class=\"comment\">");
+                                fprintf(d_file, "<p class=\"comment\">");
                                 in_p = TRUE;
                         }
 
                         /* Codify diagrams */
                         if (spaces >= 2 && blank_nl) {
-                                printf("<code>  ");
+                                fprintf(d_file, "<code>  ");
                                 code = CODE_DIAGRAM;
                         }
 
@@ -129,12 +130,12 @@ static void output_comment(const char *buf)
 
                 /* Codify anything specifically tagged */
                 if (buf[i] == '[' && !code) {
-                        printf("<code>");
+                        fprintf(d_file, "<code>");
                         code = CODE_BRACKETS;
                         continue;
                 }
                 if (buf[i] == ']' && code == CODE_BRACKETS) {
-                        printf("</code>");
+                        fprintf(d_file, "</code>");
                         code = CODE_NONE;
                         continue;
                 }
@@ -143,20 +144,20 @@ static void output_comment(const char *buf)
                 if (!code && is_macro(buf[i], TRUE)) {
                         for (j = i + 1; buf[j] && is_macro(buf[j], FALSE); j++);
                         if (j - i > 2) {
-                                printf("<code>");
+                                fprintf(d_file, "<code>");
                                 code = CODE_MACRO;
                         }
                 } else if (code == CODE_MACRO && !is_macro(buf[i], FALSE)) {
-                        printf("</code>");
+                        fprintf(d_file, "</code>");
                         code = CODE_NONE;
                 }
 
-                putchar(buf[i]);
+                fputc(buf[i], d_file);
         }
         if (code)
-                printf("</code>");
+                fprintf(d_file, "</code>");
         if (in_p)
-                printf("</p>\n");
+                fprintf(d_file, "</p>\n");
 }
 
 /******************************************************************************\
@@ -177,7 +178,7 @@ static void output_def(const char *name, const char *buf)
 
         if (!buf[0])
                 return;
-        printf("<pre>");
+        fprintf(d_file, "<pre>");
         start_token = TRUE;
         escaped = FALSE;
         mode = NONE;
@@ -193,12 +194,15 @@ static void output_def(const char *name, const char *buf)
                         if (next_i && (!entry || strcmp(entry->name, name))) {
                                 next_i += i;
                                 if (entry)
-                                        printf("<a href=\"#%s\">", entry->name);
+                                        fprintf(d_file, "<a href=\"#%s\">", 
+                                                entry->name);
                                 else
-                                        printf("<b class=\"keyword%d\">", type);
+                                        fprintf(d_file, 
+                                                "<b class=\"keyword%d\">", 
+                                                type);
                                 while (i < next_i)
-                                        putchar(buf[i++]);
-                                printf(entry ? "</a>" : "</b>");
+                                        fputc(buf[i++], d_file);
+                                fprintf(d_file, entry ? "</a>" : "</b>");
                                 start_token = FALSE;
                                 i--;
                                 continue;
@@ -231,55 +235,55 @@ static void output_def(const char *name, const char *buf)
                         break;
                 }
                 if (end) {
-                        printf("</span>");
+                        fprintf(d_file, "</span>");
                         mode = NONE;
                 }
 
                 /* C comments */
                 if (!mode && buf[i] == '/' && buf[i + 1] == '*') {
-                        printf("<span class=\"def_comment\">");
+                        fprintf(d_file, "<span class=\"def_comment\">");
                         mode = C_COMMENT;
                 }
 
                 /* C++ comments */
                 if (!mode && buf[i] == '/' && buf[i + 1] == '/') {
-                        printf("<span class=\"def_comment\">");
+                        fprintf(d_file, "<span class=\"def_comment\">");
                         mode = CPP_COMMENT;
                 }
 
                 /* Numeric constants */
                 if (!mode && start_token && buf[i] >= '0' && buf[i] <= '9') {
-                        printf("<span class=\"def_const\">");
+                        fprintf(d_file, "<span class=\"def_const\">");
                         mode = NUMERIC;
                 }
 
                 /* Strings */
                 if (!mode && buf[i] == '"') {
-                        printf("<span class=\"def_const\">");
+                        fprintf(d_file, "<span class=\"def_const\">");
                         mode = STRING;
                         mode_i = i;
                 }
 
                 /* Characters */
                 if (!mode && buf[i] == '\'') {
-                        printf("<span class=\"def_const\">");
+                        fprintf(d_file, "<span class=\"def_const\">");
                         mode = CHARACTER;
                         mode_i = i;
                 }
 
                 /* Operators */
                 if (!mode && D_is_operator(buf[i])) {
-                        printf("<span class=\"def_op\">");
+                        fprintf(d_file, "<span class=\"def_op\">");
                         mode = OPERATOR;
                 }
 
-                putchar(buf[i]);
+                fputc(buf[i], d_file);
                 start_token = mode == OPERATOR || buf[i] <= ' ';
                 escaped = !escaped && buf[i] == '\\';
         }
         if (mode)
-                printf("</span>");
-        printf("</pre>\n");
+                fprintf(d_file, "</span>");
+        fprintf(d_file, "</pre>\n");
 }
 
 /******************************************************************************\
@@ -292,14 +296,14 @@ void output_path(const char *path)
         if (!path[0])
                 return;
         if (path[0] < 0) {
-                printf("<span class=\"no_file\">not found</span>");
+                fprintf(d_file, "<span class=\"no_file\">(not found)</span>");
                 return;
         }
-        len = strlen(path);
+        len = (int)strlen(path);
         for (i = len - 1; i > 0 && path[i] != '/'; i--);
         if (i > 0)
                 i++;
-        printf("<span class=\"file\">(%s)</span>", path + i);
+        fprintf(d_file, "<span class=\"file\">(%s)</span>", path + i);
 }
 
 /******************************************************************************\
@@ -310,17 +314,19 @@ void D_output_entries(entry_t *entry)
         static int entries;
 
         while (entry) {
-                printf("<a name=\"%s\" href=\"javascript:toggle(%d)\">\n"
-                       "<div class=\"entry\" id=\"%d\">\n"
-                       "%s ", entry->name, entries, entries, entry->name);
+                fprintf(d_file, 
+                        "<a name=\"%s\" href=\"javascript:toggle(%d)\">\n"
+                        "<div class=\"entry\" id=\"%d\">\n"
+                        "%s ", entry->name, entries, entries, entry->name);
                 output_path(entry->file);
-                printf("</div>\n"
-                       "</a>\n"
-                       "<div class=\"entry_body\" id=\"%d_body\" "
-                            "style=\"display:none\">\n", entries);
+                fprintf(d_file, 
+                        "</div>\n"
+                        "</a>\n"
+                        "<div class=\"entry_body\" id=\"%d_body\" "
+                             "style=\"display:none\">\n", entries);
                 output_def(entry->name, entry->def);
                 output_comment(entry->comment);
-                printf("</div>\n");
+                fprintf(d_file, "</div>\n");
                 entries++;
                 entry = entry->next;
         }

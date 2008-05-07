@@ -13,6 +13,7 @@
 #include "gendoc.h"
 
 entry_t *d_types;
+FILE *d_file;
 
 static entry_t *functions, *defines, *variables;
 
@@ -248,7 +249,7 @@ static void output_header(const char *filename)
         }
         fread(buf, 1, sizeof (buf), file);
         fclose(file);
-        puts(buf);
+        fputs(buf, d_file);
 }
 
 /******************************************************************************\
@@ -257,23 +258,26 @@ static void output_header(const char *filename)
 static void output_html(const char *title, const char *header)
 {
         /* Header */
-        printf("<html>\n"
-               "<head>\n"
-               "<link rel=StyleSheet href=\"gendoc.css\" type=\"text/css\">\n"
-               "<title>%s</title>\n"
-               "</head>\n"
-               "<script>\n"
-               "         function toggle(n) {\n"
-               "                 body = document.getElementById(n + '_body');\n"
-               "                 if (body.style.display == 'block')\n"
-               "                         body.style.display = 'none';\n"
-               "                 else\n"
-               "                         body.style.display = 'block';\n"
-               "         }\n"
-               "</script>\n"
-               "<body>\n", title);
+        fprintf(d_file, 
+                "<html>\n"
+                "<head>\n"
+                "<link rel=StyleSheet href=\"gendoc.css\" type=\"text/css\">\n"
+                "<title>%s</title>\n"
+                "</head>\n"
+                "<script>\n"
+                "         function toggle(n) {\n"
+                "                 body = document.getElementById(n + "
+                                                                "'_body');\n"
+                "                 if (body.style.display == 'block')\n"
+                "                         body.style.display = 'none';\n"
+                "                 else\n"
+                "                         body.style.display = 'block';\n"
+                "         }\n"
+                "</script>\n"
+                "<body>\n", title);
         output_header(header);
-        printf("<div class=\"menu\">\n"
+        fprintf(d_file, 
+               "<div class=\"menu\">\n"
                "<a href=\"#Definitions\">Definitions</a> |\n"
                "<a href=\"#Types\">Types</a> |\n"
                "<a href=\"#Functions\">Functions</a> |\n"
@@ -282,27 +286,27 @@ static void output_html(const char *title, const char *header)
                "<h1>%s</h1>\n", title);
 
         /* Write definitions */
-        printf("<a name=\"Definitions\"></a>\n"
-               "<h2>Definitions</h2>\n");
+        fprintf(d_file, "<a name=\"Definitions\"></a>\n"
+                        "<h2>Definitions</h2>\n");
         D_output_entries(defines);
 
         /* Write d_types */
-        printf("<a name=\"Types\"></a>\n"
-               "<h2>Types</h2>\n");
+        fprintf(d_file, "<a name=\"Types\"></a>\n"
+                        "<h2>Types</h2>\n");
         D_output_entries(d_types);
 
         /* Write functions */
-        printf("<a name=\"Functions\"></a>\n"
-               "<h2>Functions</h2>\n");
+        fprintf(d_file, "<a name=\"Functions\"></a>\n"
+                        "<h2>Functions</h2>\n");
         D_output_entries(functions);
 
         /* Write variables */
-        printf("<a name=\"Variables\"></a>\n"
-               "<h2>Variables</h2>\n");
+        fprintf(d_file, "<a name=\"Variables\"></a>\n"
+                        "<h2>Variables</h2>\n");
         D_output_entries(variables);
 
         /* Footer */
-        printf("</body>\n</html>\n");
+        fprintf(d_file, "</body>\n</html>\n");
 }
 
 /******************************************************************************\
@@ -326,24 +330,32 @@ int main(int argc, char *argv[])
         }
 
         /* Process input files */
+        d_file = stdout;
         for (i = 1; i < argc; i++) {
-
-                /* Flags */
-                if (argv[i][0] == '-' && argv[i][1] == '-') {
-                        if (!strcmp(argv[i], "--title") && i < argc - 1)
-                                D_strncpy_buf(title, argv[++i]);
-                        else if (!strcmp(argv[i], "--header") && i < argc - 1)
-                                D_strncpy_buf(header, argv[++i]);
-                        else {
-                                fprintf(stderr, "Invalid argument '%s'\n",
-                                        argv[i]);
+                if (argv[i][0] != '-' || argv[i][1] != '-') {
+                        if (parse_file(argv[i]))
                                 return 1;
-                        }
                         continue;
                 }
 
-                if (parse_file(argv[i]))
+                /* Flags */
+                if (!strcmp(argv[i], "--title") && i < argc - 1)
+                        D_strncpy_buf(title, argv[++i]);
+                else if (!strcmp(argv[i], "--file") && i < argc - 1) {
+                        d_file = fopen(argv[++i], "w");
+                        if (!d_file) {
+                                fprintf(stderr, 
+                                        "Failed to open output file %s", 
+                                        argv[i]);
+                                return 1;
+                        }
+                } else if (!strcmp(argv[i], "--header") && i < argc - 1)
+                        D_strncpy_buf(header, argv[++i]);
+                else {
+                        fprintf(stderr, "Invalid argument '%s'\n",
+                                argv[i]);
                         return 1;
+                }
         }
 
         /* Output HTML document */
