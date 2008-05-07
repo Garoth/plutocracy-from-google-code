@@ -79,6 +79,13 @@ static int set_video_mode(void)
                 r_width.value.n = 640;
         if (r_height.value.n < 480)
                 r_height.value.n = 480;
+                
+#ifdef WINDOWS
+        /* On Windows, before we change the video mode we need to flush out
+           any existing textures in case they actually don't get lost or
+           deallocated properly on their own */
+        R_dealloc_textures();
+#endif
 
         SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
         SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 8);
@@ -108,7 +115,15 @@ static int set_video_mode(void)
         glViewport(0, 0, r_width.value.n, r_height.value.n);
         R_check_errors();
 
+        /* Update pixel scale */
         pixel_scale_update();
+        
+#ifdef WINDOWS
+        /* Under Windows we just lost all of our textures, so we need to
+           reload the entire texture linked list */
+        R_realloc_textures();
+#endif
+        
         return TRUE;
 }
 
