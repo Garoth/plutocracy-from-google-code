@@ -29,7 +29,7 @@ static struct {
         int line_skip, width, height;
 } fonts[R_FONTS];
 
-static c_ref_t *root;
+static c_ref_t *root, *root_alloc;
 static SDL_PixelFormat sdl_format;
 static int ttf_inited;
 
@@ -228,6 +228,12 @@ r_texture_t *R_texture_alloc_full(const char *file, int line, const char *func,
         pt = C_recalloc_full(file, line, func, NULL, sizeof (*pt));
         pt->ref.refs = 1;
         pt->ref.cleanup_func = (c_ref_cleanup_f)texture_cleanup;
+        if (root_alloc) {
+                pt->ref.next = root_alloc;
+                root_alloc->prev = &pt->ref;
+        }
+        pt->ref.root = &root_alloc;
+        root_alloc = &pt->ref;
         if (c_mem_check.value.n)
                 C_strncpy_buf(pt->ref.name,
                               C_va("Texture #%d allocated by %s()",
@@ -321,11 +327,49 @@ void R_texture_upload(const r_texture_t *pt)
 }
 
 /******************************************************************************\
- Reuploads all textures in the linked list to OpenGL.
- TODO: Implement
+ Unload all textures from OpenGL.
 \******************************************************************************/
-void R_upload_textures(void)
+void R_dealloc_textures(void)
 {
+        r_texture_t *tex;
+        
+        C_debug("Deallocting loaded textures");
+        tex = (r_texture_t *)root;
+        while (tex) {
+                glDeleteTextures(1, &tex->gl_name);
+                tex = (r_texture_t *)tex->ref.next;
+        }
+
+        C_debug("Deallocating allocated textures");
+        tex = (r_texture_t *)root_alloc;
+        while (tex) {
+                glDeleteTextures(1, &tex->gl_name);
+                tex = (r_texture_t *)tex->ref.next;
+        }
+}
+
+/******************************************************************************\
+ Reuploads all textures in the linked list to OpenGL.
+\******************************************************************************/
+void R_realloc_textures(void)
+{
+        r_texture_t *tex;
+        
+        C_debug("Uploading loaded textures");
+        tex = (r_texture_t *)root;
+        while (tex) {
+                glGenTextures(1, &tex->gl_name);
+                R_texture_upload(tex);
+                tex = (r_texture_t *)tex->ref.next;
+        }
+
+        C_debug("Uploading allocated textures");
+        tex = (r_texture_t *)root_alloc;
+        while (tex) {
+                glGenTextures(1, &tex->gl_name);
+                R_texture_upload(tex);
+                tex = (r_texture_t *)tex->ref.next;
+        }
 }
 
 /******************************************************************************\
@@ -532,10 +576,19 @@ static void load_font(r_font_t font, const char *path, int size)
 \******************************************************************************/
 void R_load_fonts(void)
 {
+        const char *override;
         int i;
 
         if (!ttf_inited)
                 return;
+
+        /* Get the locale font override, if any */
+        override = C_str("r-font-override", "");
+        if (override[0]) {
+                C_var_set(&r_font_console, override);
+                C_var_set(&r_font_gui, override);
+                C_var_set(&r_font_title, override);
+        }
 
         /* Console font */
         C_var_unlatch(&r_font_console);
@@ -621,4 +674,5 @@ void R_free_assets(void)
         R_free_fonts();
         TTF_Quit();
 }
+
 

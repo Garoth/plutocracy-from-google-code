@@ -63,6 +63,7 @@ typedef enum {
 } r_mode_t;
 
 /* r_assets.c */
+void R_dealloc_textures(void);
 SDL_Surface *R_font_render(r_font_t, const char *);
 void R_free_assets(void);
 void R_load_assets(void);
@@ -85,6 +86,7 @@ r_texture_t *R_texture_load(const char *filename, int mipmaps);
 void R_texture_render(r_texture_t *, int x, int y);
 void R_texture_select(r_texture_t *);
 void R_texture_upload(const r_texture_t *);
+void R_realloc_textures(void);
 
 extern r_texture_t *r_terrain_tex;
 

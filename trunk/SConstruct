@@ -75,7 +75,6 @@ opts.Save(config_file, default_env)
 
 # Windows compiler and linker need some extra flags
 if windows:
-        default_env.AppendUnique(CPPDEFINES = ['WIN32', '_CONSOLE'])
         if default_env['CC'] == 'cl':
                 default_env.PrependUnique(CFLAGS = '/MD')
         if default_env['LINK'] == 'link':
@@ -265,5 +264,5 @@ InstallRecursive(os.path.join(dist_name, 'gendoc'), 'gendoc',
 InstallRecursive(os.path.join(dist_name, 'gui'), 'gui')
 InstallRecursive(os.path.join(dist_name, 'models'), 'models')
 InstallRecursive(os.path.join(dist_name, 'src'), 'src')
-InstallRecursive(os.path.join(dist_name, 'vc8'), 'vc8',
-                 ['src/vc8/Debug', 'src/vc8/Release'])
+InstallRecursive(os.path.join(dist_name, 'windows'), 'windows',
+                 ['windows/vc8/Debug', 'windows/vc8/Release'])

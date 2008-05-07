@@ -13,7 +13,7 @@
 #include "i_common.h"
 
 /* Number of windows defined */
-#define WINDOWS 3
+#define WINDOWS_LEN 3
 
 /* Windows */
 static struct property_t {
@@ -30,8 +30,8 @@ static struct property_t {
 i_widget_t i_root;
 
 static c_vec2_t root_scroll;
-static i_window_t left_toolbar, *open_window, windows[WINDOWS];
-static i_button_t buttons[WINDOWS];
+static i_window_t left_toolbar, *open_window, windows[WINDOWS_LEN];
+static i_button_t buttons[WINDOWS_LEN];
 static int grabbing, grab_x, grab_y, layout_frame;
 
 /******************************************************************************\
@@ -96,7 +96,7 @@ static int root_event(i_widget_t *root, i_event_t event)
                 I_widget_propagate(root, event);
 
                 /* Position window hangers */
-                for (i = 0; i < WINDOWS; i++)
+                for (i = 0; i < WINDOWS_LEN; i++)
                         I_window_hanger(windows + i, &buttons[i].widget, TRUE);
 
                 return FALSE;
@@ -143,7 +143,7 @@ static void theme_configure(void)
         /* Windows */
         offset = r_height_2d - left_toolbar.widget.size.y -
                  i_border.value.n * 2;
-        for (i = 0; i < WINDOWS; i++) {
+        for (i = 0; i < WINDOWS_LEN; i++) {
                 windows[i].widget.size = properties[i].size;
                 windows[i].widget.origin = C_vec2((float)i_border.value.n,
                                                   offset -
@@ -228,13 +228,13 @@ void I_init(void)
         I_widget_add(&i_root, &left_toolbar.widget);
 
         /* Window and buttons */
-        for (i = 0; i < WINDOWS; i++) {
+        for (i = 0; i < WINDOWS_LEN; i++) {
                 properties[i].init(windows + i);
                 I_widget_add(&i_root, &windows[i].widget);
                 I_button_init(buttons + i, properties[i].icon, NULL, FALSE);
                 buttons[i].on_click = (i_callback_f)button_click;
                 buttons[i].data = windows + i;
-                if (i < WINDOWS - 1)
+                if (i < WINDOWS_LEN - 1)
                         buttons[i].widget.margin_rear = 0.5f;
                 I_widget_add(&left_toolbar.widget, &buttons[i].widget);
         }

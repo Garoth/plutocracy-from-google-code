@@ -10,6 +10,18 @@
  FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
 \******************************************************************************/
 
+/* The MSVC compiler defines these but we want to make sure they are there
+   even if we're using GCC and MinGW */
+#ifndef WIN32
+#define WIN32
+#endif
+#ifndef _CONSOLE
+#define _CONSOLE
+#endif
+#ifndef WINDOWS
+#define WINDOWS
+#endif
+
 /* Prevents deprecation warnings */
 #define _CRT_SECURE_NO_DEPRECATE 1
 
