@@ -1,11 +1,5 @@
 #summary Various links relevant to Plutocracy
 
-= Additional Files =
-
-Not all of the files required to play Plutocracy are included in SVN.
-
-  * *Windows Release* requires the Windows binaries of the SDL, SDL_image, and SDL_ttf libraries to be in the program directory or windows system directory: [http://pub.risujin.org/plutocracy/plutocracy_win32_dlls.zip]
-
 = Similar Games =
 
 == Inspirations ==
