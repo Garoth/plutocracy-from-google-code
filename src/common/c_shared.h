@@ -63,6 +63,10 @@
 /* Golden ratio */
 #define C_TAU 1.61803398874989f
 
+/* Sides of a unit isoceles triangle */
+#define C_SIN_60 0.86602540378443865f
+#define C_SIN_30 0.5f
+
 /* If you are going to use the C_va* functions, keep in mind that after calling
    any of those functions [C_VA_BUFFERS] times, you will begin overwriting
    the buffers starting from the first. Each buffer also has a fixed size.
@@ -223,6 +227,7 @@ typedef struct c_count {
 
 /* c_file.c */
 void C_file_cleanup(c_file_t *);
+int C_file_exists(const char *name);
 int C_file_init_read(c_file_t *, const char *name);
 int C_file_init_write(c_file_t *, const char *name);
 int C_file_printf(c_file_t *file, const char *fmt, ...);

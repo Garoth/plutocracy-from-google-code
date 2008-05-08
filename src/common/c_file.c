@@ -127,6 +127,21 @@ int C_file_printf(c_file_t *file, const char *fmt, ...)
 }
 
 /******************************************************************************\
+ Returns TRUE if the file exists.
+\******************************************************************************/
+int C_file_exists(const char *name)
+{
+        FILE *file;
+
+        file = fopen(name, "r");
+        if (file) {
+                fclose(file);
+                return TRUE;
+        }
+        return FALSE;
+}
+
+/******************************************************************************\
  Initializes a token file structure. Returns FALSE on failure.
 \******************************************************************************/
 int C_token_file_init(c_token_file_t *tf, const char *filename)

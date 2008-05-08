@@ -95,9 +95,9 @@ typedef enum {
         R_T_GROUND = 2,
         R_T_GROUND_HOT = 3,
         R_T_GROUND_COLD = 4,
-        R_T_WATER = 8,
+        R_T_WATER = 5,
         R_T_BASES = 3,
-        R_T_TRANSITION = 5,
+        R_T_TRANSITION = 6,
 } r_terrain_t;
 
 /* Structure that contains configuration parameters for a tile */
