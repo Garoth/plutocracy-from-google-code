@@ -14,17 +14,17 @@
 #include "r_shared.h"
 
 /* Tile sheet grid parameters */
-#define R_TILE_SHEET_W 5
-#define R_TILE_SHEET_H 5
+#define R_TILE_SHEET_W 6
+#define R_TILE_SHEET_H 3
 
-/* Proportion of the tile height that the isoceles triangle face takes up
-   (sin of PI / 3) */
-#define R_ISO_PROP 0.86602540378443865f
+/* Proportion of a tile that is used as a buffer against its neighbors */
+#define R_TILE_BORDER (4.f / 256)
 
 /* Supported extensions */
 typedef enum {
         R_EXT_MULTITEXTURE,
         R_EXT_POINT_SPRITE,
+        R_EXT_ANISOTROPY,
         R_EXTENSIONS,
 } r_extension_t;
 
@@ -52,7 +52,7 @@ struct r_texture {
         c_ref_t ref;
         SDL_Surface *surface;
         GLuint gl_name;
-        int alpha, mipmaps;
+        int alpha, mipmaps, anisotropy;
 };
 
 /* Render modes */

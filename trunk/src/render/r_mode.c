@@ -79,7 +79,7 @@ static int set_video_mode(void)
                 r_width.value.n = 640;
         if (r_height.value.n < 480)
                 r_height.value.n = 480;
-                
+
 #ifdef WINDOWS
         /* On Windows, before we change the video mode we need to flush out
            any existing textures in case they actually don't get lost or
@@ -117,14 +117,26 @@ static int set_video_mode(void)
 
         /* Update pixel scale */
         pixel_scale_update();
-        
+
 #ifdef WINDOWS
         /* Under Windows we just lost all of our textures, so we need to
            reload the entire texture linked list */
         R_realloc_textures();
 #endif
-        
+
         return TRUE;
+}
+
+/******************************************************************************\
+ Checks the extension string to see if an extension is listed.
+\******************************************************************************/
+static int check_extension(const char *ext)
+{
+        static const GLubyte *ext_str;
+
+        if (!ext_str)
+                ext_str = glGetString(GL_EXTENSIONS);
+        return gluCheckExtension((const GLubyte *)ext, ext_str);
 }
 
 /******************************************************************************\
@@ -142,9 +154,24 @@ static void check_gl_extensions(void)
         r_extensions[R_EXT_MULTITEXTURE] = gl_int;
         C_debug("%d texture units supported", gl_int);
 
-        /* Point sprites
-           FIXME: Actually check for this extension */
-        r_extensions[R_EXT_POINT_SPRITE] = TRUE;
+        /* Point sprites */
+        if (check_extension("GL_ARB_point_sprite")) {
+                r_extensions[R_EXT_POINT_SPRITE] = TRUE;
+                C_debug("Hardware point sprites supported");
+        } else {
+                r_extensions[R_EXT_POINT_SPRITE] = FALSE;
+                C_warning("Using software point sprites");
+        }
+
+        /* Check for anisotropic filtering */
+        if (check_extension("GL_EXT_texture_filter_anisotropic")) {
+                glGetIntegerv(GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT, &gl_int);
+                r_extensions[R_EXT_ANISOTROPY] = gl_int;
+                C_debug("%d anisotropy levels supported", gl_int);
+        } else {
+                r_extensions[R_EXT_ANISOTROPY] = FALSE;
+                C_warning("Anisotropic filtering not supported");
+        }
 }
 
 /******************************************************************************\

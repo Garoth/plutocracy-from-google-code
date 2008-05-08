@@ -399,7 +399,6 @@ void R_render_globe(void)
 
 /******************************************************************************\
  Converts screen pixel distance to globe radians.
-
  FIXME: Hacky and inaccurate.
 \******************************************************************************/
 float R_screen_to_globe(int pixels)
@@ -574,7 +573,7 @@ static int terrain_base(r_terrain_t terrain)
 \******************************************************************************/
 static int get_tile_terrain(int tile, r_tile_t *tiles)
 {
-        int i, j, base, base_num, trans, terrain, vert_terrain[3], row;
+        int i, j, base, base_num, trans, terrain, vert_terrain[3], offset;
 
         base = terrain_base(tiles[tile].terrain);
         if (base >= R_T_BASES - 1)
@@ -599,10 +598,10 @@ static int get_tile_terrain(int tile, r_tile_t *tiles)
                 return tiles[tile].terrain;
 
         /* Swap the base and single terrain if the base only appears once */
-        row = 2 * base;
+        offset = 2 * base;
         if (base_num == 1) {
                 trans = base;
-                row++;
+                offset++;
         }
 
         /* Find the lone terrain and assign the transition tile */
@@ -618,7 +617,7 @@ static int get_tile_terrain(int tile, r_tile_t *tiles)
                         i = 1;
         }
 
-        return R_T_TRANSITION + row * R_TILE_SHEET_W + i;
+        return R_T_TRANSITION + offset * 3 + i;
 }
 
 /******************************************************************************\
@@ -627,14 +626,17 @@ static int get_tile_terrain(int tile, r_tile_t *tiles)
 void R_configure_globe(r_tile_t *tiles)
 {
         c_vec2_t tile;
-        float bottom;
-        int i, tx, ty, flip, terrain;
+        float left, right, top, bottom, tmp;
+        int i, tx, ty, terrain;
 
         C_debug("Configuring globe");
-        tile.x = (float)(r_terrain_tex->surface->w / R_TILE_SHEET_W) /
+
+        /* UV dimensions of tile boundary box */
+        tile.x = 2.f * (r_terrain_tex->surface->w / R_TILE_SHEET_W) /
                  r_terrain_tex->surface->w;
-        tile.y = (float)(r_terrain_tex->surface->h / R_TILE_SHEET_H) /
-                 r_terrain_tex->surface->h;
+        tile.y = 2.f * (int)(C_SIN_60 * r_terrain_tex->surface->h /
+                             R_TILE_SHEET_H / 2) / r_terrain_tex->surface->h;
+
         for (i = 0; i < r_tiles; i++) {
                 set_tile_height(i, tiles[i].height);
 
@@ -642,11 +644,28 @@ void R_configure_globe(r_tile_t *tiles)
                 terrain = get_tile_terrain(i, tiles);
                 ty = terrain / R_TILE_SHEET_W;
                 tx = terrain - ty * R_TILE_SHEET_W;
-                bottom = (ty + R_ISO_PROP) * tile.y;
-                vertices[3 * i].uv = C_vec2((tx + 0.5f) * tile.x, ty * tile.y);
-                flip = i < flip_limit;
-                vertices[3 * i + 1].uv = C_vec2((tx + flip) * tile.x, bottom);
-                vertices[3 * i + 2].uv = C_vec2((tx + !flip) * tile.x, bottom);
+                left = tx / 2 * tile.x + C_SIN_60 * R_TILE_BORDER;
+                right = (tx / 2 + 1) * tile.x - C_SIN_60 * R_TILE_BORDER;
+                if (tx & 1) {
+                        bottom = ty * tile.y + C_SIN_30 * R_TILE_BORDER;
+                        top = (ty + 1.f) * tile.y - C_SIN_60 * R_TILE_BORDER;
+                        left += tile.x / 2.f;
+                        right += tile.x / 2.f;
+                } else {
+                        top = ty * tile.y + R_TILE_BORDER;
+                        bottom = (ty + 1.f) * tile.y - C_SIN_30 * R_TILE_BORDER;
+                }
+
+                /* Flip tiles are mirrored over the middle */
+                if (i < flip_limit) {
+                        tmp = left;
+                        left = right;
+                        right = tmp;
+                }
+
+                vertices[3 * i].uv = C_vec2((left + right) / 2.f, top);
+                vertices[3 * i + 1].uv = C_vec2(left, bottom);
+                vertices[3 * i + 2].uv = C_vec2(right, bottom);
 
                 /* Set normal vector */
                 normals[i] = C_vec3_cross(C_vec3_sub(vertices[3 * i].co,

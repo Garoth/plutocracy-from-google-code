@@ -308,21 +308,15 @@ void R_texture_upload(const r_texture_t *pt)
                         gl_internal = GL_RGB8;
         }
         glBindTexture(GL_TEXTURE_2D, pt->gl_name);
-        if (pt->mipmaps) {
+        if (pt->mipmaps)
                 gluBuild2DMipmaps(GL_TEXTURE_2D, gl_internal,
                                   pt->surface->w, pt->surface->h,
                                   GL_RGBA, GL_UNSIGNED_BYTE,
                                   pt->surface->pixels);
-                glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,
-                                GL_LINEAR_MIPMAP_LINEAR);
-        } else {
+        else
                 glTexImage2D(GL_TEXTURE_2D, 0, gl_internal,
                              pt->surface->w, pt->surface->h, 0,
                              GL_RGBA, GL_UNSIGNED_BYTE, pt->surface->pixels);
-                glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,
-                                GL_LINEAR);
-        }
-        glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
         R_check_errors();
 }
 
@@ -332,7 +326,7 @@ void R_texture_upload(const r_texture_t *pt)
 void R_dealloc_textures(void)
 {
         r_texture_t *tex;
-        
+
         C_debug("Deallocting loaded textures");
         tex = (r_texture_t *)root;
         while (tex) {
@@ -354,7 +348,7 @@ void R_dealloc_textures(void)
 void R_realloc_textures(void)
 {
         r_texture_t *tex;
-        
+
         C_debug("Uploading loaded textures");
         tex = (r_texture_t *)root;
         while (tex) {
@@ -428,29 +422,45 @@ r_texture_t *R_texture_load(const char *filename, int mipmaps)
 \******************************************************************************/
 void R_texture_select(r_texture_t *texture)
 {
-        int alpha;
+        int aniso;
 
-        alpha = FALSE;
-        if (texture) {
-                glEnable(GL_TEXTURE_2D);
-                glBindTexture(GL_TEXTURE_2D, texture->gl_name);
-                alpha = texture->alpha;
-                if (r_mode == R_MODE_3D) {
-                        glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S,
-                                        GL_REPEAT);
-                        glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T,
-                                        GL_REPEAT);
-                } else {
-                        glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S,
-                                        GL_CLAMP);
-                        glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T,
-                                        GL_CLAMP);
-                }
-        } else {
+        if (!texture) {
                 glDisable(GL_TEXTURE_2D);
                 glBindTexture(GL_TEXTURE_2D, 0);
+                glDisable(GL_BLEND);
+                glDisable(GL_ALPHA_TEST);
+                return;
         }
-        if (alpha) {
+        glEnable(GL_TEXTURE_2D);
+        glBindTexture(GL_TEXTURE_2D, texture->gl_name);
+
+        /* Texture repeat */
+        glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+        glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+
+        /* Mipmaps */
+        if (texture->mipmaps) {
+                glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,
+                                GL_LINEAR_MIPMAP_LINEAR);
+                if (texture->mipmaps > 1)
+                        glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAX_LOD,
+                                        texture->mipmaps);
+        } else
+                glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,
+                                GL_LINEAR);
+        glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+        /* Anisotropic filtering */
+        if (r_extensions[R_EXT_ANISOTROPY] > 1) {
+                aniso = texture->anisotropy;
+                if (aniso > r_extensions[R_EXT_ANISOTROPY])
+                        aniso = r_extensions[R_EXT_ANISOTROPY];
+                glTexParameterf(GL_TEXTURE_2D,
+                                GL_TEXTURE_MAX_ANISOTROPY_EXT, aniso);
+        }
+
+        /* Alpha blending */
+        if (texture->alpha) {
                 glEnable(GL_BLEND);
                 glEnable(GL_ALPHA_TEST);
         } else {
@@ -479,7 +489,6 @@ void R_texture_render(r_texture_t *tex, int x, int y)
         verts[3].uv = C_vec2(1.f, 0.f);
         R_push_mode(R_MODE_2D);
         R_texture_select(tex);
-        glLoadIdentity();
         glTranslatef((GLfloat)x, (GLfloat)y, 0.f);
         glInterleavedArrays(R_VERTEX2_FORMAT, 0, verts);
         glDrawElements(GL_QUADS, 4, GL_UNSIGNED_SHORT, indices);
@@ -674,5 +683,4 @@ void R_free_assets(void)
         R_free_fonts();
         TTF_Quit();
 }
-
 
