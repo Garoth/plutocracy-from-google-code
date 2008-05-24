@@ -33,7 +33,8 @@ static void render_status(void)
         if (C_count_poll(&c_throttled, 5000)) {
                 char *str;
 
-                str = C_va("%.0f fps, (%.0f%% throttled), %.0f faces/frame",
+                str = C_va(PACKAGE_STRING
+                           ": %.0f fps, (%.0f%% throttled), %.0f faces/frame",
                            C_count_fps(&c_throttled),
                            100.f * C_count_per_frame(&c_throttled) /
                                    c_throttle_msec,
@@ -76,7 +77,6 @@ static void main_loop(void)
                                 break;
                         }
                 }
-                G_render();
                 I_render();
                 render_status();
                 R_finish_frame();
@@ -206,7 +206,7 @@ int main(int argc, char *argv[])
         init_sdl();
         R_init();
         I_init();
-        G_init();
+        G_generate_globe();
         R_load_test_assets();
 
         /* Run the main loop */

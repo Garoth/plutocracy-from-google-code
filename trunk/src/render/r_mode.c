@@ -31,7 +31,7 @@ int r_extensions[R_EXTENSIONS];
 static float cam_matrix[16];
 
 /* Camera rotation and zoom */
-float r_cam_dist, r_cam_zoom;
+float r_cam_zoom;
 static c_vec2_t cam_diff;
 static GLfloat cam_rotation[16];
 
@@ -169,7 +169,7 @@ static void check_gl_extensions(void)
                 r_extensions[R_EXT_ANISOTROPY] = gl_int;
                 C_debug("%d anisotropy levels supported", gl_int);
         } else {
-                r_extensions[R_EXT_ANISOTROPY] = FALSE;
+                r_extensions[R_EXT_ANISOTROPY] = 0;
                 C_warning("Anisotropic filtering not supported");
         }
 }
@@ -260,7 +260,7 @@ void R_init(void)
                 C_error("No available video modes");
         check_gl_extensions();
         set_gl_state();
-        r_cam_zoom = (R_ZOOM_MAX - R_ZOOM_MIN) / 2.f;
+        r_cam_zoom = R_ZOOM_MAX;
         R_clip_disable();
         R_load_assets();
         R_init_solar();
@@ -320,7 +320,7 @@ static void update_camera(void)
 
         /* Recreate the full camera matrix with the new rotation */
         glLoadIdentity();
-        glTranslatef(0, 0, -r_cam_dist - r_cam_zoom);
+        glTranslatef(0, 0, -r_globe_radius - r_cam_zoom);
         glMultMatrixf(cam_rotation);
         glGetFloatv(GL_MODELVIEW_MATRIX, cam_matrix);
 
@@ -341,10 +341,10 @@ void R_move_cam_by(c_vec2_t angle)
 void R_zoom_cam_by(float f)
 {
         r_cam_zoom += f;
-        if (r_cam_zoom < 0)
-                r_cam_zoom = 0;
-        if (r_cam_zoom > R_ZOOM_MAX - R_ZOOM_MIN)
-                r_cam_zoom = R_ZOOM_MAX - R_ZOOM_MIN;
+        if (r_cam_zoom < R_ZOOM_MIN)
+                r_cam_zoom = R_ZOOM_MIN;
+        if (r_cam_zoom > R_ZOOM_MAX)
+                r_cam_zoom = R_ZOOM_MAX;
 }
 
 /******************************************************************************\

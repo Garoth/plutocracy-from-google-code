@@ -39,7 +39,7 @@ typedef struct halo_vertex {
 } halo_vertex_t;
 #pragma pack(pop)
 
-float r_globe_radius;
+float r_globe_radius, r_globe_light;
 int r_tiles;
 
 static globe_vertex_t vertices[R_TILES_MAX * 3];
@@ -304,8 +304,6 @@ void R_generate_globe(int subdiv4)
                                   globe_colors + i);
         C_var_update(&r_globe_atmosphere, globe_atmosphere_update);
         generate_halo();
-
-        r_cam_dist = r_globe_radius + R_ZOOM_MIN;
 }
 
 /******************************************************************************\
@@ -316,7 +314,7 @@ static void render_halo(void)
         float scale, dist, z;
 
         /* Find out how far away and how big the halo is */
-        z = r_cam_dist + r_cam_zoom;
+        z = r_globe_radius + r_cam_zoom;
         dist = r_globe_radius * r_globe_radius / z;
         scale = sqrtf(r_globe_radius * r_globe_radius - dist * dist);
 
@@ -328,7 +326,7 @@ static void render_halo(void)
         glBlendFunc(GL_SRC_ALPHA, GL_ONE);
         glPushMatrix();
         glLoadIdentity();
-        glTranslatef(0, 0, -r_cam_dist - r_cam_zoom + dist);
+        glTranslatef(0, 0, -r_globe_radius - r_cam_zoom + dist);
         glScalef(scale, scale, scale);
         glEnableClientState(GL_VERTEX_ARRAY);
         glEnableClientState(GL_COLOR_ARRAY);
@@ -348,6 +346,18 @@ static void render_halo(void)
 }
 
 /******************************************************************************\
+ Returns the modulated globe color.
+\******************************************************************************/
+static GLfloat *modulate_globe_color(int i)
+{
+        static c_color_t color;
+
+        color = C_color_scalef(globe_colors[i], r_globe_light);
+        color.a = globe_colors[i].a;
+        return (GLfloat *)&color;
+}
+
+/******************************************************************************\
  Renders the entire globe.
 \******************************************************************************/
 void R_render_globe(void)
@@ -356,10 +366,10 @@ void R_render_globe(void)
 
         /* Set globe material properties */
         glMateriali(GL_FRONT, GL_SHININESS, r_globe_shininess.value.n);
-        glMaterialfv(GL_FRONT, GL_AMBIENT, (float *)globe_colors);
-        glMaterialfv(GL_FRONT, GL_DIFFUSE, (float *)(globe_colors + 1));
-        glMaterialfv(GL_FRONT, GL_SPECULAR, (float *)(globe_colors + 2));
-        glMaterialfv(GL_FRONT, GL_EMISSION, (float *)(globe_colors + 3));
+        glMaterialfv(GL_FRONT, GL_AMBIENT, modulate_globe_color(0));
+        glMaterialfv(GL_FRONT, GL_DIFFUSE, modulate_globe_color(1));
+        glMaterialfv(GL_FRONT, GL_SPECULAR, modulate_globe_color(2));
+        glMaterialfv(GL_FRONT, GL_EMISSION, modulate_globe_color(3));
 
         /* Use fog to simulate atmosphere */
         if (fog_color.a > 0.f) {
@@ -404,7 +414,7 @@ void R_render_globe(void)
 float R_screen_to_globe(int pixels)
 {
         return 0.05f * r_pixel_scale.value.f * pixels /
-               (r_cam_dist + 5.f * (R_ZOOM_MAX - R_ZOOM_MIN - r_cam_zoom));
+               (r_globe_radius + 5.f * (R_ZOOM_MAX - r_cam_zoom));
 }
 
 /******************************************************************************\

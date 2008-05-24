@@ -34,6 +34,10 @@
    worth of tiles */
 #define R_TILES_MAX 20480
 
+/* The rotation speed of the sun around the globe has to be fixed so that there
+   are no synchronization errors between players */
+#define R_MINUTES_PER_DAY 5
+
 /* Opaque texture object */
 typedef struct r_texture r_texture_t;
 
@@ -123,6 +127,7 @@ void R_get_tile_neighbors(int tile, int neighbors[3]);
 int R_get_tile_region(int tile, int neighbors[12]);
 float R_screen_to_globe(int pixels);
 
+extern float r_globe_light;
 extern int r_tiles;
 
 /* r_mode.c */
@@ -142,6 +147,7 @@ void R_start_frame(void);
 void R_zoom_cam_by(float);
 
 extern c_count_t r_count_faces;
+extern float r_cam_zoom;
 extern int r_width_2d, r_height_2d, r_restart;
 
 /* r_model.c */
