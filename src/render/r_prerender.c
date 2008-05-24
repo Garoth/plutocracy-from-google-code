@@ -344,7 +344,7 @@ static void prerender_transitions(void)
         R_texture_free(r_terrain_tex);
         r_terrain_tex = save_buffer((int)sheet.x, (int)sheet.y);
         r_terrain_tex->mipmaps = TRUE;
-        r_terrain_tex->anisotropy = 2;
+        r_terrain_tex->anisotropy = 2.f;
         R_texture_upload(r_terrain_tex);
         finish_buffer();
 }

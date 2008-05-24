@@ -10,12 +10,14 @@
  FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
 \******************************************************************************/
 
-/* g_globe.c */
-void G_generate_globe(void);
+#include "g_common.h"
 
-/* g_host.c */
-void G_host_game(void);
-
-/* g_variables.c */
-void G_register_variables(void);
+/******************************************************************************\
+ Host a new game.
+\******************************************************************************/
+void G_host_game(void)
+{
+        g_globe_seed.value.n = time(NULL);
+        G_generate_globe();
+}
 

@@ -13,7 +13,9 @@
 /* i_layout.c */
 void I_cleanup(void);
 void I_dispatch(const SDL_Event *);
+void I_enter_limbo(void);
 void I_init(void);
+void I_leave_limbo(void);
 void I_parse_config(void);
 void I_render(void);
 

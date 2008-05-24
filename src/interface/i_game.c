@@ -13,7 +13,31 @@
 #include "i_common.h"
 
 static i_label_t label;
-static i_button_t host_button, join_button, quit_button;
+static i_button_t host_button, join_button, leave_button, quit_button;
+
+/******************************************************************************\
+ Leave button event handler.
+\******************************************************************************/
+static int leave_button_event(i_button_t *button, i_event_t event)
+{
+        if (event == I_EV_RENDER) {
+                if (button->widget.state == I_WS_DISABLED && !i_limbo)
+                        button->widget.state = I_WS_READY;
+                else if (button->widget.state != I_WS_DISABLED && i_limbo)
+                        button->widget.state = I_WS_DISABLED;
+        }
+        return I_button_event(button, event);
+}
+
+/******************************************************************************\
+ Leave the current game.
+\******************************************************************************/
+static void leave_button_clicked(i_button_t *button)
+{
+        C_debug("Leave button clicked");
+        I_widget_show(button->widget.parent, FALSE);
+        I_enter_limbo();
+}
 
 /******************************************************************************\
  Host a new game via interface.
@@ -21,8 +45,10 @@ static i_button_t host_button, join_button, quit_button;
 static void host_button_clicked(i_button_t *button)
 {
         C_debug("Host button clicked");
+        G_host_game();
+        I_widget_show(button->widget.parent, FALSE);
+        I_leave_limbo();
 }
-
 
 /******************************************************************************\
  Quit the game via interface.
@@ -50,6 +76,13 @@ void I_game_init(i_window_t *window)
         I_button_init(&join_button, NULL, C_str("i-join", "Join"), TRUE);
         join_button.widget.state = I_WS_DISABLED;
         I_widget_add(&window->widget, &join_button.widget);
+
+        /* Leave button */
+        I_button_init(&leave_button, NULL, C_str("i-leave", "Leave"), TRUE);
+        leave_button.widget.event_func = (i_event_f)leave_button_event;
+        leave_button.on_click = (i_callback_f)leave_button_clicked;
+        leave_button.widget.state = I_WS_DISABLED;
+        I_widget_add(&window->widget, &leave_button.widget);
 
         /* Host button */
         I_button_init(&host_button, NULL, C_str("i-host", "Host"), TRUE);

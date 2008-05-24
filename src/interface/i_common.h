@@ -12,6 +12,7 @@
 
 #include "../common/c_shared.h"
 #include "../render/r_shared.h"
+#include "../game/g_shared.h"
 #include "i_shared.h"
 
 /* Pixels to scroll for mouse wheel scrolling */
@@ -172,7 +173,10 @@ typedef struct i_select {
 } i_select_t;
 
 /* i_button.c */
+int I_button_event(i_button_t *, i_event_t);
 void I_button_init(i_button_t *, const char *icon, const char *text, int bg);
+void I_button_configure(i_button_t *, const char *icon, const char *text,
+                        int bg);
 
 /* i_console.c */
 void I_console_init(i_window_t *);
@@ -191,6 +195,7 @@ void I_label_configure(i_label_t *, const char *);
 i_label_t *I_label_new(const char *);
 
 /* i_layout.c */
+extern int i_limbo;
 extern i_widget_t i_root;
 
 /* i_select.c */

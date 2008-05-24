@@ -375,9 +375,11 @@ void R_window_render(r_window_t *window)
 {
         r_vertex2_t verts[16];
         c_vec2_t mid_half, mid_uv, corner;
-        unsigned short indices[] = { 0,  1,  2,  3,  4,  5,  6,  7,
-                                     8,  5,  9,  3,  10, 1,  11,
-                                     12, 10, 13, 9,  14, 8,  15 };
+        unsigned short indices[] = {0, 1, 3, 2,      2, 3, 5, 4,
+                                    4, 5, 7, 6,      1, 11, 10, 3,
+                                    3, 10, 9, 5,     5, 9, 8, 7,
+                                    11, 12, 13, 10,  10, 13, 14, 9,
+                                    9, 14, 15, 8};
 
         if (!window || !sprite_render_start(&window->sprite))
                 return;
@@ -434,9 +436,9 @@ void R_window_render(r_window_t *window)
                               corner.y + mid_half.y, 0.f);
         verts[15].uv = C_vec2(1.00f, 1.00f);
 
-        C_count_add(&r_count_faces, 20);
+        C_count_add(&r_count_faces, 18);
         glInterleavedArrays(R_VERTEX2_FORMAT, 0, verts);
-        glDrawElements(GL_QUAD_STRIP, 22, GL_UNSIGNED_SHORT, indices);
+        glDrawElements(GL_QUADS, 36, GL_UNSIGNED_SHORT, indices);
 
         sprite_render_finish();
 }

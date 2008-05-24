@@ -14,10 +14,6 @@
 
 #include "r_common.h"
 
-/* The rotation speed of the sun around the globe has to be fixed so that there
-   are no synchronization errors between players */
-#define MINUTES_PER_DAY 5
-
 /* Distance of the solar objects from the center of the globe */
 #define SOLAR_DISTANCE 350.f
 
@@ -117,7 +113,7 @@ void R_render_solar(void)
         if (!r_solar.value.n)
                 return;
 
-        sky.angles.y -= c_frame_sec * C_PI / 60.f / MINUTES_PER_DAY;
+        sky.angles.y -= c_frame_sec * C_PI / 60.f / R_MINUTES_PER_DAY;
         R_model_render(&sky);
 
         /* Render the sun and moon point sprites */

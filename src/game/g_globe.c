@@ -38,13 +38,6 @@ static g_island_t islands[ISLAND_NUM];
 static int islands_len;
 
 /******************************************************************************\
- Render the game elements.
-\******************************************************************************/
-void G_render(void)
-{
-}
-
-/******************************************************************************\
  Randomly selects a tile ground terrain based on climate approximations.
  FIXME: Does not choose terrain correctly, biased toward 'hot'.
 \******************************************************************************/
@@ -235,7 +228,7 @@ static void setup_tiles(void)
 /******************************************************************************\
  Initialize an idle globe.
 \******************************************************************************/
-void G_init(void)
+void G_generate_globe(void)
 {
         C_status("Generating globe");
         C_var_unlatch(&g_globe_seed);

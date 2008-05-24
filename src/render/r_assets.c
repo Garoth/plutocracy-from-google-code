@@ -429,8 +429,6 @@ r_texture_t *R_texture_load(const char *filename, int mipmaps)
 \******************************************************************************/
 void R_texture_select(r_texture_t *texture)
 {
-        int aniso;
-
         if (!texture) {
                 glDisable(GL_TEXTURE_2D);
                 glBindTexture(GL_TEXTURE_2D, 0);
@@ -459,9 +457,13 @@ void R_texture_select(r_texture_t *texture)
 
         /* Anisotropic filtering */
         if (r_extensions[R_EXT_ANISOTROPY] > 1) {
+                GLfloat aniso;
+
                 aniso = texture->anisotropy;
                 if (aniso > r_extensions[R_EXT_ANISOTROPY])
                         aniso = r_extensions[R_EXT_ANISOTROPY];
+                if (aniso < 1.f)
+                        aniso = 1.f;
                 glTexParameterf(GL_TEXTURE_2D,
                                 GL_TEXTURE_MAX_ANISOTROPY_EXT, aniso);
         }
@@ -474,6 +476,8 @@ void R_texture_select(r_texture_t *texture)
                 glDisable(GL_BLEND);
                 glDisable(GL_ALPHA_TEST);
         }
+
+        R_check_errors();
 }
 
 /******************************************************************************\

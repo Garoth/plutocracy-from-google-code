@@ -15,6 +15,9 @@
 /* Number of windows defined */
 #define WINDOWS_LEN 3
 
+/* Globe light modulation in limbo mode */
+#define LIMBO_GLOBE_LIGHT 0.1f
+
 /* Windows */
 static struct property_t {
         void (*init)(i_window_t *);
@@ -29,9 +32,14 @@ static struct property_t {
 /* Root widget contains all other widgets */
 i_widget_t i_root;
 
+/* TRUE if the interface is in limbo mode */
+int i_limbo;
+
 static c_vec2_t root_scroll;
 static i_window_t left_toolbar, *open_window, windows[WINDOWS_LEN];
 static i_button_t buttons[WINDOWS_LEN];
+static r_sprite_t limbo_logo;
+static float limbo_fade;
 static int grabbing, grab_x, grab_y, layout_frame;
 
 /******************************************************************************\
@@ -43,6 +51,8 @@ static int root_event(i_widget_t *root, i_event_t event)
 
         switch (event) {
         case I_EV_KEY_DOWN:
+                if (i_limbo)
+                        break;
                 if (i_key == SDLK_RIGHT && root_scroll.x > -1.f)
                         root_scroll.x = -i_scroll_speed.value.f;
                 if (i_key == SDLK_LEFT && root_scroll.x < 1.f)
@@ -65,6 +75,8 @@ static int root_event(i_widget_t *root, i_event_t event)
                         root_scroll.y = 0.f;
                 break;
         case I_EV_MOUSE_DOWN:
+                if (i_limbo)
+                        break;
                 if (i_mouse == SDL_BUTTON_WHEELDOWN)
                         R_zoom_cam_by(i_zoom_speed.value.f);
                 if (i_mouse == SDL_BUTTON_WHEELUP)
@@ -99,8 +111,36 @@ static int root_event(i_widget_t *root, i_event_t event)
                 for (i = 0; i < WINDOWS_LEN; i++)
                         I_window_hanger(windows + i, &buttons[i].widget, TRUE);
 
+                /* Position limbo logo */
+                limbo_logo.origin.x = r_width_2d / 2 - limbo_logo.size.x / 2;
+                limbo_logo.origin.y = r_height_2d / 2 - limbo_logo.size.y / 2;
+
                 return FALSE;
         case I_EV_RENDER:
+
+                /* Rotate around the globe during limbo */
+                if (limbo_fade > 0.f)
+                        R_move_cam_by(C_vec2(limbo_fade * c_frame_sec / 60.f *
+                                             C_PI / R_MINUTES_PER_DAY, 0));
+                if (i_limbo) {
+                        R_zoom_cam_by((R_ZOOM_MAX - r_cam_zoom) * c_frame_sec);
+                        limbo_fade += i_fade.value.f * c_frame_sec / 10.f;
+                        if (limbo_fade > 1.f)
+                                limbo_fade = 1.f;
+                } else {
+                        limbo_fade -= i_fade.value.f * c_frame_sec / 10.f;
+                        if (limbo_fade < 0.f)
+                                limbo_fade = 0.f;
+                }
+                r_globe_light = LIMBO_GLOBE_LIGHT +
+                                (1.f - LIMBO_GLOBE_LIGHT) * (1.f - limbo_fade);
+
+                /* Render and fade limbo logo */
+                if (limbo_fade > 0.f) {
+                        limbo_logo.modulate.a = limbo_fade;
+                        R_sprite_render(&limbo_logo);
+                }
+
                 R_move_cam_by(C_vec2_scalef(root_scroll, c_frame_sec));
                 break;
         default:
@@ -170,13 +210,13 @@ static int theme_update(c_var_t *var, c_var_value_t value)
 \******************************************************************************/
 static void left_toolbar_open(i_window_t *window)
 {
-        if (open_window == window) {
-                I_widget_show(&window->widget, FALSE);
-                open_window = NULL;
-                return;
-        }
-        if (open_window)
+        if (open_window && open_window->widget.shown) {
                 I_widget_show(&open_window->widget, FALSE);
+                if (open_window == window) {
+                        open_window = NULL;
+                        return;
+                }
+        }
         I_widget_show(&window->widget, TRUE);
         open_window = window;
 }
@@ -200,14 +240,15 @@ void I_parse_config(void)
 \******************************************************************************/
 void I_leave_limbo(void)
 {
+        i_limbo = FALSE;
 }
 
 /******************************************************************************\
  Enter limbo mode.
 \******************************************************************************/
-void I_begin_limbo(void)
+void I_enter_limbo(void)
 {
-        R_zoom_cam_by(R_ZOOM_MAX);
+        i_limbo = TRUE;
 }
 
 /******************************************************************************\
@@ -260,7 +301,9 @@ void I_init(void)
         i_theme.edit = C_VE_FUNCTION;
 
         /* Start in limbo */
-        I_begin_limbo();
+        R_sprite_init(&limbo_logo, "gui/logo.png");
+        limbo_fade = 1.f;
+        I_enter_limbo();
 
         I_widget_event(&i_root, I_EV_CONFIGURE);
         I_widget_show(&left_toolbar.widget, TRUE);
@@ -272,6 +315,7 @@ void I_init(void)
 void I_cleanup(void)
 {
         I_widget_event(&i_root, I_EV_CLEANUP);
+        R_sprite_cleanup(&limbo_logo);
 }
 
 /******************************************************************************\

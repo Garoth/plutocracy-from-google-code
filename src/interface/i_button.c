@@ -170,6 +170,21 @@ int I_button_event(i_button_t *button, i_event_t event)
 }
 
 /******************************************************************************\
+ Configure the button widget. The button must have already been initialized.
+ The [icon] path and [text] strings can be NULL and do not need to persist
+ after calling the function. Call with [bg] set to TRUE to decorate the button
+ background.
+\******************************************************************************/
+void I_button_configure(i_button_t *button, const char *icon, const char *text,
+                        int bg)
+{
+        button->decorated = bg;
+        R_sprite_init(&button->icon, icon);
+        C_strncpy_buf(button->buffer, text);
+        I_widget_event(&button->widget, I_EV_CONFIGURE);
+}
+
+/******************************************************************************\
  Initializes a button widget. The [icon] path and [text] strings can be NULL
  and do not need to persist after calling the function. Call with [bg] set to
  TRUE to decorate the button background.

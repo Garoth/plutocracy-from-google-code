@@ -18,7 +18,7 @@
 #define R_TILE_SHEET_H 3
 
 /* Proportion of a tile that is used as a buffer against its neighbors */
-#define R_TILE_BORDER (4.f / 256)
+#define R_TILE_BORDER (6.f / 256)
 
 /* Supported extensions */
 typedef enum {
@@ -52,7 +52,8 @@ struct r_texture {
         c_ref_t ref;
         SDL_Surface *surface;
         GLuint gl_name;
-        int alpha, mipmaps, anisotropy;
+        float anisotropy;
+        int alpha, mipmaps;
 };
 
 /* Render modes */
@@ -109,7 +110,6 @@ void R_push_mode(r_mode_t);
 void R_set_mode(r_mode_t);
 
 extern r_mode_t r_mode;
-extern float r_cam_dist, r_cam_zoom;
 extern int r_extensions[R_EXTENSIONS];
 
 /* r_solar.c */
