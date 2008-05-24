@@ -10,11 +10,11 @@
  FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
 \******************************************************************************/
 
-/* Implements Makoto Matsumoto's Mersenne Twister random number generator:
-   http://en.wikipedia.org/wiki/Mersenne_twister */
+/* Math functions not provided by the standard library */
 
 #include "c_shared.h"
 
+/* Constants for the Mersenne Twister */
 #define N 624
 #define M 397
 #define UPPER_MASK 0x80000000
@@ -62,7 +62,9 @@ void C_rand_seed(unsigned int seed)
 }
 
 /******************************************************************************\
- Generate a random 31-bit signed integer from the internal state.
+ Generate a random 31-bit signed integer from the internal state. Implements
+ Makoto Matsumoto's Mersenne Twister random number generator:
+ http://en.wikipedia.org/wiki/Mersenne_twister
 \******************************************************************************/
 int C_rand(void)
 {
