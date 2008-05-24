@@ -21,7 +21,7 @@ static struct property_t {
         char *icon;
         c_vec2_t size;
 } properties[] = {
-        {I_game_init, "gui/icons/game.png", {240.f, 0.f}},
+        {I_game_init, "gui/icons/game.png", {200.f, 0.f}},
         {I_console_init, "gui/icons/console.png", {480.f, 240.f}},
         {I_video_init, "gui/icons/video.png", {260.f, 0.f}},
 };
@@ -196,6 +196,21 @@ void I_parse_config(void)
 }
 
 /******************************************************************************\
+ Leave limbo mode.
+\******************************************************************************/
+void I_leave_limbo(void)
+{
+}
+
+/******************************************************************************\
+ Enter limbo mode.
+\******************************************************************************/
+void I_begin_limbo(void)
+{
+        R_zoom_cam_by(R_ZOOM_MAX);
+}
+
+/******************************************************************************\
  Loads interface assets and initializes windows.
 \******************************************************************************/
 void I_init(void)
@@ -243,6 +258,9 @@ void I_init(void)
         theme_configure();
         i_theme.update = (c_var_update_f)theme_update;
         i_theme.edit = C_VE_FUNCTION;
+
+        /* Start in limbo */
+        I_begin_limbo();
 
         I_widget_event(&i_root, I_EV_CONFIGURE);
         I_widget_show(&left_toolbar.widget, TRUE);

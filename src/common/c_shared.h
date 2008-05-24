@@ -314,7 +314,8 @@ extern c_var_t c_mem_check;
 /* c_os_posix, c_os_windows.c */
 const char *C_user_dir(void);
 
-/* c_rand.c */
+/* c_math.c */
+#define C_is_pow2(n) !(n & (n - 1))
 int C_rand(void);
 #define C_rand_real() ((float)(C_rand() & 0xffff) / 0xffff)
 void C_rand_seed(unsigned int);

@@ -208,6 +208,7 @@ static void texture_cleanup(r_texture_t *pt)
 {
         SDL_FreeSurface(pt->surface);
         glDeleteTextures(1, &pt->gl_name);
+        R_check_errors();
 }
 
 /******************************************************************************\
@@ -224,7 +225,13 @@ r_texture_t *R_texture_alloc_full(const char *file, int line, const char *func,
         int flags;
 
         if (width < 1 || height < 1)
-                C_error("Invalid texture dimensions");
+                C_error_full(file, line, func,
+                             "Invalid texture dimensions: %dx%d",
+                             width, height);
+        if (!C_is_pow2(width) || !C_is_pow2(height))
+                C_warning_full(file, line, func,
+                               "Texture dimensions not power-of-two: %dx%d",
+                               width, height);
         pt = C_recalloc_full(file, line, func, NULL, sizeof (*pt));
         pt->ref.refs = 1;
         pt->ref.cleanup_func = (c_ref_cleanup_f)texture_cleanup;
@@ -492,6 +499,7 @@ void R_texture_render(r_texture_t *tex, int x, int y)
         glTranslatef((GLfloat)x, (GLfloat)y, 0.f);
         glInterleavedArrays(R_VERTEX2_FORMAT, 0, verts);
         glDrawElements(GL_QUADS, 4, GL_UNSIGNED_SHORT, indices);
+        R_check_errors();
         R_pop_mode();
 }
 

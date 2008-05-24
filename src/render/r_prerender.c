@@ -101,6 +101,7 @@ static void render_tile(int tx, int ty)
         glDisableClientState(GL_TEXTURE_COORD_ARRAY);
         glDisableClientState(GL_VERTEX_ARRAY);
         glPopMatrix();
+        R_check_errors();
 }
 
 /******************************************************************************\
@@ -379,6 +380,8 @@ void R_prerender(void)
         /* Clear to black */
         glClearColor(0.f, 0.f, 0.f, 1.f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+        R_check_errors();
 
         /* Vertices are aligned in the tile so that the top vertex of the
            triangle touches the top center of the tile */
