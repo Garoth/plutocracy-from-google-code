@@ -23,6 +23,7 @@ Khent suggested some similar games to play:
   * [http://jcatki.no-ip.org:8080/SDL_image/SDL_image_frame.html SDL_image documentation]
   * [http://www.zlib.net/manual.html zlib manual]
   * [http://www.gnu.org/software/gettext/manual/gettext.html GNU gettext]
+  * [http://www.libpng.org/pub/png/libpng-1.2.5-manual.html libpng manual]
 
 = Tiling a Sphere =
   * Generate a sphere from any polygon: http://www.neubert.net/PLASpher.html
