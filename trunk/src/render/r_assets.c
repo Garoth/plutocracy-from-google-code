@@ -100,29 +100,6 @@ void R_surface_put(SDL_Surface *surf, int x, int y, c_color_t color)
 }
 
 /******************************************************************************\
- Iterates over an SDL surface and checks if any pixels actually use alpha
- blending. Returns TRUE if at least one pixel has alpha less than full.
-\******************************************************************************/
-static int surface_uses_alpha(SDL_Surface *surf)
-{
-        int x, y, bpp;
-
-        if (SDL_LockSurface(surf) < 0) {
-                C_warning("Failed to lock surface");
-                return TRUE;
-        }
-        bpp = surf->format->BytesPerPixel;
-        for (y = 0; y < surf->h; y++)
-                for (x = 0; x < surf->w; x++)
-                        if (R_surface_get(surf, x, y).a < 1.f) {
-                                SDL_UnlockSurface(surf);
-                                return TRUE;
-                        }
-        SDL_UnlockSurface(surf);
-        return FALSE;
-}
-
-/******************************************************************************\
  Inverts a surface. Surface should not be locked when this is called.
 \******************************************************************************/
 void R_surface_invert(SDL_Surface *surf, int rgb, int alpha)
@@ -253,7 +230,8 @@ r_texture_t *R_texture_alloc_full(const char *file, int line, const char *func,
                                            sdl_format.BitsPerPixel,
                                            sdl_format.Rmask, sdl_format.Gmask,
                                            sdl_format.Bmask, sdl_format.Amask);
-        SDL_SetAlpha(pt->surface, SDL_SRCALPHA, 255);
+        SDL_SetAlpha(pt->surface, SDL_SRCALPHA | SDL_RLEACCEL,
+                     SDL_ALPHA_OPAQUE);
         rect.x = 0;
         rect.y = 0;
         rect.w = width;
@@ -374,15 +352,178 @@ void R_realloc_textures(void)
 }
 
 /******************************************************************************\
- Loads a texture using SDL_image. If the texture has already been loaded,
- just ups the reference count and returns the loaded surface. If the texture
- failed to load, returns NULL.
+ Low-level callbacks for the PNG library.
+\******************************************************************************/
+static void user_png_read(png_structp png_ptr, png_bytep data,
+                          png_size_t length)
+{
+        C_file_read((c_file_t *)png_get_io_ptr(png_ptr), (char *)data, length);
+}
+
+static void user_png_write(png_structp png_ptr, png_bytep data,
+                          png_size_t length)
+{
+        C_file_write((c_file_t *)png_get_io_ptr(png_ptr), (char *)data, length);
+}
+
+static void user_png_flush(png_structp png_ptr)
+{
+        C_file_flush((c_file_t *)png_get_io_ptr(png_ptr));
+}
+
+/******************************************************************************\
+ Loads a PNG file and allocates a new SDL surface for it. Returns NULL on
+ failure.
+
+ Based on tutorial implementation in the libpng manual:
+ http://www.libpng.org/pub/png/libpng-1.2.5-manual.html
+\******************************************************************************/
+static SDL_Surface *load_png(const char *filename, int *alpha)
+{
+        SDL_Surface *surface;
+        Uint32 flags;
+        png_byte png_header[8];
+        png_bytep row_pointers[4096];
+        png_infop info_ptr;
+        png_structp png_ptr;
+        png_uint_32 width, height;
+        c_file_t file;
+        int i, bit_depth, color_type;
+
+        surface = NULL;
+
+        /* We have to read everything ourselves for libpng */
+        if (!C_file_init_read(&file, filename)) {
+                C_warning("Failed to open '%s' for reading", filename);
+                return NULL;
+        }
+
+        /* Check the first few bytes of the file to see if it is PNG format */
+        C_file_read(&file, (char *)png_header, sizeof (png_header));
+        if (png_sig_cmp(png_header, 0, sizeof (png_header))) {
+                C_warning("'%s' is not in PNG format", filename);
+                C_file_cleanup(&file);
+                return NULL;
+        }
+
+        /* Allocate the PNG structures */
+        png_ptr = png_create_read_struct(PNG_LIBPNG_VER_STRING,
+                                         NULL, NULL, NULL);
+        if (!png_ptr) {
+                C_warning("Failed to allocate PNG struct");
+                return NULL;
+        }
+
+        /* Tells libpng that we've read a bit of the header already */
+        png_set_sig_bytes(png_ptr, sizeof (png_header));
+
+        /* Set read callback before proceeding */
+        png_set_read_fn(png_ptr, (voidp)&file, (png_rw_ptr)user_png_read);
+
+        /* If an error occurs in libpng, it will longjmp back here */
+        if (setjmp(png_ptr->jmpbuf)) {
+		C_warning("Error loading PNG '%s'", filename);
+		goto cleanup;
+	}
+
+        /* Allocate a PNG info struct */
+        info_ptr = png_create_info_struct(png_ptr);
+        if (!info_ptr) {
+                C_warning("Failed to allocate PNG info struct");
+                goto cleanup;
+        }
+
+        /* Read the image info */
+        png_read_info(png_ptr, info_ptr);
+        png_get_IHDR(png_ptr, info_ptr, &width, &height, &bit_depth,
+                     &color_type, NULL, NULL, NULL);
+
+        /* If the image has an alpha channel we want to store it properly */
+        *alpha = FALSE;
+        if (color_type == PNG_COLOR_TYPE_RGB_ALPHA)
+                *alpha = TRUE;
+
+        /* Convert paletted images to RGB */
+        if (color_type == PNG_COLOR_TYPE_PALETTE)
+                png_set_palette_to_rgb(png_ptr);
+
+        /* Convert transparent regions to alpha channel */
+        if (png_get_valid(png_ptr, info_ptr, PNG_INFO_tRNS)) {
+                png_set_tRNS_to_alpha(png_ptr);
+                *alpha = TRUE;
+        }
+
+        /* Convert grayscale images to RGB */
+        if (color_type == PNG_COLOR_TYPE_GRAY ||
+            color_type == PNG_COLOR_TYPE_GRAY_ALPHA) {
+                png_set_expand(png_ptr);
+                png_set_gray_to_rgb(png_ptr);
+        }
+
+        /* Crop 16-bit image data to 8-bit */
+        if (bit_depth == 16)
+                png_set_strip_16(png_ptr);
+
+        /* Give opaque images an opaque alpha channel (ARGB) */
+        if (!(color_type & PNG_COLOR_MASK_ALPHA))
+                png_set_filler(png_ptr, 0xff, PNG_FILLER_BEFORE);
+
+        /* Convert 1-, 2-, and 4-bit samples to 8-bit */
+        png_set_packing(png_ptr);
+
+        /* Let libpng handle interlacing */
+        png_set_interlace_handling(png_ptr);
+
+        /* Update our image information */
+        png_read_update_info(png_ptr, info_ptr);
+        png_get_IHDR(png_ptr, info_ptr, &width, &height, &bit_depth,
+                     &color_type, NULL, NULL, NULL);
+
+        /* Sanity check */
+        if (width < 1 || height < 1) {
+                C_warning("Invalid PNG image dimensions %dx%d", width, height);
+                goto cleanup;
+        }
+        if (height > sizeof (row_pointers)) {
+                C_warning("PNG image is too tall (%d), cropping", height);
+                height = sizeof (row_pointers);
+        }
+
+        /* Allocate the SDL surface */
+        flags = SDL_HWSURFACE;
+        if (*alpha)
+                flags |= SDL_SRCALPHA;
+        surface = SDL_CreateRGBSurface(flags, width, height,
+                                       sdl_format.BitsPerPixel,
+                                       sdl_format.Rmask, sdl_format.Gmask,
+                                       sdl_format.Bmask, sdl_format.Amask);
+        SDL_SetAlpha(surface, SDL_SRCALPHA | SDL_RLEACCEL, SDL_ALPHA_OPAQUE);
+
+        /* Get image data */
+        if (SDL_LockSurface(surface) < 0) {
+                C_warning("Failed to lock surface");
+                goto cleanup;
+        }
+        for (i = 0; i < height; i++)
+                row_pointers[i] = surface->pixels + surface->pitch * i;
+        png_read_image(png_ptr, row_pointers);
+        SDL_UnlockSurface(surface);
+
+cleanup:
+        png_destroy_read_struct(&png_ptr, &info_ptr, NULL);
+        C_file_cleanup(&file);
+        return surface;
+}
+
+/******************************************************************************\
+ Loads a texture from file. If the texture has already been loaded, just ups
+ the reference count and returns the loaded surface. If the texture failed to
+ load, returns NULL.
 \******************************************************************************/
 r_texture_t *R_texture_load(const char *filename, int mipmaps)
 {
-        SDL_Surface *surface, *surface_new;
         r_texture_t *pt;
-        int found, flags;
+        int found;
 
         if (!filename || !filename[0])
                 return NULL;
@@ -394,26 +535,13 @@ r_texture_t *R_texture_load(const char *filename, int mipmaps)
                 return pt;
 
         /* Load the image file */
-        surface = IMG_Load(filename);
-        if (!surface) {
+        pt->mipmaps = mipmaps;
+        pt->surface = load_png(filename, &pt->alpha);
+        if (!pt->surface) {
                 C_warning("Failed to load texture '%s'", filename);
                 C_ref_down(&pt->ref);
                 return NULL;
         }
-
-        /* Convert to our texture format */
-        pt->alpha = surface_uses_alpha(surface);
-        flags = SDL_HWSURFACE;
-        if (pt->alpha)
-                flags |= SDL_SRCALPHA;
-        surface_new = SDL_ConvertSurface(surface, &sdl_format, flags);
-        SDL_FreeSurface(surface);
-        if (!surface_new) {
-                C_warning("Failed to convert texture '%s'", filename);
-                return NULL;
-        }
-        pt->surface = surface_new;
-        pt->mipmaps = mipmaps;
 
         /* Load the texture into OpenGL */
         glGenTextures(1, &pt->gl_name);
@@ -652,6 +780,7 @@ void R_load_assets(void)
         sdl_format.Ashift = 24;
         sdl_format.Bshift = 16;
         sdl_format.Gshift = 8;
+        sdl_format.alpha = 255;
 
         /* Initialize SDL_ttf library */
         TTF_VERSION(&compiled);

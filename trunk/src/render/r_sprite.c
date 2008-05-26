@@ -118,6 +118,8 @@ void R_sprite_render(const r_sprite_t *sprite)
 
         /* Render textured quad */
         half = C_vec2_divf(sprite->size, 2.f);
+        if (sprite->unscaled)
+                half = C_vec2_divf(half, r_pixel_scale.value.f / 2.f);
         verts[0].co = C_vec3(-half.x, half.y, 0.f);
         verts[0].uv = C_vec2(0.f, 1.f);
         verts[1].co = C_vec3(-half.x, -half.y, 0.f);

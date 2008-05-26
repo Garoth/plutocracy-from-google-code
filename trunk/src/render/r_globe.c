@@ -17,6 +17,7 @@
 
 /* Atmospheric halo parameters */
 #define FOG_DISTANCE 12.f
+#define FOG_ZOOM_SCALE 0.8f
 #define HALO_SEGMENTS 32
 #define HALO_LOW_SCALE 0.995f
 #define HALO_HIGH_SCALE 1.1f
@@ -375,7 +376,7 @@ void R_render_globe(void)
         if (fog_color.a > 0.f) {
                 float fog_start;
 
-                fog_start = r_cam_zoom / 2 + R_ZOOM_MIN +
+                fog_start = r_cam_zoom * FOG_ZOOM_SCALE +
                             (1.f - fog_color.a) * r_globe_radius / 2;
                 render_halo();
                 glEnable(GL_FOG);

@@ -111,7 +111,7 @@ static int root_event(i_widget_t *root, i_event_t event)
                 for (i = 0; i < WINDOWS_LEN; i++)
                         I_window_hanger(windows + i, &buttons[i].widget, TRUE);
 
-                /* Position limbo logo */
+                /* Size and position limbo logo */
                 limbo_logo.origin.x = r_width_2d / 2 - limbo_logo.size.x / 2;
                 limbo_logo.origin.y = r_height_2d / 2 - limbo_logo.size.y / 2;
 
@@ -302,6 +302,7 @@ void I_init(void)
 
         /* Start in limbo */
         R_sprite_init(&limbo_logo, "gui/logo.png");
+        limbo_logo.unscaled = TRUE;
         limbo_fade = 1.f;
         I_enter_limbo();
 
