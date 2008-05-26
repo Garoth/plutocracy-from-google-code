@@ -123,7 +123,7 @@
   2.2  Windows with Visual Studio
   -------------------------------
 
-    The windows\vc8 directory contains a solution and project file setup for 
+    The windows\vc8 directory contains a solution and project file setup for
     compiling Plutocracy with Visual Studio 2005. The windows directory
     includes the following SDKs and the project file is already setup to
     use them:
@@ -143,32 +143,32 @@
 
     Plutocracy can be compiled for MinGW using SCons. You will need to install
     and setup the following programs:
-    
+
       Python      http://www.python.org/download/
       SCons       http://www.scons.org/
       MinGW       http://www.mingw.org/download.shtml
-    
+
     Note that MinGW is required, MSys is not necessary. You will need to
     configure the PATH environment variable to contain the path of the
     MinGW bin directory:
-    
+
       1.) Right click on 'My Computer'
       2.) Select 'Properties'
       3.) Select 'Advanced' tab
       4.) Press 'Environment Variables'
       5.) Select 'PATH' in the top listbox
       6.) Press 'Edit'
-      7.) Enter the path to the Python, Python Scripts, and MinGW bin 
-          directories followed by a semicolon before any paths that are 
+      7.) Enter the path to the Python, Python Scripts, and MinGW bin
+          directories followed by a semicolon before any paths that are
           already there:
-      
+
             C:\Program Files\Python 2.5;
             C:\Program Files\Python 2.5\Scripts;
             C:\MSys\MinGW\bin;
 
     You should now be able to open a command prompt, navigate to the
     Plutocracy directory and compile using scons:
-    
+
       C:\plutocracy> scons
 
     For additional build targets run scons help:
@@ -217,8 +217,8 @@
       vc8/glext.h (© 2007 The Khronos Group Inc)
       gui/fonts/BLKCHCRY.TTF (public domain, Earl Allen and Doug Miles)
       gui/fonts/SF ARchery Black.ttf (© 2001 ShyFonts Type Foundry)
-     
-      
+
+
   4.3  CC License Exceptions
   --------------------------
 

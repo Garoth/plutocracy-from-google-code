@@ -68,6 +68,7 @@ void R_dealloc_textures(void);
 SDL_Surface *R_font_render(r_font_t, const char *);
 void R_free_assets(void);
 void R_load_assets(void);
+void R_realloc_textures(void);
 void R_surface_flip_v(SDL_Surface *);
 c_color_t R_surface_get(const SDL_Surface *, int x, int y);
 void R_surface_invert(SDL_Surface *, int rgb, int alpha);
@@ -85,9 +86,10 @@ r_texture_t *R_texture_clone_full(const char *file, int line, const char *func,
 r_texture_t *R_texture_load(const char *filename, int mipmaps);
 #define R_texture_ref(t) C_ref_up((c_ref_t *)(t))
 void R_texture_render(r_texture_t *, int x, int y);
+int R_texture_save(const r_texture_t *, const char *filename);
+void R_texture_screenshot(r_texture_t *, int x, int y);
 void R_texture_select(r_texture_t *);
 void R_texture_upload(const r_texture_t *);
-void R_realloc_textures(void);
 
 extern r_texture_t *r_terrain_tex;
 

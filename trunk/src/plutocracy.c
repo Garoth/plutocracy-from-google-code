@@ -48,6 +48,27 @@ static void render_status(void)
         R_text_render(&status_text);
 }
 
+/******************************************************************************\
+ Finds an available screenshot filename and saves a screenshot.
+\******************************************************************************/
+static void take_screenshot(void)
+{
+        static int num;
+        const char *filename;
+
+        for (;;) {
+                filename = C_va("%s/screenshot%04d.png", C_user_dir(), num);
+                if (!C_file_exists(filename)) {
+                        num++;
+                        break;
+                }
+                if (++num > 9999) {
+                        C_warning("Maximum number of screenshots exhausted");
+                        return;
+                }
+        }
+        R_save_screenshot(filename);
+}
 
 /******************************************************************************\
  This is the client's graphical main loop.
@@ -71,7 +92,8 @@ static void main_loop(void)
                                 if (ev.key.keysym.sym == SDLK_ESCAPE) {
                                         C_debug("Escape key pressed");
                                         return;
-                                }
+                                } else if (ev.key.keysym.sym == SDLK_F12)
+                                        take_screenshot();
                         default:
                                 I_dispatch(&ev);
                                 break;
@@ -89,7 +111,7 @@ static void main_loop(void)
                         C_error("Static memory corruption detected");
         }
 
-        /* Do NOT do your cleanup here! This code is never reached. */
+        /* Do NOT do cleanup here! This code is not guaranteed to execute. */
 }
 
 /******************************************************************************\
