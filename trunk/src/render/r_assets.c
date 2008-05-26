@@ -357,13 +357,15 @@ void R_realloc_textures(void)
 static void user_png_read(png_structp png_ptr, png_bytep data,
                           png_size_t length)
 {
-        C_file_read((c_file_t *)png_get_io_ptr(png_ptr), (char *)data, length);
+        C_file_read((c_file_t *)png_get_io_ptr(png_ptr), (char *)data, 
+                    (int)length);
 }
 
 static void user_png_write(png_structp png_ptr, png_bytep data,
                           png_size_t length)
 {
-        C_file_write((c_file_t *)png_get_io_ptr(png_ptr), (char *)data, length);
+        C_file_write((c_file_t *)png_get_io_ptr(png_ptr), (char *)data, 
+                     (int)length);
 }
 
 static void user_png_flush(png_structp png_ptr)
@@ -504,8 +506,8 @@ static SDL_Surface *load_png(const char *filename, int *alpha)
                 C_warning("Failed to lock surface");
                 goto cleanup;
         }
-        for (i = 0; i < height; i++)
-                row_pointers[i] = surface->pixels + surface->pitch * i;
+        for (i = 0; i < (int)height; i++)
+                row_pointers[i] = (char *)surface->pixels + surface->pitch * i;
         png_read_image(png_ptr, row_pointers);
         SDL_UnlockSurface(surface);
 
@@ -577,7 +579,7 @@ void R_texture_select(r_texture_t *texture)
                                 GL_LINEAR_MIPMAP_LINEAR);
                 if (texture->mipmaps > 1)
                         glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAX_LOD,
-                                        texture->mipmaps);
+                                        (GLfloat)texture->mipmaps);
         } else
                 glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,
                                 GL_LINEAR);
@@ -589,7 +591,7 @@ void R_texture_select(r_texture_t *texture)
 
                 aniso = texture->anisotropy;
                 if (aniso > r_extensions[R_EXT_ANISOTROPY])
-                        aniso = r_extensions[R_EXT_ANISOTROPY];
+                        aniso = (GLfloat)r_extensions[R_EXT_ANISOTROPY];
                 if (aniso < 1.f)
                         aniso = 1.f;
                 glTexParameterf(GL_TEXTURE_2D,

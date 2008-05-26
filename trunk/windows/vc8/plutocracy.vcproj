@@ -63,7 +63,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="SDL.lib SDLmain.lib SDL_image.lib SDL_ttf.lib OpenGL32.lib GlU32.lib user32.lib shell32.lib zdll.lib"
+				AdditionalDependencies="SDL.lib SDLmain.lib SDL_ttf.lib OpenGL32.lib GlU32.lib user32.lib shell32.lib zdll.lib libpng.lib"
 				OutputFile="$(OutDir)/plutocracy.exe"
 				LinkIncremental="2"
 				AdditionalLibraryDirectories="..\lib"
@@ -234,6 +234,10 @@
 				</FileConfiguration>
 			</File>
 			<File
+				RelativePath="..\..\src\common\c_math.c"
+				>
+			</File>
+			<File
 				RelativePath="..\..\src\common\c_memory.c"
 				>
 				<FileConfiguration
@@ -259,30 +263,6 @@
 			</File>
 			<File
 				RelativePath="..\..\src\common\c_os_windows.c"
-				>
-				<FileConfiguration
-					Name="Debug|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						UsePrecompiledHeader="1"
-						PrecompiledHeaderThrough="c_shared.h"
-						PrecompiledHeaderFile="$(IntDir)\c_shared.pch"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						UsePrecompiledHeader="1"
-						PrecompiledHeaderThrough="c_shared.h"
-						PrecompiledHeaderFile="$(IntDir)\c_shared.pch"
-					/>
-				</FileConfiguration>
-			</File>
-			<File
-				RelativePath="..\..\src\common\c_rand.c"
 				>
 				<FileConfiguration
 					Name="Debug|Win32"
@@ -694,6 +674,10 @@
 				</FileConfiguration>
 			</File>
 			<File
+				RelativePath="..\..\src\game\g_host.c"
+				>
+			</File>
+			<File
 				RelativePath="..\..\src\game\g_shared.h"
 				>
 			</File>
@@ -1026,7 +1010,7 @@
 			>
 		</File>
 		<File
-			RelativePath="..\README"
+			RelativePath="..\..\README"
 			>
 		</File>
 	</Files>

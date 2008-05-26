@@ -136,7 +136,7 @@ static int check_extension(const char *ext)
 
         if (!ext_str)
                 ext_str = glGetString(GL_EXTENSIONS);
-        return gluCheckExtension((const GLubyte *)ext, ext_str);
+        return strstr(ext_str, ext) != NULL;
 }
 
 /******************************************************************************\
