@@ -57,6 +57,7 @@ typedef struct r_sprite {
         c_vec2_t origin, size;
         c_color_t modulate;
         float angle, z;
+        int unscaled;
 } r_sprite_t;
 
 /* A point sprite in world space */

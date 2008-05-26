@@ -86,8 +86,8 @@ int C_file_read(c_file_t *file, char *buf, int len)
 }
 
 /******************************************************************************\
- Write [len] bytes from [buf] into file [file]. Returns the number of bytes
- actually written.
+ Write [len] bytes from [buf] into [file]. Returns the number of bytes actually
+ written.
 \******************************************************************************/
 int C_file_write(c_file_t *file, const char *buf, int len)
 {
@@ -96,6 +96,18 @@ int C_file_write(c_file_t *file, const char *buf, int len)
         if (file->type != C_FT_LIBC)
                 C_error("Invalid file I/O type %d", file->type);
         return (int)fwrite(buf, 1, len, (FILE *)file->stream);
+}
+
+/******************************************************************************\
+ Flush all buffered write operations into file.
+\******************************************************************************/
+void C_file_flush(c_file_t *file)
+{
+        if (!file || !file->stream || !file->type)
+                return;
+        if (file->type != C_FT_LIBC)
+                C_error("Invalid file I/O type %d", file->type);
+        fflush((FILE *)file->stream);
 }
 
 /******************************************************************************\

@@ -34,8 +34,10 @@
 
 /* SDL */
 #include <SDL.h>
-#include <SDL_image.h>
 #include <SDL_ttf.h>
+
+/* libpng */
+#include <png.h>
 
 /* zlib */
 #include <zlib.h>
@@ -228,17 +230,18 @@ typedef struct c_count {
 /* c_file.c */
 void C_file_cleanup(c_file_t *);
 int C_file_exists(const char *name);
+void C_file_flush(c_file_t *);
 int C_file_init_read(c_file_t *, const char *name);
 int C_file_init_write(c_file_t *, const char *name);
-int C_file_printf(c_file_t *file, const char *fmt, ...);
-int C_file_read(c_file_t *file, char *buf, int len);
-int C_file_vprintf(c_file_t *file, const char *fmt, va_list va);
-int C_file_write(c_file_t *file, const char *buf, int len);
+int C_file_printf(c_file_t *, const char *fmt, ...);
+int C_file_read(c_file_t *, char *buf, int len);
+int C_file_vprintf(c_file_t *, const char *fmt, va_list va);
+int C_file_write(c_file_t *, const char *buf, int len);
 void C_token_file_cleanup(c_token_file_t *);
 int C_token_file_init(c_token_file_t *, const char *filename);
 void C_token_file_init_string(c_token_file_t *, const char *string);
 const char *C_token_file_read_full(c_token_file_t *, int *out_quoted);
-void C_token_file_parse_pairs(c_token_file_t *tf, c_key_value_f callback);
+void C_token_file_parse_pairs(c_token_file_t *, c_key_value_f callback);
 #define C_token_file_read(f) C_token_file_read_full(f, NULL)
 
 /* c_log.c */
