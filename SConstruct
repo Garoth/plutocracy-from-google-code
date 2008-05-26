@@ -121,10 +121,10 @@ if windows:
                 plutocracy_env.ParseConfig('sh sdl-config --prefix=windows' +
                                                         ' --cflags --libs')
                 plutocracy_objlibs = [path('windows/lib/zdll.lib'),
-                                      path('windows/lib/png.lib'),
+                                      path('windows/lib/libpng.lib'),
                                       path('windows/lib/SDL_ttf.lib')]
         else:
-                plutocracy_env.Append(LIBS = ['zdll', 'png', 'SDL_ttf'])
+                plutocracy_env.Append(LIBS = ['zdll', 'libpng', 'SDL_ttf'])
 else:
         plutocracy_src.remove(path('src/common/c_os_windows.c'))
         plutocracy_env.Append(CPPPATH = '.')

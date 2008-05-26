@@ -17,7 +17,7 @@
 \******************************************************************************/
 void G_host_game(void)
 {
-        g_globe_seed.value.n = time(NULL);
+        g_globe_seed.value.n = (int)time(NULL);
         G_generate_globe();
 }
 
