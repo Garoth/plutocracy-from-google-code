@@ -144,6 +144,7 @@ void R_init(void);
 void R_move_cam_by(c_vec2_t);
 void R_pop_clip(void);
 void R_push_clip(void);
+void R_save_screenshot(const char *filename);
 void R_start_frame(void);
 void R_zoom_cam_by(float);
 

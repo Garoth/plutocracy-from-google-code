@@ -54,24 +54,16 @@ done:   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 }
 
 /******************************************************************************\
- Locks the back buffer, allocates a new texture, and blits to it a rectangle
- from the upper left-hand corner of the back buffer. You must manually upload
- the texture after calling this function.
+ Allocates a new texture and reads in into it a rectangle from the upper
+ left-hand corner of the back buffer. You must manually upload the texture
+ after calling this function.
 \******************************************************************************/
 static r_texture_t *save_buffer(int w, int h)
 {
-        SDL_Surface *video;
         r_texture_t *tex;
 
-        video = SDL_GetVideoSurface();
         tex = R_texture_alloc(w, h, TRUE);
-        if (SDL_LockSurface(tex->surface) < 0)
-                C_error("Failed to lock texture: %s", SDL_GetError());
-        glReadPixels(0, r_height.value.n - h, w, h, GL_RGBA, GL_UNSIGNED_BYTE,
-                     tex->surface->pixels);
-        R_surface_flip_v(tex->surface);
-        R_check_errors();
-        SDL_UnlockSurface(tex->surface);
+        R_texture_screenshot(tex, 0, 0);
         return tex;
 }
 

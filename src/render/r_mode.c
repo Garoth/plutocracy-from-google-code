@@ -43,6 +43,9 @@ static float clip_values[CLIP_STACK * 4];
 static int mode_stack;
 static r_mode_t mode_values[MODE_STACK];
 
+/* When non-empty will save a PNG screenshot */
+static char screenshot[256];
+
 /******************************************************************************\
  Updates when [r_pixel_scale] changes.
 \******************************************************************************/
@@ -132,10 +135,10 @@ static int set_video_mode(void)
 \******************************************************************************/
 static int check_extension(const char *ext)
 {
-        static const GLubyte *ext_str;
+        static const char *ext_str;
 
         if (!ext_str)
-                ext_str = glGetString(GL_EXTENSIONS);
+                ext_str = (const char *)glGetString(GL_EXTENSIONS);
         return strstr(ext_str, ext) != NULL;
 }
 
@@ -590,11 +593,37 @@ void R_start_frame(void)
 }
 
 /******************************************************************************\
+ Mark this frame for saving a screenshot when the buffer flips.
+\******************************************************************************/
+void R_save_screenshot(const char *filename)
+{
+        if (screenshot[0]) {
+                C_warning("Can't save '%s', screenshot '%s' queued",
+                          filename, screenshot);
+                return;
+        }
+        C_strncpy_buf(screenshot, filename);
+}
+
+/******************************************************************************\
  Finishes rendering the scene and flips the buffer.
 \******************************************************************************/
 void R_finish_frame(void)
 {
         R_render_tests();
+
+        /* Before flipping the buffer, save any pending screenshots */
+        if (screenshot[0]) {
+                r_texture_t *tex;
+
+                C_debug("Saving screenshot '%s'", screenshot);
+                tex = R_texture_alloc(r_width.value.n, r_height.value.n, FALSE);
+                R_texture_screenshot(tex, 0, 0);
+                R_texture_save(tex, screenshot);
+                R_texture_free(tex);
+                screenshot[0] = NUL;
+        }
+
         SDL_GL_SwapBuffers();
         R_check_errors();
 }

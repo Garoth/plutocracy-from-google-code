@@ -188,7 +188,7 @@ static void texture_cleanup(r_texture_t *pt)
         R_check_errors();
 }
 
-/******************************************************************************\
+/*****************************************************************************\
  Just allocate a texture object and cleared [width] by [height] SDL surface.
  Does not load anything or add the texture to the texture linked list. The
  texture needs to be uploaded after calling this function.
@@ -242,6 +242,27 @@ r_texture_t *R_texture_alloc_full(const char *file, int line, const char *func,
         if (c_mem_check.value.n)
                 C_trace_full(file, line, func, "Allocated texture #%d", count);
         return pt;
+}
+
+/******************************************************************************\
+ Reads in an area of the screen (current buffer) from ([x], [y]) the size of
+ the texture. You must manually upload the texture after calling this function.
+\******************************************************************************/
+void R_texture_screenshot(r_texture_t *texture, int x, int y)
+{
+        SDL_Surface *video;
+
+        video = SDL_GetVideoSurface();
+        if (SDL_LockSurface(texture->surface) < 0) {
+                C_warning("Failed to lock texture: %s", SDL_GetError());
+                return;
+        }
+        glReadPixels(x, r_height.value.n - texture->surface->h - y,
+                     texture->surface->w, texture->surface->h,
+                     GL_RGBA, GL_UNSIGNED_BYTE, texture->surface->pixels);
+        R_surface_flip_v(texture->surface);
+        R_check_errors();
+        SDL_UnlockSurface(texture->surface);
 }
 
 /******************************************************************************\
@@ -357,14 +378,14 @@ void R_realloc_textures(void)
 static void user_png_read(png_structp png_ptr, png_bytep data,
                           png_size_t length)
 {
-        C_file_read((c_file_t *)png_get_io_ptr(png_ptr), (char *)data, 
+        C_file_read((c_file_t *)png_get_io_ptr(png_ptr), (char *)data,
                     (int)length);
 }
 
 static void user_png_write(png_structp png_ptr, png_bytep data,
                           png_size_t length)
 {
-        C_file_write((c_file_t *)png_get_io_ptr(png_ptr), (char *)data, 
+        C_file_write((c_file_t *)png_get_io_ptr(png_ptr), (char *)data,
                      (int)length);
 }
 
@@ -396,7 +417,7 @@ static SDL_Surface *load_png(const char *filename, int *alpha)
 
         /* We have to read everything ourselves for libpng */
         if (!C_file_init_read(&file, filename)) {
-                C_warning("Failed to open '%s' for reading", filename);
+                C_warning("Failed to open PNG '%s' for reading", filename);
                 return NULL;
         }
 
@@ -412,7 +433,7 @@ static SDL_Surface *load_png(const char *filename, int *alpha)
         png_ptr = png_create_read_struct(PNG_LIBPNG_VER_STRING,
                                          NULL, NULL, NULL);
         if (!png_ptr) {
-                C_warning("Failed to allocate PNG struct");
+                C_warning("Failed to allocate PNG read struct");
                 return NULL;
         }
 
@@ -487,7 +508,7 @@ static SDL_Surface *load_png(const char *filename, int *alpha)
                 goto cleanup;
         }
         if (height > sizeof (row_pointers)) {
-                C_warning("PNG image is too tall (%d), cropping", height);
+                C_warning("PNG image is too tall (%dpx), cropping", height);
                 height = sizeof (row_pointers);
         }
 
@@ -507,7 +528,8 @@ static SDL_Surface *load_png(const char *filename, int *alpha)
                 goto cleanup;
         }
         for (i = 0; i < (int)height; i++)
-                row_pointers[i] = (char *)surface->pixels + surface->pitch * i;
+                row_pointers[i] = (png_bytep)surface->pixels +
+                                  surface->pitch * i;
         png_read_image(png_ptr, row_pointers);
         SDL_UnlockSurface(surface);
 
@@ -551,6 +573,87 @@ r_texture_t *R_texture_load(const char *filename, int mipmaps)
         R_check_errors();
 
         return pt;
+}
+
+/******************************************************************************\
+ Write the contents of a texture as a PNG file. Returns TRUE if a file was
+ written.
+\******************************************************************************/
+int R_texture_save(const r_texture_t *tex, const char *filename)
+{
+        png_infop info_ptr;
+        png_structp png_ptr;
+        png_bytep row_pointers[4096];
+        c_file_t file;
+        int i, height, success;
+
+        if (!tex || !tex->surface || tex->surface->w < 1 || tex->surface->h < 1)
+                return FALSE;
+        success = FALSE;
+
+        /* We have to read everything ourselves for libpng */
+        if (!C_file_init_write(&file, filename)) {
+                C_warning("Failed to open PNG '%s' for writing", filename);
+                return FALSE;
+        }
+
+        /* Allocate the PNG structures */
+        png_ptr = png_create_write_struct(PNG_LIBPNG_VER_STRING,
+                                          NULL, NULL, NULL);
+        if (!png_ptr) {
+                C_warning("Failed to allocate PNG write struct");
+                return FALSE;
+        }
+
+        /* Set write callbacks before proceeding */
+        png_set_write_fn(png_ptr, (voidp)&file, (png_rw_ptr)user_png_write,
+                         (png_flush_ptr)user_png_flush);
+
+        /* If an error occurs in libpng, it will longjmp back here */
+        if (setjmp(png_ptr->jmpbuf)) {
+		C_warning("Error saving PNG '%s'", filename);
+		goto cleanup;
+	}
+
+        /* Allocate a PNG info struct */
+        info_ptr = png_create_info_struct(png_ptr);
+        if (!info_ptr) {
+                C_warning("Failed to allocate PNG info struct");
+                goto cleanup;
+        }
+
+        /* Sanity check */
+        height = tex->surface->h;
+        if (height > 4096) {
+                C_warning("Image too tall (%dpx), cropping", height);
+                height = 4096;
+        }
+
+        /* Setup the info structure for writing our texture */
+        png_set_IHDR(png_ptr, info_ptr, tex->surface->w, height, 8,
+                     PNG_COLOR_TYPE_RGB_ALPHA, PNG_INTERLACE_NONE,
+                     PNG_COMPRESSION_TYPE_DEFAULT, PNG_FILTER_TYPE_DEFAULT);
+
+        /* Write image header */
+        png_write_info(png_ptr, info_ptr);
+
+        /* Write the image data */
+        if (SDL_LockSurface(tex->surface) < 0) {
+                C_warning("Failed to lock surface");
+                goto cleanup;
+        }
+        for (i = 0; i < (int)height; i++)
+                row_pointers[i] = (png_bytep)tex->surface->pixels +
+                                  tex->surface->pitch * i;
+        png_write_image(png_ptr, row_pointers);
+        png_write_end(png_ptr, NULL);
+        SDL_UnlockSurface(tex->surface);
+        success = TRUE;
+
+cleanup:
+        png_destroy_write_struct(&png_ptr, &info_ptr);
+        C_file_cleanup(&file);
+        return success;
 }
 
 /******************************************************************************\
