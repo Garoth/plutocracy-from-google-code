@@ -315,6 +315,7 @@ void C_test_mem_check(void);
 extern c_var_t c_mem_check;
 
 /* c_os_posix, c_os_windows.c */
+int C_mkdir(const char *path);
 const char *C_user_dir(void);
 
 /* c_math.c */

@@ -60,7 +60,7 @@ int C_file_init_read(c_file_t *file, const char *name)
 \******************************************************************************/
 int C_file_init_write(c_file_t *file, const char *name)
 {
-        file->stream = fopen(name, "w");
+        file->stream = fopen(name, "wb");
         if (!file->stream) {
                 file->type = C_FT_NONE;
                 return FALSE;

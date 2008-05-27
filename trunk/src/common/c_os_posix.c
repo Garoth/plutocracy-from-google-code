@@ -17,6 +17,21 @@
 #include <sys/stat.h>
 
 /******************************************************************************\
+ Creates directory if it does not already exist. Returns TRUE if the directory
+ exists after the call.
+\******************************************************************************/
+int C_mkdir(const char *path)
+{
+        if (!mkdir(path, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH))
+                C_debug("Created directory '%s'", path);
+        else if (errno != EEXIST) {
+                C_warning("Failed to create: %s", strerror(errno));
+                return FALSE;
+        }
+        return TRUE;
+}
+
+/******************************************************************************\
  Returns the path to the user's writeable Plutocracy directory. The directory
  is not returned with a trailing slash.
 \******************************************************************************/
@@ -28,10 +43,7 @@ const char *C_user_dir(void)
                 snprintf(user_dir, sizeof (user_dir),
                          "%s/." PACKAGE, getenv("HOME"));
                 C_debug("Home directory is '%s'", user_dir);
-                if (!mkdir(user_dir, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH))
-                        C_debug("Directory created");
-                else if (errno != EEXIST)
-                        C_warning("Failed to create: %s", strerror(errno));
+                C_mkdir(user_dir);
         }
         return user_dir;
 }

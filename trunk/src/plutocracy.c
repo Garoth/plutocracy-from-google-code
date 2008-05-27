@@ -53,20 +53,24 @@ static void render_status(void)
 \******************************************************************************/
 static void take_screenshot(void)
 {
-        static int num;
+        struct tm *local;
+        time_t msec;
+        int i;
         const char *filename;
-
-        for (;;) {
-                filename = C_va("%s/screenshot%04d.png", C_user_dir(), num);
-                if (!C_file_exists(filename)) {
-                        num++;
-                        break;
-                }
-                if (++num > 9999) {
-                        C_warning("Maximum number of screenshots exhausted");
-                        return;
-                }
-        }
+        
+        if (!C_mkdir(C_va("%s/screenshots", C_user_dir())))
+                return;                
+        time(&msec);
+        local = localtime(&msec);        
+        filename = C_va("%s/screenshots/%d-%02d-%02d--%02d%02d.png", 
+                        C_user_dir(), local->tm_year + 1900, local->tm_mon + 1,
+                        local->tm_mday, local->tm_hour, local->tm_min);
+        for (i = 0; C_file_exists(filename) && i < 26; i++)
+                filename = C_va("%s/screenshots/%d-%02d-%02d--%02d%02d%c.png", 
+                                C_user_dir(), local->tm_year + 1900, 
+                                local->tm_mon + 1, local->tm_mday, 
+                                local->tm_hour, local->tm_min,
+                                'a' + i);
         R_save_screenshot(filename);
 }
 
