@@ -64,7 +64,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalDependencies="SDL.lib SDLmain.lib SDL_ttf.lib OpenGL32.lib GlU32.lib user32.lib shell32.lib zdll.lib libpng.lib"
-				OutputFile="$(OutDir)/plutocracy.exe"
+				OutputFile="../../plutocracy.exe"
 				LinkIncremental="2"
 				AdditionalLibraryDirectories="..\lib"
 				GenerateDebugInformation="true"

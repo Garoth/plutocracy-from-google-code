@@ -489,7 +489,7 @@ static SDL_Surface *load_png(const char *filename, int *alpha)
 
         /* Give opaque images an opaque alpha channel (ARGB) */
         if (!(color_type & PNG_COLOR_MASK_ALPHA))
-                png_set_filler(png_ptr, 0xff, PNG_FILLER_BEFORE);
+                png_set_filler(png_ptr, 0xff, PNG_FILLER_AFTER);
 
         /* Convert 1-, 2-, and 4-bit samples to 8-bit */
         png_set_packing(png_ptr);
@@ -581,11 +581,16 @@ r_texture_t *R_texture_load(const char *filename, int mipmaps)
 \******************************************************************************/
 int R_texture_save(const r_texture_t *tex, const char *filename)
 {
+        struct tm *local;
+        time_t msec;
+        png_bytep row_pointers[4096];
         png_infop info_ptr;
         png_structp png_ptr;
-        png_bytep row_pointers[4096];
+        png_text text[2];
+        png_time mod_time;
         c_file_t file;
         int i, height, success;
+        char buf[64];
 
         if (!tex || !tex->surface || tex->surface->w < 1 || tex->surface->h < 1)
                 return FALSE;
@@ -633,6 +638,28 @@ int R_texture_save(const r_texture_t *tex, const char *filename)
         png_set_IHDR(png_ptr, info_ptr, tex->surface->w, height, 8,
                      PNG_COLOR_TYPE_RGB_ALPHA, PNG_INTERLACE_NONE,
                      PNG_COMPRESSION_TYPE_DEFAULT, PNG_FILTER_TYPE_DEFAULT);
+
+        /* Setup the comment text */
+        text[0].key = "Title";
+        text[0].text = PACKAGE_STRING;
+        text[0].text_length = strlen(text[0].text);
+        text[0].compression = PNG_TEXT_COMPRESSION_NONE;
+        time(&msec);
+        local = localtime(&msec);
+        text[1].key = "Creation Time";
+        text[1].text = buf;
+        text[1].text_length = strftime(buf, sizeof (buf), 
+                                       "%d %b %Y %H:%M:%S GMT", local);
+        text[1].compression = PNG_TEXT_COMPRESSION_NONE;
+        png_set_text(png_ptr, info_ptr, text, 2);
+        
+        /* Set modified time */
+        mod_time.day = local->tm_mday;
+        mod_time.hour = local->tm_hour;
+        mod_time.minute = local->tm_min;
+        mod_time.second = local->tm_sec;
+        mod_time.year = local->tm_year + 1900;
+        png_set_tIME(png_ptr, info_ptr, &mod_time);
 
         /* Write image header */
         png_write_info(png_ptr, info_ptr);

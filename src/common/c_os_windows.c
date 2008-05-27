@@ -18,6 +18,21 @@
 #include <shlobj.h>
 
 /******************************************************************************\
+ Creates directory if it does not already exist. Returns TRUE if the directory
+ exists after the call.
+\******************************************************************************/
+int C_mkdir(const char *path)
+{
+        if (!_mkdir(path))
+                C_debug("Created directory '%s'", path);
+        else if (errno != EEXIST) {
+                C_warning("Failed to create: %s", strerror(errno));
+                return FALSE;
+        }
+        return TRUE;
+}
+
+/******************************************************************************\
  Returns the path to the user's writeable Plutocracy directory.
 \******************************************************************************/
 const char *C_user_dir(void)
@@ -35,10 +50,7 @@ const char *C_user_dir(void)
                 snprintf(user_dir, sizeof (user_dir),
                          "%s/" PACKAGE, app_data);
                 C_debug("Home directory is '%s'", user_dir);
-                if (!_mkdir(user_dir))
-                        C_debug("Directory created");
-                else if (errno != EEXIST)
-                        C_warning("Failed to create: %s", strerror(errno));
+                C_mkdir(user_dir);
         }
         return user_dir;
 }

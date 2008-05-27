@@ -113,28 +113,27 @@ void R_load_test_assets(void)
 \******************************************************************************/
 static void render_test_model(void)
 {
-        float left[] = { -1.0, 0.0, 0.0, 0.0 };
-
         if (!test_model.data)
                 return;
-        glClear(GL_DEPTH_BUFFER_BIT);
         R_push_mode(R_MODE_3D);
+        r_mode_hold = TRUE;
+        glClear(GL_DEPTH_BUFFER_BIT);
 
-        /* Setup a white light to the left */
+        /* Disable some default 3D mode features */
         glMatrixMode(GL_MODELVIEW);
         glLoadIdentity();
-        glEnable(GL_LIGHT0);
-        glLightfv(GL_LIGHT0, GL_POSITION, left);
+        glColor4f(1.f, 1.f, 1.f, 1.f);
         R_check_errors();
 
         /* Render the test model */
         test_model.origin.z = -7;
         R_model_render(&test_model);
-
+        
         /* Spin the model around a bit */
         test_model.angles.x += 0.05f * c_frame_sec;
         test_model.angles.y += 0.30f * c_frame_sec;
 
+        r_mode_hold = FALSE;
         R_pop_mode();
 }
 
