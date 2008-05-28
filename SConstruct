@@ -128,7 +128,7 @@ if windows:
 else:
         plutocracy_src.remove(path('src/common/c_os_windows.c'))
         plutocracy_env.Append(CPPPATH = '.')
-        plutocracy_env.Append(LIBS = ['SDL_image', 'SDL_ttf', 'GL', 'GLU', 'z', 'png'])
+        plutocracy_env.Append(LIBS = ['SDL_ttf', 'GL', 'GLU', 'z', 'png'])
         plutocracy_env.ParseConfig('sdl-config --cflags --libs')
 plutocracy_obj = plutocracy_env.Object(plutocracy_src)
 plutocracy = plutocracy_env.Program(package, plutocracy_obj +
