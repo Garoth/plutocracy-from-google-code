@@ -10,12 +10,14 @@
  FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
 \******************************************************************************/
 
+/* Implements the generation and rendering of the world globe */
+
 #include "r_common.h"
 
 /* Maximum number of subdivision iterations */
 #define SUBDIV4_MAX 5
 
-/* Atmospheric halo parameters */
+/* Atmospheric fog and halo parameters */
 #define FOG_DISTANCE 12.f
 #define FOG_ZOOM_SCALE 0.8f
 #define HALO_SEGMENTS 32
@@ -40,7 +42,13 @@ typedef struct halo_vertex {
 } halo_vertex_t;
 #pragma pack(pop)
 
-float r_globe_radius, r_globe_light;
+/* Globe radius from the center to sea-level */
+float r_globe_radius;
+
+/* Modulates the globe material colors */
+float r_globe_light;
+
+/* Number of tiles on the globe */
 int r_tiles;
 
 static globe_vertex_t vertices[R_TILES_MAX * 3];
@@ -359,9 +367,9 @@ static GLfloat *modulate_globe_color(int i)
 }
 
 /******************************************************************************\
- Renders the entire globe.
+ Start rendering the globe.
 \******************************************************************************/
-void R_render_globe(void)
+void R_start_globe(void)
 {
         R_push_mode(R_MODE_3D);
 
@@ -401,11 +409,19 @@ void R_render_globe(void)
         glDisableClientState(GL_VERTEX_ARRAY);
         glDisableClientState(GL_NORMAL_ARRAY);
 
+        R_check_errors();
+        C_count_add(&r_count_faces, r_tiles);
+}
+
+/******************************************************************************\
+ Finishes rendering the globe.
+\******************************************************************************/
+void R_finish_globe(void)
+{
         glDisable(GL_FOG);
         R_disable_light();
         R_check_errors();
         R_pop_mode();
-        C_count_add(&r_count_faces, r_tiles);
 }
 
 /******************************************************************************\

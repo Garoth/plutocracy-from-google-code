@@ -185,18 +185,64 @@ static void grow_islands(int num, int island_size)
 }
 
 /******************************************************************************\
- Find each tile's neighbors and set fields.
+ Initialize and position a tile's model.
 \******************************************************************************/
-static void setup_tiles(void)
+static void set_tile_model(int tile, const char *filename)
 {
-        int i, j, neighbors[3];
+        R_model_cleanup(&g_tiles[tile].model);
+        R_model_init(&g_tiles[tile].model, filename);
+        g_tiles[tile].model.origin = g_tiles[tile].origin;
+        g_tiles[tile].model.normal = g_tiles[tile].normal;
+        g_tiles[tile].model.angle = g_tiles[tile].angle;
+}
 
-        C_debug("Locating tile neighbors");
+/******************************************************************************\
+ Cleanup globe assets.
+\******************************************************************************/
+void G_cleanup_globe(void)
+{
+        int i;
+
+        for (i = 0; i < r_tiles; i++)
+                R_model_cleanup(&g_tiles[i].model);
+}
+
+/******************************************************************************\
+ Update function for [g_test_tiles].
+\******************************************************************************/
+static int test_tiles_update(c_var_t *var, c_var_value_t value)
+{
+        int i;
+
+        for (i = 0; i < r_tiles; i++)
+                if (g_tiles[i].render->terrain == R_T_GROUND)
+                        set_tile_model(i, value.s);
+        return TRUE;
+}
+
+/******************************************************************************\
+ Initialize an idle globe.
+\******************************************************************************/
+void G_generate_globe(void)
+{
+        int i, j;
+
+        C_status("Generating globe");
+        C_var_unlatch(&g_globe_seed);
+        C_var_unlatch(&g_globe_subdiv4);
+        G_cleanup_globe();
+        R_generate_globe(g_globe_subdiv4.value.n);
+        C_rand_seed(g_globe_seed.value.n);
+
+        /* Locate tile neighbors */
         for (i = 0; i < r_tiles; i++) {
+                int neighbors[3];
+
                 render_tiles[i].terrain = R_T_WATER;
                 render_tiles[i].height = 0;
                 g_tiles[i].render = render_tiles + i;
                 g_tiles[i].island = -1;
+                C_zero(&g_tiles[i].model);
                 R_get_tile_neighbors(i, neighbors);
                 for (j = 0; j < 3; j++) {
                         if (neighbors[j] < 0 || neighbors[j] >= r_tiles)
@@ -205,9 +251,9 @@ static void setup_tiles(void)
                         g_tiles[i].neighbors[j] = g_tiles + neighbors[j];
                 }
         }
-        C_rand_seed(g_globe_seed.value.n);
 
-        /* Globe size affects the island parameters */
+        /* Grow the islands and set terrain. Globe size affects the island
+           growth parameters. */
         switch (g_globe_subdiv4.value.n) {
         case 5: grow_islands(75, 256);
                 break;
@@ -221,20 +267,55 @@ static void setup_tiles(void)
                 islands_len = 0;
                 return;
         }
-
         sanitise_terrain();
+
+        /* This call actually raises the tiles to match terrain height */
+        R_configure_globe(render_tiles);
+
+        /* Calculate tile vectors */
+        for (i = 0; i < r_tiles; i++) {
+                c_vec3_t coords[3], ab, ac;
+
+                R_get_tile_coords(i, coords);
+
+                /* Centroid */
+                g_tiles[i].origin = C_vec3_add(coords[0], coords[1]);
+                g_tiles[i].origin = C_vec3_add(g_tiles[i].origin, coords[2]);
+                g_tiles[i].origin = C_vec3_divf(g_tiles[i].origin, 3.f);
+
+                /* Normal */
+                ab = C_vec3_sub(coords[1], coords[0]);
+                ac = C_vec3_sub(coords[2], coords[0]);
+                g_tiles[i].normal = C_vec3_cross(ab, ac);
+
+                /* TODO: Angle */
+                g_tiles[i].angle = 0.f;
+        }
+
+        /* We can now set test tiles */
+        C_var_update(&g_test_tile, (c_var_update_f)test_tiles_update);
 }
 
 /******************************************************************************\
- Initialize an idle globe.
+ Returns TRUE if the tile is within the visible hemisphere
+ TODO: implement
 \******************************************************************************/
-void G_generate_globe(void)
+static int tile_visible(int tile)
 {
-        C_status("Generating globe");
-        C_var_unlatch(&g_globe_seed);
-        C_var_unlatch(&g_globe_subdiv4);
-        R_generate_globe(g_globe_subdiv4.value.n);
-        setup_tiles();
-        R_configure_globe(render_tiles);
+        return TRUE;
+}
+
+/******************************************************************************\
+ Render the globe.
+\******************************************************************************/
+void G_render_globe(void)
+{
+        int i;
+
+        R_start_globe();
+        for (i = 0; i < r_tiles; i++)
+                if (tile_visible(i))
+                        R_model_render(&g_tiles[i].model);
+        R_finish_globe();
 }
 

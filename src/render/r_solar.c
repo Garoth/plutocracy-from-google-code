@@ -68,7 +68,7 @@ void R_enable_light(void)
                 return;
         glEnable(GL_LIGHTING);
         glPushMatrix();
-        glRotatef(C_rad_to_deg(sky.angles.y), 0.f, 1.f, 0.f);
+        glRotatef(C_rad_to_deg(sky.angle), 0.f, 1.f, 0.f);
 
         /* Sunlight */
         sun_pos[0] = r_globe_radius + r_moon_height.value.f;
@@ -113,12 +113,12 @@ void R_render_solar(void)
         if (!r_solar.value.n)
                 return;
 
-        sky.angles.y -= c_frame_sec * C_PI / 60.f / R_MINUTES_PER_DAY;
+        sky.angle -= c_frame_sec * C_PI / 60.f / R_MINUTES_PER_DAY;
         R_model_render(&sky);
 
         /* Render the sun and moon point sprites */
-        sun.world_origin.x = cosf(-sky.angles.y) * SOLAR_DISTANCE;
-        sun.world_origin.z = sinf(-sky.angles.y) * SOLAR_DISTANCE;
+        sun.world_origin.x = cosf(-sky.angle) * SOLAR_DISTANCE;
+        sun.world_origin.z = sinf(-sky.angle) * SOLAR_DISTANCE;
         R_billboard_render(&sun);
         moon.world_origin.x = -sun.world_origin.x;
         moon.world_origin.z = -sun.world_origin.z;

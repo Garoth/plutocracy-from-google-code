@@ -12,6 +12,9 @@
 
 #include "g_common.h"
 
+/* Game testing */
+c_var_t g_test_tile;
+
 /* Globe variables */
 c_var_t g_globe_seed, g_globe_subdiv4;
 
@@ -20,6 +23,11 @@ c_var_t g_globe_seed, g_globe_subdiv4;
 \******************************************************************************/
 void G_register_variables(void)
 {
+        /* Game testing */
+        C_register_string(&g_test_tile, "g_test_tile", "",
+                          "path of tile PLUM model to test");
+
+        /* Globe variables */
         C_register_integer(&g_globe_seed, "g_globe_seed", C_rand(),
                            "seed for globe terrain generator");
         g_globe_seed.archive = FALSE;

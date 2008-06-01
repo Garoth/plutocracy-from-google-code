@@ -57,18 +57,18 @@ static void take_screenshot(void)
         time_t msec;
         int i;
         const char *filename;
-        
+
         if (!C_mkdir(C_va("%s/screenshots", C_user_dir())))
-                return;                
+                return;
         time(&msec);
-        local = localtime(&msec);        
-        filename = C_va("%s/screenshots/%d-%02d-%02d--%02d%02d.png", 
+        local = localtime(&msec);
+        filename = C_va("%s/screenshots/%d-%02d-%02d--%02d%02d.png",
                         C_user_dir(), local->tm_year + 1900, local->tm_mon + 1,
                         local->tm_mday, local->tm_hour, local->tm_min);
         for (i = 0; C_file_exists(filename) && i < 26; i++)
-                filename = C_va("%s/screenshots/%d-%02d-%02d--%02d%02d%c.png", 
-                                C_user_dir(), local->tm_year + 1900, 
-                                local->tm_mon + 1, local->tm_mday, 
+                filename = C_va("%s/screenshots/%d-%02d-%02d--%02d%02d%c.png",
+                                C_user_dir(), local->tm_year + 1900,
+                                local->tm_mon + 1, local->tm_mday,
                                 local->tm_hour, local->tm_min,
                                 'a' + i);
         R_save_screenshot(filename);
@@ -103,6 +103,7 @@ static void main_loop(void)
                                 break;
                         }
                 }
+                G_render_globe();
                 I_render();
                 render_status();
                 R_finish_frame();
@@ -165,6 +166,7 @@ static void cleanup(void)
         ran_once = TRUE;
 
         C_status("Cleaning up");
+        G_cleanup_globe();
         I_cleanup();
         R_text_cleanup(&status_text);
         R_free_test_assets();
