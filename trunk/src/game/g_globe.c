@@ -187,13 +187,13 @@ static void grow_islands(int num, int island_size)
 /******************************************************************************\
  Initialize and position a tile's model.
 \******************************************************************************/
-static void set_tile_model(int tile, const char *filename)
+static int set_tile_model(int tile, const char *filename)
 {
-        R_model_cleanup(&g_tiles[tile].model);
-        R_model_init(&g_tiles[tile].model, filename);
         g_tiles[tile].model.origin = g_tiles[tile].origin;
         g_tiles[tile].model.normal = g_tiles[tile].normal;
-        g_tiles[tile].model.angle = g_tiles[tile].angle;
+        g_tiles[tile].model.forward = g_tiles[tile].forward;
+        R_model_cleanup(&g_tiles[tile].model);
+        return R_model_init(&g_tiles[tile].model, filename);
 }
 
 /******************************************************************************\
@@ -216,7 +216,8 @@ static int test_tiles_update(c_var_t *var, c_var_value_t value)
 
         for (i = 0; i < r_tiles; i++)
                 if (g_tiles[i].render->terrain == R_T_GROUND)
-                        set_tile_model(i, value.s);
+                        if (!set_tile_model(i, value.s))
+                                return FALSE;
         return TRUE;
 }
 
@@ -283,13 +284,14 @@ void G_generate_globe(void)
                 g_tiles[i].origin = C_vec3_add(g_tiles[i].origin, coords[2]);
                 g_tiles[i].origin = C_vec3_divf(g_tiles[i].origin, 3.f);
 
-                /* Normal */
+                /* Normal Vector */
                 ab = C_vec3_sub(coords[1], coords[0]);
                 ac = C_vec3_sub(coords[2], coords[0]);
-                g_tiles[i].normal = C_vec3_cross(ab, ac);
+                g_tiles[i].normal = C_vec3_norm(C_vec3_cross(ab, ac));
 
-                /* TODO: Angle */
-                g_tiles[i].angle = 0.f;
+                /* Forward Vector */
+                g_tiles[i].forward = C_vec3_norm(C_vec3_sub(coords[0],
+                                                            g_tiles[i].origin));
         }
 
         /* We can now set test tiles */

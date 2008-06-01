@@ -16,11 +16,10 @@
 
 /* A tile on the globe */
 typedef struct g_tile {
-        c_vec3_t origin, normal;
+        c_vec3_t origin, normal, forward;
         r_model_t model;
         r_tile_t *render;
         struct g_tile *neighbors[3];
-        float angle;
         int island;
 } g_tile_t;
 

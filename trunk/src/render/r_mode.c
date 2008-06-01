@@ -32,8 +32,9 @@ static float cam_matrix[16];
 
 /* Camera rotation and zoom */
 float r_cam_zoom;
-static c_vec2_t cam_diff;
+static c_vec2_t cam_rot_diff;
 static GLfloat cam_rotation[16];
+static float cam_zoom_diff;
 
 /* Clipping stack */
 static int clip_stack;
@@ -78,10 +79,10 @@ static int set_video_mode(void)
         C_var_unlatch(&r_height);
 
         /* Ensure a minimum render size or pre-rendering will crash */
-        if (r_width.value.n < 640)
-                r_width.value.n = 640;
-        if (r_height.value.n < 480)
-                r_height.value.n = 480;
+        if (r_width.value.n < R_WIDTH_MIN)
+                r_width.value.n = R_WIDTH_MIN;
+        if (r_height.value.n < R_HEIGHT_MIN)
+                r_height.value.n = R_HEIGHT_MIN;
 
 #ifdef WINDOWS
         /* On Windows, before we change the video mode we need to flush out
@@ -185,7 +186,7 @@ static void set_gl_state(void)
         c_color_t color;
 
         glEnable(GL_TEXTURE_2D);
-        glAlphaFunc(GL_GREATER, 0);
+        glAlphaFunc(GL_GREATER, 1 / 255.f);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
         glDepthFunc(GL_LEQUAL);
         glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
@@ -311,14 +312,22 @@ static void update_camera(void)
         R_push_mode(R_MODE_3D);
         glMatrixMode(GL_MODELVIEW);
 
+        /* Update zoom */
+        r_cam_zoom += cam_zoom_diff;
+        if (r_cam_zoom < R_ZOOM_MIN)
+                r_cam_zoom = R_ZOOM_MIN;
+        if (r_cam_zoom > R_ZOOM_MAX)
+                r_cam_zoom = R_ZOOM_MAX;
+        cam_zoom_diff = 0.f;
+
         /* Apply the rotation differences from last frame to the rotation
            matrix to get view-oriented scrolling */
         glLoadMatrixf(cam_rotation);
         x_axis = C_vec3(cam_rotation[0], cam_rotation[4], cam_rotation[8]);
         y_axis = C_vec3(cam_rotation[1], cam_rotation[5], cam_rotation[9]);
-        glRotatef(C_rad_to_deg(cam_diff.y), x_axis.x, x_axis.y, x_axis.z);
-        glRotatef(C_rad_to_deg(cam_diff.x), y_axis.x, y_axis.y, y_axis.z);
-        cam_diff = C_vec2(0.f, 0.f);
+        glRotatef(C_rad_to_deg(cam_rot_diff.y), x_axis.x, x_axis.y, x_axis.z);
+        glRotatef(C_rad_to_deg(cam_rot_diff.x), y_axis.x, y_axis.y, y_axis.z);
+        cam_rot_diff = C_vec2(0.f, 0.f);
         glGetFloatv(GL_MODELVIEW_MATRIX, cam_rotation);
 
         /* Recreate the full camera matrix with the new rotation */
@@ -335,7 +344,7 @@ static void update_camera(void)
 \******************************************************************************/
 void R_move_cam_by(c_vec2_t angle)
 {
-        cam_diff = C_vec2_add(cam_diff, angle);
+        cam_rot_diff = C_vec2_add(cam_rot_diff, angle);
 }
 
 /******************************************************************************\
@@ -343,11 +352,7 @@ void R_move_cam_by(c_vec2_t angle)
 \******************************************************************************/
 void R_zoom_cam_by(float f)
 {
-        r_cam_zoom += f;
-        if (r_cam_zoom < R_ZOOM_MIN)
-                r_cam_zoom = R_ZOOM_MIN;
-        if (r_cam_zoom > R_ZOOM_MAX)
-                r_cam_zoom = R_ZOOM_MAX;
+        cam_zoom_diff += f;
 }
 
 /******************************************************************************\

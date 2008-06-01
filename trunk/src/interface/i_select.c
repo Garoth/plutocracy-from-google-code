@@ -49,10 +49,16 @@ int I_select_event(i_select_t *select, i_event_t event)
 \******************************************************************************/
 static void select_change(i_select_t *select, int index)
 {
-        if (index < 0)
-                index = select->list_len - 1;
-        if (index >= select->list_len)
+        if (index <= 0) {
                 index = 0;
+                select->left.widget.state = I_WS_DISABLED;
+        } else if (select->left.widget.state == I_WS_DISABLED)
+                select->left.widget.state = I_WS_READY;
+        if (index >= select->list_len - 1) {
+                index = select->list_len - 1;
+                select->right.widget.state = I_WS_DISABLED;
+        } else if (select->right.widget.state == I_WS_DISABLED)
+                select->right.widget.state = I_WS_READY;
         I_label_configure(&select->item, select->list[index]);
         select->index = index;
         if (select->on_change)
@@ -114,6 +120,8 @@ void I_select_init(i_select_t *select, const char *label, const char **list,
         select->left.on_click = (i_callback_f)left_arrow_clicked;
         select->left.data = select;
         select->left.widget.margin_rear = 0.5f;
+        if (initial < 1)
+                select->left.widget.state = I_WS_DISABLED;
         I_widget_add(&select->widget, &select->left.widget);
 
         /* Selected item label */
@@ -121,11 +129,16 @@ void I_select_init(i_select_t *select, const char *label, const char **list,
         select->item.color = I_COLOR_ALT;
         I_widget_add(&select->widget, &select->item.widget);
 
+        /* Find the length of the options list */
+        for (select->list_len = 0; list[select->list_len]; select->list_len++);
+
         /* Right button */
         I_button_init(&select->right, "gui/icons/arrow-right.png", NULL, FALSE);
         select->right.on_click = (i_callback_f)right_arrow_clicked;
         select->right.data = select;
         select->right.widget.margin_front = 0.5f;
+        if (initial >= select->list_len - 1)
+                select->right.widget.state = I_WS_DISABLED;
         I_widget_add(&select->widget, &select->right.widget);
 
         I_widget_inited(&select->widget);

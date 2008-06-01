@@ -648,11 +648,11 @@ int R_texture_save(const r_texture_t *tex, const char *filename)
         local = localtime(&msec);
         text[1].key = "Creation Time";
         text[1].text = buf;
-        text[1].text_length = strftime(buf, sizeof (buf), 
+        text[1].text_length = strftime(buf, sizeof (buf),
                                        "%d %b %Y %H:%M:%S GMT", local);
         text[1].compression = PNG_TEXT_COMPRESSION_NONE;
         png_set_text(png_ptr, info_ptr, text, 2);
-        
+
         /* Set modified time */
         mod_time.day = local->tm_mday;
         mod_time.hour = local->tm_hour;

@@ -138,7 +138,8 @@ int I_button_event(i_button_t *button, i_event_t event)
         case I_EV_MOUSE_UP:
                 if (button->widget.state == I_WS_ACTIVE && button->on_click) {
                         button->on_click(button);
-                        button->widget.state = I_WS_HOVER;
+                        if (button->widget.state == I_WS_ACTIVE)
+                                button->widget.state = I_WS_HOVER;
                 }
                 break;
         case I_EV_RENDER:
