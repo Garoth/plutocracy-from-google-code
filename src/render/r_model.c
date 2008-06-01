@@ -368,6 +368,8 @@ int R_model_init(r_model_t *model, const char *filename)
         model->data = model_data_load(filename);
         model->scale = 1.f;
         model->time_left = -1;
+        model->normal = C_vec3(0.f, 1.f, 0.f);
+        model->forward = C_vec3(0.f, 0.f, 1.f);
 
         /* Start playing the first animation */
         if (model->data && model->data->anims_len)
@@ -494,34 +496,48 @@ static void update_animation(r_model_t *model)
 \******************************************************************************/
 void R_model_render(r_model_t *model)
 {
+        c_vec3_t side;
         mesh_t *meshes;
+        GLfloat m[16];
         int i;
 
         if (!model || !model->data)
                 return;
         R_push_mode(R_MODE_3D);
 
-        /* Translation and scale transformations (order is important) */
-        if (model->origin.x || model->origin.y || model->origin.z)
-                glTranslatef(model->origin.x, model->origin.y, model->origin.z);
-        if (model->scale != 1.f)
-                glScalef(model->scale, model->scale, model->scale);
+        /* Calculate the right-pointing vector. The forward and normal
+           vectors had better be correct and normalized! */
+        side = C_vec3_cross(model->normal, model->forward);
 
-        /* Orient the model to face the normal */
-        if (model->normal.x || model->normal.z) {
-                float xz_mag, z_angle;
+        /* X */
+        m[0] = side.x * model->scale;
+        m[4] = model->normal.x * model->scale;
+        m[8] = model->forward.x * model->scale;
+        m[12] = model->origin.x;
 
-                xz_mag = sqrtf(model->normal.x * model->normal.x +
-                               model->normal.z * model->normal.z);
-                z_angle = atan2f(model->normal.y, xz_mag) - C_PI / 2.f;
-                glRotatef(C_rad_to_deg(z_angle), -model->normal.z / xz_mag,
-                          0.f, model->normal.x / xz_mag);
-        }
+        /* Y */
+        m[1] = side.y * model->scale;
+        m[5] = model->normal.y * model->scale;
+        m[9] = model->forward.y * model->scale;
+        m[13] = model->origin.y;
 
-        /* Model roll angle */
-        if (model->angle)
-                glRotatef(C_rad_to_deg(model->angle), 0.f, 1.f, 0.f);
+        /* Z */
+        m[2] = side.z * model->scale;
+        m[6] = model->normal.z * model->scale;
+        m[10] = model->forward.z * model->scale;
+        m[14] = model->origin.z;
 
+        /* W */
+        m[3] = 0.f;
+        m[7] = 0.f;
+        m[11] = 0.f;
+        m[15] = 1.f;
+
+        glMultMatrixf(m);
+        R_check_errors();
+
+        /* Animate meshes. Interpolating here between frames is slow, it is best
+           if models contain enough keyframes to maintain desired framerate. */
         if (model->time_left >= 0)
                 update_animation(model);
         if (model->use_lerp_meshes)
@@ -529,9 +545,11 @@ void R_model_render(r_model_t *model)
         else
                 meshes = model->data->matrix +
                          model->data->objects_len * model->last_frame;
+
+        /* Each object in the model needs a rendering call */
         for (i = 0; i < model->data->objects_len; i++)
                 mesh_render(meshes + i, model->data->objects[i].texture);
-        R_check_errors();
+
         R_pop_mode();
 }
 

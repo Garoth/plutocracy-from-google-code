@@ -14,8 +14,21 @@
 
 #include "c_shared.h"
 
+/* Number of milliseconds spent sleeping this frame */
 c_count_t c_throttled;
-int c_time_msec, c_frame_msec, c_frame, c_throttle_msec;
+
+/* The minimum duration of frame in milliseconds calculated from [c_max_fps] by
+   the [C_throttle_fps()] function */
+int c_throttle_msec;
+
+/* Duration of time since the program started */
+int c_time_msec;
+
+/* The current frame number */
+int c_frame;
+
+/* Duration of the last frame */
+int c_frame_msec;
 float c_frame_sec;
 
 /******************************************************************************\

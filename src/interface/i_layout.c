@@ -302,7 +302,6 @@ void I_init(void)
 
         /* Start in limbo */
         R_sprite_init(&limbo_logo, "gui/logo.png");
-        limbo_logo.unscaled = TRUE;
         limbo_fade = 1.f;
         I_enter_limbo();
 

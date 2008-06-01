@@ -31,7 +31,7 @@ static const char *list_bool[] = {"No", "Yes", NULL},
 static i_label_t label;
 static i_button_t apply_button;
 static i_select_t options[OPTIONS];
-static SDL_Rect **video_modes;
+static SDL_Rect *video_modes[VIDEO_MODES];
 static int orig_indices[OPTIONS];
 
 /******************************************************************************\
@@ -44,7 +44,7 @@ static void apply_button_clicked(i_button_t *button)
         for (i = 0; i < OPTIONS_APPLY; i++)
                 orig_indices[i] = options[i].index;
         r_restart = TRUE;
-        if (!video_modes)
+        if (!video_modes[0])
                 return;
         i = orig_indices[0];
         if (r_width.value.n != video_modes[i]->w) {
@@ -111,31 +111,37 @@ static int closest_index(float value, const char **list)
 \******************************************************************************/
 static void populate_modes(void)
 {
-        int i;
+        SDL_Rect **sdl_modes;
+        int i, j;
 
-        video_modes = SDL_ListModes(NULL, SDL_OPENGL | SDL_GL_DOUBLEBUFFER |
-                                          SDL_HWPALETTE | SDL_HWSURFACE |
-                                          SDL_FULLSCREEN);
+        sdl_modes = SDL_ListModes(NULL, SDL_OPENGL | SDL_GL_DOUBLEBUFFER |
+                                        SDL_HWPALETTE | SDL_HWSURFACE |
+                                        SDL_FULLSCREEN);
 
         /* FIXME: SDL_ListModes() won't always return a list */
-        if (!video_modes || video_modes == (void *)-1) {
+        if (!sdl_modes || sdl_modes == (void *)-1) {
                 C_warning("SDL_ListModes() did not return a list of modes");
                 list_modes[0] = NULL;
                 orig_indices[0] = 0;
-                video_modes = NULL;
+                video_modes[0] = NULL;
                 return;
         }
 
         orig_indices[0] = 0;
-        for (i = 0; video_modes[i] && i < VIDEO_MODES - 1; i++) {
-                if (r_width.latched.n == video_modes[i]->w &&
-                    r_height.latched.n == video_modes[i]->h)
+        for (i = j = 0; sdl_modes[i] && i < VIDEO_MODES - 1; i++) {
+                if (sdl_modes[i]->w < R_WIDTH_MIN ||
+                    sdl_modes[i]->h < R_HEIGHT_MIN)
+                        continue;
+                if (r_width.latched.n == sdl_modes[i]->w &&
+                    r_height.latched.n == sdl_modes[i]->h)
                         orig_indices[0] = i;
-                list_modes[i] = (char *)(mode_strings + i);
-                snprintf(mode_strings[i], sizeof (mode_strings[i]),
-                         "%dx%d", video_modes[i]->w, video_modes[i]->h);
+                video_modes[j] = sdl_modes[i];
+                list_modes[j] = (char *)(mode_strings + j);
+                snprintf(mode_strings[j], sizeof (mode_strings[j]),
+                         "%dx%d", video_modes[j]->w, video_modes[j]->h);
+                j++;
         }
-        list_modes[i] = NULL;
+        list_modes[j] = NULL;
 }
 
 /******************************************************************************\

@@ -38,15 +38,19 @@
    are no synchronization errors between players */
 #define R_MINUTES_PER_DAY 5
 
+/* Because of prerendering back buffer usage, we need a minimum resolution */
+#define R_WIDTH_MIN 256
+#define R_HEIGHT_MIN 256
+
 /* Opaque texture object */
 typedef struct r_texture r_texture_t;
 
 /* Model instance type */
 typedef struct r_model {
-        c_vec3_t origin, normal;
+        c_vec3_t origin, normal, forward;
         struct r_mesh *lerp_meshes;
         struct r_model_data *data;
-        float scale, angle;
+        float scale;
         int anim, frame, last_frame, last_frame_time, time_left,
             use_lerp_meshes;
 } r_model_t;

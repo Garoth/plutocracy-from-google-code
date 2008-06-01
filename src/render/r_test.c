@@ -129,9 +129,6 @@ static void render_test_model(void)
         test_model.origin.z = -7;
         R_model_render(&test_model);
 
-        /* Spin the model around a bit */
-        test_model.angle += 0.05f * c_frame_sec;
-
         r_mode_hold = FALSE;
         R_pop_mode();
 }
