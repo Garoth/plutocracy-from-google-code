@@ -163,10 +163,8 @@ int C_token_file_init(c_token_file_t *tf, const char *filename)
         tf->pos[1] = tf->swap = ' ';
         tf->pos[2] = NUL;
         tf->eof = FALSE;
-        if (!C_file_init_read(&tf->file, filename)) {
-                C_warning("Failed to open token file '%s'", filename);
+        if (!C_file_init_read(&tf->file, filename))
                 return FALSE;
-        }
         C_debug("Opened token file '%s'", filename);
         return TRUE;
 }

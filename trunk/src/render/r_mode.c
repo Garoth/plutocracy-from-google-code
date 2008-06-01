@@ -589,7 +589,6 @@ void R_start_frame(void)
 
         update_camera();
         R_render_solar();
-        R_render_globe();
 }
 
 /******************************************************************************\

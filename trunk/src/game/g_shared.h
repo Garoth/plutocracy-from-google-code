@@ -11,7 +11,9 @@
 \******************************************************************************/
 
 /* g_globe.c */
+void G_cleanup_globe(void);
 void G_generate_globe(void);
+void G_render_globe(void);
 
 /* g_host.c */
 void G_host_game(void);

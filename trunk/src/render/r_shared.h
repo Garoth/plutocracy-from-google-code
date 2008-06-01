@@ -43,10 +43,10 @@ typedef struct r_texture r_texture_t;
 
 /* Model instance type */
 typedef struct r_model {
-        c_vec3_t origin, angles;
+        c_vec3_t origin, normal;
         struct r_mesh *lerp_meshes;
         struct r_model_data *data;
-        float scale;
+        float scale, angle;
         int anim, frame, last_frame, last_frame_time, time_left,
             use_lerp_meshes;
 } r_model_t;
@@ -121,12 +121,14 @@ void R_load_fonts(void);
 
 /* r_globe.c */
 void R_configure_globe(r_tile_t *array);
+void R_finish_globe(void);
 void R_generate_globe(int subdiv4);
 void R_get_tile_coords(int index, c_vec3_t verts[3]);
 float R_get_tile_latitude(int tile);
 void R_get_tile_neighbors(int tile, int neighbors[3]);
 int R_get_tile_region(int tile, int neighbors[12]);
 float R_screen_to_globe(int pixels);
+void R_start_globe(void);
 
 extern float r_globe_light;
 extern int r_tiles;

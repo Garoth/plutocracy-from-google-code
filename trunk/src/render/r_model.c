@@ -158,6 +158,8 @@ static model_data_t *model_data_load(const char *filename)
         const char *token;
         int found, quoted, object, frame, verts_parsed;
 
+        if (!filename || !filename[0])
+                return NULL;
         data = C_ref_alloc(sizeof (*data), &data_root,
                            (c_ref_cleanup_f)model_data_cleanup,
                            filename, &found);
@@ -498,16 +500,28 @@ void R_model_render(r_model_t *model)
         if (!model || !model->data)
                 return;
         R_push_mode(R_MODE_3D);
+
+        /* Translation and scale transformations (order is important) */
         if (model->origin.x || model->origin.y || model->origin.z)
                 glTranslatef(model->origin.x, model->origin.y, model->origin.z);
         if (model->scale != 1.f)
                 glScalef(model->scale, model->scale, model->scale);
-        if (model->angles.x)
-                glRotatef(C_rad_to_deg(model->angles.x), 1.0, 0.0, 0.0);
-        if (model->angles.y)
-                glRotatef(C_rad_to_deg(model->angles.y), 0.0, 1.0, 0.0);
-        if (model->angles.z)
-                glRotatef(C_rad_to_deg(model->angles.z), 0.0, 0.0, 1.0);
+
+        /* Orient the model to face the normal */
+        if (model->normal.x || model->normal.z) {
+                float xz_mag, z_angle;
+
+                xz_mag = sqrtf(model->normal.x * model->normal.x +
+                               model->normal.z * model->normal.z);
+                z_angle = atan2f(model->normal.y, xz_mag) - C_PI / 2.f;
+                glRotatef(C_rad_to_deg(z_angle), -model->normal.z / xz_mag,
+                          0.f, model->normal.x / xz_mag);
+        }
+
+        /* Model roll angle */
+        if (model->angle)
+                glRotatef(C_rad_to_deg(model->angle), 0.f, 1.f, 0.f);
+
         if (model->time_left >= 0)
                 update_animation(model);
         if (model->use_lerp_meshes)

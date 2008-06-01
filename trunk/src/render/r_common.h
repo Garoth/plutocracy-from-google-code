@@ -94,8 +94,6 @@ void R_texture_upload(const r_texture_t *);
 extern r_texture_t *r_terrain_tex;
 
 /* r_globe.c */
-void R_render_globe(void);
-
 extern float r_globe_radius;
 
 /* r_mode.c */

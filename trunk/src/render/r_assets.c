@@ -10,7 +10,7 @@
  FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
 \******************************************************************************/
 
-/* Implements model, mesh, and texture loading and management. Textures are
+/* Implements texture loading, manipulation, and management. Textures are
    stored in a linked list and should only be accessed during loading time so
    efficiency here is not important. */
 
