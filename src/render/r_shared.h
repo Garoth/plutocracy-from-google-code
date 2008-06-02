@@ -155,6 +155,7 @@ void R_start_frame(void);
 void R_zoom_cam_by(float);
 
 extern c_count_t r_count_faces;
+extern c_vec3_t r_cam_normal;
 extern float r_cam_zoom;
 extern int r_width_2d, r_height_2d, r_restart;
 

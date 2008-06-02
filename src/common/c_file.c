@@ -191,7 +191,6 @@ void C_token_file_cleanup(c_token_file_t *tf)
         if (!tf || !tf->file.stream || !tf->file.type)
                 return;
         C_file_cleanup(&tf->file);
-        C_debug("Closed token file '%s'", tf->filename);
 }
 
 /******************************************************************************\
