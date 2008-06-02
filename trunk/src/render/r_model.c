@@ -76,13 +76,13 @@ static void mesh_render(mesh_t *mesh, r_texture_t *texture)
 
         /* Use the Vertex Buffer Object if available */
         if (mesh->verts_vbo && mesh->indices_vbo) {
-                glBindBuffer(GL_ARRAY_BUFFER, mesh->verts_vbo);
-                glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh->indices_vbo);
+                r_ext.glBindBuffer(GL_ARRAY_BUFFER, mesh->verts_vbo);
+                r_ext.glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh->indices_vbo);
                 glInterleavedArrays(R_VERTEX3_FORMAT, 0, NULL);
                 glDrawElements(GL_TRIANGLES, mesh->indices_len,
                                GL_UNSIGNED_SHORT, NULL);
-                glBindBuffer(GL_ARRAY_BUFFER, 0);
-                glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+                r_ext.glBindBuffer(GL_ARRAY_BUFFER, 0);
+                r_ext.glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
         }
 
         /* Rendering by uploading the data every time is slower */
@@ -108,9 +108,9 @@ static void mesh_cleanup(mesh_t *mesh)
         C_free(mesh->verts);
         C_free(mesh->indices);
         if (mesh->verts_vbo)
-                glDeleteBuffers(1, &mesh->verts_vbo);
+                r_ext.glDeleteBuffers(1, &mesh->verts_vbo);
         if (mesh->indices_vbo)
-                glDeleteBuffers(1, &mesh->indices_vbo);
+                r_ext.glDeleteBuffers(1, &mesh->indices_vbo);
 }
 
 /******************************************************************************\
@@ -145,23 +145,23 @@ static int finish_object(model_data_t *data, int frame, int object,
         }
 
         /* If Vertex Buffer Objects are available, upload the data now */
-        if (r_extensions[R_EXT_VERTEX_BUFFER]) {
+        if (r_ext.vertex_buffers) {
 
                 /* First upload the vertex data */
-                glGenBuffers(1, &mesh->verts_vbo);
-                glBindBuffer(GL_ARRAY_BUFFER, mesh->verts_vbo);
-                glBufferData(GL_ARRAY_BUFFER,
-                             mesh->verts_len * sizeof (*mesh->verts),
-                             mesh->verts, GL_STATIC_DRAW);
-                glBindBuffer(GL_ARRAY_BUFFER, 0);
+                r_ext.glGenBuffers(1, &mesh->verts_vbo);
+                r_ext.glBindBuffer(GL_ARRAY_BUFFER, mesh->verts_vbo);
+                r_ext.glBufferData(GL_ARRAY_BUFFER,
+                                   mesh->verts_len * sizeof (*mesh->verts),
+                                   mesh->verts, GL_STATIC_DRAW);
+                r_ext.glBindBuffer(GL_ARRAY_BUFFER, 0);
 
                 /* Now upload the indices */
-                glGenBuffers(1, &mesh->indices_vbo);
-                glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh->indices_vbo);
-                glBufferData(GL_ELEMENT_ARRAY_BUFFER,
-                             mesh->indices_len * sizeof (*mesh->indices),
-                             mesh->indices, GL_STATIC_DRAW);
-                glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+                r_ext.glGenBuffers(1, &mesh->indices_vbo);
+                r_ext.glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh->indices_vbo);
+                r_ext.glBufferData(GL_ELEMENT_ARRAY_BUFFER,
+                                   mesh->indices_len * sizeof (*mesh->indices),
+                                   mesh->indices, GL_STATIC_DRAW);
+                r_ext.glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 
                 R_check_errors();
         } else {

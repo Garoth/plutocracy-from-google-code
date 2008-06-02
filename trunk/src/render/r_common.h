@@ -64,6 +64,17 @@ typedef enum {
         R_MODE_3D,
 } r_mode_t;
 
+/* Structure to wrap OpenGL extensions */
+typedef struct r_ext {
+        PFNGLBINDBUFFERPROC glBindBuffer;
+        PFNGLBUFFERDATAPROC glBufferData;
+        PFNGLDELETEBUFFERSPROC glDeleteBuffers;
+        PFNGLGENBUFFERSPROC glGenBuffers;
+        GLfloat anisotropy;
+        GLint multitexture;
+        int point_sprites, vertex_buffers;
+} r_ext_t;
+
 /* r_assets.c */
 void R_dealloc_textures(void);
 SDL_Surface *R_font_render(r_font_t, const char *);
@@ -98,20 +109,18 @@ extern r_texture_t *r_terrain_tex;
 extern float r_globe_radius;
 
 /* r_mode.c */
-extern int r_mode_hold;
-
-/* r_prerender.c */
-void R_prerender(void);
-
-/* r_render.c */
 #define R_check_errors() R_check_errors_full(__FILE__, __LINE__, __func__);
 void R_check_errors_full(const char *file, int line, const char *func);
 void R_pop_mode(void);
 void R_push_mode(r_mode_t);
 void R_set_mode(r_mode_t);
 
+extern r_ext_t r_ext;
 extern r_mode_t r_mode;
-extern int r_extensions[R_EXTENSIONS];
+extern int r_mode_hold;
+
+/* r_prerender.c */
+void R_prerender(void);
 
 /* r_solar.c */
 void R_cleanup_solar(void);

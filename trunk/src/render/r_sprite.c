@@ -465,7 +465,7 @@ void R_billboard_render(r_billboard_t *bb)
 
         /* If the point sprite extension is available we can use it instead
            of doing all of the math on the CPU */
-        if (r_extensions[R_EXT_POINT_SPRITE]) {
+        if (r_ext.point_sprites) {
                 R_push_mode(R_MODE_3D);
                 R_texture_select(bb->sprite.texture);
                 glPointSize(bb->size);
