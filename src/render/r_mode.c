@@ -24,6 +24,9 @@ r_mode_t r_mode;
 c_color_t clear_color;
 int r_width_2d, r_height_2d, r_mode_hold, r_restart;
 
+/* Structure to wrap OpenGL extensions */
+r_ext_t r_ext;
+
 /* Restart the video system */
 int r_restart;
 static int init_frame;
@@ -152,47 +155,50 @@ static int check_extension(const char *ext)
 }
 
 /******************************************************************************\
- Outputs debug strings and checks supported extensions. The supported
- extensions array (r_extensions) is filled out accordingly.
+ Outputs debug strings and checks supported extensions. Fills out [r_ext].
 \******************************************************************************/
 static void check_gl_extensions(void)
 {
-        GLint gl_int;
-
-        C_zero(r_extensions);
+        C_zero(&r_ext);
 
         /* Multitexture */
-        glGetIntegerv(GL_MAX_TEXTURE_UNITS_ARB, &gl_int);
-        r_extensions[R_EXT_MULTITEXTURE] = gl_int;
-        C_debug("%d texture units supported", gl_int);
+        glGetIntegerv(GL_MAX_TEXTURE_UNITS_ARB, &r_ext.multitexture);
+        C_debug("%d texture units supported", r_ext.multitexture);
 
         /* Point sprites */
         if (check_extension("GL_ARB_point_sprite")) {
-                r_extensions[R_EXT_POINT_SPRITE] = TRUE;
+                r_ext.point_sprites = TRUE;
                 C_debug("Hardware point sprites supported");
         } else {
-                r_extensions[R_EXT_POINT_SPRITE] = FALSE;
+                r_ext.point_sprites = FALSE;
                 C_warning("Using software point sprites");
         }
 
         /* Check for anisotropic filtering */
         if (check_extension("GL_EXT_texture_filter_anisotropic")) {
-                glGetIntegerv(GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT, &gl_int);
-                r_extensions[R_EXT_ANISOTROPY] = gl_int;
-                C_debug("%d anisotropy levels supported", gl_int);
-        } else {
-                r_extensions[R_EXT_ANISOTROPY] = 0;
+                glGetFloatv(GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT, 
+                            &r_ext.anisotropy);
+                C_debug("%g anisotropy levels supported", r_ext.anisotropy);
+        } else
                 C_warning("Anisotropic filtering not supported");
-        }
 
         /* Check for vertex buffer objects */
         if (check_extension("GL_ARB_vertex_buffer_object")) {
-                r_extensions[R_EXT_VERTEX_BUFFER] = TRUE;
-                C_debug("Vertex buffer objects supported");
-        } else {
-                r_extensions[R_EXT_VERTEX_BUFFER] = FALSE;
+                r_ext.glGenBuffers = SDL_GL_GetProcAddress("glGenBuffers");
+                r_ext.glDeleteBuffers = 
+                        SDL_GL_GetProcAddress("glDeleteBuffers");
+                r_ext.glBindBuffer = SDL_GL_GetProcAddress("glBindBuffer");
+                r_ext.glBufferData = SDL_GL_GetProcAddress("glBufferData");
+                if (!r_ext.glGenBuffers || !r_ext.glDeleteBuffers || 
+                    !r_ext.glBindBuffer || !r_ext.glBufferData) {
+                        C_warning("Vertex buffer extension supported, but "
+                                  "failed to get function addresses");
+                } else {
+                        r_ext.vertex_buffers = TRUE;
+                        C_debug("Vertex buffer objects supported");
+                }
+        } else
                 C_warning("Vertex buffer objects not supported");
-        }
 }
 
 /******************************************************************************\
@@ -241,7 +247,7 @@ static void set_gl_state(void)
         glLightModelfv(GL_LIGHT_MODEL_AMBIENT, C_ARRAYF(color));
 
         /* Point sprites */
-        if (r_extensions[R_EXT_POINT_SPRITE]) {
+        if (r_ext.point_sprites) {
                 glEnable(GL_POINT_SPRITE);
                 glTexEnvi(GL_POINT_SPRITE, GL_COORD_REPLACE, GL_TRUE);
         }

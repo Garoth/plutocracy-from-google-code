@@ -311,7 +311,7 @@ void R_generate_globe(int subdiv4)
 
         /* Delete any old vertex buffers */
         if (vertices_vbo) {
-                glDeleteBuffers(1, &vertices_vbo);
+                r_ext.glDeleteBuffers(1, &vertices_vbo);
                 vertices_vbo = 0;
         }
 }
@@ -398,11 +398,11 @@ void R_start_globe(void)
         R_texture_select(r_terrain_tex);
 
         /* Use the Vertex Buffer Object if available */
-        if (r_extensions[R_EXT_VERTEX_BUFFER] && vertices_vbo) {
-                glBindBuffer(GL_ARRAY_BUFFER, vertices_vbo);
+        if (vertices_vbo) {
+                r_ext.glBindBuffer(GL_ARRAY_BUFFER, vertices_vbo);
                 glInterleavedArrays(GL_T2F_N3F_V3F, sizeof (*vertices), NULL);
                 glDrawArrays(GL_TRIANGLES, 0, 3 * r_tiles);
-                glBindBuffer(GL_ARRAY_BUFFER, 0);
+                r_ext.glBindBuffer(GL_ARRAY_BUFFER, 0);
         }
 
         /* Rendering by uploading the data every time is slower */
@@ -718,14 +718,15 @@ void R_configure_globe(r_tile_t *tiles)
         r_globe_smooth.update = globe_smooth_update;
 
         /* If Vertex Buffer Objects are supported, upload the vertices now */
-        if (r_extensions[R_EXT_VERTEX_BUFFER]) {
+        if (r_ext.vertex_buffers) {
                 if (vertices_vbo)
-                        glDeleteBuffers(1, &vertices_vbo);
-                glGenBuffers(1, &vertices_vbo);
-                glBindBuffer(GL_ARRAY_BUFFER, vertices_vbo);
-                glBufferData(GL_ARRAY_BUFFER, r_tiles * 3 * sizeof (*vertices),
-                             vertices, GL_STATIC_DRAW);
-                glBindBuffer(GL_ARRAY_BUFFER, 0);
+                        r_ext.glDeleteBuffers(1, &vertices_vbo);
+                r_ext.glGenBuffers(1, &vertices_vbo);
+                r_ext.glBindBuffer(GL_ARRAY_BUFFER, vertices_vbo);
+                r_ext.glBufferData(GL_ARRAY_BUFFER,
+                                   r_tiles * 3 * sizeof (*vertices),
+                                   vertices, GL_STATIC_DRAW);
+                r_ext.glBindBuffer(GL_ARRAY_BUFFER, 0);
         }
 }
 
