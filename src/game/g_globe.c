@@ -217,10 +217,12 @@ static int test_tiles_update(c_var_t *var, c_var_value_t value)
         int i;
 
         for (i = 0; i < r_tiles; i++)
-                if (g_tiles[i].render->terrain == R_T_GROUND &&
+                if (g_tiles[i].render->terrain != R_T_WATER &&
+                    g_tiles[i].render->terrain != R_T_SHALLOW &&
                     !set_tile_model(i, value.s)) {
-                        C_debug("Failed to set test tile");
-                        return FALSE;
+                        for (; i < r_tiles; i++)
+                                R_model_cleanup(&g_tiles[i].model);
+                        return TRUE;
                 }
         return TRUE;
 }
@@ -304,6 +306,7 @@ void G_generate_globe(void)
 
 /******************************************************************************\
  Returns TRUE if the tile is within the visible hemisphere
+ TODO: This function is overly generous
 \******************************************************************************/
 static int tile_visible(int tile)
 {

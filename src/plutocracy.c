@@ -30,15 +30,22 @@ static void render_status(void)
 {
         if (c_show_fps.value.n <= 0)
                 return;
-        if (C_count_poll(&c_throttled, 5000)) {
+        if (C_count_poll(&c_throttled, 2000)) {
                 char *str;
 
-                str = C_va(PACKAGE_STRING
-                           ": %.0f fps, (%.0f%% throttled), %.0f faces/frame",
-                           C_count_fps(&c_throttled),
-                           100.f * C_count_per_frame(&c_throttled) /
-                                   c_throttle_msec,
-                           C_count_per_frame(&r_count_faces));
+                if (c_throttle_msec > 0)
+                        str = C_va(PACKAGE_STRING
+                                   ": %.0f fps (%.0f%% throttled), "
+                                   "%.0f faces/frame",
+                                   C_count_fps(&c_throttled),
+                                   100.f * C_count_per_frame(&c_throttled) /
+                                           c_throttle_msec,
+                                   C_count_per_frame(&r_count_faces));
+                else
+                        str = C_va(PACKAGE_STRING
+                                   ": %.0f fps, %.0f faces/frame",
+                                   C_count_fps(&c_throttled),
+                                   C_count_per_frame(&r_count_faces));
                 R_text_configure(&status_text, R_FONT_CONSOLE,
                                  0, 1.f, FALSE, str);
                 status_text.sprite.origin = C_vec2(4.f, 4.f);

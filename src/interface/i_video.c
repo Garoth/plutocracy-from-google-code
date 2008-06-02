@@ -35,6 +35,21 @@ static SDL_Rect *video_modes[VIDEO_MODES];
 static int orig_indices[OPTIONS];
 
 /******************************************************************************\
+ Set the apply button's state depending on if options have changed or not.
+\******************************************************************************/
+static void set_apply_state(void)
+{
+        int i;
+
+        for (i = 0; i < OPTIONS_APPLY; i++)
+                if (options[i].index != orig_indices[i]) {
+                        apply_button.widget.state = I_WS_READY;
+                        return;
+                }
+        apply_button.widget.state = I_WS_DISABLED;
+}
+
+/******************************************************************************\
  Apply modified settings.
 \******************************************************************************/
 static void apply_button_clicked(i_button_t *button)
@@ -50,26 +65,14 @@ static void apply_button_clicked(i_button_t *button)
         if (r_width.value.n != video_modes[i]->w) {
                 r_width.latched.n = video_modes[i]->w;
                 r_width.has_latched = TRUE;
-        }
+        } else
+                r_width.has_latched = FALSE;
         if (r_height.value.n != video_modes[i]->h) {
                 r_height.latched.n = video_modes[i]->h;
                 r_height.has_latched = TRUE;
-        }
-}
-
-/******************************************************************************\
- Set the apply button's state depending on if options have changed or not.
-\******************************************************************************/
-static void set_apply_state(void)
-{
-        int i;
-
-        for (i = 0; i < OPTIONS_APPLY; i++)
-                if (options[i].index != orig_indices[i]) {
-                        apply_button.widget.state = I_WS_READY;
-                        return;
-                }
-        apply_button.widget.state = I_WS_DISABLED;
+        } else
+                r_height.has_latched = FALSE;
+        set_apply_state();
 }
 
 /******************************************************************************\

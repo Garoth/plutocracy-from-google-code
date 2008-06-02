@@ -38,14 +38,19 @@ void R_register_variables(void)
 {
         /* Video parameters */
         C_register_integer(&r_width, "r_width", 1024, "window width in pixels");
+        r_width.unsafe = TRUE;
         C_register_integer(&r_height, "r_height", 768,
                            "window height in pixels");
+        r_height.unsafe = TRUE;
         C_register_integer(&r_color_bits, "r_color_bits", 32,
                            "texture color depth: 16 or 32 bits");
+        r_color_bits.unsafe = TRUE;
         C_register_integer(&r_depth_bits, "r_depth_bits", 16,
                            "depth buffer bits: 16 or 24 bits");
+        r_depth_bits.unsafe = TRUE;
         C_register_integer(&r_windowed, "r_windowed", TRUE,
                            "1 = windowed mode, 0 = fullscreen");
+        r_windowed.unsafe = TRUE;
         C_register_integer(&r_vsync, "r_vsync", TRUE, "enable vertical sync");
         C_register_float(&r_gamma, "r_gamma", 1, "brightness gamma correction");
         C_register_float(&r_pixel_scale, "r_pixel_scale", 1,

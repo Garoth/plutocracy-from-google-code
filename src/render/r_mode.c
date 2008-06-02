@@ -24,6 +24,10 @@ r_mode_t r_mode;
 c_color_t clear_color;
 int r_width_2d, r_height_2d, r_mode_hold, r_restart;
 
+/* Restart the video system */
+int r_restart;
+static int init_frame;
+
 /* Supported extensions */
 int r_extensions[R_EXTENSIONS];
 
@@ -47,7 +51,7 @@ static float clip_values[CLIP_STACK * 4];
 static int mode_stack;
 static r_mode_t mode_values[MODE_STACK];
 
-/* When non-empty will save a PNG screenshot */
+/* When non-empty will save a PNG screenshot to this filename */
 static char screenshot[256];
 
 /******************************************************************************\
@@ -136,6 +140,7 @@ static int set_video_mode(void)
 
 /******************************************************************************\
  Checks the extension string to see if an extension is listed.
+ FIXME: Will return false-positive for partial match
 \******************************************************************************/
 static int check_extension(const char *ext)
 {
@@ -178,6 +183,15 @@ static void check_gl_extensions(void)
         } else {
                 r_extensions[R_EXT_ANISOTROPY] = 0;
                 C_warning("Anisotropic filtering not supported");
+        }
+
+        /* Check for vertex buffer objects */
+        if (check_extension("GL_ARB_vertex_buffer_object")) {
+                r_extensions[R_EXT_VERTEX_BUFFER] = TRUE;
+                C_debug("Vertex buffer objects supported");
+        } else {
+                r_extensions[R_EXT_VERTEX_BUFFER] = FALSE;
+                C_warning("Vertex buffer objects not supported");
         }
 }
 
@@ -256,15 +270,22 @@ static int clear_update(c_var_t *var, c_var_value_t value)
 /******************************************************************************\
  Creates the client window. Initializes OpenGL settings such view matrices,
  culling, and depth testing. Returns TRUE on success.
-
- TODO: Try backup "safe" video modes when user requested mode fails.
 \******************************************************************************/
 void R_init(void)
 {
         C_status("Opening window");
         C_count_reset(&r_count_faces);
-        if (!set_video_mode())
-                C_error("No available video modes");
+
+        /* If we fail to set the video mode, our only hope is to reset the
+           "unsafe" variables that the user might have messed up and try
+           setting the video mode again */
+        if (!set_video_mode()) {
+                C_reset_unsafe_vars();
+                if (!set_video_mode())
+                        C_error("Failed to set video mode");
+                C_warning("Video mode set after resetting unsafe variables");
+        }
+
         check_gl_extensions();
         set_gl_state();
         r_cam_zoom = R_ZOOM_MAX;
@@ -580,7 +601,6 @@ void R_pop_mode(void)
 
 /******************************************************************************\
  Clears the buffer and starts rendering the scene.
- TODO: If r_color_bits changed, re-upload textures to OpenGL.
 \******************************************************************************/
 void R_start_frame(void)
 {
@@ -589,6 +609,9 @@ void R_start_frame(void)
         /* Video can only be restarted at the start of the frame */
         if (r_restart) {
                 set_video_mode();
+                if (r_color_bits.changed > init_frame)
+                        R_realloc_textures();
+                init_frame = c_frame;
                 r_restart = FALSE;
         }
 

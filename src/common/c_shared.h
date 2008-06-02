@@ -195,7 +195,7 @@ struct c_var {
         c_var_type_t type;
         c_var_edit_t edit;
         c_var_update_f update;
-        int changed;
+        int changed, unsafe;
         char has_latched, archive;
 };
 
@@ -380,6 +380,7 @@ void C_register_integer(c_var_t *, const char *name, int value,
 void C_register_string(c_var_t *, const char *name, const char *value,
                        const char *comment);
 void C_register_variables(void);
+void C_reset_unsafe_vars(void);
 c_var_t *C_resolve_var(const char *name);
 void C_translate_vars(void);
 void C_var_set(c_var_t *, const char *value);
