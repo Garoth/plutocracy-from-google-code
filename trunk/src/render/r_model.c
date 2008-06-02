@@ -18,6 +18,7 @@
 /* Non-animated mesh */
 typedef struct r_mesh {
         r_vertex3_t *verts;
+        GLuint verts_vbo, indices_vbo;
         unsigned short *indices;
         int verts_len, indices_len;
 } mesh_t;
@@ -72,9 +73,25 @@ static void mesh_render(mesh_t *mesh, r_texture_t *texture)
 {
         R_texture_select(texture);
         C_count_add(&r_count_faces, mesh->indices_len / 3);
-        glInterleavedArrays(R_VERTEX3_FORMAT, 0, mesh->verts);
-        glDrawElements(GL_TRIANGLES, mesh->indices_len,
-                       GL_UNSIGNED_SHORT, mesh->indices);
+
+        /* Use the Vertex Buffer Object if available */
+        if (mesh->verts_vbo && mesh->indices_vbo) {
+                glBindBuffer(GL_ARRAY_BUFFER, mesh->verts_vbo);
+                glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh->indices_vbo);
+                glInterleavedArrays(R_VERTEX3_FORMAT, 0, NULL);
+                glDrawElements(GL_TRIANGLES, mesh->indices_len,
+                               GL_UNSIGNED_SHORT, NULL);
+                glBindBuffer(GL_ARRAY_BUFFER, 0);
+                glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+        }
+
+        /* Rendering by uploading the data every time is slower */
+        else {
+                glInterleavedArrays(R_VERTEX3_FORMAT, 0, mesh->verts);
+                glDrawElements(GL_TRIANGLES, mesh->indices_len,
+                               GL_UNSIGNED_SHORT, mesh->indices);
+        }
+
         glDisableClientState(GL_TEXTURE_COORD_ARRAY);
         glDisableClientState(GL_NORMAL_ARRAY);
         glDisableClientState(GL_VERTEX_ARRAY);
@@ -90,10 +107,15 @@ static void mesh_cleanup(mesh_t *mesh)
                 return;
         C_free(mesh->verts);
         C_free(mesh->indices);
+        if (mesh->verts_vbo)
+                glDeleteBuffers(1, &mesh->verts_vbo);
+        if (mesh->indices_vbo)
+                glDeleteBuffers(1, &mesh->indices_vbo);
 }
 
 /******************************************************************************\
- Finish parsing an object.
+ Finish parsing an object and creates the mesh object. If Vertex Buffer Objects
+ are supported, a new buffer is allocated and the vertex data is uploaded.
 \******************************************************************************/
 static int finish_object(model_data_t *data, int frame, int object,
                          c_array_t *verts, c_array_t *indices)
@@ -121,6 +143,32 @@ static int finish_object(model_data_t *data, int frame, int object,
                           data->objects[object].name, frame);
                 return FALSE;
         }
+
+        /* If Vertex Buffer Objects are available, upload the data now */
+        if (r_extensions[R_EXT_VERTEX_BUFFER]) {
+
+                /* First upload the vertex data */
+                glGenBuffers(1, &mesh->verts_vbo);
+                glBindBuffer(GL_ARRAY_BUFFER, mesh->verts_vbo);
+                glBufferData(GL_ARRAY_BUFFER,
+                             mesh->verts_len * sizeof (*mesh->verts),
+                             mesh->verts, GL_STATIC_DRAW);
+                glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+                /* Now upload the indices */
+                glGenBuffers(1, &mesh->indices_vbo);
+                glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh->indices_vbo);
+                glBufferData(GL_ELEMENT_ARRAY_BUFFER,
+                             mesh->indices_len * sizeof (*mesh->indices),
+                             mesh->indices, GL_STATIC_DRAW);
+                glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+
+                R_check_errors();
+        } else {
+                mesh->verts_vbo = 0;
+                mesh->indices_vbo = 0;
+        }
+
         return TRUE;
 }
 
@@ -493,6 +541,9 @@ static void update_animation(r_model_t *model)
 /******************************************************************************\
  Render and advance the animation of a model. Applies the model's translation,
  rotation, and scale.
+
+ This URL is helpful in demystifying the matrix operations:
+ http://www.gamedev.net/reference/articles/article695.asp
 \******************************************************************************/
 void R_model_render(r_model_t *model)
 {

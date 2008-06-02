@@ -55,9 +55,8 @@ static globe_vertex_t vertices[R_TILES_MAX * 3];
 static halo_vertex_t halo_verts[2 + HALO_SEGMENTS * 2];
 static c_color_t globe_colors[4], fog_color;
 static c_vec3_t normals[R_TILES_MAX];
+static GLuint vertices_vbo;
 static int flip_limit;
-static unsigned short indices[R_TILES_MAX * 3],
-                      halo_indices[2 + HALO_SEGMENTS * 2];
 
 /******************************************************************************\
  Space out the vertices at even distance from the sphere.
@@ -269,12 +268,10 @@ static void generate_halo(void)
                 unit = C_vec3(cosf(angle), sinf(angle), 0.f);
 
                 /* Bottom vertex */
-                halo_indices[2 * i] = 2 * i;
                 vert = halo_verts + 2 * i;
                 vert->co = C_vec3_scalef(unit, HALO_LOW_SCALE);
 
                 /* Top vertex */
-                halo_indices[2 * i + 1] = 2 * i + 1;
                 vert++;
                 vert->color = C_color(0.f, 0.f, 0.f, 0.f);
                 vert->co = C_vec3_scalef(unit, HALO_HIGH_SCALE);
@@ -301,11 +298,9 @@ void R_generate_globe(int subdiv4)
         for (i = 0; i < subdiv4; i++)
                 subdivide4();
 
-        /* Set indices and normals */
-        for (i = 0; i < r_tiles * 3; i++) {
-                indices[i] = i;
+        /* Set normals */
+        for (i = 0; i < r_tiles * 3; i++)
                 vertices[i].no = C_vec3_norm(vertices[i].co);
-        }
 
         /* Setup globe material properties */
         for (i = 0; i < 4; i++)
@@ -313,6 +308,12 @@ void R_generate_globe(int subdiv4)
                                   globe_colors + i);
         C_var_update(&r_globe_atmosphere, globe_atmosphere_update);
         generate_halo();
+
+        /* Delete any old vertex buffers */
+        if (vertices_vbo) {
+                glDeleteBuffers(1, &vertices_vbo);
+                vertices_vbo = 0;
+        }
 }
 
 /******************************************************************************\
@@ -341,8 +342,7 @@ static void render_halo(void)
         glEnableClientState(GL_COLOR_ARRAY);
         glVertexPointer(3, GL_FLOAT, sizeof (*halo_verts), &halo_verts[0].co);
         glColorPointer(4, GL_FLOAT, sizeof (*halo_verts), &halo_verts[0].color);
-        glDrawElements(GL_TRIANGLE_STRIP, 2 + 2 * HALO_SEGMENTS,
-                       GL_UNSIGNED_SHORT, halo_indices);
+        glDrawArrays(GL_TRIANGLE_STRIP, 0, 2 + 2 * HALO_SEGMENTS);
         glDisableClientState(GL_COLOR_ARRAY);
         glDisableClientState(GL_VERTEX_ARRAY);
         glPopMatrix();
@@ -394,17 +394,24 @@ void R_start_globe(void)
                 glFogf(GL_FOG_END, fog_start + FOG_DISTANCE);
         }
 
-        /* Setup arrays and render the globe mesh. These arrays are not
-           interleaved because we will be doing multitexturing in the future. */
         R_enable_light();
         R_texture_select(r_terrain_tex);
-        glEnableClientState(GL_VERTEX_ARRAY);
-        glEnableClientState(GL_NORMAL_ARRAY);
-        glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-        glTexCoordPointer(2, GL_FLOAT, sizeof (*vertices), &vertices[0].uv);
-        glVertexPointer(3, GL_FLOAT, sizeof (*vertices), &vertices[0].co);
-        glNormalPointer(GL_FLOAT, sizeof (*vertices), &vertices[0].no);
-        glDrawElements(GL_TRIANGLES, 3 * r_tiles, GL_UNSIGNED_SHORT, indices);
+
+        /* Use the Vertex Buffer Object if available */
+        if (r_extensions[R_EXT_VERTEX_BUFFER] && vertices_vbo) {
+                glBindBuffer(GL_ARRAY_BUFFER, vertices_vbo);
+                glInterleavedArrays(GL_T2F_N3F_V3F, sizeof (*vertices), NULL);
+                glDrawArrays(GL_TRIANGLES, 0, 3 * r_tiles);
+                glBindBuffer(GL_ARRAY_BUFFER, 0);
+        }
+
+        /* Rendering by uploading the data every time is slower */
+        else {
+                glInterleavedArrays(GL_T2F_N3F_V3F,
+                                    sizeof (*vertices), vertices);
+                glDrawArrays(GL_TRIANGLES, 0, 3 * r_tiles);
+        }
+
         glDisableClientState(GL_TEXTURE_COORD_ARRAY);
         glDisableClientState(GL_VERTEX_ARRAY);
         glDisableClientState(GL_NORMAL_ARRAY);
@@ -709,5 +716,16 @@ void R_configure_globe(r_tile_t *tiles)
         /* We can update normals dynamically from now on */
         r_globe_smooth.edit = C_VE_FUNCTION;
         r_globe_smooth.update = globe_smooth_update;
+
+        /* If Vertex Buffer Objects are supported, upload the vertices now */
+        if (r_extensions[R_EXT_VERTEX_BUFFER]) {
+                if (vertices_vbo)
+                        glDeleteBuffers(1, &vertices_vbo);
+                glGenBuffers(1, &vertices_vbo);
+                glBindBuffer(GL_ARRAY_BUFFER, vertices_vbo);
+                glBufferData(GL_ARRAY_BUFFER, r_tiles * 3 * sizeof (*vertices),
+                             vertices, GL_STATIC_DRAW);
+                glBindBuffer(GL_ARRAY_BUFFER, 0);
+        }
 }
 

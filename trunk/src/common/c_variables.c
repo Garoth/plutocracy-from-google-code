@@ -523,3 +523,20 @@ void C_translate_vars(void)
                                                   var->comment);
 }
 
+/******************************************************************************\
+ Unsafe variable settings may be preventing the program from starting. Reset
+ them to the defaults that are most likely to work. Variable edit rules are
+ ignored and update functions are not called.
+\******************************************************************************/
+void C_reset_unsafe_vars(void)
+{
+        c_var_t *var;
+
+        for (var = root; var; var = var->next)
+                if (var->unsafe) {
+                        var->value = var->stock;
+                        var->has_latched = FALSE;
+                        C_debug("Reset unsafe variable '%s'", var->name);
+                }
+}
+

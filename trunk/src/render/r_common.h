@@ -25,6 +25,7 @@ typedef enum {
         R_EXT_MULTITEXTURE,
         R_EXT_POINT_SPRITE,
         R_EXT_ANISOTROPY,
+        R_EXT_VERTEX_BUFFER,
         R_EXTENSIONS,
 } r_extension_t;
 

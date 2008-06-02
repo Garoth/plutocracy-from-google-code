@@ -135,7 +135,6 @@ float C_count_fps(const c_count_t *counter)
  Throttle framerate if vsync is off or broken so we don't burn the CPU for no
  reason. SDL_Delay() will only work in 10ms increments on some systems so it
  is necessary to break down our delays into bite-sized chunks ([wait_msec]).
- TODO: Why do we need to wait twice as long as the correct rate?
 \******************************************************************************/
 void C_throttle_fps(void)
 {
@@ -144,7 +143,7 @@ void C_throttle_fps(void)
 
         if (c_max_fps.value.n < 1)
                 return;
-        c_throttle_msec = 2000 / c_max_fps.value.n;
+        c_throttle_msec = 1000 / c_max_fps.value.n;
         if (c_frame_msec > c_throttle_msec)
                 return;
         wait_msec += c_throttle_msec - c_frame_msec;
