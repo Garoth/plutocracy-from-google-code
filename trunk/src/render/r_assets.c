@@ -716,12 +716,12 @@ void R_texture_select(r_texture_t *texture)
         glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
         /* Anisotropic filtering */
-        if (r_extensions[R_EXT_ANISOTROPY] > 1) {
+        if (r_ext.anisotropy > 1.f) {
                 GLfloat aniso;
 
                 aniso = texture->anisotropy;
-                if (aniso > r_extensions[R_EXT_ANISOTROPY])
-                        aniso = (GLfloat)r_extensions[R_EXT_ANISOTROPY];
+                if (aniso > r_ext.anisotropy)
+                        aniso = r_ext.anisotropy;
                 if (aniso < 1.f)
                         aniso = 1.f;
                 glTexParameterf(GL_TEXTURE_2D,
