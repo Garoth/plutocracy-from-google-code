@@ -189,11 +189,13 @@ static void grow_islands(int num, int island_size)
 \******************************************************************************/
 static int set_tile_model(int tile, const char *filename)
 {
+        R_model_cleanup(&g_tiles[tile].model);
+        if (!R_model_init(&g_tiles[tile].model, filename))
+                return FALSE;
         g_tiles[tile].model.origin = g_tiles[tile].origin;
         g_tiles[tile].model.normal = g_tiles[tile].normal;
         g_tiles[tile].model.forward = g_tiles[tile].forward;
-        R_model_cleanup(&g_tiles[tile].model);
-        return R_model_init(&g_tiles[tile].model, filename);
+        return TRUE;
 }
 
 /******************************************************************************\
@@ -215,9 +217,11 @@ static int test_tiles_update(c_var_t *var, c_var_value_t value)
         int i;
 
         for (i = 0; i < r_tiles; i++)
-                if (g_tiles[i].render->terrain == R_T_GROUND)
-                        if (!set_tile_model(i, value.s))
-                                return FALSE;
+                if (g_tiles[i].render->terrain == R_T_GROUND &&
+                    !set_tile_model(i, value.s)) {
+                        C_debug("Failed to set test tile");
+                        return FALSE;
+                }
         return TRUE;
 }
 
@@ -300,11 +304,10 @@ void G_generate_globe(void)
 
 /******************************************************************************\
  Returns TRUE if the tile is within the visible hemisphere
- TODO: implement
 \******************************************************************************/
 static int tile_visible(int tile)
 {
-        return TRUE;
+        return C_vec3_dot(r_cam_normal, g_tiles[tile].origin) > 0.f;
 }
 
 /******************************************************************************\

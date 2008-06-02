@@ -27,6 +27,9 @@ int r_width_2d, r_height_2d, r_mode_hold, r_restart;
 /* Supported extensions */
 int r_extensions[R_EXTENSIONS];
 
+/* Camera location */
+c_vec3_t r_cam_normal;
+
 /* The full camera matrix */
 static float cam_matrix[16];
 
@@ -335,6 +338,13 @@ static void update_camera(void)
         glTranslatef(0, 0, -r_globe_radius - r_cam_zoom);
         glMultMatrixf(cam_rotation);
         glGetFloatv(GL_MODELVIEW_MATRIX, cam_matrix);
+
+        /* Extract the camera location from the matrix for use by other parts
+           of the program. We want to where the camera itself is rather than
+           where it rotates things so we take the inverse rotation matrix's
+           Z axis. */
+        r_cam_normal = C_vec3(cam_rotation[2], cam_rotation[6],
+                              cam_rotation[10]);
 
         R_pop_mode();
 }
