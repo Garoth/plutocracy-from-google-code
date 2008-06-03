@@ -42,6 +42,9 @@
 #define R_WIDTH_MIN 256
 #define R_HEIGHT_MIN 256
 
+/* Maximum number of globe 4-subdivision iterations */
+#define R_SUBDIV4_MAX 5
+
 /* Opaque texture object */
 typedef struct r_texture r_texture_t;
 
@@ -164,6 +167,9 @@ void R_model_cleanup(r_model_t *);
 int R_model_init(r_model_t *, const char *filename);
 void R_model_play(r_model_t *, const char *anim_name);
 void R_model_render(r_model_t *);
+
+/* r_solar.c */
+void R_adjust_light_for(c_vec3_t origin);
 
 /* r_sprite.c */
 #define R_billboard_cleanup(p) R_sprite_cleanup(&(p)->sprite)

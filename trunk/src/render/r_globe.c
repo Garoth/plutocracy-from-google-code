@@ -14,9 +14,6 @@
 
 #include "r_common.h"
 
-/* Maximum number of subdivision iterations */
-#define SUBDIV4_MAX 5
-
 /* Atmospheric fog and halo parameters */
 #define FOG_DISTANCE 12.f
 #define FOG_ZOOM_SCALE 0.8f
@@ -288,8 +285,8 @@ void R_generate_globe(int subdiv4)
 
         if (subdiv4 < 0)
                 subdiv4 = 0;
-        else if (subdiv4 > SUBDIV4_MAX) {
-                subdiv4 = SUBDIV4_MAX;
+        else if (subdiv4 > R_SUBDIV4_MAX) {
+                subdiv4 = R_SUBDIV4_MAX;
                 C_warning("Too many subdivisions requested");
         }
         C_debug("Generating globe with %d subdivisions", subdiv4);

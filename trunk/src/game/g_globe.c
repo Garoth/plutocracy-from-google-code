@@ -306,11 +306,14 @@ void G_generate_globe(void)
 
 /******************************************************************************\
  Returns TRUE if the tile is within the visible hemisphere
- TODO: This function is overly generous
 \******************************************************************************/
 static int tile_visible(int tile)
 {
-        return C_vec3_dot(r_cam_normal, g_tiles[tile].origin) > 0.f;
+        static float limits[R_SUBDIV4_MAX + 1] = {0.f, 0.f, 0.f,
+                                                  1.f, 12.f, 38.f};
+
+        return C_vec3_dot(r_cam_normal, g_tiles[tile].origin) >
+               limits[g_globe_subdiv4.value.n];
 }
 
 /******************************************************************************\
@@ -322,8 +325,10 @@ void G_render_globe(void)
 
         R_start_globe();
         for (i = 0; i < r_tiles; i++)
-                if (tile_visible(i))
+                if (tile_visible(i)) {
+                        R_adjust_light_for(g_tiles[i].origin);
                         R_model_render(&g_tiles[i].model);
+                }
         R_finish_globe();
 }
 

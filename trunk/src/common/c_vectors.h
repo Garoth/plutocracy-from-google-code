@@ -37,20 +37,20 @@ typedef struct c_color {
 \******************************************************************************/
 static inline c_vec2_t C_vec2(float x, float y)
 {
-    c_vec2_t result = { x, y };
-    return result;
+        c_vec2_t result = { x, y };
+        return result;
 }
 
 static inline c_vec3_t C_vec3(float x, float y, float z)
 {
-    c_vec3_t result = { x, y, z };
-    return result;
+        c_vec3_t result = { x, y, z };
+        return result;
 }
 
 static inline c_color_t C_color(float r, float g, float b, float a)
 {
-    c_color_t result = { r, g, b, a };
-    return result;
+        c_color_t result = { r, g, b, a };
+        return result;
 }
 
 /******************************************************************************\
@@ -184,24 +184,24 @@ static inline c_color_t C_color_divf(c_color_t a, float f)
 \******************************************************************************/
 static inline float C_vec2_dot(c_vec2_t a, c_vec2_t b)
 {
-    return a.x * b.x + a.y * b.y;
+        return a.x * b.x + a.y * b.y;
 }
 
 static inline float C_vec3_dot(c_vec3_t a, c_vec3_t b)
 {
-    return a.x * b.x + a.y * b.y + a.z * b.z;
+        return a.x * b.x + a.y * b.y + a.z * b.z;
 }
 
 static inline float C_vec2_cross(c_vec2_t a, c_vec2_t b)
 {
-    return a.y * b.x - a.x * b.y;
+        return a.y * b.x - a.x * b.y;
 }
 
 static inline c_vec3_t C_vec3_cross(c_vec3_t a, c_vec3_t b)
 {
-    return C_vec3(a.y * b.z - a.z * b.y,
-                  a.z * b.x - a.x * b.z,
-                  a.x * b.y - a.y * b.x);
+        return C_vec3(a.y * b.z - a.z * b.y,
+                      a.z * b.x - a.x * b.z,
+                      a.x * b.y - a.y * b.x);
 }
 
 /******************************************************************************\
@@ -210,12 +210,12 @@ static inline c_vec3_t C_vec3_cross(c_vec3_t a, c_vec3_t b)
 \******************************************************************************/
 static inline float C_vec2_square(c_vec2_t p)
 {
-    return p.x * p.x + p.y * p.y;
+        return p.x * p.x + p.y * p.y;
 }
 
 static inline float C_vec3_square(c_vec3_t p)
 {
-    return p.x * p.x + p.y * p.y + p.z * p.z;
+        return p.x * p.x + p.y * p.y + p.z * p.z;
 }
 
 /******************************************************************************\
@@ -223,12 +223,12 @@ static inline float C_vec3_square(c_vec3_t p)
 \******************************************************************************/
 static inline float C_vec2_len(c_vec2_t p)
 {
-    return (float)sqrt(C_vec2_square(p));
+        return (float)sqrt(C_vec2_square(p));
 }
 
 static inline float C_vec3_len(c_vec3_t p)
 {
-    return (float)sqrt(C_vec3_square(p));
+        return (float)sqrt(C_vec3_square(p));
 }
 
 /******************************************************************************\
@@ -236,12 +236,12 @@ static inline float C_vec3_len(c_vec3_t p)
 \******************************************************************************/
 static inline c_vec2_t C_vec2_norm(c_vec2_t p)
 {
-    return C_vec2_divf(p, C_vec2_len(p));
+        return C_vec2_divf(p, C_vec2_len(p));
 }
 
 static inline c_vec3_t C_vec3_norm(c_vec3_t p)
 {
-    return C_vec3_divf(p, C_vec3_len(p));
+        return C_vec3_divf(p, C_vec3_len(p));
 }
 
 /******************************************************************************\
@@ -249,12 +249,12 @@ static inline c_vec3_t C_vec3_norm(c_vec3_t p)
 \******************************************************************************/
 static inline int C_vec2_eq(c_vec2_t a, c_vec2_t b)
 {
-    return a.x == b.x && a.y == b.y;
+        return a.x == b.x && a.y == b.y;
 }
 
 static inline int C_vec3_eq(c_vec3_t a, c_vec3_t b)
 {
-    return a.x == b.x && a.y == b.y && a.z == b.z;
+        return a.x == b.x && a.y == b.y && a.z == b.z;
 }
 
 /******************************************************************************\
@@ -352,8 +352,8 @@ static inline c_color_t C_color_blend(c_color_t dest, c_color_t src)
 static inline c_color_t C_color_rgba(unsigned char r, unsigned char g,
                                      unsigned char b, unsigned char a)
 {
-    c_color_t result = { r, g, b, a };
-    return C_color_divf(result, 255.f);
+        c_color_t result = { r, g, b, a };
+        return C_color_divf(result, 255.f);
 }
 
 /******************************************************************************\
@@ -361,8 +361,8 @@ static inline c_color_t C_color_rgba(unsigned char r, unsigned char g,
 \******************************************************************************/
 static inline c_color_t C_color_32(unsigned int v)
 {
-    return C_color_rgba((v & 0xff0000) >> 16, (v & 0xff00) >> 8, v & 0xff,
-                        (v & 0xff000000) >> 24);
+        return C_color_rgba((v & 0xff0000) >> 16, (v & 0xff00) >> 8, v & 0xff,
+                            (v & 0xff000000) >> 24);
 }
 
 /******************************************************************************\

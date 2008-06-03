@@ -17,6 +17,9 @@
 /* Distance of the solar objects from the center of the globe */
 #define SOLAR_DISTANCE 350.f
 
+/* Localized light parameters */
+#define LIGHT_TRANSITION 16.f
+
 static r_model_t sky;
 static r_billboard_t moon, sun;
 static c_color_t moon_colors[3], sun_colors[3];
@@ -94,6 +97,31 @@ void R_enable_light(void)
         glLightf(GL_LIGHT1, GL_CONSTANT_ATTENUATION, 0.f);
 
         glPopMatrix();
+}
+
+/******************************************************************************\
+ After light is enabled, modulates sunlight to prevent backlighting models on
+ the night side of the globe.
+\******************************************************************************/
+void R_adjust_light_for(c_vec3_t origin)
+{
+        c_color_t diffuse, specular;
+        float dist, scale;
+
+        if (!r_light.value.n)
+                return;
+        dist = C_vec3_dot(origin, sky.forward);
+        diffuse = sun_colors[1];
+        specular = sun_colors[2];
+        if (dist < LIGHT_TRANSITION / 2) {
+                scale = dist / LIGHT_TRANSITION + 0.5f;
+                if (scale < 0.f)
+                        scale = 0.f;
+                diffuse = C_color_scalef(diffuse, scale);
+                specular = C_color_scalef(specular, scale);
+        }
+        glLightfv(GL_LIGHT0, GL_DIFFUSE, C_ARRAYF(diffuse));
+        glLightfv(GL_LIGHT0, GL_SPECULAR, C_ARRAYF(specular));
 }
 
 /******************************************************************************\
