@@ -17,8 +17,8 @@ c_var_t r_width, r_height, r_color_bits, r_depth_bits, r_windowed, r_vsync,
         r_gamma, r_pixel_scale, r_clear, r_gl_errors;
 
 /* Render testing */
-c_var_t r_test_model, r_test_prerender, r_test_sprite, r_test_sprite_num,
-        r_test_text;
+c_var_t r_test_normals, r_test_model, r_test_prerender, r_test_sprite,
+        r_test_sprite_num, r_test_text;
 
 /* Effects parameters */
 c_var_t r_globe_atmosphere, r_globe_smooth;
@@ -71,6 +71,9 @@ void R_register_variables(void)
                            "number of test sprites to show");
         C_register_string(&r_test_text, "r_test_text", "",
                           "text to test rendering");
+        C_register_integer(&r_test_normals, "r_test_normals", 0,
+                           "renders model and globe normals");
+        r_test_normals.edit = C_VE_ANYTIME;
 
         /* Visual effects parameters */
         C_register_float(&r_globe_smooth, "r_globe_smooth", 1.f,

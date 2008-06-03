@@ -7,20 +7,20 @@ Group: 'Export'
 Tooltip: 'Save a Plutocracy Model File'
 """
 
-__author__ = "Michael Levin, Campbell Barton, Jiri Hnidek"
-__url__ = ['www.blender.org', 'blenderartists.org']
-__version__ = "1.0"
+__author__ = "Michael Levin"
+__url__ = ['plutocracy.googlecode.com', 'www.blender.org', 'blenderartists.org']
+__version__ = "r251"
 
 __bpydoc__ = """\
 This script is an exporter to Plutocracy Model file format.
-(Based on the OBJ exporter by Campbell Barton and Jiri Hnidek.)
+(Based loosely on the OBJ exporter by Campbell Barton and Jiri Hnidek.)
 
 Usage:
 
-Select the objects you wish to export and run this script from "File->Export" menu.
-Selecting the default options from the popup box will be good in most cases.
-All objects that can be represented as a mesh (mesh, curve, metaball, surface, text3d)
-will be exported as mesh data.
+All objects in the scene that can be represented as a mesh (mesh, curve,
+metaball, surface, text3d) will be exported as mesh data. Any texture paths
+will be exported as well, if they are prefixed with any amount of double-dots
+and slashes ("../path"), these will be stripped.
 """
 
 
@@ -99,12 +99,12 @@ def write_face(file, me, f, verts, quad):
                 u = 0
                 v = 0
                 if f.smooth:
-                        no_x = f.v[j].no[0]
-                        no_y = f.v[j].no[1]
-                        no_z = f.v[j].no[2]
+                        no_x = f.v[o + j].no.x
+                        no_y = f.v[o + j].no.y
+                        no_z = f.v[o + j].no.z
                 if me.faceUV:
-                        u = f.uv[j].x
-                        v = 1 - f.uv[j].y # v flipped!
+                        u = f.uv[o + j].x
+                        v = 1 - f.uv[o + j].y # v flipped!
                 vec = ( f.v[o + j].co.x, f.v[o + j].co.y, f.v[o + j].co.z, \
                         no_x, no_y, no_z, u, v )
 
@@ -129,6 +129,7 @@ def write_frame(scn, file, objects):
         for me, ob, ob_mat in objects:
                 me = me.__copy__();
                 me.transform(ob_mat * mat_xrot90)
+                me.calcNormals()
 
                 # Indicate that this is a new object
                 file.write('\no\n')

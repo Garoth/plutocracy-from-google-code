@@ -114,12 +114,12 @@ void R_render_solar(void)
         if (!r_solar.value.n)
                 return;
         sky_angle -= c_frame_sec * C_PI / 60.f / R_MINUTES_PER_DAY;
-        sky.forward = C_vec3(cosf(sky_angle), 0.f, sinf(sky_angle));
+        sky.forward = C_vec3(cosf(-sky_angle), 0.f, sinf(-sky_angle));
         R_model_render(&sky);
 
         /* Render the sun and moon point sprites */
-        sun.world_origin.x = cosf(-sky_angle) * SOLAR_DISTANCE;
-        sun.world_origin.z = sinf(-sky_angle) * SOLAR_DISTANCE;
+        sun.world_origin.x = sky.forward.x * SOLAR_DISTANCE;
+        sun.world_origin.z = sky.forward.z * SOLAR_DISTANCE;
         R_billboard_render(&sun);
         moon.world_origin.x = -sun.world_origin.x;
         moon.world_origin.z = -sun.world_origin.z;

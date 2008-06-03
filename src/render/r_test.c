@@ -125,6 +125,11 @@ static void render_test_model(void)
         glColor4f(1.f, 1.f, 1.f, 1.f);
         R_check_errors();
 
+        /* Orient the model */
+        test_model.normal = C_vec3(0.f, 1.f, 0.f);
+        test_model.forward = C_vec3(cosf(c_time_msec / 5000.f),
+                                    0.f, sinf(c_time_msec / 5000.f));
+
         /* Render the test model */
         test_model.origin.z = -7;
         R_model_render(&test_model);
@@ -168,5 +173,36 @@ void R_render_tests(void)
         render_test_model();
         render_test_sprites();
         render_test_text();
+}
+
+/******************************************************************************\
+ Render normals. Must be called within 3D mode.
+\******************************************************************************/
+void R_render_normals(int count, c_vec3_t *co, c_vec3_t *no, int stride)
+{
+        c_vec3_t co2;
+        int i;
+
+        if (!r_test_normals.value.n)
+                return;
+        R_gl_disable(GL_FOG);
+        R_gl_disable(GL_LIGHTING);
+        R_texture_select(NULL);
+        glEnableClientState(GL_VERTEX_ARRAY);
+        for (i = 0; i < count; i++) {
+                co2 = C_vec3_add(*co, *no);
+                glBegin(GL_LINE_STRIP);
+                glColor4f(1.f, 1.f, 0.f, 1.f);
+                glVertex3f(co->x, co->y, co->z);
+                glColor4f(1.f, 0.f, 0.f, 1.f);
+                glVertex3f(co2.x, co2.y, co2.z);
+                glEnd();
+                co = (c_vec3_t *)((char *)co + stride);
+                no = (c_vec3_t *)((char *)no + stride);
+        }
+        glColor4f(1.f, 1.f, 1.f, 1.f);
+        glDisableClientState(GL_VERTEX_ARRAY);
+        R_gl_restore();
+        R_check_errors();
 }
 

@@ -96,6 +96,10 @@ static void mesh_render(mesh_t *mesh, r_texture_t *texture)
         glDisableClientState(GL_NORMAL_ARRAY);
         glDisableClientState(GL_VERTEX_ARRAY);
         R_check_errors();
+
+        /* Render the mesh normals for testing */
+        R_render_normals(mesh->verts_len, &mesh->verts[0].co,
+                         &mesh->verts[0].no, sizeof (*mesh->verts));
 }
 
 /******************************************************************************\

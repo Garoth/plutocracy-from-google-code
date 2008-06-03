@@ -111,6 +111,9 @@ extern float r_globe_radius;
 /* r_mode.c */
 #define R_check_errors() R_check_errors_full(__FILE__, __LINE__, __func__);
 void R_check_errors_full(const char *file, int line, const char *func);
+void R_gl_disable(GLenum);
+void R_gl_enable(GLenum);
+void R_gl_restore(void);
 void R_pop_mode(void);
 void R_push_mode(r_mode_t);
 void R_set_mode(r_mode_t);
@@ -130,12 +133,14 @@ void R_init_solar(void);
 void R_render_solar(void);
 
 /* r_test.c */
+void R_render_normals(int count, c_vec3_t *co, c_vec3_t *no, int stride);
 void R_render_tests(void);
 
 /* r_variables.c */
 extern c_var_t r_clear, r_depth_bits, r_globe_colors[4], r_globe_atmosphere,
                r_globe_shininess, r_globe_smooth, r_gl_errors, r_light,
                r_moon_atten, r_moon_colors[3], r_moon_height, r_solar,
-               r_sun_colors[3], r_test_sprite_num, r_test_sprite, r_test_model,
-               r_test_prerender, r_test_text, r_vsync;
+               r_sun_colors[3], r_test_normals, r_test_sprite_num,
+               r_test_sprite, r_test_model,  r_test_prerender, r_test_text,
+               r_vsync;
 

@@ -12,9 +12,10 @@
 
 #include "r_common.h"
 
-/* Stack limits */
+/* Limits */
 #define CLIP_STACK 32
 #define MODE_STACK 32
+#define OPTIONS_MAX 32
 
 /* Keep track of how many faces we render each frame */
 c_count_t r_count_faces;
@@ -56,6 +57,86 @@ static r_mode_t mode_values[MODE_STACK];
 
 /* When non-empty will save a PNG screenshot to this filename */
 static char screenshot[256];
+
+/* OpenGL options that are temporarily disabled */
+static GLenum enabled_options[OPTIONS_MAX], disabled_options[OPTIONS_MAX];
+
+/******************************************************************************\
+ Equivalent to glEnable, but stores the current value for later restoration.
+\******************************************************************************/
+void R_gl_enable(GLenum option)
+{
+        int i;
+
+        if (glIsEnabled(option))
+                return;
+
+        /* See if we disabled this temporarily first */
+        for (i = 0; i < OPTIONS_MAX; i++)
+                if (disabled_options[i] == option) {
+                        disabled_options[i] = 0;
+                        glEnable(option);
+                        return;
+                }
+
+        /* Find an open enabled slot */
+        for (i = 0; i < OPTIONS_MAX; i++)
+                if (!enabled_options[i]) {
+                        enabled_options[i] = option;
+                        glEnable(option);
+                        return;
+                }
+
+        C_error("Enabled options buffer overflow");
+}
+
+/******************************************************************************\
+ Equivalent to glDisable, but stores the current value for later restoration.
+\******************************************************************************/
+void R_gl_disable(GLenum option)
+{
+        int i;
+
+        if (!glIsEnabled(option))
+                return;
+
+        /* See if we enabled this temporarily first */
+        for (i = 0; i < OPTIONS_MAX; i++)
+                if (enabled_options[i] == option) {
+                        enabled_options[i] = 0;
+                        glDisable(option);
+                        return;
+                }
+
+        /* Find an open disabled slot */
+        for (i = 0; i < OPTIONS_MAX; i++)
+                if (!disabled_options[i]) {
+                        disabled_options[i] = option;
+                        glDisable(option);
+                        return;
+                }
+
+        C_error("Disabled options buffer overflow");
+}
+
+/******************************************************************************\
+ Restores any settings changed by [R_gl_enable] or [R_gl_disable].
+\******************************************************************************/
+void R_gl_restore(void)
+{
+        int i;
+
+        for (i = 0; i < OPTIONS_MAX; i++) {
+                if (enabled_options[i]) {
+                        glDisable(enabled_options[i]);
+                        enabled_options[i] = 0;
+                }
+                if (disabled_options[i]) {
+                        glEnable(disabled_options[i]);
+                        disabled_options[i] = 0;
+                }
+        }
+}
 
 /******************************************************************************\
  Updates when [r_pixel_scale] changes.
@@ -176,7 +257,7 @@ static void check_gl_extensions(void)
 
         /* Check for anisotropic filtering */
         if (check_extension("GL_EXT_texture_filter_anisotropic")) {
-                glGetFloatv(GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT, 
+                glGetFloatv(GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT,
                             &r_ext.anisotropy);
                 C_debug("%g anisotropy levels supported", r_ext.anisotropy);
         } else
@@ -185,11 +266,11 @@ static void check_gl_extensions(void)
         /* Check for vertex buffer objects */
         if (check_extension("GL_ARB_vertex_buffer_object")) {
                 r_ext.glGenBuffers = SDL_GL_GetProcAddress("glGenBuffers");
-                r_ext.glDeleteBuffers = 
+                r_ext.glDeleteBuffers =
                         SDL_GL_GetProcAddress("glDeleteBuffers");
                 r_ext.glBindBuffer = SDL_GL_GetProcAddress("glBindBuffer");
                 r_ext.glBufferData = SDL_GL_GetProcAddress("glBufferData");
-                if (!r_ext.glGenBuffers || !r_ext.glDeleteBuffers || 
+                if (!r_ext.glGenBuffers || !r_ext.glDeleteBuffers ||
                     !r_ext.glBindBuffer || !r_ext.glBufferData) {
                         C_warning("Vertex buffer extension supported, but "
                                   "failed to get function addresses");
