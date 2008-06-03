@@ -415,9 +415,12 @@ void R_start_globe(void)
         glDisableClientState(GL_TEXTURE_COORD_ARRAY);
         glDisableClientState(GL_VERTEX_ARRAY);
         glDisableClientState(GL_NORMAL_ARRAY);
-
         R_check_errors();
         C_count_add(&r_count_faces, r_tiles);
+
+        /* Render the globe's normals for testing */
+        R_render_normals(3 * r_tiles, &vertices[0].co, &vertices[0].no,
+                         sizeof (*vertices));
 }
 
 /******************************************************************************\
@@ -717,7 +720,8 @@ void R_configure_globe(r_tile_t *tiles)
         r_globe_smooth.edit = C_VE_FUNCTION;
         r_globe_smooth.update = globe_smooth_update;
 
-        /* If Vertex Buffer Objects are supported, upload the vertices now */
+        /* If Vertex Buffer Objects are supported, upload the vertices now
+           FIXME: Sending extra data to VBO */
         if (r_ext.vertex_buffers) {
                 if (vertices_vbo)
                         r_ext.glDeleteBuffers(1, &vertices_vbo);
