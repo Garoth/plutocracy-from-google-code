@@ -310,7 +310,7 @@ void G_generate_globe(void)
 static int tile_visible(int tile)
 {
         static float limits[R_SUBDIV4_MAX + 1] = {0.f, 0.f, 0.f,
-                                                  1.f, 12.f, 38.f};
+                                                  0.f, 11.25f, 36.f};
 
         return C_vec3_dot(r_cam_normal, g_tiles[tile].origin) >
                limits[g_globe_subdiv4.value.n];

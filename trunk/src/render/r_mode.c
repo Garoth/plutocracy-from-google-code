@@ -168,6 +168,7 @@ static int set_video_mode(void)
         C_var_unlatch(&r_windowed);
         C_var_unlatch(&r_width);
         C_var_unlatch(&r_height);
+        C_var_unlatch(&r_multisample);
 
         /* Ensure a minimum render size or pre-rendering will crash */
         if (r_width.value.n < R_WIDTH_MIN)
@@ -186,6 +187,9 @@ static int set_video_mode(void)
         SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 8);
         SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, r_depth_bits.value.n);
         SDL_GL_SetAttribute(SDL_GL_SWAP_CONTROL, r_vsync.value.n);
+        if (r_multisample.value.n < 0)
+                r_multisample.value.n = 0;
+        SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, r_multisample.value.n);
         if (r_color_bits.value.n <= 16) {
                 SDL_GL_SetAttribute(SDL_GL_RED_SIZE, 5);
                 SDL_GL_SetAttribute(SDL_GL_GREEN_SIZE, 6);
@@ -332,6 +336,9 @@ static void set_gl_state(void)
                 glEnable(GL_POINT_SPRITE);
                 glTexEnvi(GL_POINT_SPRITE, GL_COORD_REPLACE, GL_TRUE);
         }
+
+        /* Multisampling starts out enabled, we don't need it for everything */
+        glDisable(GL_MULTISAMPLE);
 
         R_check_errors();
 }

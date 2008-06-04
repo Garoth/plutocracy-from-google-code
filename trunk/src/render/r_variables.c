@@ -14,7 +14,7 @@
 
 /* Video parameters */
 c_var_t r_width, r_height, r_color_bits, r_depth_bits, r_windowed, r_vsync,
-        r_gamma, r_pixel_scale, r_clear, r_gl_errors;
+        r_gamma, r_pixel_scale, r_clear, r_gl_errors, r_multisample;
 
 /* Render testing */
 c_var_t r_test_normals, r_test_model, r_test_prerender, r_test_sprite,
@@ -59,6 +59,9 @@ void R_register_variables(void)
         C_register_integer(&r_gl_errors, "r_gl_errors", 0,
                            "enable to quit if there is a GL error");
         r_gl_errors.edit = C_VE_ANYTIME;
+        C_register_integer(&r_multisample, "r_multisample", 0,
+                           "set to number of samples to enable FSAA");
+        r_multisample.unsafe = TRUE;
 
         /* Render testing */
         C_register_string(&r_test_model, "r_test_model", "",

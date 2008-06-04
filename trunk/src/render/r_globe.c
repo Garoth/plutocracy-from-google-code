@@ -582,6 +582,16 @@ static int globe_smooth_update(c_var_t *var, c_var_value_t value)
         } else
                 for (i = 0; i < r_tiles * 3; i++)
                         vertices[i].no = normals[i / 3];
+
+        /* Need to update the VBO */
+        if (r_ext.vertex_buffers && vertices_vbo) {
+                r_ext.glBindBuffer(GL_ARRAY_BUFFER, vertices_vbo);
+                r_ext.glBufferData(GL_ARRAY_BUFFER,
+                                   r_tiles * 3 * sizeof (*vertices),
+                                   vertices, GL_STATIC_DRAW);
+                r_ext.glBindBuffer(GL_ARRAY_BUFFER, 0);
+        }
+
         return TRUE;
 }
 
