@@ -534,7 +534,7 @@ void C_reset_unsafe_vars(void)
 
         for (var = root; var; var = var->next)
                 if (var->unsafe) {
-                        var->value = var->stock;
+                        var->value = var->latched = var->stock;
                         var->has_latched = FALSE;
                         C_debug("Reset unsafe variable '%s'", var->name);
                 }

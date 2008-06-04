@@ -601,10 +601,15 @@ void R_model_render(r_model_t *model)
                 meshes = model->data->matrix +
                          model->data->objects_len * model->last_frame;
 
+        /* We want to multisample models */
+        if (r_multisample.value.n)
+                glEnable(GL_MULTISAMPLE);
+
         /* Each object in the model needs a rendering call */
         for (i = 0; i < model->data->objects_len; i++)
                 mesh_render(meshes + i, model->data->objects[i].texture);
 
+        glDisable(GL_MULTISAMPLE);
         R_pop_mode();
 }
 

@@ -196,6 +196,6 @@ void R_load_test_assets(void);
 /* r_variables.c */
 void R_register_variables(void);
 
-extern c_var_t r_color_bits, r_gamma, r_height, r_pixel_scale, r_width,
-               r_windowed;
+extern c_var_t r_color_bits, r_gamma, r_height, r_multisample, r_pixel_scale,
+               r_width, r_windowed;
 

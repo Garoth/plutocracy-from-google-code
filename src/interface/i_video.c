@@ -13,10 +13,10 @@
 #include "i_common.h"
 
 /* Number of options implemented */
-#define OPTIONS 5
+#define OPTIONS 6
 
 /* Number of options (from the top) that need the apply button */
-#define OPTIONS_APPLY 3
+#define OPTIONS_APPLY 4
 
 /* Length of video modes list */
 #define VIDEO_MODES 128
@@ -26,7 +26,8 @@ static char mode_strings[VIDEO_MODES][16], *list_modes[VIDEO_MODES];
 static const char *list_bool[] = {"No", "Yes", NULL},
                   *list_numeric[] = {"0.50", "0.75", "1.00", "1.25",
                                      "1.50", "1.75", "2.00", NULL},
-                  *list_color_bits[] = {"16", "32", NULL};
+                  *list_color_bits[] = {"16", "32", NULL},
+                  *list_multisample[] = {"No", "2", "4", NULL};
 
 static i_label_t label;
 static i_button_t apply_button;
@@ -187,6 +188,16 @@ void I_video_init(i_window_t *window)
                       list_bool, orig_indices[opt]);
         options[opt].on_change = (i_callback_f)on_change_set;
         options[opt].data = &r_windowed;
+        I_widget_add(&window->widget, &options[opt].widget);
+
+        /* Select multisampling */
+        orig_indices[++opt] = closest_index((float)r_multisample.latched.n,
+                                            list_multisample);
+        I_select_init(options + opt, C_str("i-video-multisample",
+                                           "Multisampling:"),
+                      list_multisample, orig_indices[opt]);
+        options[opt].on_change = (i_callback_f)on_change_set;
+        options[opt].data = &r_multisample;
         I_widget_add(&window->widget, &options[opt].widget);
 
         /* Select gamma */
