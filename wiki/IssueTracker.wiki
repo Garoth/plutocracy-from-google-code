@@ -49,3 +49,7 @@ The issue tracker is primarily used to claim areas to work on. The workflow proc
     * *Success!* You're done! Good job, set the status to `Resolved` and ask another developer to verify that you didn't screw up. Once they have OK'd your work, either one of you can set the status of the issue to `Verified`.
     * *You don't have the time.* The work is good and should be done, but you specifically cannot do it because you don't have the time or know-how to complete the task. It's OK, it happens! Set the status to `Stalled` and inform the other developers. This lets everyone know that you have given up work and would like someone else to take over. Remove your name from the issue owner field.
     * *The idea doesn't work.* Sometimes only after working on an idea for a while do you realize that it just doesn't work. First, check with the other developers to make sure they can't think of a way to make it work or if someone else wants to take over. If no one can or will, set the status to `Failed`.
+
+If you are not creating a new Issue to work on, you can still accept an existing one, open or stalled issue. Please mind the `Difficulty` tag on the Issue:
+  * Issues that have been marked with `Difficulty-Easy` are appropriate for beginners and those not familiar with the existing code. These are good issues to work on. 
+  * Those that have been marked `Difficulty-Hard` may require extensive knowledge, effort, or design decisions that require you to be very familiar with the work that has already been done. These Issues are not appropriate for beginners.
