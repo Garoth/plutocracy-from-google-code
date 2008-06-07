@@ -1,0 +1,137 @@
+#summary This is a listing of the models that will be in the game, their names, and the hierarchy of folders needed (ie Buildings -> models/buildings/)
+#labels Phase-Requirements
+
+=MODEL NAME LISTING AND STATUS=
+
+    ==Notes==
+
+        [ ] not committed
+
+        [C] committed (done)
+
+        genlit: litter generated through player actions (destroying ships)
+
+        randlit: litter generated randomly at map generation
+
+    ==Buildings==
+
+        [ ] field-compost.plum
+
+        [ ] field-cotton.plum
+
+        [ ] field-generic.plum
+
+        [ ] field-sugar.plum
+
+        [ ] field-wheat.plum
+
+        [ ] guildhall-bakery.plum
+
+        [ ] guildhall-furnisher.plum
+
+        [ ] guildhall-gemcutter.plum
+
+        [ ] guildhall-generic.plum
+
+        [ ] guildhall-weaver.plum
+
+        [ ] mill-cannery.plum
+
+        [ ] mill-distillery.plum
+
+        [ ] mill-generic.plum
+
+        [ ] mill-sawmill.plum
+
+        [ ] mill-steel.plum
+
+        [ ] mine-gem.plum
+
+        [ ] mine-generic.plum
+
+        [ ] mine-ore.plum
+
+        [ ] mine-sulfur.plum
+
+        [ ] special-housing.plum
+
+        [ ] special-townhall.plum
+
+        [ ] special-warehouse.plum
+
+        [ ] water-barricade.plum
+
+        [ ] water-dock.plum
+
+        [ ] water-shipyard.plum
+
+        [ ] water-tower.plum
+
+        [ ] workshop-armorer.plum
+
+        [ ] workshop-arsenal.plum
+
+        [ ] workshop-generic.plum
+
+        [ ] workshop-ropemaker.plum
+
+        [ ] workshop-sailmaker.plum
+
+    ==Ships==
+
+        [ ] part-cannon.plum
+
+        [ ] part-cannonball.plum
+
+        [ ] ship-brig.plum
+
+        [ ] ship-fluyt.plum
+
+        [ ] ship-frigate.plum
+
+        [ ] ship-galleon.plum
+
+        [ ] ship-sloop.plum
+
+    ==Environment==
+
+        [ ] genlit-cannonball.plum
+
+        [ ] genlit-cargo.plum
+
+        [ ] genlit-destroyed-building.plum
+
+        [ ] genlit-destroyed-ship.plum
+
+        [ ] genlit-floating-ship-remains.plum
+
+        [ ] randlit-bird.plum
+
+        [ ] randlit-oldciv-collapsed-bridge.plum
+
+        [ ] randlit-oldciv-pillar.plum
+
+        [ ] randlit-oldciv-ruin-land.plum
+
+        [ ] randlit-oldciv-ruin-water.plum
+
+        [ ] randlit-oldciv-statue-arc.plum
+
+        [ ] randlit-oldciv-statue-human.plum
+
+        [ ] randlit-oldciv-statue-tree.plum
+
+        [C] randlit-rock.plum
+
+        [ ] randlit-shrubbery.plum
+
+        [ ] terrain-mountain.plum
+
+        [ ] tree-bamboo.plum
+
+        [ ] tree-conifer.plum
+
+        [C] tree-deciduous.plum
+
+        [ ] tree-palm.plum
+
