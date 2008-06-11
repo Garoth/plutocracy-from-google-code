@@ -35,15 +35,17 @@ static int init_frame;
 /* Supported extensions */
 int r_extensions[R_EXTENSIONS];
 
-/* Camera location */
-c_vec3_t r_cam_normal;
+/* Camera location and orientation */
+c_vec3_t r_cam_origin, r_cam_forward, r_cam_normal;
+
+/* The distance the camera is from the globe surface*/
+float r_cam_zoom;
 
 /* The full camera matrix */
 static float cam_matrix[16];
 
-/* Camera rotation and zoom */
-float r_cam_zoom;
-static c_vec2_t cam_rot_diff;
+/* Camera rotation */
+static c_vec3_t cam_rot_diff;
 static GLfloat cam_rotation[16];
 static float cam_zoom_diff;
 
@@ -421,11 +423,44 @@ void R_check_errors_full(const char *file, int line, const char *func)
 }
 
 /******************************************************************************\
+ Transforms a vector using camera rotation. Does not apply zoom translation.
+\******************************************************************************/
+c_vec3_t R_rotate_from_cam(c_vec3_t v)
+{
+        c_vec3_t vt;
+
+        vt.x = v.x * cam_rotation[0] + v.y * cam_rotation[4] +
+               v.z * cam_rotation[8];
+        vt.y = v.x * cam_rotation[1] + v.y * cam_rotation[5] +
+               v.z * cam_rotation[9];
+        vt.z = v.x * cam_rotation[2] + v.y * cam_rotation[6] +
+               v.z * cam_rotation[10];
+        return vt;
+}
+
+/******************************************************************************\
+ Transforms a vector using the inverse of the camera rotation. Does not apply
+ zoom translation.
+\******************************************************************************/
+c_vec3_t R_rotate_to_cam(c_vec3_t v)
+{
+        c_vec3_t vt;
+
+        vt.x = v.x * cam_rotation[0] + v.y * cam_rotation[1] +
+               v.z * cam_rotation[2];
+        vt.y = v.x * cam_rotation[4] + v.y * cam_rotation[5] +
+               v.z * cam_rotation[6];
+        vt.z = v.x * cam_rotation[8] + v.y * cam_rotation[9] +
+               v.z * cam_rotation[10];
+        return vt;
+}
+
+/******************************************************************************\
  Calculates a new camera rotation matrix and reloads the modelview matrix.
 \******************************************************************************/
 static void update_camera(void)
 {
-        c_vec3_t x_axis, y_axis;
+        c_vec3_t x_axis, y_axis, z_axis;
 
         R_push_mode(R_MODE_3D);
         glMatrixMode(GL_MODELVIEW);
@@ -443,9 +478,11 @@ static void update_camera(void)
         glLoadMatrixf(cam_rotation);
         x_axis = C_vec3(cam_rotation[0], cam_rotation[4], cam_rotation[8]);
         y_axis = C_vec3(cam_rotation[1], cam_rotation[5], cam_rotation[9]);
-        glRotatef(C_rad_to_deg(cam_rot_diff.y), x_axis.x, x_axis.y, x_axis.z);
-        glRotatef(C_rad_to_deg(cam_rot_diff.x), y_axis.x, y_axis.y, y_axis.z);
-        cam_rot_diff = C_vec2(0.f, 0.f);
+        z_axis = C_vec3(cam_rotation[2], cam_rotation[6], cam_rotation[10]);
+        glRotatef(C_rad_to_deg(cam_rot_diff.x), x_axis.x, x_axis.y, x_axis.z);
+        glRotatef(C_rad_to_deg(cam_rot_diff.y), y_axis.x, y_axis.y, y_axis.z);
+        glRotatef(C_rad_to_deg(cam_rot_diff.z), z_axis.x, z_axis.y, z_axis.z);
+        cam_rot_diff = C_vec3(0.f, 0.f, 0.f);
         glGetFloatv(GL_MODELVIEW_MATRIX, cam_rotation);
 
         /* Recreate the full camera matrix with the new rotation */
@@ -455,21 +492,36 @@ static void update_camera(void)
         glGetFloatv(GL_MODELVIEW_MATRIX, cam_matrix);
 
         /* Extract the camera location from the matrix for use by other parts
-           of the program. We want to where the camera itself is rather than
-           where it rotates things so we take the inverse rotation matrix's
-           Z axis. */
-        r_cam_normal = C_vec3(cam_rotation[2], cam_rotation[6],
-                              cam_rotation[10]);
+           of the program. We cannot replace these new vectors with the axes
+           above because they are changed by the rotations. */
+        r_cam_forward = C_vec3(-cam_rotation[2], -cam_rotation[6],
+                               -cam_rotation[10]);
+        r_cam_normal = C_vec3(cam_rotation[1], cam_rotation[5],
+                              cam_rotation[9]);
+        r_cam_origin = C_vec3_scalef(r_cam_forward,
+                                     -r_globe_radius - r_cam_zoom);
 
         R_pop_mode();
 }
 
 /******************************************************************************\
- Move the camera incrementally relative to the current orientation.
+ Rotate the camera incrementally relative to the current orientation. The
+ rotation is specified using distances to move in the camera's local x- and
+ y-axes.
 \******************************************************************************/
-void R_move_cam_by(c_vec2_t angle)
+void R_move_cam_by(c_vec2_t distance)
 {
-        cam_rot_diff = C_vec2_add(cam_rot_diff, angle);
+        cam_rot_diff.x += distance.y / (r_globe_radius * C_PI);
+        cam_rot_diff.y += distance.x / (r_globe_radius * C_PI);
+}
+
+/******************************************************************************\
+ Rotate the camera incrementally relative to the current orientation. Angles
+ represent rotation around their axes (i.e. [x] value around the x-axis).
+\******************************************************************************/
+void R_rotate_cam_by(c_vec3_t angle)
+{
+        cam_rot_diff = C_vec3_add(cam_rot_diff, angle);
 }
 
 /******************************************************************************\
@@ -654,7 +706,7 @@ void R_set_mode(r_mode_t mode)
 
         /* 3D mode sets up perspective projection and camera view for models */
         if (mode == R_MODE_3D) {
-                gluPerspective(90.0, (float)r_width.value.n / r_height.value.n,
+                gluPerspective(R_FOV, (float)r_width.value.n / r_height.value.n,
                                1.f, 512.f);
                 glEnable(GL_CULL_FACE);
                 glEnable(GL_DEPTH_TEST);

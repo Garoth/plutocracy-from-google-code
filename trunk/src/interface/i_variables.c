@@ -23,6 +23,9 @@ c_var_t i_border, i_button, i_button_active, i_button_hover, i_button_light,
 /* Interface usability variables */
 c_var_t i_scroll_speed, i_zoom_speed;
 
+/* Interface test variables */
+c_var_t i_test_globe;
+
 /******************************************************************************\
  Registers interface namespace variables.
 \******************************************************************************/
@@ -85,11 +88,16 @@ void I_register_variables(void)
         i_work_area.archive = FALSE;
 
         /* Interface usability variables */
-        C_register_float(&i_scroll_speed, "i_scroll_speed", 1.f,
-                         "scrolling speed in pixels per second");
+        C_register_float(&i_scroll_speed, "i_scroll_speed", 100.f,
+                         "globe key scrolling speed in game units");
         i_scroll_speed.edit = C_VE_ANYTIME;
         C_register_float(&i_zoom_speed, "i_zoom_speed", 1.f,
-                         "zoom speed in units per click");
+                         "globe zoom speed in units per click");
         i_zoom_speed.edit = C_VE_ANYTIME;
+
+        /* Interface test variables */
+        C_register_integer(&i_test_globe, "i_test_globe", FALSE,
+                           "test mouse position detection on the globe");
+        i_test_globe.edit = C_VE_ANYTIME;
 }
 

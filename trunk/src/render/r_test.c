@@ -206,3 +206,25 @@ void R_render_normals(int count, c_vec3_t *co, c_vec3_t *no, int stride)
         R_check_errors();
 }
 
+/******************************************************************************\
+ Draws a line in world space coordinates.
+\******************************************************************************/
+void R_render_test_line(c_vec3_t a, c_vec3_t b, c_color_t color)
+{
+        R_push_mode(R_MODE_3D);
+        R_gl_disable(GL_FOG);
+        R_gl_disable(GL_LIGHTING);
+        R_texture_select(NULL);
+        glEnableClientState(GL_VERTEX_ARRAY);
+        glBegin(GL_LINE_STRIP);
+        glColor4f(color.r * 0.25f, color.g * 0.25f, color.b * 0.25f, color.a);
+        glVertex3f(a.x, a.y, a.z);
+        glColor4f(color.r, color.g, color.b, color.a);
+        glVertex3f(b.x, b.y, b.z);
+        glEnd();
+        glColor4f(1.f, 1.f, 1.f, 1.f);
+        glDisableClientState(GL_VERTEX_ARRAY);
+        R_check_errors();
+        R_pop_mode();
+}
+

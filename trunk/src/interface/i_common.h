@@ -189,6 +189,12 @@ void I_entry_configure(i_entry_t *, const char *);
 /* i_game.c */
 void I_game_init(i_window_t *);
 
+/* i_globe.c */
+void I_grab_globe(int x, int y);
+void I_release_globe(void);
+void I_rotate_globe(int x, int y);
+void I_test_globe(void);
+
 /* i_label.c */
 void I_label_init(i_label_t *, const char *);
 void I_label_configure(i_label_t *, const char *);
@@ -205,8 +211,8 @@ void I_select_init(i_select_t *, const char *label, const char **list,
 /* i_variables.c */
 extern c_var_t i_border, i_button, i_button_active, i_button_hover,
                i_button_light, i_button_prelight, i_color, i_color2,
-               i_debug, i_fade, i_hanger, i_scroll_speed, i_shadow, i_theme,
-               i_window, i_work_area, i_zoom_speed;
+               i_debug, i_fade, i_hanger, i_scroll_speed, i_shadow,
+               i_test_globe, i_theme, i_window, i_work_area, i_zoom_speed;
 
 /* i_video.c */
 void I_video_init(i_window_t *);
