@@ -10,6 +10,8 @@
  FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
 \******************************************************************************/
 
+/* Contains the root window and toolbars */
+
 #include "i_common.h"
 
 /* Number of windows defined */
@@ -17,6 +19,10 @@
 
 /* Globe light modulation in limbo mode */
 #define LIMBO_GLOBE_LIGHT 0.1f
+
+/* The logo fades in/out during limbo mode changes, but not as fast as the
+   other windows and GUI elements */
+#define LIMBO_FADE_SCALE 0.2f
 
 /* Windows */
 static struct property_t {
@@ -40,7 +46,7 @@ static i_window_t left_toolbar, *open_window, windows[WINDOWS_LEN];
 static i_button_t buttons[WINDOWS_LEN];
 static r_sprite_t limbo_logo;
 static float limbo_fade;
-static int grabbing, grab_x, grab_y, layout_frame;
+static int layout_frame;
 
 /******************************************************************************\
  Root window event function.
@@ -81,26 +87,15 @@ static int root_event(i_widget_t *root, i_event_t event)
                         R_zoom_cam_by(i_zoom_speed.value.f);
                 if (i_mouse == SDL_BUTTON_WHEELUP)
                         R_zoom_cam_by(-i_zoom_speed.value.f);
-                if (i_mouse == SDL_BUTTON_MIDDLE) {
-                        grabbing = TRUE;
-                        grab_x = i_mouse_x;
-                        grab_y = i_mouse_y;
-                }
+                if (i_mouse == SDL_BUTTON_MIDDLE)
+                        I_grab_globe(i_mouse_x, i_mouse_y);
                 break;
         case I_EV_MOUSE_UP:
                 if (i_mouse == SDL_BUTTON_MIDDLE)
-                        grabbing = FALSE;
+                        I_release_globe();
                 break;
         case I_EV_MOUSE_MOVE:
-                if (grabbing) {
-                        float dx, dy;
-
-                        dx = R_screen_to_globe(i_mouse_x - grab_x);
-                        dy = R_screen_to_globe(i_mouse_y - grab_y);
-                        R_move_cam_by(C_vec2(dx, dy));
-                        grab_x = i_mouse_x;
-                        grab_y = i_mouse_y;
-                }
+                I_rotate_globe(i_mouse_x, i_mouse_y);
                 break;
         case I_EV_CONFIGURE:
                 i_colors[I_COLOR] = C_color_string(i_color.value.s);
@@ -118,17 +113,23 @@ static int root_event(i_widget_t *root, i_event_t event)
                 return FALSE;
         case I_EV_RENDER:
 
+                /* Render globe interface tests */
+                I_test_globe();
+
                 /* Rotate around the globe during limbo */
                 if (limbo_fade > 0.f)
-                        R_move_cam_by(C_vec2(limbo_fade * c_frame_sec / 60.f *
-                                             C_PI / R_MINUTES_PER_DAY, 0));
+                        R_rotate_cam_by(C_vec3(0.f, limbo_fade *
+                                                    c_frame_sec / 60.f * C_PI /
+                                                    R_MINUTES_PER_DAY, 0.f));
                 if (i_limbo) {
                         R_zoom_cam_by((R_ZOOM_MAX - r_cam_zoom) * c_frame_sec);
-                        limbo_fade += i_fade.value.f * c_frame_sec / 10.f;
+                        limbo_fade += i_fade.value.f * c_frame_sec *
+                                      LIMBO_FADE_SCALE;
                         if (limbo_fade > 1.f)
                                 limbo_fade = 1.f;
                 } else {
-                        limbo_fade -= i_fade.value.f * c_frame_sec / 10.f;
+                        limbo_fade -= i_fade.value.f * c_frame_sec *
+                                      LIMBO_FADE_SCALE;
                         if (limbo_fade < 0.f)
                                 limbo_fade = 0.f;
                 }

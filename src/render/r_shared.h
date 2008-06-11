@@ -45,6 +45,12 @@
 /* Maximum number of globe 4-subdivision iterations */
 #define R_SUBDIV4_MAX 5
 
+/* Rendering field-of-view in degrees */
+#define R_FOV 90.f
+
+/* tan(R_FOV / 2) */
+#define R_FOV_HALF_TAN 1.f
+
 /* Opaque texture object */
 typedef struct r_texture r_texture_t;
 
@@ -134,10 +140,9 @@ void R_get_tile_coords(int index, c_vec3_t verts[3]);
 float R_get_tile_latitude(int tile);
 void R_get_tile_neighbors(int tile, int neighbors[3]);
 int R_get_tile_region(int tile, int neighbors[12]);
-float R_screen_to_globe(int pixels);
 void R_start_globe(void);
 
-extern float r_globe_light;
+extern float r_globe_light, r_globe_radius;
 extern int r_tiles;
 
 /* r_mode.c */
@@ -153,12 +158,15 @@ void R_init(void);
 void R_move_cam_by(c_vec2_t);
 void R_pop_clip(void);
 void R_push_clip(void);
+void R_rotate_cam_by(c_vec3_t);
+c_vec3_t R_rotate_from_cam(c_vec3_t);
+c_vec3_t R_rotate_to_cam(c_vec3_t);
 void R_save_screenshot(const char *filename);
 void R_start_frame(void);
 void R_zoom_cam_by(float);
 
 extern c_count_t r_count_faces;
-extern c_vec3_t r_cam_normal;
+extern c_vec3_t r_cam_forward, r_cam_normal, r_cam_origin;
 extern float r_cam_zoom;
 extern int r_width_2d, r_height_2d, r_restart;
 
@@ -192,6 +200,7 @@ void R_window_render(r_window_t *);
 /* r_tests.c */
 void R_free_test_assets(void);
 void R_load_test_assets(void);
+void R_render_test_line(c_vec3_t from, c_vec3_t to, c_color_t);
 
 /* r_variables.c */
 void R_register_variables(void);

@@ -105,9 +105,6 @@ void R_texture_upload(const r_texture_t *);
 
 extern r_texture_t *r_terrain_tex;
 
-/* r_globe.c */
-extern float r_globe_radius;
-
 /* r_mode.c */
 #define R_check_errors() R_check_errors_full(__FILE__, __LINE__, __func__);
 void R_check_errors_full(const char *file, int line, const char *func);
@@ -137,10 +134,10 @@ void R_render_normals(int count, c_vec3_t *co, c_vec3_t *no, int stride);
 void R_render_tests(void);
 
 /* r_variables.c */
-extern c_var_t r_clear, r_depth_bits, r_globe_colors[4], r_globe_atmosphere,
-               r_globe_shininess, r_globe_smooth, r_gl_errors, r_light,
-               r_moon_atten, r_moon_colors[3], r_moon_height, r_solar,
-               r_sun_colors[3], r_test_normals, r_test_sprite_num,
-               r_test_sprite, r_test_model,  r_test_prerender, r_test_text,
-               r_vsync;
+extern c_var_t r_clear, r_depth_bits, r_globe, r_globe_colors[4],
+               r_globe_atmosphere, r_globe_shininess, r_globe_smooth,
+               r_globe_transitions, r_gl_errors, r_light, r_moon_atten,
+               r_moon_colors[3], r_moon_height, r_solar, r_sun_colors[3],
+               r_test_normals, r_test_sprite_num, r_test_sprite, r_test_model,
+               r_test_prerender, r_test_text, r_vsync;
 

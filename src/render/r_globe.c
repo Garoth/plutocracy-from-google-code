@@ -394,6 +394,10 @@ void R_start_globe(void)
         R_enable_light();
         R_texture_select(r_terrain_tex);
 
+        /* Only render if the globe is desired */
+        if (!r_globe.value.n)
+                return;
+
         /* Use the Vertex Buffer Object if available */
         if (vertices_vbo) {
                 r_ext.glBindBuffer(GL_ARRAY_BUFFER, vertices_vbo);
@@ -429,16 +433,6 @@ void R_finish_globe(void)
         R_disable_light();
         R_check_errors();
         R_pop_mode();
-}
-
-/******************************************************************************\
- Converts screen pixel distance to globe radians.
- FIXME: Hacky and inaccurate.
-\******************************************************************************/
-float R_screen_to_globe(int pixels)
-{
-        return 0.05f * r_pixel_scale.value.f * pixels /
-               (r_globe_radius + 5.f * (R_ZOOM_MAX - r_cam_zoom));
 }
 
 /******************************************************************************\
@@ -623,6 +617,10 @@ static int get_tile_terrain(int tile, r_tile_t *tiles)
         if (base >= R_T_BASES - 1)
                 return tiles[tile].terrain;
 
+        /* If we are not using transition tiles, just return the base */
+        if (!r_globe_transitions.value.n)
+                return base;
+
         /* Each tile vertex can only have up to two base terrains on it, we
            need to find out if the dominant one is present */
         base_num = 0;
@@ -674,6 +672,7 @@ void R_configure_globe(r_tile_t *tiles)
         int i, tx, ty, terrain;
 
         C_debug("Configuring globe");
+        C_var_unlatch(&r_globe_transitions);
 
         /* UV dimensions of tile boundary box */
         tile.x = 2.f * (r_terrain_tex->surface->w / R_TILE_SHEET_W) /

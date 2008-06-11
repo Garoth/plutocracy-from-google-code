@@ -104,10 +104,8 @@ static void output_comment(const char *buf)
                                 fprintf(d_file, "</code><br>");
                                 code = CODE_NONE;
                                 blank_nl = TRUE;
-                        } else if (i - last_nl < 64 && in_p) {
-                                fprintf(d_file, "</p>");
-                                in_p = FALSE;
-                        }
+                        } else if (i - last_nl < 64 && in_p)
+                                fprintf(d_file, "<br>");
                         last_nl = i;
                         spaces = 0;
                 } else if (buf[i] == ' ' || buf[i] == '\t') {
@@ -126,6 +124,20 @@ static void output_comment(const char *buf)
                         }
 
                         spaces = -1;
+                }
+
+                /* Links need to be processed separately */
+                if (!strncmp(buf + i, "http://", 7)) {
+                        char link[256];
+
+                        for (j = 0; j < sizeof (link) - 1 &&
+                             buf[i + j] && buf[i + j] > ' '; j++)
+                                link[j] = buf[i + j];
+                        link[j] = NUL;
+                        fprintf(d_file, "<a class=\"out\" href=\"%s\">%s</a>",
+                                link, link);
+                        i += j - 1;
+                        continue;
                 }
 
                 /* Codify anything specifically tagged */
@@ -194,11 +206,11 @@ static void output_def(const char *name, const char *buf)
                         if (next_i && (!entry || strcmp(entry->name, name))) {
                                 next_i += i;
                                 if (entry)
-                                        fprintf(d_file, "<a href=\"#%s\">", 
+                                        fprintf(d_file, "<a href=\"#%s\">",
                                                 entry->name);
                                 else
-                                        fprintf(d_file, 
-                                                "<b class=\"keyword%d\">", 
+                                        fprintf(d_file,
+                                                "<b class=\"keyword%d\">",
                                                 type);
                                 while (i < next_i)
                                         fputc(buf[i++], d_file);
@@ -314,12 +326,12 @@ void D_output_entries(entry_t *entry)
         static int entries;
 
         while (entry) {
-                fprintf(d_file, 
+                fprintf(d_file,
                         "<a name=\"%s\" href=\"javascript:toggle(%d)\">\n"
                         "<div class=\"entry\" id=\"%d\">\n"
                         "%s ", entry->name, entries, entries, entry->name);
                 output_path(entry->file);
-                fprintf(d_file, 
+                fprintf(d_file,
                         "</div>\n"
                         "</a>\n"
                         "<div class=\"entry_body\" id=\"%d_body\" "

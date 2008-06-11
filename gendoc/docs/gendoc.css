@@ -1,4 +1,3 @@
-
 body {
         background: #2e3436;
         color: #d3d7cf;
@@ -20,6 +19,21 @@ a {
         color: #eeeeec;
         font-weight: bold;
         text-decoration: none;
+}
+
+a.out {
+        color: #729fcf;
+        font-weight: normal;
+        font-family: monospace;
+}
+
+a.out:hover {
+        text-decoration: underline;
+}
+
+a.out:active {
+        color: #ef2929;
+        text-decoration: underline;
 }
 
 h1 {
