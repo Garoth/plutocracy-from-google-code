@@ -470,6 +470,10 @@
 				</FileConfiguration>
 			</File>
 			<File
+				RelativePath="..\..\src\interface\i_globe.c"
+				>
+			</File>
+			<File
 				RelativePath="..\..\src\interface\i_label.c"
 				>
 				<FileConfiguration
