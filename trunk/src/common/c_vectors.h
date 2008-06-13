@@ -310,6 +310,33 @@ static inline c_vec3_t C_vec3_tfm(c_vec3_t v, GLfloat m[16])
 }
 
 /******************************************************************************\
+ Returns the index of the vector's dominant axis.
+\******************************************************************************/
+static inline int C_vec3_dominant(c_vec3_t v)
+{
+        if (v.x > v.y) {
+                if (v.x > v.z)
+                        return 0;
+                return 2;
+        }
+        if (v.y > v.z)
+                return 1;
+        return 2;
+}
+
+/******************************************************************************\
+ Construct a 2D vector from a 3D vector by projecting onto one axis.
+\******************************************************************************/
+static inline c_vec2_t C_vec2_from_3(c_vec3_t v, int axis)
+{
+        if (axis == 2)
+                return C_vec2(v.x, v.y);
+        if (axis == 1)
+                return C_vec2(v.z, v.x);
+        return C_vec2(v.y, v.z);
+}
+
+/******************************************************************************\
  Returns TRUE if the two rectangles intersect.
 \******************************************************************************/
 static inline int C_rect_intersect(c_vec2_t o1, c_vec2_t s1,

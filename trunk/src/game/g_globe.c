@@ -22,7 +22,7 @@
 #define ISLAND_VARIANCE 0.5f
 
 /* Maximum height off the globe surface of a tile */
-#define ISLAND_HEIGHT 5.f
+#define ISLAND_HEIGHT 4.f
 
 /* Minimum number of land tiles for island to succeed */
 #define ISLAND_LAND 20
@@ -363,7 +363,7 @@ static int tile_visible(int tile)
 }
 
 /******************************************************************************\
- Render the globe.
+ Render the globe and updates tile visibility.
 \******************************************************************************/
 void G_render_globe(void)
 {
@@ -371,7 +371,7 @@ void G_render_globe(void)
 
         R_start_globe();
         for (i = 0; i < r_tiles; i++)
-                if (tile_visible(i)) {
+                if ((g_tiles[i].visible = tile_visible(i))) {
                         R_adjust_light_for(g_tiles[i].origin);
                         R_model_render(&g_tiles[i].model);
                 }
@@ -379,11 +379,77 @@ void G_render_globe(void)
 }
 
 /******************************************************************************\
+ Returns TRUE if the given ray intersects the tile.
+
+ The algorithm used here projects the ray onto the triangle's plane and
+ tests the barycentric coordinates of the intersection point to determine
+ whether the triangle was hit. Source:
+ http://www.devmaster.net/wiki/Ray-triangle_intersection
+\******************************************************************************/
+static int ray_intersects_tile(c_vec3_t O, c_vec3_t D, int tile)
+{
+        c_vec3_t P, triangle[3];
+        c_vec2_t Q, B, C;
+        float t, u, v, b_cross_c;
+        int axis;
+
+        R_get_tile_coords(tile, triangle);
+
+        /* Find [P], the ray's location in the triangle plane */
+        O = C_vec3_sub(O, triangle[0]);
+        t = C_vec3_dot(g_tiles[tile].normal, O) /
+            -C_vec3_dot(g_tiles[tile].normal, D);
+        if (t <= 0.f)
+                return FALSE;
+        P = C_vec3_add(O, C_vec3_scalef(D, t));
+
+        /* Project the points onto one axis to simplify calculations. Choose the
+           dominant axis of the normal for numeric stability. */
+        axis = C_vec3_dominant(g_tiles[tile].normal);
+        Q = C_vec2_from_3(P, axis);
+        B = C_vec2_from_3(C_vec3_sub(triangle[1], triangle[0]), axis);
+        C = C_vec2_from_3(C_vec3_sub(triangle[2], triangle[0]), axis);
+
+        /* Find the barycentric coordinates */
+        b_cross_c = C_vec2_cross(B, C);
+        u = C_vec2_cross(Q, C) / b_cross_c;
+        v = C_vec2_cross(Q, B) / -b_cross_c;
+
+        /* Check if the point is within triangle bounds */
+        if (u >= 0.f && v >= 0.f && u + v <= 1.f) {
+                if (g_test_globe.value.n) {
+                        P = C_vec3_add(P, triangle[0]);
+                        R_render_test_line(P,
+                                           C_vec3_add(P, g_tiles[tile].normal),
+                                           C_color(1.f, 0.f, 0.f, 1.f));
+                }
+                return TRUE;
+        }
+        return FALSE;
+}
+
+/******************************************************************************\
  After a mouse click is transformed into a ray with [origin] and [forward]
  vector, this function will find which tile (if any) was clicked on and
  trigger any actions this may have caused.
 \******************************************************************************/
-void G_click_ray(c_vec3_t origin, c_vec3_t forward)
+void G_click_ray(c_vec3_t origin, c_vec3_t forward, int button)
 {
+        int i;
+
+        for (i = 0; i < r_tiles; i++)
+                if (g_tiles[i].visible &&
+                    ray_intersects_tile(origin, forward, i)) {
+                        if (g_test_globe.value.n) {
+                                c_vec3_t b;
+
+                                C_debug("Click hit for tile %d", i);
+                                b = C_vec3_add(g_tiles[i].origin,
+                                               g_tiles[i].normal);
+                                R_render_test_line(g_tiles[i].origin, b,
+                                                   C_color(0.f, 1.f, 0.f, 1.f));
+                                set_tile_model(i, "");
+                        }
+                }
 }
 

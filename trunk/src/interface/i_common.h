@@ -190,10 +190,7 @@ void I_entry_configure(i_entry_t *, const char *);
 void I_game_init(i_window_t *);
 
 /* i_globe.c */
-void I_grab_globe(int x, int y);
-void I_release_globe(void);
-void I_rotate_globe(int x, int y);
-void I_test_globe(void);
+void I_globe_event(i_event_t);
 
 /* i_label.c */
 void I_label_init(i_label_t *, const char *);

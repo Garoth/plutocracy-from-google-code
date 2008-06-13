@@ -516,11 +516,15 @@ int C_color_update(c_var_t *var, c_var_value_t value)
 void C_translate_vars(void)
 {
         c_var_t *var;
+        int total;
 
-        for (var = root; var; var = var->next)
-                if (var->comment && var->comment[0])
+        for (var = root, total = 0; var; var = var->next)
+                if (var->comment && var->comment[0]) {
                         var->comment = C_str(C_va("%s-comment", var->name),
                                                   var->comment);
+                        total++;
+                }
+        C_debug("%d registered variables", total);
 }
 
 /******************************************************************************\
