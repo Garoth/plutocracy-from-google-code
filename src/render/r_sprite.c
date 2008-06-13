@@ -103,9 +103,6 @@ static void sprite_render_finish(void)
    |   |
    1---2
 
- TODO: Disable anti-aliasing here if FSAA is on.
- FIXME: There is a slight overlap between the antialiased edge line and the
-        polygon which should probably be fixed if possible.
 \******************************************************************************/
 void R_sprite_render(const r_sprite_t *sprite)
 {

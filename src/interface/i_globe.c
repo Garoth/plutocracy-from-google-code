@@ -15,6 +15,7 @@
 #include "i_common.h"
 
 static c_vec3_t grab_normal;
+static c_vec2_t globe_motion;
 static float grab_angle;
 static int grabbing, grab_rolling;
 
@@ -47,6 +48,15 @@ static int intersect_ray_globe(c_vec3_t o, c_vec3_t d, c_vec3_t *point)
 }
 
 /******************************************************************************\
+ Returns an eye-space ray direction from the camera into the screen pixel.
+\******************************************************************************/
+static c_vec3_t screen_ray(int x, int y)
+{
+        return C_vec3_norm(C_vec3(x - r_width_2d / 2.f, r_height_2d / 2.f - y,
+                                  -0.5f * r_height_2d / R_FOV_HALF_TAN));
+}
+
+/******************************************************************************\
  Converts a screen coordinate to a globe [normal]. Returns TRUE if the globe
  was clicked on and [normal] was set. Otherwise, returns FALSe and sets
  [angle] to the roll angle.
@@ -57,10 +67,7 @@ static int screen_to_normal(int x, int y, c_vec3_t *normal, float *angle)
 
         /* We need to create a vector that points out of the camera into the
            ray that is cast into the direction of the clicked pixel */
-        direction.x = x - r_width_2d / 2.f;
-        direction.y = r_height_2d / 2.f - y;
-        direction.z = -0.5f * r_height_2d / R_FOV_HALF_TAN;
-        direction = C_vec3_norm(direction);
+        direction = screen_ray(x, y);
         forward = R_rotate_to_cam(direction);
 
         /* Test the direction ray */
@@ -87,7 +94,7 @@ static int screen_to_normal(int x, int y, c_vec3_t *normal, float *angle)
 /******************************************************************************\
  Grab and begin rotating the globe. [x] and [y] are in screen coordinates.
 \******************************************************************************/
-void I_grab_globe(int x, int y)
+static void grab_globe(int x, int y)
 {
         if (grabbing)
                 return;
@@ -102,7 +109,7 @@ void I_grab_globe(int x, int y)
 /******************************************************************************\
  Release the globe from a rotation grab.
 \******************************************************************************/
-void I_release_globe(void)
+static void release_globe(void)
 {
         grabbing = FALSE;
 }
@@ -111,7 +118,7 @@ void I_release_globe(void)
  Rotate the globe during a grab or do nothing. [x] and [y] are in screen
  coordinates.
 \******************************************************************************/
-void I_rotate_globe(int x, int y)
+static void rotate_globe(int x, int y)
 {
         c_vec3_t normal, angles;
         float angle;
@@ -158,7 +165,7 @@ void I_rotate_globe(int x, int y)
 /******************************************************************************\
  Runs mouse click detection functions for testing.
 \******************************************************************************/
-void I_test_globe(void)
+static void test_globe(void)
 {
         c_vec3_t normal;
         float angle;
@@ -169,5 +176,68 @@ void I_test_globe(void)
         R_render_test_line(C_vec3_scalef(normal, r_globe_radius),
                            C_vec3_scalef(normal, r_globe_radius + 1.f),
                            C_color(0.f, 1.f, 1.f, 1.f));
+}
+
+/******************************************************************************\
+ Processes events from the root window that affect the globe.
+\******************************************************************************/
+void I_globe_event(i_event_t event)
+{
+        switch (event) {
+        case I_EV_KEY_DOWN:
+                if (i_limbo)
+                        break;
+                if (i_key == SDLK_RIGHT && globe_motion.x > -1.f)
+                        globe_motion.x = -i_scroll_speed.value.f;
+                if (i_key == SDLK_LEFT && globe_motion.x < 1.f)
+                        globe_motion.x = i_scroll_speed.value.f;
+                if (i_key == SDLK_DOWN && globe_motion.y > -1.f)
+                        globe_motion.y = -i_scroll_speed.value.f;
+                if (i_key == SDLK_UP && globe_motion.y < 1.f)
+                        globe_motion.y = i_scroll_speed.value.f;
+                if (i_key == '-')
+                        R_zoom_cam_by(i_zoom_speed.value.f);
+                if (i_key == '=')
+                        R_zoom_cam_by(-i_zoom_speed.value.f);
+                break;
+        case I_EV_KEY_UP:
+                if ((i_key == SDLK_RIGHT && globe_motion.x < 0.f) ||
+                    (i_key == SDLK_LEFT && globe_motion.x > 0.f))
+                        globe_motion.x = 0.f;
+                if ((i_key == SDLK_DOWN && globe_motion.y < 0.f) ||
+                    (i_key == SDLK_UP && globe_motion.y > 0.f))
+                        globe_motion.y = 0.f;
+                break;
+        case I_EV_MOUSE_DOWN:
+                if (i_limbo)
+                        break;
+                if (i_mouse == SDL_BUTTON_WHEELDOWN)
+                        R_zoom_cam_by(i_zoom_speed.value.f);
+                else if (i_mouse == SDL_BUTTON_WHEELUP)
+                        R_zoom_cam_by(-i_zoom_speed.value.f);
+                else if (i_mouse == SDL_BUTTON_MIDDLE)
+                        grab_globe(i_mouse_x, i_mouse_y);
+                else {
+                        c_vec3_t direction;
+
+                        direction = screen_ray(i_mouse_x, i_mouse_y);
+                        direction = R_rotate_to_cam(direction);
+                        G_click_ray(r_cam_origin, direction, i_mouse);
+                }
+                break;
+        case I_EV_MOUSE_UP:
+                if (i_mouse == SDL_BUTTON_MIDDLE)
+                        release_globe();
+                break;
+        case I_EV_MOUSE_MOVE:
+                rotate_globe(i_mouse_x, i_mouse_y);
+                break;
+        case I_EV_RENDER:
+                test_globe();
+                R_move_cam_by(C_vec2_scalef(globe_motion, c_frame_sec));
+                break;
+        default:
+                break;
+        }
 }
 

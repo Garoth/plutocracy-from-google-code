@@ -161,7 +161,6 @@ static void pixel_scale_update(void)
 \******************************************************************************/
 static int set_video_mode(void)
 {
-        SDL_Surface *screen;
         int flags;
 
         C_var_unlatch(&r_vsync);
@@ -189,8 +188,11 @@ static int set_video_mode(void)
         SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 8);
         SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, r_depth_bits.value.n);
         SDL_GL_SetAttribute(SDL_GL_SWAP_CONTROL, r_vsync.value.n);
-        if (r_multisample.value.n < 0)
+        if (r_multisample.value.n < 0) {
                 r_multisample.value.n = 0;
+                SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, 0);
+        } else
+                SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, 1);
         SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, r_multisample.value.n);
         if (r_color_bits.value.n <= 16) {
                 SDL_GL_SetAttribute(SDL_GL_RED_SIZE, 5);
@@ -205,9 +207,8 @@ static int set_video_mode(void)
                 SDL_HWSURFACE;
         if (!r_windowed.value.n)
                 flags |= SDL_FULLSCREEN;
-        screen = SDL_SetVideoMode(r_width.value.n, r_height.value.n,
-                                  r_color_bits.value.n, flags);
-        if (!screen) {
+        if (!SDL_SetVideoMode(r_width.value.n, r_height.value.n,
+                              r_color_bits.value.n, flags)) {
                 C_warning("Failed to set video mode: %s", SDL_GetError());
                 return FALSE;
         }

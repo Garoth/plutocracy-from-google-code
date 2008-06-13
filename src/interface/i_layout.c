@@ -41,7 +41,6 @@ i_widget_t i_root;
 /* TRUE if the interface is in limbo mode */
 int i_limbo;
 
-static c_vec2_t root_scroll;
 static i_window_t left_toolbar, *open_window, windows[WINDOWS_LEN];
 static i_button_t buttons[WINDOWS_LEN];
 static r_sprite_t limbo_logo;
@@ -56,47 +55,6 @@ static int root_event(i_widget_t *root, i_event_t event)
         int i;
 
         switch (event) {
-        case I_EV_KEY_DOWN:
-                if (i_limbo)
-                        break;
-                if (i_key == SDLK_RIGHT && root_scroll.x > -1.f)
-                        root_scroll.x = -i_scroll_speed.value.f;
-                if (i_key == SDLK_LEFT && root_scroll.x < 1.f)
-                        root_scroll.x = i_scroll_speed.value.f;
-                if (i_key == SDLK_DOWN && root_scroll.y > -1.f)
-                        root_scroll.y = -i_scroll_speed.value.f;
-                if (i_key == SDLK_UP && root_scroll.y < 1.f)
-                        root_scroll.y = i_scroll_speed.value.f;
-                if (i_key == '-')
-                        R_zoom_cam_by(i_zoom_speed.value.f);
-                if (i_key == '=')
-                        R_zoom_cam_by(-i_zoom_speed.value.f);
-                break;
-        case I_EV_KEY_UP:
-                if ((i_key == SDLK_RIGHT && root_scroll.x < 0.f) ||
-                    (i_key == SDLK_LEFT && root_scroll.x > 0.f))
-                        root_scroll.x = 0.f;
-                if ((i_key == SDLK_DOWN && root_scroll.y < 0.f) ||
-                    (i_key == SDLK_UP && root_scroll.y > 0.f))
-                        root_scroll.y = 0.f;
-                break;
-        case I_EV_MOUSE_DOWN:
-                if (i_limbo)
-                        break;
-                if (i_mouse == SDL_BUTTON_WHEELDOWN)
-                        R_zoom_cam_by(i_zoom_speed.value.f);
-                if (i_mouse == SDL_BUTTON_WHEELUP)
-                        R_zoom_cam_by(-i_zoom_speed.value.f);
-                if (i_mouse == SDL_BUTTON_MIDDLE)
-                        I_grab_globe(i_mouse_x, i_mouse_y);
-                break;
-        case I_EV_MOUSE_UP:
-                if (i_mouse == SDL_BUTTON_MIDDLE)
-                        I_release_globe();
-                break;
-        case I_EV_MOUSE_MOVE:
-                I_rotate_globe(i_mouse_x, i_mouse_y);
-                break;
         case I_EV_CONFIGURE:
                 i_colors[I_COLOR] = C_color_string(i_color.value.s);
                 i_colors[I_COLOR_ALT] = C_color_string(i_color2.value.s);
@@ -112,9 +70,6 @@ static int root_event(i_widget_t *root, i_event_t event)
 
                 return FALSE;
         case I_EV_RENDER:
-
-                /* Render globe interface tests */
-                I_test_globe();
 
                 /* Rotate around the globe during limbo */
                 if (limbo_fade > 0.f)
@@ -133,6 +88,8 @@ static int root_event(i_widget_t *root, i_event_t event)
                         if (limbo_fade < 0.f)
                                 limbo_fade = 0.f;
                 }
+
+                /* Globe lighting is modulated by limbo mode */
                 r_globe_light = LIMBO_GLOBE_LIGHT +
                                 (1.f - LIMBO_GLOBE_LIGHT) * (1.f - limbo_fade);
 
@@ -142,11 +99,14 @@ static int root_event(i_widget_t *root, i_event_t event)
                         R_sprite_render(&limbo_logo);
                 }
 
-                R_move_cam_by(C_vec2_scalef(root_scroll, c_frame_sec));
                 break;
         default:
                 break;
         }
+
+        /* Propagate to the globe interface processing function */
+        I_globe_event(event);
+
         return TRUE;
 }
 

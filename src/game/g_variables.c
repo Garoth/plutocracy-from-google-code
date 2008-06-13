@@ -13,7 +13,7 @@
 #include "g_common.h"
 
 /* Game testing */
-c_var_t g_test_tile;
+c_var_t g_test_globe, g_test_tile;
 
 /* Globe variables */
 c_var_t g_globe_islands, g_globe_island_size, g_globe_seed, g_globe_subdiv4;
@@ -26,6 +26,9 @@ void G_register_variables(void)
         /* Game testing */
         C_register_string(&g_test_tile, "g_test_tile", "",
                           "path of tile PLUM model to test");
+        C_register_integer(&g_test_globe, "g_test_globe", FALSE,
+                           "test globe tile click detection");
+        g_test_globe.edit = C_VE_ANYTIME;
 
         /* Globe variables */
         C_register_integer(&g_globe_seed, "g_globe_seed", C_rand(),

@@ -20,7 +20,7 @@ typedef struct g_tile {
         r_model_t model;
         r_tile_t *render;
         struct g_tile *neighbors[3];
-        int island;
+        int visible, island;
 } g_tile_t;
 
 /* g_globe.c */
@@ -28,5 +28,5 @@ extern c_var_t g_globe_islands, g_globe_island_size, g_globe_seed,
                g_globe_subdiv4;
 
 /* g_variables.c */
-extern c_var_t g_test_tile;
+extern c_var_t g_test_globe, g_test_tile;
 
