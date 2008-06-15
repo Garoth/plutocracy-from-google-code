@@ -117,14 +117,21 @@ typedef struct i_window {
         int hanger_shown, decorated;
 } i_window_t;
 
+/* Button type */
+typedef enum {
+        I_BT_DECORATED,
+        I_BT_ICON_SQUARE,
+        I_BT_ICON_ROUND,
+} i_button_type_t;
+
 /* Buttons can have an icon and/or text */
 typedef struct i_button {
         i_widget_t widget;
         r_window_t normal, hover, active;
-        r_sprite_t icon, text, light, prelight;
+        r_sprite_t icon, text, icon_active, icon_hover;
         i_callback_f on_click;
+        i_button_type_t type;
         void *data;
-        int decorated;
         char buffer[64];
 } i_button_t;
 
@@ -174,9 +181,10 @@ typedef struct i_select {
 
 /* i_button.c */
 int I_button_event(i_button_t *, i_event_t);
-void I_button_init(i_button_t *, const char *icon, const char *text, int bg);
+void I_button_init(i_button_t *, const char *icon, const char *text,
+                   i_button_type_t);
 void I_button_configure(i_button_t *, const char *icon, const char *text,
-                        int bg);
+                        i_button_type_t);
 
 /* i_console.c */
 void I_console_init(i_window_t *);
@@ -207,9 +215,10 @@ void I_select_init(i_select_t *, const char *label, const char **list,
 
 /* i_variables.c */
 extern c_var_t i_border, i_button, i_button_active, i_button_hover,
-               i_button_light, i_button_prelight, i_color, i_color2,
-               i_debug, i_fade, i_hanger, i_scroll_speed, i_shadow,
-               i_test_globe, i_theme, i_window, i_work_area, i_zoom_speed;
+               i_square_active, i_square_hover, i_round_active, i_round_hover,
+               i_color, i_color2, i_debug, i_fade, i_hanger, i_scroll_speed,
+               i_shadow, i_test_globe, i_theme, i_window, i_work_area,
+               i_zoom_speed;
 
 /* i_video.c */
 void I_video_init(i_window_t *);

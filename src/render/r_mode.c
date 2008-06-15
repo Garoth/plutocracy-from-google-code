@@ -28,26 +28,15 @@ int r_width_2d, r_height_2d, r_mode_hold, r_restart;
 /* Structure to wrap OpenGL extensions */
 r_ext_t r_ext;
 
-/* Restart the video system */
+/* Restarts the video system */
 int r_restart;
 static int init_frame;
 
 /* Supported extensions */
 int r_extensions[R_EXTENSIONS];
 
-/* Camera location and orientation */
-c_vec3_t r_cam_origin, r_cam_forward, r_cam_normal;
-
-/* The distance the camera is from the globe surface*/
-float r_cam_zoom;
-
-/* The full camera matrix */
-static float cam_matrix[16];
-
-/* Camera rotation */
-static c_vec3_t cam_rot_diff;
-static GLfloat cam_rotation[16];
-static float cam_zoom_diff;
+/* The 3D-mode projection matrix */
+GLfloat r_proj_matrix[16];
 
 /* Clipping stack */
 static int clip_stack;
@@ -215,6 +204,16 @@ static int set_video_mode(void)
 
         /* Set screen view */
         glViewport(0, 0, r_width.value.n, r_height.value.n);
+
+        /* We only need to compute a perspective matrix once as we never change
+           the field-of-view in-game */
+        glMatrixMode(GL_PROJECTION);
+        glLoadIdentity();
+        gluPerspective(R_FOV, (float)r_width.value.n / r_height.value.n,
+                       1.f, 512.f);
+        glGetFloatv(GL_PROJECTION_MATRIX, r_proj_matrix);
+        glMatrixMode(GL_MODELVIEW);
+
         R_check_errors();
 
         /* Update pixel scale */
@@ -323,13 +322,6 @@ static void set_gl_state(void)
         mode_stack = -1;
         mode_values[0] = R_MODE_NONE;
 
-        /* Initialize camera to identity */
-        memset(cam_rotation, 0, sizeof (cam_rotation));
-        cam_rotation[0] = 1.f;
-        cam_rotation[5] = 1.f;
-        cam_rotation[10] = 1.f;
-        cam_rotation[15] = 1.f;
-
         /* Setup the lighting model */
         color = C_color(0.f, 0.f, 0.f, 1.f);
         glLightModelfv(GL_LIGHT_MODEL_AMBIENT, C_ARRAYF(color));
@@ -388,6 +380,7 @@ void R_init(void)
         r_cam_zoom = R_ZOOM_MAX;
         R_clip_disable();
         R_load_assets();
+        R_init_camera();
         R_init_solar();
 
         /* Set updatable variables */
@@ -421,116 +414,6 @@ void R_check_errors_full(const char *file, int line, const char *func)
                              gl_error, gluErrorString(gl_error));
         C_warning(file, line, func, "OpenGL error %d: %s",
                   gl_error, gluErrorString(gl_error));
-}
-
-/******************************************************************************\
- Transforms a vector using camera rotation. Does not apply zoom translation.
-\******************************************************************************/
-c_vec3_t R_rotate_from_cam(c_vec3_t v)
-{
-        c_vec3_t vt;
-
-        vt.x = v.x * cam_rotation[0] + v.y * cam_rotation[4] +
-               v.z * cam_rotation[8];
-        vt.y = v.x * cam_rotation[1] + v.y * cam_rotation[5] +
-               v.z * cam_rotation[9];
-        vt.z = v.x * cam_rotation[2] + v.y * cam_rotation[6] +
-               v.z * cam_rotation[10];
-        return vt;
-}
-
-/******************************************************************************\
- Transforms a vector using the inverse of the camera rotation. Does not apply
- zoom translation.
-\******************************************************************************/
-c_vec3_t R_rotate_to_cam(c_vec3_t v)
-{
-        c_vec3_t vt;
-
-        vt.x = v.x * cam_rotation[0] + v.y * cam_rotation[1] +
-               v.z * cam_rotation[2];
-        vt.y = v.x * cam_rotation[4] + v.y * cam_rotation[5] +
-               v.z * cam_rotation[6];
-        vt.z = v.x * cam_rotation[8] + v.y * cam_rotation[9] +
-               v.z * cam_rotation[10];
-        return vt;
-}
-
-/******************************************************************************\
- Calculates a new camera rotation matrix and reloads the modelview matrix.
-\******************************************************************************/
-static void update_camera(void)
-{
-        c_vec3_t x_axis, y_axis, z_axis;
-
-        R_push_mode(R_MODE_3D);
-        glMatrixMode(GL_MODELVIEW);
-
-        /* Update zoom */
-        r_cam_zoom += cam_zoom_diff;
-        if (r_cam_zoom < R_ZOOM_MIN)
-                r_cam_zoom = R_ZOOM_MIN;
-        if (r_cam_zoom > R_ZOOM_MAX)
-                r_cam_zoom = R_ZOOM_MAX;
-        cam_zoom_diff = 0.f;
-
-        /* Apply the rotation differences from last frame to the rotation
-           matrix to get view-oriented scrolling */
-        glLoadMatrixf(cam_rotation);
-        x_axis = C_vec3(cam_rotation[0], cam_rotation[4], cam_rotation[8]);
-        y_axis = C_vec3(cam_rotation[1], cam_rotation[5], cam_rotation[9]);
-        z_axis = C_vec3(cam_rotation[2], cam_rotation[6], cam_rotation[10]);
-        glRotatef(C_rad_to_deg(cam_rot_diff.x), x_axis.x, x_axis.y, x_axis.z);
-        glRotatef(C_rad_to_deg(cam_rot_diff.y), y_axis.x, y_axis.y, y_axis.z);
-        glRotatef(C_rad_to_deg(cam_rot_diff.z), z_axis.x, z_axis.y, z_axis.z);
-        cam_rot_diff = C_vec3(0.f, 0.f, 0.f);
-        glGetFloatv(GL_MODELVIEW_MATRIX, cam_rotation);
-
-        /* Recreate the full camera matrix with the new rotation */
-        glLoadIdentity();
-        glTranslatef(0, 0, -r_globe_radius - r_cam_zoom);
-        glMultMatrixf(cam_rotation);
-        glGetFloatv(GL_MODELVIEW_MATRIX, cam_matrix);
-
-        /* Extract the camera location from the matrix for use by other parts
-           of the program. We cannot replace these new vectors with the axes
-           above because they are changed by the rotations. */
-        r_cam_forward = C_vec3(-cam_rotation[2], -cam_rotation[6],
-                               -cam_rotation[10]);
-        r_cam_normal = C_vec3(cam_rotation[1], cam_rotation[5],
-                              cam_rotation[9]);
-        r_cam_origin = C_vec3_scalef(r_cam_forward,
-                                     -r_globe_radius - r_cam_zoom);
-
-        R_pop_mode();
-}
-
-/******************************************************************************\
- Rotate the camera incrementally relative to the current orientation. The
- rotation is specified using distances to move in the camera's local x- and
- y-axes.
-\******************************************************************************/
-void R_move_cam_by(c_vec2_t distance)
-{
-        cam_rot_diff.x += distance.y / (r_globe_radius * C_PI);
-        cam_rot_diff.y += distance.x / (r_globe_radius * C_PI);
-}
-
-/******************************************************************************\
- Rotate the camera incrementally relative to the current orientation. Angles
- represent rotation around their axes (i.e. [x] value around the x-axis).
-\******************************************************************************/
-void R_rotate_cam_by(c_vec3_t angle)
-{
-        cam_rot_diff = C_vec3_add(cam_rot_diff, angle);
-}
-
-/******************************************************************************\
- Zoom the camera incrementally.
-\******************************************************************************/
-void R_zoom_cam_by(float f)
-{
-        cam_zoom_diff += f;
 }
 
 /******************************************************************************\
@@ -682,7 +565,7 @@ void R_set_mode(r_mode_t mode)
 
         /* Reset model-view matrices even if the mode didn't change */
         if (mode == R_MODE_3D)
-                glLoadMatrixf(cam_matrix);
+                glLoadMatrixf(r_cam_matrix);
         else if (mode == R_MODE_2D)
                 glLoadIdentity();
 
@@ -690,10 +573,10 @@ void R_set_mode(r_mode_t mode)
                 return;
         r_mode = mode;
         glMatrixMode(GL_PROJECTION);
-        glLoadIdentity();
 
         /* 2D mode sets up an orthogonal projection to render sprites */
         if (mode == R_MODE_2D) {
+                glLoadIdentity();
                 glOrtho(0.f, r_width_2d, r_height_2d, 0.f, 0.f, 1.f);
                 glMatrixMode(GL_MODELVIEW);
                 glLoadIdentity();
@@ -707,12 +590,10 @@ void R_set_mode(r_mode_t mode)
 
         /* 3D mode sets up perspective projection and camera view for models */
         if (mode == R_MODE_3D) {
-                gluPerspective(R_FOV, (float)r_width.value.n / r_height.value.n,
-                               1.f, 512.f);
+                glLoadMatrixf(r_proj_matrix);
                 glEnable(GL_CULL_FACE);
                 glEnable(GL_DEPTH_TEST);
                 glMatrixMode(GL_MODELVIEW);
-                glLoadMatrixf(cam_matrix);
         } else {
                 glDisable(GL_CULL_FACE);
                 glDisable(GL_DEPTH_TEST);
@@ -772,7 +653,7 @@ void R_start_frame(void)
                 clear_flags |= GL_COLOR_BUFFER_BIT;
         glClear(clear_flags);
 
-        update_camera();
+        R_update_camera();
         R_render_solar();
 }
 

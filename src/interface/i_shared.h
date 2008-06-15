@@ -19,6 +19,9 @@ void I_leave_limbo(void);
 void I_parse_config(void);
 void I_render(void);
 
+/* i_ring.c */
+void I_show_ring(c_vec3_t origin);
+
 /* i_variables.c */
 void I_register_variables(void);
 

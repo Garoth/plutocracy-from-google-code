@@ -16,9 +16,10 @@
 c_var_t i_debug;
 
 /* Theme variables */
-c_var_t i_border, i_button, i_button_active, i_button_hover, i_button_light,
-        i_button_prelight, i_color, i_color2, i_fade, i_hanger, i_shadow,
-        i_theme, i_window, i_work_area;
+c_var_t i_border, i_button, i_button_active, i_button_hover,
+        i_square_active, i_square_hover, i_round_active, i_round_hover,
+        i_color, i_color2, i_fade, i_hanger, i_shadow, i_theme, i_window,
+        i_work_area;
 
 /* Interface usability variables */
 c_var_t i_scroll_speed, i_zoom_speed;
@@ -51,14 +52,22 @@ void I_register_variables(void)
                           "gui/themes/default/button_hover.png",
                           "path to decorated button hover texture");
         i_button_hover.archive = FALSE;
-        C_register_string(&i_button_prelight, "i_button_prelight",
-                          "gui/themes/default/button_prelight.png",
-                          "path to icon button hover texture");
-        i_button_prelight.archive = FALSE;
-        C_register_string(&i_button_light, "i_button_light",
-                          "gui/themes/default/button_light.png",
-                          "path to icon button pressed texture");
-        i_button_light.archive = FALSE;
+        C_register_string(&i_square_active, "i_square_active",
+                          "gui/themes/default/square_active.png",
+                          "path to square icon button active texture");
+        i_square_active.archive = FALSE;
+        C_register_string(&i_square_hover, "i_square_hover",
+                          "gui/themes/default/square_hover.png",
+                          "path to square icon button hover texture");
+        i_square_hover.archive = FALSE;
+        C_register_string(&i_round_active, "i_round_active",
+                          "gui/themes/default/round_active.png",
+                          "path to round icon button active texture");
+        i_round_active.archive = FALSE;
+        C_register_string(&i_round_hover, "i_round_hover",
+                          "gui/themes/default/round_hover.png",
+                          "path to round icon button hover texture");
+        i_round_hover.archive = FALSE;
         C_register_string(&i_color, "i_color", "aluminium1",
                           "interface text color");
         i_color.archive = FALSE;

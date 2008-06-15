@@ -226,7 +226,7 @@ void I_video_init(i_window_t *window)
 
         /* Apply button */
         I_button_init(&apply_button, NULL,
-                      C_str("i-video-apply", "Apply"), TRUE);
+                      C_str("i-video-apply", "Apply"), I_BT_DECORATED);
         apply_button.on_click = (i_callback_f)apply_button_clicked;
         apply_button.widget.margin_front = 1.f;
         apply_button.widget.state = I_WS_DISABLED;

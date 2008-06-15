@@ -457,7 +457,6 @@ void R_billboard_init(r_billboard_t *bb, const char *filename)
 \******************************************************************************/
 void R_billboard_render(r_billboard_t *bb)
 {
-        GLfloat model_view[16], projection[16];
         c_vec3_t co;
 
         /* If the point sprite extension is available we can use it instead
@@ -474,27 +473,15 @@ void R_billboard_render(r_billboard_t *bb)
                 return;
         }
 
-        /* Get the transformation matrices from 3D mode */
-        R_push_mode(R_MODE_3D);
-        glGetFloatv(GL_MODELVIEW_MATRIX, model_view);
-        glGetFloatv(GL_PROJECTION_MATRIX, projection);
-        R_pop_mode();
-
-        /* Push a point through the transformation matrices */
-        co = bb->world_origin;
-        co = C_vec3_tfm(co, model_view);
-        co = C_vec3_tfm(co, projection);
-        co.x = (co.x + 1.f) * r_width_2d / 2.f + bb->sprite.size.x;
-        co.y = (1.f - co.y) * r_height_2d / 2.f + bb->sprite.size.y;
-        co.z = (co.z + 1.f) / -2.f;
+        /* Push the origin point through the transformation matrices */
+        co = R_project(bb->world_origin);
         if (co.z >= 0.f)
                 return;
 
         /* Render the billboard as a regular sprite but pushed back in the z
-           direction and with depth testing.
-           FIXME: Why do we have to translate by the size times 1.5? */
-        bb->sprite.origin.x = co.x - bb->sprite.size.x * 1.5f;
-        bb->sprite.origin.y = co.y - bb->sprite.size.y * 1.5f;
+           direction and with depth testing */
+        bb->sprite.origin.x = co.x - bb->sprite.size.x * 0.5f;
+        bb->sprite.origin.y = co.y - bb->sprite.size.y * 0.5f;
         bb->sprite.size.x = bb->size / r_pixel_scale.value.f;
         bb->sprite.size.y = bb->sprite.size.x;
         bb->sprite.z = co.z;
