@@ -9,8 +9,7 @@ Tooltip: 'Save a Plutocracy Model File'
 
 __author__ = "Michael Levin"
 __url__ = ['plutocracy.googlecode.com', 'www.blender.org', 'blenderartists.org']
-__version__ = "r251"
-
+__version__ = "r272"
 __bpydoc__ = """\
 This script is an exporter to Plutocracy Model file format.
 (Based loosely on the OBJ exporter by Campbell Barton and Jiri Hnidek.)
@@ -23,12 +22,9 @@ will be exported as well, if they are prefixed with any amount of double-dots
 and slashes ("../path"), these will be stripped.
 """
 
-
-# --------------------------------------------------------------------------
+################################################################################
 # Plutocracy Model Exporter by Michael "risujin" Levin
 # based on OBJ Export v1.1 by Campbell Barton (AKA Ideasman)
-# --------------------------------------------------------------------------
-# ***** BEGIN GPL LICENSE BLOCK *****
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -44,9 +40,7 @@ and slashes ("../path"), these will be stripped.
 # along with this program; if not, write to the Free Software Foundation,
 # Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #
-# ***** END GPL LICENCE BLOCK *****
-# --------------------------------------------------------------------------
-
+################################################################################
 
 import Blender
 from Blender import Mesh, Scene, Window, sys, Image, Draw
@@ -55,18 +49,16 @@ import BPyObject
 import BPySys
 import BPyMessages
 
-
-def vec_eq(a, b):
-        for i in xrange(0, len(a)):
-                if a[i] != b[i]:
-                        return False
-        return True
-
-
+################################################################################
+# Escapes the string
+################################################################################
 def sanitize(s):
         return s.replace('"', '\\"')
 
-
+################################################################################
+# Converts a Blender relative path to a real relative path, stripping all
+# '../' from the front of the string
+################################################################################
 def sanitize_strip(s):
         if s[0:2] == '//':
                 s = s[2:len(s)]
@@ -74,7 +66,9 @@ def sanitize_strip(s):
                 s = s[3:len(s)]
         return sanitize(s)
 
-
+################################################################################
+# Get an image name from a material
+################################################################################
 def get_image_filename(scn, me):
         for mat in me.materials:
                 for mtex in mat.getTextures():
@@ -85,7 +79,9 @@ def get_image_filename(scn, me):
                                 return image.getFilename()
         return ''
 
-
+################################################################################
+# Writes the vertex data for a face
+################################################################################
 def write_face(file, me, f, verts, quad):
         inds = [ 0, 0, 0 ]
         reused = False
@@ -119,7 +115,15 @@ def write_face(file, me, f, verts, quad):
         if reused:
                 file.write('i %d %d %d\n' % tuple(inds))
 
+################################################################################
+# Comparison function to sort faces bottom-up
+################################################################################
+def face_cmp(a, b):
+        return (int)((a.cent.y - b.cent.y) * 1000)
 
+################################################################################
+# Write all the data from a frame
+################################################################################
 def write_frame(scn, file, objects):
 
         # Blender has front and side confused
@@ -131,10 +135,14 @@ def write_frame(scn, file, objects):
                 me.transform(ob_mat * mat_xrot90)
                 me.calcNormals()
 
+                # Sort the faces bottom up so that translucent bits are rendered
+                # in the correct order when the model is on the globe
+                sorted_faces = sorted(me.faces, face_cmp)
+
                 # Indicate that this is a new object
                 file.write('\no\n')
                 verts = { }
-                for f in me.faces:
+                for f in sorted_faces:
                         write_face(file, me, f, verts, False)
                         if len(f.v) == 4:
                                 write_face(file, me, f, verts, True)
@@ -142,6 +150,9 @@ def write_frame(scn, file, objects):
                 # Cleanup
                 del me
 
+################################################################################
+# Write the entire animation to file
+################################################################################
 def write(filename):
         if not filename.lower().endswith('.plum'):
                 filename += '.plum'
@@ -246,6 +257,9 @@ def write(filename):
 
         Blender.Set('curframe', orig_frame)
 
+################################################################################
+# This is the entry point to the script
+################################################################################
 if __name__ == '__main__':
         Window.FileSelector(write, 'Export Plutocracy PLUM', \
                             sys.makename(ext='.plum'))
