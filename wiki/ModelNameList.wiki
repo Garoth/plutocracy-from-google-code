@@ -52,7 +52,7 @@ randlit: litter generated randomly at map generation
 || || ship-fluyt.plum||
 || || ship-frigate.plum||
 || || ship-galleon.plum||
-|| || ship-sloop.plum||
+||C|| ship-sloop.plum||
 
 ==Environment==
 
