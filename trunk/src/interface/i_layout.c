@@ -122,8 +122,10 @@ static void theme_configure(void)
         C_var_unlatch(&i_button);
         C_var_unlatch(&i_button_active);
         C_var_unlatch(&i_button_hover);
-        C_var_unlatch(&i_button_light);
-        C_var_unlatch(&i_button_prelight);
+        C_var_unlatch(&i_square_active);
+        C_var_unlatch(&i_square_hover);
+        C_var_unlatch(&i_round_active);
+        C_var_unlatch(&i_round_hover);
         C_var_unlatch(&i_color);
         C_var_unlatch(&i_color2);
         C_var_unlatch(&i_hanger);
@@ -248,7 +250,8 @@ void I_init(void)
         for (i = 0; i < WINDOWS_LEN; i++) {
                 properties[i].init(windows + i);
                 I_widget_add(&i_root, &windows[i].widget);
-                I_button_init(buttons + i, properties[i].icon, NULL, FALSE);
+                I_button_init(buttons + i, properties[i].icon, NULL,
+                              I_BT_ICON_SQUARE);
                 buttons[i].on_click = (i_callback_f)button_click;
                 buttons[i].data = windows + i;
                 if (i < WINDOWS_LEN - 1)

@@ -85,7 +85,7 @@ void R_register_variables(void)
         C_register_float(&r_globe_smooth, "r_globe_smooth", 1.f,
                          "amount to smooth globe normals: 0.0-1.0");
         C_register_string(&r_globe_atmosphere, "r_globe_atmosphere",
-                          "#d06080a0", "color of the globe atmosphere");
+                          "#c06080a0", "color of the globe atmosphere");
         C_register_integer(&r_globe_transitions, "r_globe_transitions", 1,
                            "use transition tiles");
 

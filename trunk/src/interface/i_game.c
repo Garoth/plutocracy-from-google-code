@@ -55,7 +55,7 @@ static void host_button_clicked(i_button_t *button)
 \******************************************************************************/
 static void quit_button_clicked(i_button_t *button)
 {
-        C_debug("Exit button clicked");
+        C_debug("Quit button clicked");
         c_exit = TRUE;
 }
 
@@ -73,25 +73,29 @@ void I_game_init(i_window_t *window)
         I_widget_add(&window->widget, &label.widget);
 
         /* Join button */
-        I_button_init(&join_button, NULL, C_str("i-join", "Join"), TRUE);
+        I_button_init(&join_button, NULL, C_str("i-join", "Join"),
+                      I_BT_DECORATED);
         join_button.widget.state = I_WS_DISABLED;
         I_widget_add(&window->widget, &join_button.widget);
 
         /* Leave button */
-        I_button_init(&leave_button, NULL, C_str("i-leave", "Leave"), TRUE);
+        I_button_init(&leave_button, NULL, C_str("i-leave", "Leave"),
+                      I_BT_DECORATED);
         leave_button.widget.event_func = (i_event_f)leave_button_event;
         leave_button.on_click = (i_callback_f)leave_button_clicked;
         leave_button.widget.state = I_WS_DISABLED;
         I_widget_add(&window->widget, &leave_button.widget);
 
         /* Host button */
-        I_button_init(&host_button, NULL, C_str("i-host", "Host"), TRUE);
+        I_button_init(&host_button, NULL, C_str("i-host", "Host"),
+                      I_BT_DECORATED);
         host_button.on_click = (i_callback_f)host_button_clicked;
         host_button.widget.margin_rear = 1.f;
         I_widget_add(&window->widget, &host_button.widget);
 
         /* Quit button */
-        I_button_init(&quit_button, NULL, C_str("i-quit", "Quit"), TRUE);
+        I_button_init(&quit_button, NULL, C_str("i-quit", "Quit"),
+                      I_BT_DECORATED);
         quit_button.on_click = (i_callback_f)quit_button_clicked;
         I_widget_add(&window->widget, &quit_button.widget);
 }

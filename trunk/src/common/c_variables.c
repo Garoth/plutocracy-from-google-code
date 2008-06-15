@@ -359,8 +359,6 @@ void C_write_autogen(void)
         c_file_t file;
         c_var_t *var;
         const char *value;
-        int i, chars;
-        char comment[80];
 
         if (!C_file_init_write(&file, C_va("%s/autogen.cfg", C_user_dir()))) {
                 C_warning("Failed to save variable config");
@@ -370,7 +368,7 @@ void C_write_autogen(void)
                              "***************************************\\\n"
                              " %s - Automatically generated config\n"
                              "\\**************************************"
-                             "****************************************/\n\n",
+                             "****************************************/\n",
                              PACKAGE_STRING);
         for (var = root; var; var = var->next) {
                 if (!var->archive)
@@ -399,35 +397,10 @@ void C_write_autogen(void)
                         C_error("Unregistered variable in list");
                 }
 
-                /* Get the variable's help comment and pad it */
-                if (!var->comment || !var->comment[0])
-                        comment[0] = NUL;
-                else {
-                        C_utf8_strlen(value, &chars);
-                        chars += C_strlen(var->name) + 1;
-                        if (chars > 31) {
-                                C_file_printf(&file, "\n/* %s */\n",
-                                              var->comment);
-                                comment[0] = '\n';
-                                comment[1] = NUL;
-                        } else {
-                                for (i = 0; i < 24 - chars; i++)
-                                        comment[i] = ' ';
-                                i += snprintf(comment + i,
-                                              sizeof (comment) - i - 5 - chars,
-                                              "/* %s", var->comment);
-                                if (i > (int)sizeof (comment) - 5 - chars)
-                                        i = sizeof (comment) - 5;
-                                comment[i++] = ' ';
-                                comment[i++] = '*';
-                                comment[i++] = '/';
-                                comment[i] = NUL;
-                        }
-                }
-
-                if (value)
-                        C_file_printf(&file, "%s %s%s\n",
-                                      var->name, value, comment);
+                /* Print the comment and key-value pair */
+                C_file_printf(&file, "\n/* %s */\n%s %s\n",
+                              var->comment ? var->comment : "",
+                              var->name, value);
         }
         C_file_printf(&file, "\n");
         C_file_cleanup(&file);

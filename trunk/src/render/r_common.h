@@ -105,6 +105,12 @@ void R_texture_upload(const r_texture_t *);
 
 extern r_texture_t *r_terrain_tex;
 
+/* r_camera.c */
+void R_init_camera(void);
+void R_update_camera(void);
+
+extern GLfloat r_cam_matrix[16];
+
 /* r_mode.c */
 #define R_check_errors() R_check_errors_full(__FILE__, __LINE__, __func__);
 void R_check_errors_full(const char *file, int line, const char *func);
@@ -117,6 +123,7 @@ void R_set_mode(r_mode_t);
 
 extern r_ext_t r_ext;
 extern r_mode_t r_mode;
+extern GLfloat r_proj_matrix[16];
 extern int r_mode_hold;
 
 /* r_prerender.c */

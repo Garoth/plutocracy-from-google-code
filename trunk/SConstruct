@@ -29,9 +29,19 @@ def path(p):
                 p = p.replace('/', '\\')
         return p
 
+# Builder for precompiled headers
+gch_builder = Builder(action = '$CC $CFLAGS $CCFLAGS $_CCCOMCOM ' +
+                               '-x c-header -c $SOURCE -o $TARGET')
+
 # Create a default environment. Have to set environment variables after
 # initialization so that SCons doesn't mess them up.
-default_env = Environment(ENV = os.environ)
+default_env = Environment(ENV = os.environ, BUILDERS = {'GCH' : gch_builder})
+
+# If the file timestamp has not changed, don't run MD5 test
+default_env.Decider('MD5-timestamp')
+
+# Tells SCons to be smarter about caching dependencies
+default_env.SetOption('implicit_cache', 1)
 
 # Adds an option that may have been set via environment flags
 def AddEnvOption(env, opts, opt_name, opt_desc, env_name = None, value = None):
@@ -67,7 +77,8 @@ AddEnvOption(default_env, opts, 'LINK', 'Linker to use')
 AddEnvOption(default_env, opts, 'LINKFLAGS', 'Linker flags', 'LDFLAGS')
 AddEnvOption(default_env, opts, 'PREFIX', 'Installation path prefix',
              'PREFIX', '/usr/local/')
-opts.Add(BoolOption('gch', 'Build a precompiled header (gcc only)', True))
+opts.Add(EnumOption('pch', 'Use precompiled headers if possible', 'common',
+                    allowed_values = ('no', 'common', 'all')))
 opts.Add(BoolOption('dump_env', 'Dump SCons Environment contents', False))
 opts.Add(BoolOption('dump_path', 'Dump path enviornment variable', False))
 opts.Update(default_env)
@@ -137,15 +148,28 @@ if windows:
         plutocracy_env.Clean(plutocracy, 'plutocracy.exe.manifest')
 Default(plutocracy)
 
-# Build the precompiled header as a dependency of the main program
-plutocracy_gch = ''
-if plutocracy_env['gch'] and not windows:
-        plutocracy_gch = 'src/common/c_shared.h.gch'
-        plutocracy_env.Command('src/common/c_shared.h.gch',
-                               glob.glob('src/common/*.h'),
-                               '$CC $CFLAGS $CCFLAGS $_CCCOMCOM -x c-header ' +
-                               '-c src/common/c_shared.h -o $TARGET')
-        plutocracy_env.Depends(plutocracy_obj, plutocracy_gch)
+# Build the precompiled headers as dependencies of the main program. We have
+# to manually specify the header dependencies because SCons is too stupid to
+# scan the header files on its own.
+plutocracy_pch = []
+def PlutocracyPCH(header, deps = []):
+        global plutocracy_pch
+        pch = plutocracy_env.GCH(header + '.gch', header)
+        plutocracy_env.Depends(pch, deps)
+        plutocracy_env.Depends(plutocracy_obj, pch)
+        plutocracy_pch += pch
+if plutocracy_env['pch'] != 'no' and not windows:
+        common_deps = glob.glob('src/common/*.h')
+        PlutocracyPCH('src/common/c_shared.h', common_deps)
+        if plutocracy_env['pch'] == 'all':
+                network_deps = common_deps + glob.glob('src/network/*.h')
+                PlutocracyPCH('src/network/n_common.h')
+                render_deps = common_deps + glob.glob('src/render/*.h')
+                PlutocracyPCH('src/render/r_common.h', render_deps)
+                interface_deps = (render_deps + glob.glob('src/interface/*.h') +
+                                  glob.glob('src/game/*.h'))
+                PlutocracyPCH('src/interface/i_common.h', interface_deps)
+                PlutocracyPCH('src/game/g_common.h', interface_deps)
 
 # Windows has a prebuilt config
 if windows:
@@ -164,8 +188,7 @@ else:
                 config.close()
         plutocracy_config = plutocracy_env.Command('config.h', '', WriteConfigH)
 
-plutocracy_env.Depends(plutocracy_obj + [plutocracy_gch],
-                       plutocracy_config)
+plutocracy_env.Depends(plutocracy_obj + plutocracy_pch, plutocracy_config)
 plutocracy_env.Depends(plutocracy_config, config_file)
 
 ################################################################################
@@ -266,3 +289,4 @@ InstallRecursive(os.path.join(dist_name, 'models'), 'models')
 InstallRecursive(os.path.join(dist_name, 'src'), 'src')
 InstallRecursive(os.path.join(dist_name, 'windows'), 'windows',
                  ['windows/vc8/Debug', 'windows/vc8/Release'])
+

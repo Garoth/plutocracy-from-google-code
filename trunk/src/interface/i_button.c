@@ -27,17 +27,24 @@ int I_button_event(i_button_t *button, i_event_t event)
                 R_window_cleanup(&button->normal);
                 R_window_cleanup(&button->active);
                 R_window_cleanup(&button->hover);
-                R_sprite_cleanup(&button->light);
-                R_sprite_cleanup(&button->prelight);
-                if (button->decorated) {
+                R_sprite_cleanup(&button->icon_active);
+                R_sprite_cleanup(&button->icon_hover);
+                if (button->type == I_BT_DECORATED) {
                         R_window_init(&button->normal, i_button.value.s);
                         R_window_init(&button->hover, i_button_hover.value.s);
                         R_window_init(&button->active, i_button_active.value.s);
-                } else {
-                        R_sprite_init(&button->light, i_button_light.value.s);
-                        R_sprite_init(&button->prelight,
-                                      i_button_prelight.value.s);
-                }
+                } else if (button->type == I_BT_ICON_SQUARE) {
+                        R_sprite_init(&button->icon_active,
+                                      i_square_active.value.s);
+                        R_sprite_init(&button->icon_hover,
+                                      i_square_hover.value.s);
+                } else if (button->type == I_BT_ICON_ROUND) {
+                        R_sprite_init(&button->icon_active,
+                                      i_round_active.value.s);
+                        R_sprite_init(&button->icon_hover,
+                                      i_round_hover.value.s);
+                } else
+                        C_error("Invalid button type %d", button->type);
 
                 /* Setup text */
                 R_sprite_cleanup(&button->text);
@@ -51,13 +58,13 @@ int I_button_event(i_button_t *button, i_event_t event)
                         if (button->icon.texture &&
                             button->icon.size.y > button->widget.size.y)
                                 button->widget.size.y = button->icon.size.y;
-                        if (button->decorated)
+                        if (button->type == I_BT_DECORATED)
                                 button->widget.size.y += i_border.value.n * 2;
                 }
                 if (button->widget.size.x < 1) {
                         button->widget.size.x = button->text.size.x +
                                                 button->icon.size.x;
-                        if (button->decorated)
+                        if (button->type == I_BT_DECORATED)
                                 button->widget.size.x += i_border.value.n * 2;
                         if (button->icon.texture && button->buffer[0])
                                 button->widget.size.x += i_border.value.n;
@@ -68,7 +75,7 @@ int I_button_event(i_button_t *button, i_event_t event)
                 /* Setup decorations (for each state) to cover full area */
                 origin = button->widget.origin;
                 size = button->widget.size;
-                if (button->decorated) {
+                if (button->type == I_BT_DECORATED) {
                         button->normal.sprite.origin = origin;
                         button->normal.sprite.size = size;
                         button->hover.sprite.origin = origin;
@@ -86,15 +93,15 @@ int I_button_event(i_button_t *button, i_event_t event)
                                 border = size.y / 4;
                         origin2 = C_vec2_subf(origin, border);
                         size2 = C_vec2_addf(size, border * 2.f);
-                        button->light.origin = origin2;
-                        button->light.size = size2;
-                        button->prelight.origin = origin2;
-                        button->prelight.size = size2;
+                        button->icon_active.origin = origin2;
+                        button->icon_active.size = size2;
+                        button->icon_hover.origin = origin2;
+                        button->icon_hover.size = size2;
                 }
 
                 /* Pack the icon left, vertically centered */
                 origin.y += size.y / 2;
-                if (button->decorated) {
+                if (button->type == I_BT_DECORATED) {
                         origin.x += i_border.value.n;
                         size = C_vec2_subf(size, i_border.value.n * 2.f);
                 }
@@ -126,8 +133,8 @@ int I_button_event(i_button_t *button, i_event_t event)
                 R_window_cleanup(&button->normal);
                 R_window_cleanup(&button->active);
                 R_window_cleanup(&button->hover);
-                R_sprite_cleanup(&button->light);
-                R_sprite_cleanup(&button->prelight);
+                R_sprite_cleanup(&button->icon_active);
+                R_sprite_cleanup(&button->icon_hover);
                 R_sprite_cleanup(&button->icon);
                 R_sprite_cleanup(&button->text);
                 break;
@@ -150,12 +157,12 @@ int I_button_event(i_button_t *button, i_event_t event)
                 button->normal.sprite.modulate.a = button->widget.fade;
                 if (button->widget.state == I_WS_HOVER) {
                         R_window_render(&button->hover);
-                        button->prelight.modulate.a = button->widget.fade;
-                        R_sprite_render(&button->prelight);
+                        button->icon_hover.modulate.a = button->widget.fade;
+                        R_sprite_render(&button->icon_hover);
                 } else if (button->widget.state == I_WS_ACTIVE) {
                         R_window_render(&button->active);
-                        button->light.modulate.a = button->widget.fade;
-                        R_sprite_render(&button->light);
+                        button->icon_active.modulate.a = button->widget.fade;
+                        R_sprite_render(&button->icon_active);
                 } else
                         R_window_render(&button->normal);
                 R_push_clip();
@@ -173,13 +180,12 @@ int I_button_event(i_button_t *button, i_event_t event)
 /******************************************************************************\
  Configure the button widget. The button must have already been initialized.
  The [icon] path and [text] strings can be NULL and do not need to persist
- after calling the function. Call with [bg] set to TRUE to decorate the button
- background.
+ after calling the function.
 \******************************************************************************/
 void I_button_configure(i_button_t *button, const char *icon, const char *text,
-                        int bg)
+                        i_button_type_t type)
 {
-        button->decorated = bg;
+        button->type = type;
         R_sprite_init(&button->icon, icon);
         C_strncpy_buf(button->buffer, text);
         I_widget_event(&button->widget, I_EV_CONFIGURE);
@@ -187,11 +193,10 @@ void I_button_configure(i_button_t *button, const char *icon, const char *text,
 
 /******************************************************************************\
  Initializes a button widget. The [icon] path and [text] strings can be NULL
- and do not need to persist after calling the function. Call with [bg] set to
- TRUE to decorate the button background.
+ and do not need to persist after calling the function.
 \******************************************************************************/
 void I_button_init(i_button_t *button, const char *icon, const char *text,
-                   int bg)
+                   i_button_type_t type)
 {
         C_zero(button);
         I_widget_set_name(&button->widget, "Button");
@@ -199,7 +204,7 @@ void I_button_init(i_button_t *button, const char *icon, const char *text,
         button->widget.state = I_WS_READY;
         button->widget.clickable = TRUE;
         button->on_click = NULL;
-        button->decorated = bg;
+        button->type = type;
         R_sprite_init(&button->icon, icon);
         C_strncpy_buf(button->buffer, text);
         I_widget_inited(&button->widget);

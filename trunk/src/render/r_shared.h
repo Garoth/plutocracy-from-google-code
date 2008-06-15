@@ -132,6 +132,15 @@ c_vec2_t R_font_size(r_font_t, const char *);
 int R_font_width(r_font_t);
 void R_load_fonts(void);
 
+/* r_camera.c */
+void R_move_cam_by(c_vec2_t);
+c_vec3_t R_project(c_vec3_t);
+c_vec3_t R_project_by_cam(c_vec3_t);
+void R_rotate_cam_by(c_vec3_t);
+c_vec3_t R_rotate_from_cam(c_vec3_t);
+c_vec3_t R_rotate_to_cam(c_vec3_t);
+void R_zoom_cam_by(float);
+
 /* r_globe.c */
 void R_configure_globe(r_tile_t *array);
 void R_finish_globe(void);
@@ -155,15 +164,10 @@ void R_clip_rect(c_vec2_t origin, c_vec2_t size);
 void R_clip_disable(void);
 void R_finish_frame(void);
 void R_init(void);
-void R_move_cam_by(c_vec2_t);
 void R_pop_clip(void);
 void R_push_clip(void);
-void R_rotate_cam_by(c_vec3_t);
-c_vec3_t R_rotate_from_cam(c_vec3_t);
-c_vec3_t R_rotate_to_cam(c_vec3_t);
 void R_save_screenshot(const char *filename);
 void R_start_frame(void);
-void R_zoom_cam_by(float);
 
 extern c_count_t r_count_faces;
 extern c_vec3_t r_cam_forward, r_cam_normal, r_cam_origin;
