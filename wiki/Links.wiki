@@ -24,6 +24,8 @@ Khent suggested some similar games to play:
   * [http://www.zlib.net/manual.html zlib manual]
   * [http://www.gnu.org/software/gettext/manual/gettext.html GNU gettext]
   * [http://www.libpng.org/pub/png/libpng-1.2.5-manual.html libpng manual]
+  * [http://www.blender.org/documentation/242PythonDoc/index.html Blender API]
+  * [http://www.scons.org/doc/0.98.5/HTML/scons-api/index.html SCons API]
 
 = Tiling a Sphere =
   * Generate a sphere from any polygon: http://www.neubert.net/PLASpher.html
