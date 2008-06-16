@@ -68,7 +68,7 @@ int I_scrollback_event(i_scrollback_t *sb, i_event_t event)
         switch (event) {
         case I_EV_ADD_CHILD:
                 if (sb->children >= sb->limit)
-                        I_widget_remove(sb->widget.child);
+                        I_widget_remove(sb->widget.child, TRUE);
                 else
                         sb->children++;
                 i_child->size = sb->widget.size;
@@ -76,6 +76,12 @@ int I_scrollback_event(i_scrollback_t *sb, i_event_t event)
                 scrollback_moved(sb);
                 return FALSE;
         case I_EV_CONFIGURE:
+
+                /* Cleanup all the child labels so that we do not waste time
+                   reconfiguring them whenever something changes */
+                I_widget_remove_children(&sb->widget, TRUE);
+                sb->children = 0;
+
                 R_window_cleanup(&sb->window);
                 R_window_init(&sb->window, i_work_area.value.s);
                 if (!sb->widget.size.y)

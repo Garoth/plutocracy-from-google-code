@@ -18,8 +18,8 @@ c_var_t i_debug;
 /* Theme variables */
 c_var_t i_border, i_button, i_button_active, i_button_hover,
         i_square_active, i_square_hover, i_round_active, i_round_hover,
-        i_color, i_color2, i_fade, i_hanger, i_shadow, i_theme, i_window,
-        i_work_area;
+        i_color, i_color2, i_fade, i_hanger, i_ring, i_shadow, i_theme,
+        i_window, i_work_area;
 
 /* Interface usability variables */
 c_var_t i_scroll_speed, i_zoom_speed;
@@ -95,6 +95,10 @@ void I_register_variables(void)
                           "gui/themes/default/work_area.png",
                           "path to work-area widget background texture");
         i_work_area.archive = FALSE;
+        C_register_string(&i_ring, "i_ring",
+                          "gui/themes/default/ring.png",
+                          "path to ring widget background texture");
+        i_ring.archive = FALSE;
 
         /* Interface usability variables */
         C_register_float(&i_scroll_speed, "i_scroll_speed", 100.f,

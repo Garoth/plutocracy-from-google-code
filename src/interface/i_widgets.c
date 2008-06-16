@@ -86,9 +86,28 @@ void I_widget_add(i_widget_t *parent, i_widget_t *child)
 }
 
 /******************************************************************************\
- Remove a widget from its parent container.
+ Remove all of the widget's children.
 \******************************************************************************/
-void I_widget_remove(i_widget_t *widget)
+void I_widget_remove_children(i_widget_t *widget, int cleanup)
+{
+        i_widget_t *child, *child_next;
+
+        if (!widget)
+                return;
+        for (child = widget->child; child; child = child_next) {
+                child_next = child->next;
+                child->parent = NULL;
+                child->next = NULL;
+                if (cleanup)
+                        I_widget_event(child, I_EV_CLEANUP);
+        }
+        widget->child = NULL;
+}
+
+/******************************************************************************\
+ Remove a widget from its parent container and free its memory.
+\******************************************************************************/
+void I_widget_remove(i_widget_t *widget, int cleanup)
 {
         if (!widget)
                 return;
@@ -109,7 +128,8 @@ void I_widget_remove(i_widget_t *widget)
         }
         widget->parent = NULL;
         widget->next = NULL;
-        I_widget_event(widget, I_EV_CLEANUP);
+        if (cleanup)
+                I_widget_event(widget, I_EV_CLEANUP);
 }
 
 /******************************************************************************\

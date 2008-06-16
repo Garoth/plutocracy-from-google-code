@@ -10,6 +10,8 @@
  FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
 \******************************************************************************/
 
+/* The button widget implements clickable decorated buttons and toolbar icons */
+
 #include "i_common.h"
 
 /******************************************************************************\
@@ -33,12 +35,12 @@ int I_button_event(i_button_t *button, i_event_t event)
                         R_window_init(&button->normal, i_button.value.s);
                         R_window_init(&button->hover, i_button_hover.value.s);
                         R_window_init(&button->active, i_button_active.value.s);
-                } else if (button->type == I_BT_ICON_SQUARE) {
+                } else if (button->type == I_BT_SQUARE) {
                         R_sprite_init(&button->icon_active,
                                       i_square_active.value.s);
                         R_sprite_init(&button->icon_hover,
                                       i_square_hover.value.s);
-                } else if (button->type == I_BT_ICON_ROUND) {
+                } else if (button->type == I_BT_ROUND) {
                         R_sprite_init(&button->icon_active,
                                       i_round_active.value.s);
                         R_sprite_init(&button->icon_hover,

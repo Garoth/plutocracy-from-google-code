@@ -31,7 +31,7 @@ static struct {
 
 static c_ref_t *root, *root_alloc;
 static SDL_PixelFormat sdl_format;
-static int ttf_inited;
+static int ttf_inited, allocated, allocated_high;
 
 /******************************************************************************\
  Gets a pixel from an SDL surface. Lock the surface before calling.
@@ -183,9 +183,41 @@ void R_surface_flip_v(SDL_Surface *surf)
 \******************************************************************************/
 static void texture_cleanup(r_texture_t *pt)
 {
-        SDL_FreeSurface(pt->surface);
+        if (pt->surface) {
+
+                /* Keep track of free'd memory */
+                allocated -= pt->surface->w * pt->surface->h *
+                             pt->surface->format->BytesPerPixel;
+
+                SDL_FreeSurface(pt->surface);
+        }
         glDeleteTextures(1, &pt->gl_name);
         R_check_errors();
+}
+
+/******************************************************************************\
+ Wrapper around surface allocation that keeps track of memory allocated.
+\******************************************************************************/
+static SDL_Surface *surface_alloc(int width, int height, int alpha)
+{
+        SDL_Surface *surface;
+        int flags;
+
+        flags = SDL_HWSURFACE;
+        if (alpha)
+                flags |= SDL_SRCALPHA;
+        surface = SDL_CreateRGBSurface(flags, width, height,
+                                       sdl_format.BitsPerPixel,
+                                       sdl_format.Rmask, sdl_format.Gmask,
+                                       sdl_format.Bmask, sdl_format.Amask);
+        SDL_SetAlpha(surface, SDL_SRCALPHA | SDL_RLEACCEL, SDL_ALPHA_OPAQUE);
+
+        /* Keep track of allocated memory */
+        allocated += width * height * sdl_format.BytesPerPixel;
+        if (allocated > allocated_high)
+                allocated_high = allocated;
+
+        return surface;
 }
 
 /*****************************************************************************\
@@ -199,7 +231,6 @@ r_texture_t *R_texture_alloc_full(const char *file, int line, const char *func,
         static int count;
         SDL_Rect rect;
         r_texture_t *pt;
-        int flags;
 
         if (width < 1 || height < 1)
                 C_error_full(file, line, func,
@@ -223,15 +254,7 @@ r_texture_t *R_texture_alloc_full(const char *file, int line, const char *func,
                               C_va("Texture #%d allocated by %s()",
                                    ++count, func));
         pt->alpha = alpha;
-        flags = SDL_HWSURFACE;
-        if (alpha)
-                flags |= SDL_SRCALPHA;
-        pt->surface = SDL_CreateRGBSurface(flags, width, height,
-                                           sdl_format.BitsPerPixel,
-                                           sdl_format.Rmask, sdl_format.Gmask,
-                                           sdl_format.Bmask, sdl_format.Amask);
-        SDL_SetAlpha(pt->surface, SDL_SRCALPHA | SDL_RLEACCEL,
-                     SDL_ALPHA_OPAQUE);
+        pt->surface = surface_alloc(width, height, alpha);
         rect.x = 0;
         rect.y = 0;
         rect.w = width;
@@ -296,16 +319,14 @@ r_texture_t *R_texture_clone_full(const char *file, int line, const char *func,
 \******************************************************************************/
 void R_texture_upload(const r_texture_t *pt)
 {
-        int flags, gl_internal;
+        int gl_internal;
 
-        flags = SDL_HWSURFACE;
         if (pt->alpha) {
                 gl_internal = GL_RGBA;
                 if (r_color_bits.value.n == 16)
                         gl_internal = GL_RGBA4;
                 else if (r_color_bits.value.n == 32)
                         gl_internal = GL_RGBA8;
-                flags |= SDL_SRCALPHA;
         } else {
                 gl_internal = GL_RGB;
                 if (r_color_bits.value.n == 16)
@@ -404,7 +425,6 @@ static void user_png_flush(png_structp png_ptr)
 static SDL_Surface *load_png(const char *filename, int *alpha)
 {
         SDL_Surface *surface;
-        Uint32 flags;
         png_byte png_header[8];
         png_bytep row_pointers[4096];
         png_infop info_ptr;
@@ -504,25 +524,18 @@ static SDL_Surface *load_png(const char *filename, int *alpha)
 
         /* Sanity check */
         if (width < 1 || height < 1) {
-                C_warning("Invalid PNG image dimensions %dx%d", width, height);
+                C_warning("PNG image '%s' has invalid dimensions %dx%d",
+                          filename, width, height);
                 goto cleanup;
         }
         if (height > sizeof (row_pointers)) {
-                C_warning("PNG image is too tall (%dpx), cropping", height);
+                C_warning("PNG image '%s' is too tall (%dpx), cropping",
+                          filename, height);
                 height = sizeof (row_pointers);
         }
 
-        /* Allocate the SDL surface */
-        flags = SDL_HWSURFACE;
-        if (*alpha)
-                flags |= SDL_SRCALPHA;
-        surface = SDL_CreateRGBSurface(flags, width, height,
-                                       sdl_format.BitsPerPixel,
-                                       sdl_format.Rmask, sdl_format.Gmask,
-                                       sdl_format.Bmask, sdl_format.Amask);
-        SDL_SetAlpha(surface, SDL_SRCALPHA | SDL_RLEACCEL, SDL_ALPHA_OPAQUE);
-
-        /* Get image data */
+        /* Allocate the SDL surface and get image data */
+        surface = surface_alloc(width, height, *alpha);
         if (SDL_LockSurface(surface) < 0) {
                 C_warning("Failed to lock surface");
                 goto cleanup;
@@ -562,7 +575,6 @@ r_texture_t *R_texture_load(const char *filename, int mipmaps)
         pt->mipmaps = mipmaps;
         pt->surface = load_png(filename, &pt->alpha);
         if (!pt->surface) {
-                C_warning("Failed to load texture '%s'", filename);
                 C_ref_down(&pt->ref);
                 return NULL;
         }
@@ -952,6 +964,11 @@ void R_free_fonts(void)
 \******************************************************************************/
 void R_free_assets(void)
 {
+        /* Print out estimated memory usage */
+        if (c_mem_check.value.n)
+                C_debug("SDL surface memory high mark %.1fmb",
+                        allocated_high / (1024.f * 1024.f));
+
         R_texture_free(r_terrain_tex);
         R_free_fonts();
         TTF_Quit();

@@ -24,6 +24,10 @@
    other windows and GUI elements */
 #define LIMBO_FADE_SCALE 0.2f
 
+/* SDL key-repeat initial timeout and repeat interval */
+#define KEY_REPEAT_TIMEOUT 300
+#define KEY_REPEAT_INTERVAL 30
+
 /* Windows */
 static struct property_t {
         void (*init)(i_window_t *);
@@ -122,14 +126,15 @@ static void theme_configure(void)
         C_var_unlatch(&i_button);
         C_var_unlatch(&i_button_active);
         C_var_unlatch(&i_button_hover);
-        C_var_unlatch(&i_square_active);
-        C_var_unlatch(&i_square_hover);
-        C_var_unlatch(&i_round_active);
-        C_var_unlatch(&i_round_hover);
         C_var_unlatch(&i_color);
         C_var_unlatch(&i_color2);
         C_var_unlatch(&i_hanger);
+        C_var_unlatch(&i_ring);
+        C_var_unlatch(&i_round_active);
+        C_var_unlatch(&i_round_hover);
         C_var_unlatch(&i_shadow);
+        C_var_unlatch(&i_square_active);
+        C_var_unlatch(&i_square_hover);
         C_var_unlatch(&i_window);
         C_var_unlatch(&i_work_area);
 
@@ -224,7 +229,7 @@ void I_init(void)
         C_status("Initializing interface");
 
         /* Enable key repeats so held keys generate key-down events */
-        SDL_EnableKeyRepeat(300, 30);
+        SDL_EnableKeyRepeat(KEY_REPEAT_TIMEOUT, KEY_REPEAT_INTERVAL);
 
         /* Enable Unicode so we get Unicode key strokes AND capitals */
         SDL_EnableUNICODE(1);
@@ -251,7 +256,7 @@ void I_init(void)
                 properties[i].init(windows + i);
                 I_widget_add(&i_root, &windows[i].widget);
                 I_button_init(buttons + i, properties[i].icon, NULL,
-                              I_BT_ICON_SQUARE);
+                              I_BT_SQUARE);
                 buttons[i].on_click = (i_callback_f)button_click;
                 buttons[i].data = windows + i;
                 if (i < WINDOWS_LEN - 1)
@@ -268,6 +273,9 @@ void I_init(void)
         R_sprite_init(&limbo_logo, "gui/logo.png");
         limbo_fade = 1.f;
         I_enter_limbo();
+
+        /* Create ring widgets */
+        I_init_ring();
 
         I_widget_event(&i_root, I_EV_CONFIGURE);
         I_widget_show(&left_toolbar.widget, TRUE);

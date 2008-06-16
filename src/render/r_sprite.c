@@ -53,7 +53,8 @@ void R_sprite_cleanup(r_sprite_t *sprite)
 \******************************************************************************/
 static int sprite_render_start(const r_sprite_t *sprite)
 {
-        if (!sprite || !sprite->texture || sprite->z > 0.f)
+        if (!sprite || !sprite->texture || sprite->z > 0.f ||
+            sprite->modulate.a <= 0.f)
                 return FALSE;
         R_push_mode(R_MODE_2D);
         R_texture_select(sprite->texture);

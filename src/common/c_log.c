@@ -14,12 +14,13 @@
 
 #include "c_shared.h"
 
-extern c_var_t c_log_level, c_log_file;
+extern c_var_t c_log_level, c_log_file, c_log_throttle;
 
 c_log_event_f c_log_func;
 c_log_mode_t c_log_mode;
 
 static c_file_t log_file;
+static int log_time, log_count;
 
 /******************************************************************************\
  Close the log file to conserve file handles.
@@ -133,6 +134,15 @@ void C_log(c_log_level_t level, const char *file, int line,
                 level = C_LOG_TRACE;
         if (level > C_LOG_ERROR && level > c_log_level.value.n)
                 return;
+
+        /* Throttle log spam */
+        if (c_time_msec - log_time > 1000) {
+                log_count = 1;
+                log_time = c_time_msec;
+        } else if (c_frame > 0 && c_log_throttle.value.n > 0 &&
+                   ++log_count > c_log_throttle.value.n)
+                return;
+
         va_start(va, fmt);
         if (c_log_level.value.n <= C_LOG_STATUS) {
                 if (level >= C_LOG_STATUS) {

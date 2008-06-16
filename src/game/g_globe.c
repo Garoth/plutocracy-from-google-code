@@ -39,7 +39,7 @@ g_tile_t g_tiles[R_TILES_MAX];
 static r_tile_t render_tiles[R_TILES_MAX];
 static g_island_t islands[ISLAND_NUM];
 static float visible_limit;
-static int islands_len;
+static int islands_len, selected_tile;
 
 /******************************************************************************\
  Randomly selects a tile ground terrain based on climate approximations.
@@ -429,6 +429,21 @@ static int ray_intersects_tile(c_vec3_t O, c_vec3_t D, int tile)
 }
 
 /******************************************************************************\
+ Test ring callback function.
+\******************************************************************************/
+static void test_ring_callback(i_ring_icon_t icon)
+{
+        if (icon == I_RI_TEST_MILL)
+                set_tile_model(selected_tile, "models/test/mill.plum");
+        else if (icon == I_RI_TEST_TREE)
+                set_tile_model(selected_tile,
+                               "models/environment/tree-deciduous.plum");
+        else
+                set_tile_model(selected_tile, "");
+}
+
+
+/******************************************************************************\
  After a mouse click is transformed into a ray with [origin] and [forward]
  vector, this function will find which tile (if any) was clicked on and
  trigger any actions this may have caused.
@@ -437,19 +452,32 @@ void G_click_ray(c_vec3_t origin, c_vec3_t forward, int button)
 {
         int i;
 
-        for (i = 0; i < r_tiles; i++)
-                if (g_tiles[i].visible &&
-                    ray_intersects_tile(origin, forward, i)) {
-                        if (g_test_globe.value.n) {
-                                c_vec3_t b;
+        selected_tile = -1;
+        for (i = 0; i < r_tiles; i++) {
+                if (!g_tiles[i].visible ||
+                    !ray_intersects_tile(origin, forward, i))
+                        continue;
+                selected_tile = i;
 
-                                C_debug("Click hit for tile %d", i);
-                                b = C_vec3_add(g_tiles[i].origin,
-                                               g_tiles[i].normal);
-                                R_render_test_line(g_tiles[i].origin, b,
-                                                   C_color(0.f, 1.f, 0.f, 1.f));
-                                set_tile_model(i, "");
-                        }
+                /* Test tile click detection */
+                if (g_test_globe.value.n) {
+                        c_vec3_t b;
+
+                        C_debug("Click hit for tile %d", i);
+                        b = C_vec3_add(g_tiles[i].origin,
+                                       g_tiles[i].normal);
+                        R_render_test_line(g_tiles[i].origin, b,
+                                           C_color(0.f, 1.f, 0.f, 1.f));
+                        set_tile_model(i, "");
                 }
+
+                /* If we clicked on a valid tile, popup the ring menu */
+                I_reset_ring();
+                I_add_to_ring(I_RI_TEST_BLANK, TRUE);
+                I_add_to_ring(I_RI_TEST_MILL, TRUE);
+                I_add_to_ring(I_RI_TEST_TREE, TRUE);
+                I_add_to_ring(I_RI_TEST_DISABLED, FALSE);
+                I_show_ring(g_tiles[i].origin, (i_ring_f)test_ring_callback);
+        }
 }
 
