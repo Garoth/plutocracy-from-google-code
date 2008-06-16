@@ -10,10 +10,6 @@
  FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
 \******************************************************************************/
 
-/* This is the minimum FPS that model animations must maintain. If they are
-   slower than this, frames are interpolated. */
-#define R_MODEL_ANIM_FPS 30
-
 /* This is the largest value that pixels can be stretched. This means that all
    GUI textures need to be created this many times larger than normal. The
    largest supported resoluton is WQXGA 2560x1600 (nVidia Geforce 8800GT)
@@ -57,11 +53,9 @@ typedef struct r_texture r_texture_t;
 /* Model instance type */
 typedef struct r_model {
         c_vec3_t origin, normal, forward;
-        struct r_mesh *lerp_meshes;
         struct r_model_data *data;
         float scale;
-        int anim, frame, last_frame, last_frame_time, time_left,
-            use_lerp_meshes;
+        int anim, frame, last_frame, last_frame_time, time_left;
 } r_model_t;
 
 /* 2D textured quad sprite, can only be rendered in 2D mode */

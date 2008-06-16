@@ -50,23 +50,6 @@ typedef struct r_model_data {
 static c_ref_t *data_root;
 
 /******************************************************************************\
- Find a vertex in a static mesh vertex array. Returns the length of the array
- if a matching vertex is not found.
-\******************************************************************************/
-static unsigned short mesh_find_vert(const mesh_t *mesh,
-                                     const r_vertex3_t *vert)
-{
-        int i;
-
-        for (i = 0; i < mesh->verts_len; i++)
-                if (C_vec3_eq(vert->co, mesh->verts[i].co) &&
-                    C_vec3_eq(vert->no, mesh->verts[i].no) &&
-                    C_vec2_eq(vert->uv, mesh->verts[i].uv))
-                        break;
-        return (unsigned short)i;
-}
-
-/******************************************************************************\
  Render a mesh.
 \******************************************************************************/
 static void mesh_render(mesh_t *mesh, r_texture_t *texture)
@@ -427,11 +410,6 @@ int R_model_init(r_model_t *model, const char *filename)
         if (model->data && model->data->anims_len)
                 R_model_play(model, model->data->anims[0].name);
 
-        /* Allocate memory for interpolated object meshes */
-        if (model->data && model->data->frames)
-                model->lerp_meshes = C_calloc(model->data->objects_len *
-                                              sizeof (*model->lerp_meshes));
-
         return model->data != NULL;
 }
 
@@ -441,56 +419,10 @@ int R_model_init(r_model_t *model, const char *filename)
 \******************************************************************************/
 void R_model_cleanup(r_model_t *model)
 {
-        int i;
-
         if (!model)
                 return;
-        if (model->lerp_meshes) {
-                for (i = 0; i < model->data->objects_len; i++)
-                        mesh_cleanup(model->lerp_meshes + i);
-                C_free(model->lerp_meshes);
-        }
         C_ref_down(&model->data->ref);
         C_zero(model);
-}
-
-/******************************************************************************\
- Interpolate between two frames. If the target mesh has vertex and index
- arrays, it is assumed that there is sufficient space allocated in those
- arrays to hold the new interpolated arrays otherwise these arrays are
- allocated with enough room to hold the largest possible interpolated frame.
- Textures are not interpolated.
-\******************************************************************************/
-static void interpolate_mesh(mesh_t *dest, float lerp,
-                             const mesh_t *from,
-                             const mesh_t *to)
-{
-        int j;
-
-        /* Allocate memory for index and vertex arrays */
-        if (!dest->indices)
-                dest->indices = C_malloc(to->indices_len *
-                                         sizeof (*to->indices));
-        if (!dest->verts)
-                dest->verts = C_malloc(to->indices_len * sizeof (*to->verts));
-
-        /* Interpolate each vertex */
-        dest->verts_len = 0;
-        dest->indices_len = to->indices_len;
-        for (j = 0; j < to->indices_len; j++) {
-                r_vertex3_t *to_vert, *from_vert, vert;
-                unsigned short index;
-
-                to_vert = to->verts + to->indices[j];
-                from_vert = from->verts + from->indices[j];
-                vert.co = C_vec3_lerp(from_vert->co, lerp, to_vert->co);
-                vert.no = C_vec3_lerp(from_vert->no, lerp, to_vert->no);
-                vert.uv = C_vec2_lerp(from_vert->uv, lerp, to_vert->uv);
-                index = mesh_find_vert(dest, &vert);
-                if (index >= dest->verts_len)
-                        dest->verts[dest->verts_len++] = vert;
-                dest->indices[j] = index;
-        }
 }
 
 /******************************************************************************\
@@ -500,46 +432,25 @@ static void interpolate_mesh(mesh_t *dest, float lerp,
 static void update_animation(r_model_t *model)
 {
         model_anim_t *anim;
-        float lerp;
-        int i;
 
-        anim = model->data->anims + model->anim;
         model->time_left -= c_frame_msec;
+        if (model->time_left > 0)
+                return;
 
         /* Advance a frame forward or backward */
-        if (model->time_left <= 0) {
-                model->last_frame = model->frame;
-                if (anim->to > anim->from) {
-                        model->frame++;
-                        if (model->frame > anim->to)
-                                R_model_play(model, anim->end_anim);
-                } else {
-                        model->frame--;
-                        if (model->frame < anim->to)
-                                R_model_play(model, anim->end_anim);
-                }
-                model->time_left = anim->delay;
-                model->last_frame_time = c_time_msec;
-                model->use_lerp_meshes = FALSE;
-                return;
+        anim = model->data->anims + model->anim;
+        model->last_frame = model->frame;
+        if (anim->to > anim->from) {
+                model->frame++;
+                if (model->frame > anim->to)
+                        R_model_play(model, anim->end_anim);
+        } else {
+                model->frame--;
+                if (model->frame < anim->to)
+                        R_model_play(model, anim->end_anim);
         }
-
-        /* Generate interpolated meshes if we need a new frame now */
-        if (c_time_msec - model->last_frame_time < 1000 / R_MODEL_ANIM_FPS)
-                return;
-        if (model->frame == model->last_frame)
-                return;
+        model->time_left = anim->delay;
         model->last_frame_time = c_time_msec;
-        model->use_lerp_meshes = TRUE;
-        if (anim->delay < 1)
-                C_error("Invalid animation structure");
-        lerp = 1.f - (float)model->time_left / anim->delay;
-        for (i = 0; i < model->data->objects_len; i++)
-                interpolate_mesh(model->lerp_meshes + i, lerp,
-                                 model->data->matrix + i +
-                                 model->last_frame * model->data->objects_len,
-                                 model->data->matrix + i +
-                                 model->frame * model->data->objects_len);
 }
 
 /******************************************************************************\
@@ -595,11 +506,8 @@ void R_model_render(r_model_t *model)
            if models contain enough keyframes to maintain desired framerate. */
         if (model->time_left >= 0)
                 update_animation(model);
-        if (model->use_lerp_meshes)
-                meshes = model->lerp_meshes;
-        else
-                meshes = model->data->matrix +
-                         model->data->objects_len * model->last_frame;
+        meshes = model->data->matrix +
+                 model->data->objects_len * model->last_frame;
 
         /* We want to multisample models */
         if (r_multisample.value.n)
@@ -622,7 +530,6 @@ static void model_stop(r_model_t *model)
         model->frame = 0;
         model->last_frame = 0;
         model->time_left = -1;
-        model->use_lerp_meshes = FALSE;
 }
 
 /******************************************************************************\
@@ -644,7 +551,6 @@ void R_model_play(r_model_t *model, const char *name)
                         model->frame = model->data->anims[i].from;
                         model->time_left = model->data->anims[i].delay;
                         model->last_frame_time = c_time_msec;
-                        model->use_lerp_meshes = FALSE;
                         return;
                 }
         model_stop(model);
