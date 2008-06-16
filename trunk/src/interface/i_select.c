@@ -117,7 +117,7 @@ void I_select_init(i_select_t *select, const char *label, const char **list,
 
         /* Left button */
         I_button_init(&select->left, "gui/icons/arrow-left.png", NULL,
-                      I_BT_ICON_ROUND);
+                      I_BT_ROUND);
         select->left.on_click = (i_callback_f)left_arrow_clicked;
         select->left.data = select;
         select->left.widget.margin_rear = 0.5f;
@@ -135,7 +135,7 @@ void I_select_init(i_select_t *select, const char *label, const char **list,
 
         /* Right button */
         I_button_init(&select->right, "gui/icons/arrow-right.png", NULL,
-                      I_BT_ICON_ROUND);
+                      I_BT_ROUND);
         select->right.on_click = (i_callback_f)right_arrow_clicked;
         select->right.data = select;
         select->right.widget.margin_front = 0.5f;

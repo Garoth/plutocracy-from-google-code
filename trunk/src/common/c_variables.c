@@ -17,7 +17,7 @@
 #include "c_shared.h"
 
 /* Message logging */
-c_var_t c_log_level, c_log_file;
+c_var_t c_log_level, c_log_file, c_log_throttle;
 
 /* Never burn the user's CPU, if we are running through frames too quickly
    (faster than this rate), we need to take a nap */
@@ -48,6 +48,9 @@ void C_register_variables(void)
         c_log_level.edit = C_VE_ANYTIME;
         C_register_string(&c_log_file, "c_log_file", "",
                           "filename to redirect log output to");
+        C_register_integer(&c_log_throttle, "c_log_throttle", 25,
+                           "maximum log messages per second, 0 to disable");
+        c_log_throttle.edit = C_VE_ANYTIME;
 
         /* FPS cap */
         C_register_integer(&c_max_fps, "c_max_fps", 120,

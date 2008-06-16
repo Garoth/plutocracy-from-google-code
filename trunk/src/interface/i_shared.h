@@ -10,6 +10,21 @@
  FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
 \******************************************************************************/
 
+/* Maximum number of icon buttons a ring can hold */
+#define I_RING_BUTTONS 6
+
+/* Ring icon names */
+typedef enum {
+        I_RI_TEST_BLANK,
+        I_RI_TEST_MILL,
+        I_RI_TEST_TREE,
+        I_RI_TEST_DISABLED,
+        I_RING_ICONS,
+} i_ring_icon_t;
+
+/* Ring callback function */
+typedef void (*i_ring_f)(i_ring_icon_t);
+
 /* i_layout.c */
 void I_cleanup(void);
 void I_dispatch(const SDL_Event *);
@@ -20,7 +35,9 @@ void I_parse_config(void);
 void I_render(void);
 
 /* i_ring.c */
-void I_show_ring(c_vec3_t origin);
+void I_reset_ring(void);
+void I_add_to_ring(i_ring_icon_t, int enabled);
+void I_show_ring(c_vec3_t origin, i_ring_f callback);
 
 /* i_variables.c */
 void I_register_variables(void);

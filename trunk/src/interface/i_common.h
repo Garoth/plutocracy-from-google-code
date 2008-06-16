@@ -120,8 +120,8 @@ typedef struct i_window {
 /* Button type */
 typedef enum {
         I_BT_DECORATED,
-        I_BT_ICON_SQUARE,
-        I_BT_ICON_ROUND,
+        I_BT_SQUARE,
+        I_BT_ROUND,
 } i_button_type_t;
 
 /* Buttons can have an icon and/or text */
@@ -209,6 +209,10 @@ i_label_t *I_label_new(const char *);
 extern int i_limbo;
 extern i_widget_t i_root;
 
+/* i_ring.c */
+void I_close_ring(void);
+void I_init_ring(void);
+
 /* i_select.c */
 void I_select_init(i_select_t *, const char *label, const char **list,
                    int initial);
@@ -216,9 +220,9 @@ void I_select_init(i_select_t *, const char *label, const char **list,
 /* i_variables.c */
 extern c_var_t i_border, i_button, i_button_active, i_button_hover,
                i_square_active, i_square_hover, i_round_active, i_round_hover,
-               i_color, i_color2, i_debug, i_fade, i_hanger, i_scroll_speed,
-               i_shadow, i_test_globe, i_theme, i_window, i_work_area,
-               i_zoom_speed;
+               i_color, i_color2, i_debug, i_fade, i_hanger, i_ring,
+               i_scroll_speed, i_shadow, i_test_globe, i_theme, i_window,
+               i_work_area, i_zoom_speed;
 
 /* i_video.c */
 void I_video_init(i_window_t *);
@@ -234,7 +238,8 @@ void I_widget_inited(const i_widget_t *);
 void I_widget_move(i_widget_t *, c_vec2_t new_origin);
 void I_widget_pack(i_widget_t *, i_pack_t, i_fit_t);
 void I_widget_propagate(i_widget_t *, i_event_t);
-void I_widget_remove(i_widget_t *);
+void I_widget_remove(i_widget_t *, int cleanup);
+void I_widget_remove_children(i_widget_t *, int cleanup);
 void I_widget_set_name(i_widget_t *, const char *class_name);
 void I_widget_show(i_widget_t *, int show);
 

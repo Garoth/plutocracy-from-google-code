@@ -104,6 +104,7 @@ static void grab_globe(int x, int y)
                 grab_normal = R_rotate_from_cam(grab_normal);
         } else
                 grab_rolling = TRUE;
+        I_close_ring();
 }
 
 /******************************************************************************\
@@ -187,6 +188,7 @@ void I_globe_event(i_event_t event)
         case I_EV_KEY_DOWN:
                 if (i_limbo)
                         break;
+                I_close_ring();
                 if (i_key == SDLK_RIGHT && globe_motion.x > -1.f)
                         globe_motion.x = -i_scroll_speed.value.f;
                 if (i_key == SDLK_LEFT && globe_motion.x < 1.f)
