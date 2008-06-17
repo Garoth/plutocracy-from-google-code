@@ -21,7 +21,6 @@
 
 static i_widget_t ring_widget;
 static r_sprite_t ring_sprite;
-static c_vec3_t world_origin;
 static c_vec2_t screen_origin;
 static i_ring_f callback;
 static i_button_t button_widgets[I_RING_ICONS];
@@ -37,7 +36,6 @@ static void position_and_pack(void)
         int i, j;
 
         /* Position the ring */
-        screen_origin = C_vec2_from_3(R_project_by_cam(world_origin), 2);
         size = C_vec2_scalef(ring_widget.size, 0.5f);
         I_widget_move(&ring_widget, C_vec2_sub(screen_origin, size));
 
@@ -134,6 +132,8 @@ void I_init_ring(void)
                       "gui/icons/ring/test_mill.png", NULL, I_BT_ROUND);
         I_button_init(button_widgets + I_RI_TEST_TREE,
                       "gui/icons/ring/test_tree.png", NULL, I_BT_ROUND);
+        I_button_init(button_widgets + I_RI_TEST_SHIP,
+                      "gui/icons/ring/test_ship.png", NULL, I_BT_ROUND);
         I_button_init(button_widgets + I_RI_TEST_DISABLED,
                       "gui/icons/ring/test_disabled.png", NULL, I_BT_ROUND);
         for (i = 0; i < I_RING_ICONS; i++) {
@@ -147,9 +147,9 @@ void I_init_ring(void)
 /******************************************************************************\
  Show the ring UI centered on a world-space [origin].
 \******************************************************************************/
-void I_show_ring(c_vec3_t origin, i_ring_f _callback)
+void I_show_ring(i_ring_f _callback)
 {
-        world_origin = origin;
+        screen_origin = C_vec2(i_mouse_x, i_mouse_y);
         position_and_pack();
         I_widget_show(&ring_widget, TRUE);
         callback = _callback;

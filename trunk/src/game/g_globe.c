@@ -438,6 +438,9 @@ static void test_ring_callback(i_ring_icon_t icon)
         else if (icon == I_RI_TEST_TREE)
                 set_tile_model(selected_tile,
                                "models/environment/tree-deciduous.plum");
+        else if (icon == I_RI_TEST_SHIP)
+                set_tile_model(selected_tile,
+                               "models/ships/ship-sloop.plum");
         else
                 set_tile_model(selected_tile, "");
 }
@@ -476,8 +479,9 @@ void G_click_ray(c_vec3_t origin, c_vec3_t forward, int button)
                 I_add_to_ring(I_RI_TEST_BLANK, TRUE);
                 I_add_to_ring(I_RI_TEST_MILL, TRUE);
                 I_add_to_ring(I_RI_TEST_TREE, TRUE);
+                I_add_to_ring(I_RI_TEST_SHIP, TRUE);
                 I_add_to_ring(I_RI_TEST_DISABLED, FALSE);
-                I_show_ring(g_tiles[i].origin, (i_ring_f)test_ring_callback);
+                I_show_ring((i_ring_f)test_ring_callback);
         }
 }
 
