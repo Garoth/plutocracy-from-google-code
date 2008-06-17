@@ -415,9 +415,7 @@ static int check_mouse_out(i_widget_t *widget)
 \******************************************************************************/
 void I_widget_event(i_widget_t *widget, i_event_t event)
 {
-        int propagate;
-
-        if (!widget->name[0])
+        if (!widget->name[0] || !widget->event_func)
                 C_error("Propagated event to uninitialized widget");
 
         /* The only event an unconfigured widget can handle is I_EV_CONFIGURE */
@@ -457,6 +455,15 @@ void I_widget_event(i_widget_t *widget, i_event_t event)
                 widget->shown = FALSE;
                 if (i_key_focus == widget)
                         i_key_focus = NULL;
+                if (mouse_focus == widget) {
+                        widget->event_func(widget, I_EV_MOUSE_OUT);
+                        widget->state = I_WS_READY;
+
+                        /* In order to find out what widget has the mouse focus
+                           now we need to push a fake mouse motion event up
+                           from the root window */
+                        I_widget_event(&i_root, I_EV_MOUSE_MOVE);
+                }
                 break;
         case I_EV_MOUSE_IN:
         case I_EV_MOUSE_OUT:
@@ -514,16 +521,14 @@ void I_widget_event(i_widget_t *widget, i_event_t event)
                 break;
         case I_EV_SHOW:
                 widget->shown = TRUE;
+                check_mouse_out(widget);
                 break;
         default:
                 break;
         }
 
         /* Call widget-specific event handler and propagate event down */
-        propagate = TRUE;
-        if (widget->event_func)
-                propagate = widget->event_func(widget, event);
-        if (propagate)
+        if (widget->event_func(widget, event))
                 I_widget_propagate(widget, event);
 
         /* After handling and propagation to children */
