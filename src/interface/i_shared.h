@@ -19,6 +19,7 @@ typedef enum {
         I_RI_TEST_MILL,
         I_RI_TEST_TREE,
         I_RI_TEST_DISABLED,
+        I_RI_TEST_SHIP,
         I_RING_ICONS,
 } i_ring_icon_t;
 
@@ -37,7 +38,7 @@ void I_render(void);
 /* i_ring.c */
 void I_reset_ring(void);
 void I_add_to_ring(i_ring_icon_t, int enabled);
-void I_show_ring(c_vec3_t origin, i_ring_f callback);
+void I_show_ring(i_ring_f callback);
 
 /* i_variables.c */
 void I_register_variables(void);
