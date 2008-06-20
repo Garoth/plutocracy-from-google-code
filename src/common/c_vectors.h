@@ -174,6 +174,11 @@ static inline c_color_t C_color_scalef(c_color_t a, float f)
         return C_color(a.r * f, a.g * f, a.b * f, a.a * f);
 }
 
+static inline c_color_t C_color_mod(c_color_t a, float f)
+{
+        return C_color(a.r * f, a.g * f, a.b * f, a.a);
+}
+
 static inline c_color_t C_color_divf(c_color_t a, float f)
 {
         return C_color(a.r / f, a.g / f, a.b / f, a.a / f);

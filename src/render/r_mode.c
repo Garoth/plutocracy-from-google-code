@@ -251,6 +251,14 @@ static void check_gl_extensions(void)
         /* Multitexture */
         glGetIntegerv(GL_MAX_TEXTURE_UNITS_ARB, &r_ext.multitexture);
         C_debug("%d texture units supported", r_ext.multitexture);
+        if (r_ext.multitexture > 1) {
+                r_ext.glActiveTexture =
+                        SDL_GL_GetProcAddress("glActiveTexture");
+                if (!r_ext.glActiveTexture) {
+                        C_warning("Failed to get glActiveTexture address");
+                        r_ext.multitexture = 1;
+                }
+        }
 
         /* Point sprites */
         if (check_extension("GL_ARB_point_sprite")) {
@@ -382,6 +390,7 @@ void R_init(void)
         R_load_assets();
         R_init_camera();
         R_init_solar();
+        R_init_globe();
 
         /* Set updatable variables */
         C_var_update(&r_clear, clear_update);
@@ -393,6 +402,7 @@ void R_init(void)
 \******************************************************************************/
 void R_cleanup(void)
 {
+        R_cleanup_globe();
         R_cleanup_solar();
         R_free_assets();
 }
@@ -684,7 +694,7 @@ void R_finish_frame(void)
                 C_debug("Saving screenshot '%s'", screenshot);
                 tex = R_texture_alloc(r_width.value.n, r_height.value.n, FALSE);
                 R_texture_screenshot(tex, 0, 0);
-                R_texture_save(tex, screenshot);
+                R_surface_save(tex->surface, screenshot);
                 R_texture_free(tex);
                 screenshot[0] = NUL;
         }

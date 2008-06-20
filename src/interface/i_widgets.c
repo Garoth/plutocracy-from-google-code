@@ -398,6 +398,20 @@ static int check_mouse_out(i_widget_t *widget)
 }
 
 /******************************************************************************\
+ When a widget is hidden, propagates up to the widget's parent and then to its
+ parent and so on until mouse focus is claimed.
+\******************************************************************************/
+static void mouse_focus_parent(i_widget_t *widget)
+{
+        while (widget) {
+                if (!check_mouse_out(widget))
+                        return;
+                widget = widget->parent;
+        }
+        mouse_focus = &i_root;
+}
+
+/******************************************************************************\
  Dispatches basic widget events and does some checks to see if the event
  applies to this widget. Cleans up resources on I_EV_CLEANUP and propagates
  the event to all child widgets.
@@ -458,12 +472,8 @@ void I_widget_event(i_widget_t *widget, i_event_t event)
                 if (mouse_focus == widget) {
                         widget->event_func(widget, I_EV_MOUSE_OUT);
                         widget->state = I_WS_READY;
-
-                        /* In order to find out what widget has the mouse focus
-                           now we need to push a fake mouse motion event up
-                           from the root window */
-                        I_widget_event(&i_root, I_EV_MOUSE_MOVE);
                 }
+                mouse_focus_parent(widget);
                 break;
         case I_EV_MOUSE_IN:
         case I_EV_MOUSE_OUT:

@@ -52,9 +52,8 @@ static c_ref_t *data_root;
 /******************************************************************************\
  Render a mesh.
 \******************************************************************************/
-static void mesh_render(mesh_t *mesh, r_texture_t *texture)
+static void mesh_render(mesh_t *mesh)
 {
-        R_texture_select(texture);
         C_count_add(&r_count_faces, mesh->indices_len / 3);
 
         /* Use the Vertex Buffer Object if available */
@@ -511,13 +510,47 @@ void R_model_render(r_model_t *model)
 
         /* We want to multisample models */
         if (r_multisample.value.n)
-                glEnable(GL_MULTISAMPLE);
+                R_gl_enable(GL_MULTISAMPLE);
 
-        /* Each object in the model needs a rendering call */
-        for (i = 0; i < model->data->objects_len; i++)
-                mesh_render(meshes + i, model->data->objects[i].texture);
+        /* Unlit models need to temporarily disable lighting */
+        if (model->unlit)
+                R_gl_disable(GL_LIGHTING);
 
-        glDisable(GL_MULTISAMPLE);
+        /* If this model is selected, multitexture the selected texture */
+        if (model->selected && r_white_tex && r_ext.multitexture > 1) {
+                c_color_t mod_color;
+
+                mod_color = C_color_mod(r_select_color, r_select_color.a);
+                r_ext.glActiveTexture(GL_TEXTURE1);
+                glEnable(GL_TEXTURE_2D);
+                glBindTexture(GL_TEXTURE_2D, r_white_tex->gl_name);
+                glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_COMBINE);
+                glTexEnvi(GL_TEXTURE_ENV, GL_COMBINE_RGB, GL_ADD);
+                glTexEnvi(GL_TEXTURE_ENV, GL_SRC0_RGB, GL_CONSTANT);
+                glTexEnvfv(GL_TEXTURE_ENV, GL_TEXTURE_ENV_COLOR,
+                           C_ARRAYF(mod_color));
+                r_ext.glActiveTexture(GL_TEXTURE0);
+
+                /* Render model meshes */
+                for (i = 0; i < model->data->objects_len; i++) {
+                        R_texture_select(model->data->objects[i].texture);
+                        mesh_render(meshes + i);
+                }
+
+                glColor4f(1.f, 1.f, 1.f, 1.f);
+                r_ext.glActiveTexture(GL_TEXTURE1);
+                glDisable(GL_TEXTURE_2D);
+                r_ext.glActiveTexture(GL_TEXTURE0);
+        }
+
+        /* Render model meshes normally */
+        else
+                for (i = 0; i < model->data->objects_len; i++) {
+                        R_texture_select(model->data->objects[i].texture);
+                        mesh_render(meshes + i);
+                }
+
+        R_gl_restore();
         R_pop_mode();
 }
 

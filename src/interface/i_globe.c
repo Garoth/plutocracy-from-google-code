@@ -124,9 +124,6 @@ static void rotate_globe(int x, int y)
         c_vec3_t normal, angles;
         float angle;
 
-        if (!grabbing)
-                return;
-
         /* Rotation without roll */
         if (screen_to_normal(x, y, &normal, &angle)) {
                 normal = R_rotate_from_cam(normal);
@@ -184,10 +181,12 @@ static void test_globe(void)
 \******************************************************************************/
 void I_globe_event(i_event_t event)
 {
+        /* No processing here during limbo */
+        if (i_limbo)
+                return;
+
         switch (event) {
         case I_EV_KEY_DOWN:
-                if (i_limbo)
-                        break;
                 I_close_ring();
                 if (i_key == SDLK_RIGHT && globe_motion.x > -1.f)
                         globe_motion.x = -i_scroll_speed.value.f;
@@ -211,28 +210,29 @@ void I_globe_event(i_event_t event)
                         globe_motion.y = 0.f;
                 break;
         case I_EV_MOUSE_DOWN:
-                if (i_limbo)
-                        break;
                 if (i_mouse == SDL_BUTTON_WHEELDOWN)
                         R_zoom_cam_by(i_zoom_speed.value.f);
                 else if (i_mouse == SDL_BUTTON_WHEELUP)
                         R_zoom_cam_by(-i_zoom_speed.value.f);
                 else if (i_mouse == SDL_BUTTON_MIDDLE)
                         grab_globe(i_mouse_x, i_mouse_y);
-                else {
-                        c_vec3_t direction;
-
-                        direction = screen_ray(i_mouse_x, i_mouse_y);
-                        direction = R_rotate_to_cam(direction);
-                        G_click_ray(r_cam_origin, direction, i_mouse);
-                }
+                else
+                        G_process_click(i_mouse);
                 break;
         case I_EV_MOUSE_UP:
                 if (i_mouse == SDL_BUTTON_MIDDLE)
                         release_globe();
                 break;
         case I_EV_MOUSE_MOVE:
-                rotate_globe(i_mouse_x, i_mouse_y);
+                if (grabbing)
+                        rotate_globe(i_mouse_x, i_mouse_y);
+                else if (!I_ring_shown()) {
+                        c_vec3_t direction;
+
+                        direction = screen_ray(i_mouse_x, i_mouse_y);
+                        direction = R_rotate_to_cam(direction);
+                        G_mouse_ray(r_cam_origin, direction);
+                }
                 break;
         case I_EV_RENDER:
                 test_globe();

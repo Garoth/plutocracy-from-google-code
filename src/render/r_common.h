@@ -54,7 +54,7 @@ struct r_texture {
         SDL_Surface *surface;
         GLuint gl_name;
         float anisotropy;
-        int alpha, mipmaps;
+        int alpha, mipmaps, additive;
 };
 
 /* Render modes */
@@ -70,6 +70,7 @@ typedef struct r_ext {
         PFNGLBUFFERDATAPROC glBufferData;
         PFNGLDELETEBUFFERSPROC glDeleteBuffers;
         PFNGLGENBUFFERSPROC glGenBuffers;
+        PFNGLACTIVETEXTUREPROC glActiveTexture;
         GLfloat anisotropy;
         GLint multitexture;
         int point_sprites, vertex_buffers;
@@ -81,11 +82,6 @@ SDL_Surface *R_font_render(r_font_t, const char *);
 void R_free_assets(void);
 void R_load_assets(void);
 void R_realloc_textures(void);
-void R_surface_flip_v(SDL_Surface *);
-c_color_t R_surface_get(const SDL_Surface *, int x, int y);
-void R_surface_invert(SDL_Surface *, int rgb, int alpha);
-void R_surface_mask(SDL_Surface *dest, SDL_Surface *src);
-void R_surface_put(SDL_Surface *, int x, int y, c_color_t);
 #define R_texture_alloc(w, h, a) R_texture_alloc_full(__FILE__, __LINE__, \
                                                       __func__, w, h, a)
 r_texture_t *R_texture_alloc_full(const char *file, int line, const char *func,
@@ -103,13 +99,20 @@ void R_texture_screenshot(r_texture_t *, int x, int y);
 void R_texture_select(r_texture_t *);
 void R_texture_upload(const r_texture_t *);
 
-extern r_texture_t *r_terrain_tex;
+extern r_texture_t *r_terrain_tex, *r_select_model_tex, *r_white_tex;
+extern SDL_PixelFormat r_sdl_format;
 
 /* r_camera.c */
 void R_init_camera(void);
 void R_update_camera(void);
 
 extern GLfloat r_cam_matrix[16];
+
+/* r_globe.c */
+void R_cleanup_globe(void);
+void R_init_globe(void);
+
+extern c_color_t r_select_color;
 
 /* r_mode.c */
 #define R_check_errors() R_check_errors_full(__FILE__, __LINE__, __func__);
@@ -133,8 +136,26 @@ void R_prerender(void);
 void R_cleanup_solar(void);
 void R_disable_light(void);
 void R_enable_light(void);
+void R_finish_atmosphere(void);
+void R_generate_halo(void);
 void R_init_solar(void);
 void R_render_solar(void);
+void R_start_atmosphere(void);
+
+extern c_color_t r_fog_color;
+
+/* r_surface.c */
+SDL_Surface *R_surface_alloc(int width, int height, int alpha);
+void R_surface_flip_v(SDL_Surface *);
+c_color_t R_surface_get(const SDL_Surface *, int x, int y);
+void R_surface_invert(SDL_Surface *, int rgb, int alpha);
+SDL_Surface *R_surface_load_png(const char *filename, int *alpha);
+void R_surface_mask(SDL_Surface *dest, SDL_Surface *src);
+void R_surface_put(SDL_Surface *, int x, int y, c_color_t);
+int R_surface_save(SDL_Surface *, const char *filename);
+void R_surface_stats(void);
+
+extern int r_sdl_mem, r_sdl_mem_high;
 
 /* r_test.c */
 void R_render_normals(int count, c_vec3_t *co, c_vec3_t *no, int stride);
@@ -142,7 +163,7 @@ void R_render_tests(void);
 
 /* r_variables.c */
 extern c_var_t r_clear, r_depth_bits, r_globe, r_globe_colors[4],
-               r_globe_atmosphere, r_globe_shininess, r_globe_smooth,
+               r_atmosphere, r_globe_shininess, r_globe_smooth,
                r_globe_transitions, r_gl_errors, r_light, r_moon_atten,
                r_moon_colors[3], r_moon_height, r_solar, r_sun_colors[3],
                r_test_normals, r_test_sprite_num, r_test_sprite, r_test_model,
