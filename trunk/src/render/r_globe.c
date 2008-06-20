@@ -14,12 +14,10 @@
 
 #include "r_common.h"
 
-/* Atmospheric fog and halo parameters */
-#define FOG_DISTANCE 12.f
-#define FOG_ZOOM_SCALE 0.8f
-#define HALO_SEGMENTS 32
-#define HALO_LOW_SCALE 0.995f
-#define HALO_HIGH_SCALE 1.1f
+/* Sine-wave blending modulation for the tile selection */
+#define SELECT_FREQ 0.005f
+#define SELECT_AMP 0.250f
+#define SELECT_MODULATE 0.33f
 
 /* Globe vertex type */
 #pragma pack(push, 4)
@@ -31,14 +29,6 @@ typedef struct globe_vertex {
 } globe_vertex_t;
 #pragma pack(pop)
 
-/* Atmospheric halo vertex type */
-#pragma pack(push, 4)
-typedef struct halo_vertex {
-        c_color_t color;
-        c_vec3_t co;
-} halo_vertex_t;
-#pragma pack(pop)
-
 /* Globe radius from the center to sea-level */
 float r_globe_radius;
 
@@ -48,12 +38,41 @@ float r_globe_light;
 /* Number of tiles on the globe */
 int r_tiles;
 
-static globe_vertex_t vertices[R_TILES_MAX * 3];
-static halo_vertex_t halo_verts[2 + HALO_SEGMENTS * 2];
-static c_color_t globe_colors[4], fog_color;
+/* Current selection color */
+c_color_t r_select_color;
+
+static c_color_t globe_colors[4];
 static c_vec3_t normals[R_TILES_MAX];
+static r_vertex3_t select_verts[3];
+static r_texture_t *select_tex;
+static globe_vertex_t vertices[R_TILES_MAX * 3];
 static GLuint vertices_vbo;
-static int flip_limit;
+static int flip_limit, selected_tile;
+
+/******************************************************************************\
+ Initialize globe data.
+\******************************************************************************/
+void R_init_globe(void)
+{
+        int i;
+
+        /* Load select triangle texture */
+        select_tex = R_texture_load("models/globe/select.png", TRUE);
+        select_tex->additive = TRUE;
+
+        /* Setup globe material properties */
+        for (i = 0; i < 4; i++)
+                C_var_update_data(r_globe_colors + i, C_color_update,
+                                  globe_colors + i);
+}
+
+/******************************************************************************\
+ Cleanup globe data.
+\******************************************************************************/
+void R_cleanup_globe(void)
+{
+        R_texture_free(select_tex);
+}
 
 /******************************************************************************\
  Space out the vertices at even distance from the sphere.
@@ -238,44 +257,6 @@ static void generate_icosahedron(void)
 }
 
 /******************************************************************************\
- Update function for atmosphere color.
-\******************************************************************************/
-static int globe_atmosphere_update(c_var_t *var, c_var_value_t value)
-{
-        int i;
-
-        fog_color = C_color_string(value.s);
-        for (i = 0; i <= HALO_SEGMENTS; i++)
-                halo_verts[2 * i].color = fog_color;
-        return TRUE;
-}
-
-/******************************************************************************\
- Generates the halo vertices.
-\******************************************************************************/
-static void generate_halo(void)
-{
-        c_vec3_t unit;
-        halo_vertex_t *vert;
-        float angle;
-        int i;
-
-        for (i = 0; i <= HALO_SEGMENTS; i++) {
-                angle = 2.f * C_PI * i / HALO_SEGMENTS;
-                unit = C_vec3(cosf(angle), sinf(angle), 0.f);
-
-                /* Bottom vertex */
-                vert = halo_verts + 2 * i;
-                vert->co = C_vec3_scalef(unit, HALO_LOW_SCALE);
-
-                /* Top vertex */
-                vert++;
-                vert->color = C_color(0.f, 0.f, 0.f, 0.f);
-                vert->co = C_vec3_scalef(unit, HALO_HIGH_SCALE);
-        }
-}
-
-/******************************************************************************\
  Generates the globe by subdividing an icosahedron and spacing the vertices
  out at the sphere's surface.
 \******************************************************************************/
@@ -299,56 +280,14 @@ void R_generate_globe(int subdiv4)
         for (i = 0; i < r_tiles * 3; i++)
                 vertices[i].no = C_vec3_norm(vertices[i].co);
 
-        /* Setup globe material properties */
-        for (i = 0; i < 4; i++)
-                C_var_update_data(r_globe_colors + i, C_color_update,
-                                  globe_colors + i);
-        C_var_update(&r_globe_atmosphere, globe_atmosphere_update);
-        generate_halo();
-
         /* Delete any old vertex buffers */
         if (vertices_vbo) {
                 r_ext.glDeleteBuffers(1, &vertices_vbo);
                 vertices_vbo = 0;
         }
-}
 
-/******************************************************************************\
- Renders the halo around the globe.
-\******************************************************************************/
-static void render_halo(void)
-{
-        float scale, dist, z;
-
-        /* Find out how far away and how big the halo is */
-        z = r_globe_radius + r_cam_zoom;
-        dist = r_globe_radius * r_globe_radius / z;
-        scale = sqrtf(r_globe_radius * r_globe_radius - dist * dist);
-
-        /* Render the halo */
-        glDisable(GL_DEPTH_TEST);
-        glDisable(GL_TEXTURE_2D);
-        glDisable(GL_LIGHTING);
-        glEnable(GL_BLEND);
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE);
-        glPushMatrix();
-        glLoadIdentity();
-        glTranslatef(0, 0, -r_globe_radius - r_cam_zoom + dist);
-        glScalef(scale, scale, scale);
-        glEnableClientState(GL_VERTEX_ARRAY);
-        glEnableClientState(GL_COLOR_ARRAY);
-        glVertexPointer(3, GL_FLOAT, sizeof (*halo_verts), &halo_verts[0].co);
-        glColorPointer(4, GL_FLOAT, sizeof (*halo_verts), &halo_verts[0].color);
-        glDrawArrays(GL_TRIANGLE_STRIP, 0, 2 + 2 * HALO_SEGMENTS);
-        glDisableClientState(GL_COLOR_ARRAY);
-        glDisableClientState(GL_VERTEX_ARRAY);
-        glPopMatrix();
-        glEnable(GL_DEPTH_TEST);
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-        glColor4f(1.f, 1.f, 1.f, 1.f);
-
-        R_check_errors();
-        C_count_add(&r_count_faces, 2 * HALO_SEGMENTS);
+        selected_tile = -1;
+        R_generate_halo();
 }
 
 /******************************************************************************\
@@ -377,20 +316,7 @@ void R_start_globe(void)
         glMaterialfv(GL_FRONT, GL_SPECULAR, modulate_globe_color(2));
         glMaterialfv(GL_FRONT, GL_EMISSION, modulate_globe_color(3));
 
-        /* Use fog to simulate atmosphere */
-        if (fog_color.a > 0.f) {
-                float fog_start;
-
-                fog_start = r_cam_zoom * FOG_ZOOM_SCALE +
-                            (1.f - fog_color.a) * r_globe_radius / 2;
-                render_halo();
-                glEnable(GL_FOG);
-                glFogfv(GL_FOG_COLOR, C_ARRAYF(fog_color));
-                glFogf(GL_FOG_MODE, GL_LINEAR);
-                glFogf(GL_FOG_START, fog_start);
-                glFogf(GL_FOG_END, fog_start + FOG_DISTANCE);
-        }
-
+        R_start_atmosphere();
         R_enable_light();
         R_texture_select(r_terrain_tex);
 
@@ -413,6 +339,26 @@ void R_start_globe(void)
                 glDrawArrays(GL_TRIANGLES, 0, 3 * r_tiles);
         }
 
+        /* Render selection triangle */
+        if (selected_tile >= 0) {
+                R_gl_disable(GL_LIGHTING);
+                R_texture_select(select_tex);
+
+                /* Sine-wave modulate the selection highlight */
+                r_select_color = r_fog_color;
+                r_select_color.a = SELECT_MODULATE * (1.f - SELECT_AMP *
+                                   (1.f - sinf(SELECT_FREQ * c_time_msec)));
+                glColor4f(r_select_color.r, r_select_color.g,
+                          r_select_color.b, r_select_color.a);
+
+                glInterleavedArrays(R_VERTEX3_FORMAT, sizeof (*select_verts),
+                                    select_verts);
+                glDrawArrays(GL_TRIANGLES, 0, 3);
+                glColor4f(1.f, 1.f, 1.f, 1.f);
+                C_count_add(&r_count_faces, 1);
+                R_gl_restore();
+        }
+
         glDisableClientState(GL_TEXTURE_COORD_ARRAY);
         glDisableClientState(GL_VERTEX_ARRAY);
         glDisableClientState(GL_NORMAL_ARRAY);
@@ -429,7 +375,7 @@ void R_start_globe(void)
 \******************************************************************************/
 void R_finish_globe(void)
 {
-        glDisable(GL_FOG);
+        R_finish_atmosphere();
         R_disable_light();
         R_check_errors();
         R_pop_mode();
@@ -738,5 +684,30 @@ void R_configure_globe(r_tile_t *tiles)
                                    vertices, GL_STATIC_DRAW);
                 r_ext.glBindBuffer(GL_ARRAY_BUFFER, 0);
         }
+}
+
+/******************************************************************************\
+ Picks a tile on the globe to highlight during rendering.
+\******************************************************************************/
+void R_select_tile(int tile)
+{
+        selected_tile = tile;
+        if (tile < 0)
+                return;
+
+        /* Copy coordinates */
+        select_verts[0].co = vertices[3 * tile].co;
+        select_verts[1].co = vertices[3 * tile + 1].co;
+        select_verts[2].co = vertices[3 * tile + 2].co;
+
+        /* Copy normals */
+        select_verts[0].no = vertices[3 * tile].no;
+        select_verts[1].no = vertices[3 * tile + 1].no;
+        select_verts[2].no = vertices[3 * tile + 2].no;
+
+        /* Set UV */
+        select_verts[0].uv = C_vec2(0.5f, 0.0f);
+        select_verts[1].uv = C_vec2(0.0f, 1.0f);
+        select_verts[2].uv = C_vec2(1.0f, 1.0f);
 }
 

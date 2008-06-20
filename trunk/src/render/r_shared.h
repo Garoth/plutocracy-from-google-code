@@ -55,7 +55,8 @@ typedef struct r_model {
         c_vec3_t origin, normal, forward;
         struct r_model_data *data;
         float scale;
-        int anim, frame, last_frame, last_frame_time, time_left;
+        int anim, frame, last_frame, last_frame_time, time_left, unlit,
+            selected;
 } r_model_t;
 
 /* 2D textured quad sprite, can only be rendered in 2D mode */
@@ -143,6 +144,7 @@ void R_get_tile_coords(int index, c_vec3_t verts[3]);
 float R_get_tile_latitude(int tile);
 void R_get_tile_neighbors(int tile, int neighbors[3]);
 int R_get_tile_region(int tile, int neighbors[12]);
+void R_select_tile(int tile);
 void R_start_globe(void);
 
 extern float r_globe_light, r_globe_radius;

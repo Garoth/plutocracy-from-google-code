@@ -225,6 +225,7 @@ static int set_tile_model(int tile, const char *filename)
         g_tiles[tile].model.origin = g_tiles[tile].origin;
         g_tiles[tile].model.normal = g_tiles[tile].normal;
         g_tiles[tile].model.forward = g_tiles[tile].forward;
+        g_tiles[tile].model.selected = selected_tile == tile;
         return TRUE;
 }
 
@@ -258,7 +259,18 @@ static int test_tiles_update(c_var_t *var, c_var_value_t value)
 }
 
 /******************************************************************************\
- Initialize an idle globe.
+ One-time globe initialization. Call after rendering has been initialized.
+\******************************************************************************/
+void G_init_globe(void)
+{
+        selected_tile = -1;
+
+        /* Generate a starter globe */
+        G_generate_globe();
+}
+
+/******************************************************************************\
+ Generate a new globe.
 \******************************************************************************/
 void G_generate_globe(void)
 {
@@ -370,12 +382,25 @@ void G_render_globe(void)
         int i;
 
         R_start_globe();
+
+        /* Render tile models */
         for (i = 0; i < r_tiles; i++)
                 if ((g_tiles[i].visible = tile_visible(i))) {
                         R_adjust_light_for(g_tiles[i].origin);
                         R_model_render(&g_tiles[i].model);
                 }
+
         R_finish_globe();
+
+        /* Render a test line from the selected tile */
+        if (g_test_globe.value.n && selected_tile >= 0) {
+                c_vec3_t b;
+
+                b = C_vec3_add(g_tiles[selected_tile].origin,
+                               g_tiles[selected_tile].normal);
+                R_render_test_line(g_tiles[selected_tile].origin, b,
+                                   C_color(0.f, 1.f, 0.f, 1.f));
+        }
 }
 
 /******************************************************************************\
@@ -445,43 +470,64 @@ static void test_ring_callback(i_ring_icon_t icon)
                 set_tile_model(selected_tile, "");
 }
 
-
 /******************************************************************************\
- After a mouse click is transformed into a ray with [origin] and [forward]
- vector, this function will find which tile (if any) was clicked on and
- trigger any actions this may have caused.
+ The mouse screen position is transformed into a ray with [origin] and
+ [forward] vector, this function will find which tile (if any) the mouse is
+ hovering over.
 \******************************************************************************/
-void G_click_ray(c_vec3_t origin, c_vec3_t forward, int button)
+void G_mouse_ray(c_vec3_t origin, c_vec3_t forward)
 {
+        float selected_z, z;
         int i;
 
-        selected_tile = -1;
+        /* We can quit early if the selected tile is still being hovered over */
+        if (selected_tile >= 0 && g_tiles[selected_tile].visible &&
+            ray_intersects_tile(origin, forward, selected_tile)) {
+                g_tiles[selected_tile].model.selected = TRUE;
+                return;
+        }
+
+        /* Disable selected tile effect for old model */
+        if (selected_tile >= 0)
+                g_tiles[selected_tile].model.selected = FALSE;
+
+        /* Iterate over all visible tiles to find the selected tile */
+        selected_z = 0.f;
+        R_select_tile(selected_tile = -1);
         for (i = 0; i < r_tiles; i++) {
                 if (!g_tiles[i].visible ||
                     !ray_intersects_tile(origin, forward, i))
                         continue;
-                selected_tile = i;
 
-                /* Test tile click detection */
-                if (g_test_globe.value.n) {
-                        c_vec3_t b;
-
-                        C_debug("Click hit for tile %d", i);
-                        b = C_vec3_add(g_tiles[i].origin,
-                                       g_tiles[i].normal);
-                        R_render_test_line(g_tiles[i].origin, b,
-                                           C_color(0.f, 1.f, 0.f, 1.f));
-                        set_tile_model(i, "");
+                /* Make sure we only select the closest match */
+                z = C_vec3_dot(r_cam_forward, g_tiles[i].origin);
+                if (z < selected_z) {
+                        selected_tile = i;
+                        selected_z = z;
                 }
-
-                /* If we clicked on a valid tile, popup the ring menu */
-                I_reset_ring();
-                I_add_to_ring(I_RI_TEST_BLANK, TRUE);
-                I_add_to_ring(I_RI_TEST_MILL, TRUE);
-                I_add_to_ring(I_RI_TEST_TREE, TRUE);
-                I_add_to_ring(I_RI_TEST_SHIP, TRUE);
-                I_add_to_ring(I_RI_TEST_DISABLED, FALSE);
-                I_show_ring((i_ring_f)test_ring_callback);
         }
+        if (selected_tile < 0)
+                return;
+
+        R_select_tile(selected_tile);
+        g_tiles[selected_tile].model.selected = TRUE;
+}
+
+/******************************************************************************\
+ Called when the interface root window receives a click.
+\******************************************************************************/
+void G_process_click(int button)
+{
+        if (selected_tile < 0)
+                return;
+
+        /* If we clicked on a valid tile, popup the ring menu */
+        I_reset_ring();
+        I_add_to_ring(I_RI_TEST_BLANK, TRUE);
+        I_add_to_ring(I_RI_TEST_MILL, TRUE);
+        I_add_to_ring(I_RI_TEST_TREE, TRUE);
+        I_add_to_ring(I_RI_TEST_SHIP, TRUE);
+        I_add_to_ring(I_RI_TEST_DISABLED, FALSE);
+        I_show_ring((i_ring_f)test_ring_callback);
 }
 

@@ -212,6 +212,7 @@ extern i_widget_t i_root;
 /* i_ring.c */
 void I_close_ring(void);
 void I_init_ring(void);
+int I_ring_shown(void);
 
 /* i_select.c */
 void I_select_init(i_select_t *, const char *label, const char **list,

@@ -12,7 +12,9 @@
 
 /* g_globe.c */
 void G_cleanup_globe(void);
-void G_click_ray(c_vec3_t origin, c_vec3_t forward, int button);
+void G_init_globe(void);
+void G_mouse_ray(c_vec3_t origin, c_vec3_t forward);
+void G_process_click(int button);
 void G_generate_globe(void);
 void G_render_globe(void);
 

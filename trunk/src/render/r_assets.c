@@ -23,6 +23,12 @@ extern c_var_t r_font_console, r_font_console_pt, r_font_gui, r_font_gui_pt,
 /* Terrain tile sheet */
 r_texture_t *r_terrain_tex;
 
+/* White generated texture */
+r_texture_t *r_white_tex;
+
+/* SDL format used for textures */
+SDL_PixelFormat r_sdl_format;
+
 /* Font asset array */
 static struct {
         TTF_Font *ttf_font;
@@ -30,153 +36,7 @@ static struct {
 } fonts[R_FONTS];
 
 static c_ref_t *root, *root_alloc;
-static SDL_PixelFormat sdl_format;
-static int ttf_inited, allocated, allocated_high;
-
-/******************************************************************************\
- Gets a pixel from an SDL surface. Lock the surface before calling.
-\******************************************************************************/
-c_color_t R_surface_get(const SDL_Surface *surf, int x, int y)
-{
-        Uint8 *p, r, g, b, a;
-        Uint32 pixel;
-        int bpp;
-
-        bpp = surf->format->BytesPerPixel;
-        p = (Uint8 *)surf->pixels + y * surf->pitch + x * bpp;
-        switch(bpp) {
-        case 1: pixel = *p;
-                break;
-        case 2: pixel = *(Uint16 *)p;
-                break;
-        case 3: pixel = SDL_BYTEORDER == SDL_BIG_ENDIAN ?
-                        p[0] << 16 | p[1] << 8 | p[2] :
-                        p[0] | p[1] << 8 | p[2] << 16;
-                break;
-        case 4: pixel = *(Uint32 *)p;
-                break;
-        default:
-                C_error("Invalid surface format");
-        }
-        SDL_GetRGBA(pixel, surf->format, &r, &g, &b, &a);
-        return C_color_rgba(r, g, b, a);
-}
-
-/******************************************************************************\
- Sets the color of a pixel on an SDL surface. Lock the surface before
- calling.
-\******************************************************************************/
-void R_surface_put(SDL_Surface *surf, int x, int y, c_color_t color)
-{
-        Uint8 *p;
-        Uint32 pixel;
-        int bpp;
-
-        bpp = surf->format->BytesPerPixel;
-        p = (Uint8 *)surf->pixels + y * surf->pitch + x * bpp;
-        pixel = SDL_MapRGBA(surf->format, (Uint8)(255.f * color.r),
-                            (Uint8)(255.f * color.g), (Uint8)(255.f * color.b),
-                            (Uint8)(255.f * color.a));
-        switch(bpp) {
-        case 1: *p = pixel;
-                break;
-        case 2: *(Uint16 *)p = pixel;
-                break;
-        case 3: if(SDL_BYTEORDER == SDL_BIG_ENDIAN) {
-                        p[0] = (pixel >> 16) & 0xff;
-                        p[1] = (pixel >> 8) & 0xff;
-                        p[2] = pixel & 0xff;
-                } else {
-                        p[0] = pixel & 0xff;
-                        p[1] = (pixel >> 8) & 0xff;
-                        p[2] = (pixel >> 16) & 0xff;
-                }
-                break;
-        case 4: *(Uint32 *)p = pixel;
-                break;
-        default:
-                C_error("Invalid surface format");
-        }
-}
-
-/******************************************************************************\
- Inverts a surface. Surface should not be locked when this is called.
-\******************************************************************************/
-void R_surface_invert(SDL_Surface *surf, int rgb, int alpha)
-{
-        c_color_t color;
-        int x, y;
-
-        if (SDL_LockSurface(surf) < 0) {
-                C_warning("Failed to lock surface");
-                return;
-        }
-        for (y = 0; y < surf->h; y++)
-                for (x = 0; x < surf->w; x++) {
-                        color = R_surface_get(surf, x, y);
-                        if (rgb) {
-                                color.r = 1.f - color.r;
-                                color.g = 1.f - color.g;
-                                color.b = 1.f - color.b;
-                        }
-                        if (alpha)
-                                color.a = 1.f - color.a;
-                        R_surface_put(surf, x, y, color);
-                }
-        SDL_UnlockSurface(surf);
-}
-
-/******************************************************************************\
- Overwrite's [dest]'s alpha channel with [src]'s intensity. If [dest] is
- larger than [src], [src] is tiled. Do not call on locked surfaces.
-\******************************************************************************/
-void R_surface_mask(SDL_Surface *dest, SDL_Surface *src)
-{
-        int x, y;
-
-        if (SDL_LockSurface(dest) < 0) {
-                C_warning("Failed to lock destination surface");
-                return;
-        }
-        if (SDL_LockSurface(src) < 0) {
-                C_warning("Failed to lock source surface");
-                return;
-        }
-        for (y = 0; y < dest->h; y++)
-                for (x = 0; x < dest->w; x++) {
-                        c_color_t color, mask;
-
-                        color = R_surface_get(dest, x, y);
-                        mask = R_surface_get(src, x % src->w, y % src->h);
-                        color.a = C_color_luma(mask);
-                        R_surface_put(dest, x, y, color);
-                }
-        SDL_UnlockSurface(dest);
-        SDL_UnlockSurface(src);
-}
-
-/******************************************************************************\
- Vertically flip [surf]'s pixels. Do not call on a locked surface.
-\******************************************************************************/
-void R_surface_flip_v(SDL_Surface *surf)
-{
-        int x, y;
-
-        if (SDL_LockSurface(surf) < 0) {
-                C_warning("Failed to lock surface");
-                return;
-        }
-        for (y = 0; y < surf->h / 2; y++)
-                for (x = 0; x < surf->w; x++) {
-                        c_color_t color_top, color_bottom;
-
-                        color_top = R_surface_get(surf, x, y);
-                        color_bottom = R_surface_get(surf, x, surf->h - y - 1);
-                        R_surface_put(surf, x, y, color_bottom);
-                        R_surface_put(surf, x, surf->h - y - 1, color_top);
-                }
-        SDL_UnlockSurface(surf);
-}
+static int ttf_inited;
 
 /******************************************************************************\
  Frees memory associated with a texture.
@@ -186,38 +46,13 @@ static void texture_cleanup(r_texture_t *pt)
         if (pt->surface) {
 
                 /* Keep track of free'd memory */
-                allocated -= pt->surface->w * pt->surface->h *
+                r_sdl_mem -= pt->surface->w * pt->surface->h *
                              pt->surface->format->BytesPerPixel;
 
                 SDL_FreeSurface(pt->surface);
         }
         glDeleteTextures(1, &pt->gl_name);
         R_check_errors();
-}
-
-/******************************************************************************\
- Wrapper around surface allocation that keeps track of memory allocated.
-\******************************************************************************/
-static SDL_Surface *surface_alloc(int width, int height, int alpha)
-{
-        SDL_Surface *surface;
-        int flags;
-
-        flags = SDL_HWSURFACE;
-        if (alpha)
-                flags |= SDL_SRCALPHA;
-        surface = SDL_CreateRGBSurface(flags, width, height,
-                                       sdl_format.BitsPerPixel,
-                                       sdl_format.Rmask, sdl_format.Gmask,
-                                       sdl_format.Bmask, sdl_format.Amask);
-        SDL_SetAlpha(surface, SDL_SRCALPHA | SDL_RLEACCEL, SDL_ALPHA_OPAQUE);
-
-        /* Keep track of allocated memory */
-        allocated += width * height * sdl_format.BytesPerPixel;
-        if (allocated > allocated_high)
-                allocated_high = allocated;
-
-        return surface;
 }
 
 /*****************************************************************************\
@@ -254,7 +89,7 @@ r_texture_t *R_texture_alloc_full(const char *file, int line, const char *func,
                               C_va("Texture #%d allocated by %s()",
                                    ++count, func));
         pt->alpha = alpha;
-        pt->surface = surface_alloc(width, height, alpha);
+        pt->surface = R_surface_alloc(width, height, alpha);
         rect.x = 0;
         rect.y = 0;
         rect.w = width;
@@ -394,165 +229,6 @@ void R_realloc_textures(void)
 }
 
 /******************************************************************************\
- Low-level callbacks for the PNG library.
-\******************************************************************************/
-static void user_png_read(png_structp png_ptr, png_bytep data,
-                          png_size_t length)
-{
-        C_file_read((c_file_t *)png_get_io_ptr(png_ptr), (char *)data,
-                    (int)length);
-}
-
-static void user_png_write(png_structp png_ptr, png_bytep data,
-                          png_size_t length)
-{
-        C_file_write((c_file_t *)png_get_io_ptr(png_ptr), (char *)data,
-                     (int)length);
-}
-
-static void user_png_flush(png_structp png_ptr)
-{
-        C_file_flush((c_file_t *)png_get_io_ptr(png_ptr));
-}
-
-/******************************************************************************\
- Loads a PNG file and allocates a new SDL surface for it. Returns NULL on
- failure.
-
- Based on tutorial implementation in the libpng manual:
- http://www.libpng.org/pub/png/libpng-1.2.5-manual.html
-\******************************************************************************/
-static SDL_Surface *load_png(const char *filename, int *alpha)
-{
-        SDL_Surface *surface;
-        png_byte png_header[8];
-        png_bytep row_pointers[4096];
-        png_infop info_ptr;
-        png_structp png_ptr;
-        png_uint_32 width, height;
-        c_file_t file;
-        int i, bit_depth, color_type;
-
-        surface = NULL;
-
-        /* We have to read everything ourselves for libpng */
-        if (!C_file_init_read(&file, filename)) {
-                C_warning("Failed to open PNG '%s' for reading", filename);
-                return NULL;
-        }
-
-        /* Check the first few bytes of the file to see if it is PNG format */
-        C_file_read(&file, (char *)png_header, sizeof (png_header));
-        if (png_sig_cmp(png_header, 0, sizeof (png_header))) {
-                C_warning("'%s' is not in PNG format", filename);
-                C_file_cleanup(&file);
-                return NULL;
-        }
-
-        /* Allocate the PNG structures */
-        png_ptr = png_create_read_struct(PNG_LIBPNG_VER_STRING,
-                                         NULL, NULL, NULL);
-        if (!png_ptr) {
-                C_warning("Failed to allocate PNG read struct");
-                return NULL;
-        }
-
-        /* Tells libpng that we've read a bit of the header already */
-        png_set_sig_bytes(png_ptr, sizeof (png_header));
-
-        /* Set read callback before proceeding */
-        png_set_read_fn(png_ptr, (voidp)&file, (png_rw_ptr)user_png_read);
-
-        /* If an error occurs in libpng, it will longjmp back here */
-        if (setjmp(png_ptr->jmpbuf)) {
-		C_warning("Error loading PNG '%s'", filename);
-		goto cleanup;
-	}
-
-        /* Allocate a PNG info struct */
-        info_ptr = png_create_info_struct(png_ptr);
-        if (!info_ptr) {
-                C_warning("Failed to allocate PNG info struct");
-                goto cleanup;
-        }
-
-        /* Read the image info */
-        png_read_info(png_ptr, info_ptr);
-        png_get_IHDR(png_ptr, info_ptr, &width, &height, &bit_depth,
-                     &color_type, NULL, NULL, NULL);
-
-        /* If the image has an alpha channel we want to store it properly */
-        *alpha = FALSE;
-        if (color_type == PNG_COLOR_TYPE_RGB_ALPHA)
-                *alpha = TRUE;
-
-        /* Convert paletted images to RGB */
-        if (color_type == PNG_COLOR_TYPE_PALETTE)
-                png_set_palette_to_rgb(png_ptr);
-
-        /* Convert transparent regions to alpha channel */
-        if (png_get_valid(png_ptr, info_ptr, PNG_INFO_tRNS)) {
-                png_set_tRNS_to_alpha(png_ptr);
-                *alpha = TRUE;
-        }
-
-        /* Convert grayscale images to RGB */
-        if (color_type == PNG_COLOR_TYPE_GRAY ||
-            color_type == PNG_COLOR_TYPE_GRAY_ALPHA) {
-                png_set_expand(png_ptr);
-                png_set_gray_to_rgb(png_ptr);
-        }
-
-        /* Crop 16-bit image data to 8-bit */
-        if (bit_depth == 16)
-                png_set_strip_16(png_ptr);
-
-        /* Give opaque images an opaque alpha channel (ARGB) */
-        if (!(color_type & PNG_COLOR_MASK_ALPHA))
-                png_set_filler(png_ptr, 0xff, PNG_FILLER_AFTER);
-
-        /* Convert 1-, 2-, and 4-bit samples to 8-bit */
-        png_set_packing(png_ptr);
-
-        /* Let libpng handle interlacing */
-        png_set_interlace_handling(png_ptr);
-
-        /* Update our image information */
-        png_read_update_info(png_ptr, info_ptr);
-        png_get_IHDR(png_ptr, info_ptr, &width, &height, &bit_depth,
-                     &color_type, NULL, NULL, NULL);
-
-        /* Sanity check */
-        if (width < 1 || height < 1) {
-                C_warning("PNG image '%s' has invalid dimensions %dx%d",
-                          filename, width, height);
-                goto cleanup;
-        }
-        if (height > sizeof (row_pointers)) {
-                C_warning("PNG image '%s' is too tall (%dpx), cropping",
-                          filename, height);
-                height = sizeof (row_pointers);
-        }
-
-        /* Allocate the SDL surface and get image data */
-        surface = surface_alloc(width, height, *alpha);
-        if (SDL_LockSurface(surface) < 0) {
-                C_warning("Failed to lock surface");
-                goto cleanup;
-        }
-        for (i = 0; i < (int)height; i++)
-                row_pointers[i] = (png_bytep)surface->pixels +
-                                  surface->pitch * i;
-        png_read_image(png_ptr, row_pointers);
-        SDL_UnlockSurface(surface);
-
-cleanup:
-        png_destroy_read_struct(&png_ptr, &info_ptr, NULL);
-        C_file_cleanup(&file);
-        return surface;
-}
-
-/******************************************************************************\
  Loads a texture from file. If the texture has already been loaded, just ups
  the reference count and returns the loaded surface. If the texture failed to
  load, returns NULL.
@@ -573,7 +249,7 @@ r_texture_t *R_texture_load(const char *filename, int mipmaps)
 
         /* Load the image file */
         pt->mipmaps = mipmaps;
-        pt->surface = load_png(filename, &pt->alpha);
+        pt->surface = R_surface_load_png(filename, &pt->alpha);
         if (!pt->surface) {
                 C_ref_down(&pt->ref);
                 return NULL;
@@ -585,114 +261,6 @@ r_texture_t *R_texture_load(const char *filename, int mipmaps)
         R_check_errors();
 
         return pt;
-}
-
-/******************************************************************************\
- Write the contents of a texture as a PNG file. Returns TRUE if a file was
- written.
-\******************************************************************************/
-int R_texture_save(const r_texture_t *tex, const char *filename)
-{
-        struct tm *local;
-        time_t msec;
-        png_bytep row_pointers[4096];
-        png_infop info_ptr;
-        png_structp png_ptr;
-        png_text text[2];
-        png_time mod_time;
-        c_file_t file;
-        int i, height, success;
-        char buf[64];
-
-        if (!tex || !tex->surface || tex->surface->w < 1 || tex->surface->h < 1)
-                return FALSE;
-        success = FALSE;
-
-        /* We have to read everything ourselves for libpng */
-        if (!C_file_init_write(&file, filename)) {
-                C_warning("Failed to open PNG '%s' for writing", filename);
-                return FALSE;
-        }
-
-        /* Allocate the PNG structures */
-        png_ptr = png_create_write_struct(PNG_LIBPNG_VER_STRING,
-                                          NULL, NULL, NULL);
-        if (!png_ptr) {
-                C_warning("Failed to allocate PNG write struct");
-                return FALSE;
-        }
-
-        /* Set write callbacks before proceeding */
-        png_set_write_fn(png_ptr, (voidp)&file, (png_rw_ptr)user_png_write,
-                         (png_flush_ptr)user_png_flush);
-
-        /* If an error occurs in libpng, it will longjmp back here */
-        if (setjmp(png_ptr->jmpbuf)) {
-		C_warning("Error saving PNG '%s'", filename);
-		goto cleanup;
-	}
-
-        /* Allocate a PNG info struct */
-        info_ptr = png_create_info_struct(png_ptr);
-        if (!info_ptr) {
-                C_warning("Failed to allocate PNG info struct");
-                goto cleanup;
-        }
-
-        /* Sanity check */
-        height = tex->surface->h;
-        if (height > 4096) {
-                C_warning("Image too tall (%dpx), cropping", height);
-                height = 4096;
-        }
-
-        /* Setup the info structure for writing our texture */
-        png_set_IHDR(png_ptr, info_ptr, tex->surface->w, height, 8,
-                     PNG_COLOR_TYPE_RGB_ALPHA, PNG_INTERLACE_NONE,
-                     PNG_COMPRESSION_TYPE_DEFAULT, PNG_FILTER_TYPE_DEFAULT);
-
-        /* Setup the comment text */
-        text[0].key = "Title";
-        text[0].text = PACKAGE_STRING;
-        text[0].text_length = strlen(text[0].text);
-        text[0].compression = PNG_TEXT_COMPRESSION_NONE;
-        time(&msec);
-        local = localtime(&msec);
-        text[1].key = "Creation Time";
-        text[1].text = buf;
-        text[1].text_length = strftime(buf, sizeof (buf),
-                                       "%d %b %Y %H:%M:%S GMT", local);
-        text[1].compression = PNG_TEXT_COMPRESSION_NONE;
-        png_set_text(png_ptr, info_ptr, text, 2);
-
-        /* Set modified time */
-        mod_time.day = local->tm_mday;
-        mod_time.hour = local->tm_hour;
-        mod_time.minute = local->tm_min;
-        mod_time.second = local->tm_sec;
-        mod_time.year = local->tm_year + 1900;
-        png_set_tIME(png_ptr, info_ptr, &mod_time);
-
-        /* Write image header */
-        png_write_info(png_ptr, info_ptr);
-
-        /* Write the image data */
-        if (SDL_LockSurface(tex->surface) < 0) {
-                C_warning("Failed to lock surface");
-                goto cleanup;
-        }
-        for (i = 0; i < (int)height; i++)
-                row_pointers[i] = (png_bytep)tex->surface->pixels +
-                                  tex->surface->pitch * i;
-        png_write_image(png_ptr, row_pointers);
-        png_write_end(png_ptr, NULL);
-        SDL_UnlockSurface(tex->surface);
-        success = TRUE;
-
-cleanup:
-        png_destroy_write_struct(&png_ptr, &info_ptr);
-        C_file_cleanup(&file);
-        return success;
 }
 
 /******************************************************************************\
@@ -740,13 +308,22 @@ void R_texture_select(r_texture_t *texture)
                                 GL_TEXTURE_MAX_ANISOTROPY_EXT, aniso);
         }
 
-        /* Alpha blending */
-        if (texture->alpha) {
+        /* Additive blending */
+        if (texture->additive) {
                 glEnable(GL_BLEND);
-                glEnable(GL_ALPHA_TEST);
-        } else {
-                glDisable(GL_BLEND);
                 glDisable(GL_ALPHA_TEST);
+                glBlendFunc(GL_SRC_ALPHA, GL_ONE);
+        } else {
+                glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+                /* Alpha blending */
+                if (texture->alpha) {
+                        glEnable(GL_BLEND);
+                        glEnable(GL_ALPHA_TEST);
+                } else {
+                        glDisable(GL_BLEND);
+                        glDisable(GL_ALPHA_TEST);
+                }
         }
 
         R_check_errors();
@@ -915,16 +492,16 @@ void R_load_assets(void)
         C_status("Loading render assets");
 
         /* Setup the texture pixel format, RGBA in 32 bits */
-        sdl_format.BitsPerPixel = 32;
-        sdl_format.BytesPerPixel = 4;
-        sdl_format.Amask = 0xff000000;
-        sdl_format.Bmask = 0x00ff0000;
-        sdl_format.Gmask = 0x0000ff00;
-        sdl_format.Rmask = 0x000000ff;
-        sdl_format.Ashift = 24;
-        sdl_format.Bshift = 16;
-        sdl_format.Gshift = 8;
-        sdl_format.alpha = 255;
+        r_sdl_format.BitsPerPixel = 32;
+        r_sdl_format.BytesPerPixel = 4;
+        r_sdl_format.Amask = 0xff000000;
+        r_sdl_format.Bmask = 0x00ff0000;
+        r_sdl_format.Gmask = 0x0000ff00;
+        r_sdl_format.Rmask = 0x000000ff;
+        r_sdl_format.Ashift = 24;
+        r_sdl_format.Bshift = 16;
+        r_sdl_format.Gshift = 8;
+        r_sdl_format.alpha = 255;
 
         /* Initialize SDL_ttf library */
         TTF_VERSION(&compiled);
@@ -944,6 +521,16 @@ void R_load_assets(void)
         /* Generate procedural content */
         r_terrain_tex = R_texture_load("models/globe/terrain.png", TRUE);
         R_prerender();
+
+        /* Create a fake white texture */
+        r_white_tex = R_texture_alloc(1, 1, FALSE);
+        if (SDL_LockSurface(r_white_tex->surface) >= 0) {
+                R_surface_put(r_white_tex->surface, 0, 0,
+                              C_color(1.f, 1.f, 1.f, 1.f));
+                SDL_UnlockSurface(r_white_tex->surface);
+        } else
+                C_warning("Failed to lock white texture");
+        R_texture_upload(r_white_tex);
 }
 
 /******************************************************************************\
@@ -967,9 +554,10 @@ void R_free_assets(void)
         /* Print out estimated memory usage */
         if (c_mem_check.value.n)
                 C_debug("SDL surface memory high mark %.1fmb",
-                        allocated_high / (1024.f * 1024.f));
+                        r_sdl_mem_high / (1024.f * 1024.f));
 
         R_texture_free(r_terrain_tex);
+        R_texture_free(r_white_tex);
         R_free_fonts();
         TTF_Quit();
 }

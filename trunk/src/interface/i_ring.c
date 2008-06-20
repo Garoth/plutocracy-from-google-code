@@ -191,3 +191,11 @@ void I_add_to_ring(i_ring_icon_t icon, int enabled)
         buttons++;
 }
 
+/******************************************************************************\
+ Returns TRUE if the ring widget is showing.
+\******************************************************************************/
+int I_ring_shown(void)
+{
+        return ring_widget.shown;
+}
+

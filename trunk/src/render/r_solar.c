@@ -10,7 +10,7 @@
  FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
 \******************************************************************************/
 
-/* Sunlight, moonlight, and stars */
+/* Sunlight, moonlight, stars, and atmospheric effects */
 
 #include "r_common.h"
 
@@ -20,9 +20,28 @@
 /* Localized light parameters */
 #define LIGHT_TRANSITION 16.f
 
+/* Atmospheric fog and halo parameters */
+#define FOG_DISTANCE 12.f
+#define FOG_ZOOM_SCALE 0.8f
+#define HALO_SEGMENTS 32
+#define HALO_LOW_SCALE 0.995f
+#define HALO_HIGH_SCALE 1.1f
+
+/* Atmospheric halo vertex type */
+#pragma pack(push, 4)
+typedef struct halo_vertex {
+        c_color_t color;
+        c_vec3_t co;
+} halo_vertex_t;
+#pragma pack(pop)
+
+/* The color of the atmospheric fog effect */
+c_color_t r_fog_color;
+
 static r_model_t sky;
 static r_billboard_t moon, sun;
 static c_color_t moon_colors[3], sun_colors[3];
+static halo_vertex_t halo_verts[2 + HALO_SEGMENTS * 2];
 static float sky_angle;
 
 /******************************************************************************\
@@ -152,5 +171,109 @@ void R_render_solar(void)
         moon.world_origin.x = -sun.world_origin.x;
         moon.world_origin.z = -sun.world_origin.z;
         R_billboard_render(&moon);
+}
+
+/******************************************************************************\
+ Update function for atmosphere color.
+\******************************************************************************/
+static int atmosphere_update(c_var_t *var, c_var_value_t value)
+{
+        int i;
+
+        r_fog_color = C_color_string(value.s);
+        for (i = 0; i <= HALO_SEGMENTS; i++)
+                halo_verts[2 * i].color = r_fog_color;
+        return TRUE;
+}
+
+/******************************************************************************\
+ Generates the halo vertices.
+\******************************************************************************/
+void R_generate_halo(void)
+{
+        c_vec3_t unit;
+        halo_vertex_t *vert;
+        float angle;
+        int i;
+
+        for (i = 0; i <= HALO_SEGMENTS; i++) {
+                angle = 2.f * C_PI * i / HALO_SEGMENTS;
+                unit = C_vec3(cosf(angle), sinf(angle), 0.f);
+
+                /* Bottom vertex */
+                vert = halo_verts + 2 * i;
+                vert->co = C_vec3_scalef(unit, HALO_LOW_SCALE);
+
+                /* Top vertex */
+                vert++;
+                vert->color = C_color(0.f, 0.f, 0.f, 0.f);
+                vert->co = C_vec3_scalef(unit, HALO_HIGH_SCALE);
+        }
+        C_var_update(&r_atmosphere, atmosphere_update);
+}
+
+/******************************************************************************\
+ Renders the halo around the globe.
+\******************************************************************************/
+static void render_halo(void)
+{
+        float scale, dist, z;
+
+        /* Find out how far away and how big the halo is */
+        z = r_globe_radius + r_cam_zoom;
+        dist = r_globe_radius * r_globe_radius / z;
+        scale = sqrtf(r_globe_radius * r_globe_radius - dist * dist);
+
+        /* Render the halo */
+        glDisable(GL_DEPTH_TEST);
+        glDisable(GL_TEXTURE_2D);
+        glDisable(GL_LIGHTING);
+        glEnable(GL_BLEND);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE);
+        glPushMatrix();
+        glLoadIdentity();
+        glTranslatef(0, 0, -r_globe_radius - r_cam_zoom + dist);
+        glScalef(scale, scale, scale);
+        glEnableClientState(GL_VERTEX_ARRAY);
+        glEnableClientState(GL_COLOR_ARRAY);
+        glVertexPointer(3, GL_FLOAT, sizeof (*halo_verts), &halo_verts[0].co);
+        glColorPointer(4, GL_FLOAT, sizeof (*halo_verts), &halo_verts[0].color);
+        glDrawArrays(GL_TRIANGLE_STRIP, 0, 2 + 2 * HALO_SEGMENTS);
+        glDisableClientState(GL_COLOR_ARRAY);
+        glDisableClientState(GL_VERTEX_ARRAY);
+        glPopMatrix();
+        glEnable(GL_DEPTH_TEST);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+        glColor4f(1.f, 1.f, 1.f, 1.f);
+
+        R_check_errors();
+        C_count_add(&r_count_faces, 2 * HALO_SEGMENTS);
+}
+
+/******************************************************************************\
+ Enable the atmospheric fog effects and render the halo.
+\******************************************************************************/
+void R_start_atmosphere(void)
+{
+        float fog_start;
+
+        if (r_fog_color.a <= 0.f)
+                return;
+        fog_start = r_cam_zoom * FOG_ZOOM_SCALE +
+                    (1.f - r_fog_color.a) * r_globe_radius / 2;
+        render_halo();
+        glEnable(GL_FOG);
+        glFogfv(GL_FOG_COLOR, C_ARRAYF(r_fog_color));
+        glFogf(GL_FOG_MODE, GL_LINEAR);
+        glFogf(GL_FOG_START, fog_start);
+        glFogf(GL_FOG_END, fog_start + FOG_DISTANCE);
+}
+
+/******************************************************************************\
+ Disable the atmospheric fog effects.
+\******************************************************************************/
+void R_finish_atmosphere(void)
+{
+        glDisable(GL_FOG);
 }
 

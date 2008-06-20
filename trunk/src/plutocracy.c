@@ -241,7 +241,7 @@ int main(int argc, char *argv[])
         init_sdl();
         R_init();
         I_init();
-        G_generate_globe();
+        G_init_globe();
         R_load_test_assets();
 
         /* Run the main loop */
