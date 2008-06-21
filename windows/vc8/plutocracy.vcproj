@@ -236,6 +236,16 @@
 			<File
 				RelativePath="..\..\src\common\c_math.c"
 				>
+				<FileConfiguration
+					Name="Debug|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="1"
+						PrecompiledHeaderThrough="c_shared.h"
+						PrecompiledHeaderFile="$(IntDir)\c_shared.pch"
+					/>
+				</FileConfiguration>
 			</File>
 			<File
 				RelativePath="..\..\src\common\c_memory.c"
@@ -472,6 +482,16 @@
 			<File
 				RelativePath="..\..\src\interface\i_globe.c"
 				>
+				<FileConfiguration
+					Name="Debug|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="1"
+						PrecompiledHeaderThrough="i_common.h"
+						PrecompiledHeaderFile="$(IntDir)\i_common.pch"
+					/>
+				</FileConfiguration>
 			</File>
 			<File
 				RelativePath="..\..\src\interface\i_label.c"
@@ -512,6 +532,20 @@
 				</FileConfiguration>
 				<FileConfiguration
 					Name="Release|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="1"
+						PrecompiledHeaderThrough="i_common.h"
+						PrecompiledHeaderFile="$(IntDir)\i_common.pch"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath="..\..\src\interface\i_ring.c"
+				>
+				<FileConfiguration
+					Name="Debug|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -680,6 +714,16 @@
 			<File
 				RelativePath="..\..\src\game\g_host.c"
 				>
+				<FileConfiguration
+					Name="Debug|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="1"
+						PrecompiledHeaderThrough="g_common.h"
+						PrecompiledHeaderFile="$(IntDir)\g_common.pch"
+					/>
+				</FileConfiguration>
 			</File>
 			<File
 				RelativePath="..\..\src\game\g_shared.h"
@@ -695,6 +739,7 @@
 						Name="VCCLCompilerTool"
 						UsePrecompiledHeader="1"
 						PrecompiledHeaderThrough="g_common.h"
+						PrecompiledHeaderFile="$(IntDir)\g_common.pch"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -787,6 +832,20 @@
 				</FileConfiguration>
 				<FileConfiguration
 					Name="Release|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="1"
+						PrecompiledHeaderThrough="r_common.h"
+						PrecompiledHeaderFile="$(IntDir)\r_common.pch"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath="..\..\src\render\r_camera.c"
+				>
+				<FileConfiguration
+					Name="Debug|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -949,6 +1008,20 @@
 				</FileConfiguration>
 			</File>
 			<File
+				RelativePath="..\..\src\render\r_surface.c"
+				>
+				<FileConfiguration
+					Name="Debug|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="1"
+						PrecompiledHeaderThrough="r_common.h"
+						PrecompiledHeaderFile="$(IntDir)\r_common.pch"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
 				RelativePath="..\..\src\render\r_test.c"
 				>
 				<FileConfiguration
@@ -1012,6 +1085,16 @@
 		<File
 			RelativePath="..\..\src\plutocracy.c"
 			>
+			<FileConfiguration
+				Name="Debug|Win32"
+				>
+				<Tool
+					Name="VCCLCompilerTool"
+					UsePrecompiledHeader="1"
+					PrecompiledHeaderThrough="common\c_shared.h"
+					PrecompiledHeaderFile="$(IntDir)\c_shared.pch"
+				/>
+			</FileConfiguration>
 		</File>
 		<File
 			RelativePath="..\..\README"
