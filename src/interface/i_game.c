@@ -65,6 +65,7 @@ static void quit_button_clicked(i_button_t *button)
 void I_game_init(i_window_t *window)
 {
         I_window_init(window);
+        window->widget.size = C_vec2(200.f, 0.f);
         window->fit = I_FIT_TOP;
 
         /* Label */
