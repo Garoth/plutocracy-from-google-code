@@ -132,6 +132,7 @@ typedef struct i_button {
         i_callback_f on_click;
         i_button_type_t type;
         void *data;
+        int hover_activate;
         char buffer[64];
 } i_button_t;
 

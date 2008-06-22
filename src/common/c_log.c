@@ -75,7 +75,7 @@ char *C_wrap_log(const char *src, int margin, int wrap, int *plen)
         if (wrap < 20)
                 wrap = 20;
         if (margin > wrap / 2)
-                margin = wrap / 2;
+                margin = 4;
 
         /* Take care of leading newlines here to prevent padding them */
         for (j = i = 0; src[i] == '\n'; i++)
