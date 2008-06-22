@@ -149,10 +149,17 @@ void I_init_ring(void)
 \******************************************************************************/
 void I_show_ring(i_ring_f _callback)
 {
+        int i;
+
         screen_origin = C_vec2(i_mouse_x, i_mouse_y);
         position_and_pack();
         I_widget_show(&ring_widget, TRUE);
         callback = _callback;
+
+        /* Set button widgets to activate on hover, they will clear this flag
+           when they receive a mouse up event (from anywhere) */
+        for (i = 0; i < I_RING_ICONS; i++)
+                button_widgets[i].hover_activate = TRUE;
 }
 
 /******************************************************************************\

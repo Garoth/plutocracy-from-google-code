@@ -140,6 +140,10 @@ int I_button_event(i_button_t *button, i_event_t event)
                 R_sprite_cleanup(&button->icon);
                 R_sprite_cleanup(&button->text);
                 break;
+        case I_EV_MOUSE_MOVE:
+                if (button->hover_activate && i_mouse == SDL_BUTTON_LEFT)
+                        button->widget.state = I_WS_ACTIVE;
+                break;
         case I_EV_MOUSE_DOWN:
                 if (i_mouse == SDL_BUTTON_LEFT)
                         button->widget.state = I_WS_ACTIVE;
@@ -150,6 +154,7 @@ int I_button_event(i_button_t *button, i_event_t event)
                         if (button->widget.state == I_WS_ACTIVE)
                                 button->widget.state = I_WS_HOVER;
                 }
+                button->hover_activate = FALSE;
                 break;
         case I_EV_RENDER:
                 button->icon.modulate.a = button->widget.fade;
