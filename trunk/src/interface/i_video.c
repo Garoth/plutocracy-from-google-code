@@ -149,13 +149,14 @@ static void populate_modes(void)
 }
 
 /******************************************************************************\
- Initializes game window widgets on the given window.
+ Initializes video window widgets on the given window.
 \******************************************************************************/
 void I_video_init(i_window_t *window)
 {
         int opt;
 
         I_window_init(window);
+        window->widget.size = C_vec2(260.f, 0.f);
         window->fit = I_FIT_TOP;
 
         /* Label */
@@ -213,7 +214,7 @@ void I_video_init(i_window_t *window)
         orig_indices[++opt] = closest_index(r_pixel_scale.latched.f,
                                             list_numeric);
         I_select_init(&options[opt],
-                      C_str("i-video-pixel-scale", "Pixel scale:"),
+                      C_str("i-video-pixel-scale", "Scale 2D:"),
                       list_numeric, orig_indices[opt]);
         options[opt].on_change = (i_callback_f)on_change_set;
         options[opt].data = &r_pixel_scale;

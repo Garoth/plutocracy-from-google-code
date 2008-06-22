@@ -227,6 +227,7 @@ static void log_handler(c_log_level_t level, int margin, const char *string)
 void I_console_init(i_window_t *window)
 {
         I_window_init(window);
+        window->widget.size = C_vec2(480.f, 240.f);
 
         /* Set log handler */
         c_log_func = log_handler;

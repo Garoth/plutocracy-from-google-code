@@ -472,8 +472,8 @@ void I_widget_event(i_widget_t *widget, i_event_t event)
                 if (mouse_focus == widget) {
                         widget->event_func(widget, I_EV_MOUSE_OUT);
                         widget->state = I_WS_READY;
+                        mouse_focus_parent(widget);
                 }
-                mouse_focus_parent(widget);
                 break;
         case I_EV_MOUSE_IN:
         case I_EV_MOUSE_OUT:
