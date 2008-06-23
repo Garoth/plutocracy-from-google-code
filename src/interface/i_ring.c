@@ -63,7 +63,8 @@ static int ring_event(i_widget_t *widget, i_event_t event)
 
         /* Calculate mouse radius for mouse events */
         if (event == I_EV_MOUSE_MOVE || event == I_EV_MOUSE_DOWN)
-                radius = C_vec2_len(C_vec2_sub(C_vec2(i_mouse_x, i_mouse_y),
+                radius = C_vec2_len(C_vec2_sub(C_vec2((float)i_mouse_x, 
+                                                      (float)i_mouse_y),
                                                screen_origin));
 
         switch (event) {
@@ -151,7 +152,7 @@ void I_show_ring(i_ring_f _callback)
 {
         int i;
 
-        screen_origin = C_vec2(i_mouse_x, i_mouse_y);
+        screen_origin = C_vec2((float)i_mouse_x, (float)i_mouse_y);
         position_and_pack();
         I_widget_show(&ring_widget, TRUE);
         callback = _callback;

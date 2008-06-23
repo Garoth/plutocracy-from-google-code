@@ -542,6 +542,20 @@
 				</FileConfiguration>
 			</File>
 			<File
+				RelativePath="..\..\src\interface\i_nations.c"
+				>
+				<FileConfiguration
+					Name="Debug|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="1"
+						PrecompiledHeaderThrough="i_common.h"
+						PrecompiledHeaderFile="$(IntDir)\i_common.pch"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
 				RelativePath="..\..\src\interface\i_ring.c"
 				>
 				<FileConfiguration

@@ -124,7 +124,8 @@ static void theme_configure(void)
         left_toolbar.widget.size = C_vec2(0.f, toolbar_height);
         left_toolbar.widget.origin = C_vec2((float)i_border.value.n, toolbar_y);
         right_toolbar.widget.size = C_vec2(0.f, toolbar_height);
-        right_toolbar.widget.origin = C_vec2(r_width_2d - i_border.value.n,
+        right_toolbar.widget.origin = C_vec2((float)(r_width_2d - 
+                                                     i_border.value.n),
                                              toolbar_y);
 }
 
