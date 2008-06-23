@@ -169,7 +169,7 @@
     You should now be able to open a command prompt, navigate to the
     Plutocracy directory and compile using scons:
 
-      C:\plutocracy> scons
+      C:\plutocracy> scons mingw=1
 
     For additional build targets run scons help:
 
