@@ -174,7 +174,6 @@ static int set_video_mode(void)
 #endif
 
         SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
-        SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 8);
         SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, r_depth_bits.value.n);
         SDL_GL_SetAttribute(SDL_GL_SWAP_CONTROL, r_vsync.value.n);
         if (r_multisample.value.n < 0) {
@@ -192,8 +191,8 @@ static int set_video_mode(void)
                 SDL_GL_SetAttribute(SDL_GL_GREEN_SIZE, 8);
                 SDL_GL_SetAttribute(SDL_GL_BLUE_SIZE, 8);
         }
-        flags = SDL_OPENGL | SDL_GL_DOUBLEBUFFER | SDL_HWPALETTE |
-                SDL_HWSURFACE;
+        flags = SDL_OPENGL | SDL_DOUBLEBUF | SDL_HWPALETTE |
+                SDL_HWSURFACE | SDL_ANYFORMAT;
         if (!r_windowed.value.n)
                 flags |= SDL_FULLSCREEN;
         if (!SDL_SetVideoMode(r_width.value.n, r_height.value.n,
@@ -201,7 +200,7 @@ static int set_video_mode(void)
                 C_warning("Failed to set video mode: %s", SDL_GetError());
                 return FALSE;
         }
-
+        
         /* Set screen view */
         glViewport(0, 0, r_width.value.n, r_height.value.n);
 
@@ -370,8 +369,14 @@ static int clear_update(c_var_t *var, c_var_value_t value)
 \******************************************************************************/
 void R_init(void)
 {
+        char buffer[64];
+
         C_status("Opening window");
         C_count_reset(&r_count_faces);
+        
+        /* Print the video driver name */
+        SDL_VideoDriverName(buffer, sizeof (buffer));
+        C_debug("SDL video driver '%s'", buffer);
 
         /* If we fail to set the video mode, our only hope is to reset the
            "unsafe" variables that the user might have messed up and try
