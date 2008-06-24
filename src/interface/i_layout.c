@@ -51,6 +51,10 @@ static int root_event(i_widget_t *root, i_event_t event)
                 limbo_logo.origin.y = r_height_2d / 2 - limbo_logo.size.y / 2;
 
                 break;
+        case I_EV_MOUSE_MOVE:
+                I_widget_propagate(root, event);
+                I_globe_event(event);
+                return FALSE;
         case I_EV_RENDER:
 
                 /* Rotate around the globe during limbo */
@@ -124,7 +128,7 @@ static void theme_configure(void)
         left_toolbar.widget.size = C_vec2(0.f, toolbar_height);
         left_toolbar.widget.origin = C_vec2((float)i_border.value.n, toolbar_y);
         right_toolbar.widget.size = C_vec2(0.f, toolbar_height);
-        right_toolbar.widget.origin = C_vec2((float)(r_width_2d - 
+        right_toolbar.widget.origin = C_vec2((float)(r_width_2d -
                                                      i_border.value.n),
                                              toolbar_y);
 }
@@ -158,6 +162,7 @@ void I_parse_config(void)
 void I_leave_limbo(void)
 {
         i_limbo = FALSE;
+        I_widget_show(&right_toolbar.widget, TRUE);
 }
 
 /******************************************************************************\
@@ -166,6 +171,7 @@ void I_leave_limbo(void)
 void I_enter_limbo(void)
 {
         i_limbo = TRUE;
+        I_widget_show(&right_toolbar.widget, FALSE);
 }
 
 /******************************************************************************\
@@ -183,7 +189,7 @@ void I_init(void)
 
         /* Root window */
         C_zero(&i_root);
-        I_widget_set_name(&i_root, "Root Window");
+        I_widget_init(&i_root, "Root Window");
         i_root.state = I_WS_READY;
         i_root.event_func = (i_event_f)root_event;
         i_root.configured = 1;
@@ -213,17 +219,18 @@ void I_init(void)
         i_theme.update = (c_var_update_f)theme_update;
         i_theme.edit = C_VE_FUNCTION;
 
-        /* Start in limbo */
-        R_sprite_init(&limbo_logo, "gui/logo.png");
-        limbo_fade = 1.f;
-        I_enter_limbo();
-
         /* Create ring widgets */
         I_init_ring();
 
+        /* Limbo resources */
+        R_sprite_init(&limbo_logo, "gui/logo.png");
+
+        /* Configure all widgets */
         I_widget_event(&i_root, I_EV_CONFIGURE);
-        I_widget_show(&left_toolbar.widget, TRUE);
-        I_widget_show(&right_toolbar.widget, TRUE);
+
+        /* Start in limbo */
+        I_enter_limbo();
+        limbo_fade = 1.f;
 }
 
 /******************************************************************************\

@@ -156,7 +156,7 @@ void I_video_init(i_window_t *window)
         int opt;
 
         I_window_init(window);
-        window->widget.size = C_vec2(260.f, 0.f);
+        window->natural_size = C_vec2(260.f, 0.f);
         window->fit = I_FIT_TOP;
 
         /* Label */

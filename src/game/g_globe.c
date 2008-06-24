@@ -471,6 +471,14 @@ static void test_ring_callback(i_ring_icon_t icon)
 }
 
 /******************************************************************************\
+ Call when we know the mouse ray missed without or after tracing it.
+\******************************************************************************/
+void G_mouse_ray_miss(void)
+{
+        R_select_tile(selected_tile = -1);
+}
+
+/******************************************************************************\
  The mouse screen position is transformed into a ray with [origin] and
  [forward] vector, this function will find which tile (if any) the mouse is
  hovering over.

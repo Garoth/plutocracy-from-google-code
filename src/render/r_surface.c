@@ -14,9 +14,6 @@
 
 #include "r_common.h"
 
-/* High-mark of SDL memory usage */
-int r_sdl_mem, r_sdl_mem_high;
-
 /******************************************************************************\
  Gets a pixel from an SDL surface. Lock the surface before calling.
 \******************************************************************************/
@@ -180,9 +177,9 @@ SDL_Surface *R_surface_alloc(int width, int height, int alpha)
         SDL_SetAlpha(surface, SDL_SRCALPHA | SDL_RLEACCEL, SDL_ALPHA_OPAQUE);
 
         /* Keep track of allocated memory */
-        r_sdl_mem += width * height * r_sdl_format.BytesPerPixel;
-        if (r_sdl_mem > r_sdl_mem_high)
-                r_sdl_mem_high = r_sdl_mem;
+        r_video_mem += width * height * r_sdl_format.BytesPerPixel;
+        if (r_video_mem > r_video_mem_high)
+                r_video_mem_high = r_video_mem;
 
         return surface;
 }

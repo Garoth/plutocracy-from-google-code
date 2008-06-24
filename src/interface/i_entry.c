@@ -335,11 +335,10 @@ void I_entry_init(i_entry_t *entry, const char *text)
         if (!entry)
                 return;
         C_zero(entry);
-        I_widget_set_name(&entry->widget, "Entry");
+        I_widget_init(&entry->widget, "Entry");
         entry->widget.event_func = (i_event_f)I_entry_event;
         entry->widget.state = I_WS_READY;
         entry->widget.entry = TRUE;
         C_strncpy_buf(entry->buffer, text);
-        I_widget_inited(&entry->widget);
 }
 

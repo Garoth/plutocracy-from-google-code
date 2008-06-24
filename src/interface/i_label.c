@@ -68,12 +68,11 @@ void I_label_init(i_label_t *label, const char *text)
         if (!label)
                 return;
         C_zero(label);
-        I_widget_set_name(&label->widget, "Label");
+        I_widget_init(&label->widget, "Label");
         label->widget.event_func = (i_event_f)I_label_event;
         label->widget.state = I_WS_READY;
         label->font = R_FONT_GUI;
         C_strncpy_buf(label->buffer, text);
-        I_widget_inited(&label->widget);
 }
 
 /******************************************************************************\
