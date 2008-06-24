@@ -21,6 +21,13 @@ static int window_event(i_window_t *window, i_event_t event)
 {
         switch (event) {
         case I_EV_CONFIGURE:
+
+                /* Windows are optionally excepted from the normal packing
+                   order. Since they are never in another container, they can
+                   set their own size. */
+                if (window->natural_size.x || window->natural_size.y)
+                        window->widget.size = window->natural_size;
+
                 R_window_cleanup(&window->window);
                 I_widget_pack(&window->widget, window->pack_children,
                               window->fit);
@@ -75,14 +82,13 @@ void I_window_init(i_window_t *window)
         if (!window)
                 return;
         C_zero(window);
-        I_widget_set_name(&window->widget, "Window");
+        I_widget_init(&window->widget, "Window");
         window->widget.event_func = (i_event_f)window_event;
         window->widget.state = I_WS_READY;
         window->widget.clickable = TRUE;
         window->widget.padding = 1.f;
         window->pack_children = I_PACK_V;
         window->decorated = TRUE;
-        I_widget_inited(&window->widget);
 }
 
 /******************************************************************************\
@@ -109,6 +115,8 @@ static void toolbar_position(i_toolbar_t *toolbar)
 \******************************************************************************/
 int I_toolbar_event(i_toolbar_t *toolbar, i_event_t event)
 {
+        int i;
+
         switch (event) {
         case I_EV_CONFIGURE:
 
@@ -121,6 +129,10 @@ int I_toolbar_event(i_toolbar_t *toolbar, i_event_t event)
                 toolbar->widget.size = toolbar->window.widget.size;
                 toolbar_position(toolbar);
                 return FALSE;
+        case I_EV_HIDE:
+                for (i = 0; i < toolbar->children; i++)
+                        I_widget_show(&toolbar->windows[i].widget, FALSE);
+                break;
         default:
                 break;
         }
@@ -133,7 +145,7 @@ int I_toolbar_event(i_toolbar_t *toolbar, i_event_t event)
 void I_toolbar_init(i_toolbar_t *toolbar, int right)
 {
         C_zero(toolbar);
-        I_widget_set_name(&toolbar->widget, "Toolbar");
+        I_widget_init(&toolbar->widget, "Toolbar");
         toolbar->widget.event_func = (i_event_f)I_toolbar_event;
         toolbar->widget.state = I_WS_READY;
         toolbar->widget.clickable = TRUE;
@@ -142,7 +154,6 @@ void I_toolbar_init(i_toolbar_t *toolbar, int right)
         toolbar->window.pack_children = I_PACK_H;
         toolbar->window.fit = right ? I_FIT_TOP : I_FIT_BOTTOM;
         I_widget_add(&toolbar->widget, &toolbar->window.widget);
-        I_widget_inited(&toolbar->widget);
 }
 
 /******************************************************************************\
@@ -196,6 +207,7 @@ void I_toolbar_add_button(i_toolbar_t *toolbar, const char *icon,
         /* Initialize the window */
         window = toolbar->windows + toolbar->children;
         init_func(window);
+        window->widget.shown = FALSE;
         window->hanger_align = &button->widget;
         I_widget_add(&i_root, &window->widget);
 

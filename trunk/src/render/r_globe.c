@@ -41,12 +41,12 @@ int r_tiles;
 /* Current selection color */
 c_color_t r_select_color;
 
-static c_color_t globe_colors[4];
-static c_vec3_t normals[R_TILES_MAX];
 static r_vertex3_t select_verts[3];
 static r_texture_t *select_tex;
+static r_vbo_t globe_vbo;
+static c_color_t globe_colors[4];
+static c_vec3_t normals[R_TILES_MAX];
 static globe_vertex_t vertices[R_TILES_MAX * 3];
-static GLuint vertices_vbo;
 static int flip_limit, selected_tile;
 
 /******************************************************************************\
@@ -72,6 +72,7 @@ void R_init_globe(void)
 void R_cleanup_globe(void)
 {
         R_texture_free(select_tex);
+        R_vbo_cleanup(&globe_vbo);
 }
 
 /******************************************************************************\
@@ -281,10 +282,7 @@ void R_generate_globe(int subdiv4)
                 vertices[i].no = C_vec3_norm(vertices[i].co);
 
         /* Delete any old vertex buffers */
-        if (vertices_vbo) {
-                r_ext.glDeleteBuffers(1, &vertices_vbo);
-                vertices_vbo = 0;
-        }
+        R_vbo_cleanup(&globe_vbo);
 
         selected_tile = -1;
         R_generate_halo();
@@ -324,20 +322,8 @@ void R_start_globe(void)
         if (!r_globe.value.n)
                 return;
 
-        /* Use the Vertex Buffer Object if available */
-        if (vertices_vbo) {
-                r_ext.glBindBuffer(GL_ARRAY_BUFFER, vertices_vbo);
-                glInterleavedArrays(GL_T2F_N3F_V3F, sizeof (*vertices), NULL);
-                glDrawArrays(GL_TRIANGLES, 0, 3 * r_tiles);
-                r_ext.glBindBuffer(GL_ARRAY_BUFFER, 0);
-        }
-
-        /* Rendering by uploading the data every time is slower */
-        else {
-                glInterleavedArrays(GL_T2F_N3F_V3F,
-                                    sizeof (*vertices), vertices);
-                glDrawArrays(GL_TRIANGLES, 0, 3 * r_tiles);
-        }
+        /* Render the globe through a vertex buffer object */
+        R_vbo_render(&globe_vbo);
 
         /* Render selection triangle */
         if (selected_tile >= 0) {
@@ -522,16 +508,7 @@ static int globe_smooth_update(c_var_t *var, c_var_value_t value)
         } else
                 for (i = 0; i < r_tiles * 3; i++)
                         vertices[i].no = normals[i / 3];
-
-        /* Need to update the VBO */
-        if (r_ext.vertex_buffers && vertices_vbo) {
-                r_ext.glBindBuffer(GL_ARRAY_BUFFER, vertices_vbo);
-                r_ext.glBufferData(GL_ARRAY_BUFFER,
-                                   r_tiles * 3 * sizeof (*vertices),
-                                   vertices, GL_STATIC_DRAW);
-                r_ext.glBindBuffer(GL_ARRAY_BUFFER, 0);
-        }
-
+        R_vbo_update(&globe_vbo);
         return TRUE;
 }
 
@@ -672,18 +649,10 @@ void R_configure_globe(r_tile_t *tiles)
         r_globe_smooth.edit = C_VE_FUNCTION;
         r_globe_smooth.update = globe_smooth_update;
 
-        /* If Vertex Buffer Objects are supported, upload the vertices now
-           FIXME: Sending extra data to VBO */
-        if (r_ext.vertex_buffers) {
-                if (vertices_vbo)
-                        r_ext.glDeleteBuffers(1, &vertices_vbo);
-                r_ext.glGenBuffers(1, &vertices_vbo);
-                r_ext.glBindBuffer(GL_ARRAY_BUFFER, vertices_vbo);
-                r_ext.glBufferData(GL_ARRAY_BUFFER,
-                                   r_tiles * 3 * sizeof (*vertices),
-                                   vertices, GL_STATIC_DRAW);
-                r_ext.glBindBuffer(GL_ARRAY_BUFFER, 0);
-        }
+        /* If Vertex Buffer Objects are supported, upload the vertices now */
+        R_vbo_cleanup(&globe_vbo);
+        R_vbo_init(&globe_vbo, vertices, 3 * r_tiles, sizeof (*vertices),
+                   GL_T2F_N3F_V3F, NULL, 0);
 }
 
 /******************************************************************************\

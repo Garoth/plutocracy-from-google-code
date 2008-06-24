@@ -17,8 +17,8 @@
 
 /* Non-animated mesh */
 typedef struct r_mesh {
+        r_vbo_t vbo;
         r_vertex3_t *verts;
-        GLuint verts_vbo, indices_vbo;
         unsigned short *indices;
         int verts_len, indices_len;
 } mesh_t;
@@ -55,29 +55,7 @@ static c_ref_t *data_root;
 static void mesh_render(mesh_t *mesh)
 {
         C_count_add(&r_count_faces, mesh->indices_len / 3);
-
-        /* Use the Vertex Buffer Object if available */
-        if (mesh->verts_vbo && mesh->indices_vbo) {
-                r_ext.glBindBuffer(GL_ARRAY_BUFFER, mesh->verts_vbo);
-                r_ext.glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh->indices_vbo);
-                glInterleavedArrays(R_VERTEX3_FORMAT, 0, NULL);
-                glDrawElements(GL_TRIANGLES, mesh->indices_len,
-                               GL_UNSIGNED_SHORT, NULL);
-                r_ext.glBindBuffer(GL_ARRAY_BUFFER, 0);
-                r_ext.glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-        }
-
-        /* Rendering by uploading the data every time is slower */
-        else {
-                glInterleavedArrays(R_VERTEX3_FORMAT, 0, mesh->verts);
-                glDrawElements(GL_TRIANGLES, mesh->indices_len,
-                               GL_UNSIGNED_SHORT, mesh->indices);
-        }
-
-        glDisableClientState(GL_TEXTURE_COORD_ARRAY);
-        glDisableClientState(GL_NORMAL_ARRAY);
-        glDisableClientState(GL_VERTEX_ARRAY);
-        R_check_errors();
+        R_vbo_render(&mesh->vbo);
 
         /* Render the mesh normals for testing */
         R_render_normals(mesh->verts_len, &mesh->verts[0].co,
@@ -93,10 +71,7 @@ static void mesh_cleanup(mesh_t *mesh)
                 return;
         C_free(mesh->verts);
         C_free(mesh->indices);
-        if (mesh->verts_vbo)
-                r_ext.glDeleteBuffers(1, &mesh->verts_vbo);
-        if (mesh->indices_vbo)
-                r_ext.glDeleteBuffers(1, &mesh->indices_vbo);
+        R_vbo_cleanup(&mesh->vbo);
 }
 
 /******************************************************************************\
@@ -130,30 +105,10 @@ static int finish_object(model_data_t *data, int frame, int object,
                 return FALSE;
         }
 
-        /* If Vertex Buffer Objects are available, upload the data now */
-        if (r_ext.vertex_buffers) {
-
-                /* First upload the vertex data */
-                r_ext.glGenBuffers(1, &mesh->verts_vbo);
-                r_ext.glBindBuffer(GL_ARRAY_BUFFER, mesh->verts_vbo);
-                r_ext.glBufferData(GL_ARRAY_BUFFER,
-                                   mesh->verts_len * sizeof (*mesh->verts),
-                                   mesh->verts, GL_STATIC_DRAW);
-                r_ext.glBindBuffer(GL_ARRAY_BUFFER, 0);
-
-                /* Now upload the indices */
-                r_ext.glGenBuffers(1, &mesh->indices_vbo);
-                r_ext.glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh->indices_vbo);
-                r_ext.glBufferData(GL_ELEMENT_ARRAY_BUFFER,
-                                   mesh->indices_len * sizeof (*mesh->indices),
-                                   mesh->indices, GL_STATIC_DRAW);
-                r_ext.glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-
-                R_check_errors();
-        } else {
-                mesh->verts_vbo = 0;
-                mesh->indices_vbo = 0;
-        }
+        /* Meshes are rendered through vertex buffer objects */
+        R_vbo_init(&mesh->vbo, mesh->verts, mesh->verts_len,
+                   sizeof (*mesh->verts), R_VERTEX3_FORMAT,
+                   mesh->indices, mesh->indices_len);
 
         return TRUE;
 }

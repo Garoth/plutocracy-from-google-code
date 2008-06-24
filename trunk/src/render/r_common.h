@@ -76,6 +76,13 @@ typedef struct r_ext {
         int point_sprites, vertex_buffers;
 } r_ext_t;
 
+/* Wrapper for vertex buffer objects */
+typedef struct r_vbo {
+        GLuint vertices_name, indices_name;
+        void *vertices, *indices;
+        int vertices_len, indices_len, init_frame, vertex_size, vertex_format;
+} r_vbo_t;
+
 /* r_assets.c */
 void R_dealloc_textures(void);
 SDL_Surface *R_font_render(r_font_t, const char *);
@@ -98,9 +105,15 @@ int R_texture_save(const r_texture_t *, const char *filename);
 void R_texture_screenshot(r_texture_t *, int x, int y);
 void R_texture_select(r_texture_t *);
 void R_texture_upload(const r_texture_t *);
+void R_vbo_cleanup(r_vbo_t *);
+void R_vbo_init(r_vbo_t *, void *vertices, int vertices_len, int vertex_size,
+                int vertex_format, void *indices, int indices_len);
+void R_vbo_render(r_vbo_t *);
+void R_vbo_update(r_vbo_t *);
 
 extern r_texture_t *r_terrain_tex, *r_select_model_tex, *r_white_tex;
 extern SDL_PixelFormat r_sdl_format;
+extern int r_video_mem, r_video_mem_high;
 
 /* r_camera.c */
 void R_init_camera(void);
@@ -154,8 +167,6 @@ void R_surface_mask(SDL_Surface *dest, SDL_Surface *src);
 void R_surface_put(SDL_Surface *, int x, int y, c_color_t);
 int R_surface_save(SDL_Surface *, const char *filename);
 void R_surface_stats(void);
-
-extern int r_sdl_mem, r_sdl_mem_high;
 
 /* r_test.c */
 void R_render_normals(int count, c_vec3_t *co, c_vec3_t *no, int stride);

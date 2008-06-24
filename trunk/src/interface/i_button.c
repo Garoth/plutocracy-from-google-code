@@ -149,9 +149,11 @@ int I_button_event(i_button_t *button, i_event_t event)
                         button->widget.state = I_WS_ACTIVE;
                 break;
         case I_EV_MOUSE_UP:
-                if (button->widget.state == I_WS_ACTIVE && button->on_click) {
-                        button->on_click(button);
-                        if (button->widget.state == I_WS_ACTIVE)
+                if (button->widget.state == I_WS_ACTIVE) {
+                        if (button->on_click)
+                                button->on_click(button);
+                        button->widget.state = I_WS_READY;
+                        if (i_mouse_focus == &button->widget)
                                 button->widget.state = I_WS_HOVER;
                 }
                 button->hover_activate = FALSE;
@@ -206,7 +208,7 @@ void I_button_init(i_button_t *button, const char *icon, const char *text,
                    i_button_type_t type)
 {
         C_zero(button);
-        I_widget_set_name(&button->widget, "Button");
+        I_widget_init(&button->widget, "Button");
         button->widget.event_func = (i_event_f)I_button_event;
         button->widget.state = I_WS_READY;
         button->widget.clickable = TRUE;
@@ -214,6 +216,5 @@ void I_button_init(i_button_t *button, const char *icon, const char *text,
         button->type = type;
         R_sprite_init(&button->icon, icon);
         C_strncpy_buf(button->buffer, text);
-        I_widget_inited(&button->widget);
 }
 

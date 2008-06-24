@@ -63,7 +63,7 @@ static int ring_event(i_widget_t *widget, i_event_t event)
 
         /* Calculate mouse radius for mouse events */
         if (event == I_EV_MOUSE_MOVE || event == I_EV_MOUSE_DOWN)
-                radius = C_vec2_len(C_vec2_sub(C_vec2((float)i_mouse_x, 
+                radius = C_vec2_len(C_vec2_sub(C_vec2((float)i_mouse_x,
                                                       (float)i_mouse_y),
                                                screen_origin));
 
@@ -120,11 +120,11 @@ void I_init_ring(void)
 {
         int i;
 
-        I_widget_set_name(&ring_widget, "Ring");
+        I_widget_init(&ring_widget, "Ring");
         ring_widget.event_func = (i_event_f)ring_event;
         ring_widget.state = I_WS_READY;
         ring_widget.clickable = TRUE;
-        I_widget_inited(&ring_widget);
+        ring_widget.shown = FALSE;
 
         /* Initialize the button widgets */
         I_button_init(button_widgets + I_RI_TEST_BLANK,

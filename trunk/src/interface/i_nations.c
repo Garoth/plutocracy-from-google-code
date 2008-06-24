@@ -13,6 +13,15 @@
 #include "i_common.h"
 
 static i_label_t title;
+static i_button_t nations[4];
+
+/******************************************************************************\
+ A nation button was clicked.
+\******************************************************************************/
+static void nation_clicked(i_button_t *button)
+{
+        I_widget_show(button->widget.parent, FALSE);
+}
 
 /******************************************************************************\
  Initializes nations window widgets on the given window.
@@ -20,12 +29,37 @@ static i_label_t title;
 void I_nations_init(i_window_t *window)
 {
         I_window_init(window);
-        window->widget.size = C_vec2(200.f, 0.f);
+        window->natural_size = C_vec2(200.f, 0.f);
         window->fit = I_FIT_TOP;
 
         /* Title label */
-        I_label_init(&title, C_str("i-nations", "Nations:"));
+        I_label_init(&title, C_str("i-nations", "Affiliation:"));
         title.font = R_FONT_TITLE;
         I_widget_add(&window->widget, &title.widget);
+
+        /* Ruby nation */
+        I_button_init(nations, "gui/flags/red.png",
+                      C_str("c-team-red", "Ruby"), I_BT_DECORATED);
+        nations[0].on_click = (i_callback_f)nation_clicked;
+        I_widget_add(&window->widget, &nations[0].widget);
+
+        /* Emerald nation */
+        I_button_init(nations + 1, "gui/flags/green.png",
+                      C_str("c-team-green", "Emerald"), I_BT_DECORATED);
+        nations[1].on_click = (i_callback_f)nation_clicked;
+        I_widget_add(&window->widget, &nations[1].widget);
+
+        /* Sapphire nation */
+        I_button_init(nations + 2, "gui/flags/blue.png",
+                      C_str("c-team-blue", "Sapphire"), I_BT_DECORATED);
+        nations[2].on_click = (i_callback_f)nation_clicked;
+        I_widget_add(&window->widget, &nations[2].widget);
+
+        /* Pirates */
+        I_button_init(nations + 3, "gui/flags/pirate.png",
+                      C_str("c-team-pirate", "Pirate"), I_BT_DECORATED);
+        nations[3].widget.margin_front = 1.f;
+        nations[3].on_click = (i_callback_f)nation_clicked;
+        I_widget_add(&window->widget, &nations[3].widget);
 }
 

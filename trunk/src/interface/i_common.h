@@ -116,6 +116,7 @@ typedef struct i_window {
         i_widget_t *key_focus, *hanger_align;
         r_window_t window;
         r_sprite_t hanger;
+        c_vec2_t natural_size;
         float hanger_x;
         int hanger_shown, decorated;
 } i_window_t;
@@ -250,17 +251,16 @@ c_vec2_t I_widget_bounds(const i_widget_t *, i_pack_t);
 c_vec2_t I_widget_child_bounds(const i_widget_t *);
 #define I_widget_cleanup(w) I_widget_event(w, I_EV_CLEANUP)
 void I_widget_event(i_widget_t *, i_event_t);
-void I_widget_inited(const i_widget_t *);
+void I_widget_init(i_widget_t *, const char *class_name);
 void I_widget_move(i_widget_t *, c_vec2_t new_origin);
 void I_widget_pack(i_widget_t *, i_pack_t, i_fit_t);
 void I_widget_propagate(i_widget_t *, i_event_t);
 void I_widget_remove(i_widget_t *, int cleanup);
 void I_widget_remove_children(i_widget_t *, int cleanup);
-void I_widget_set_name(i_widget_t *, const char *class_name);
 void I_widget_show(i_widget_t *, int show);
 
 extern c_color_t i_colors[I_COLORS];
-extern i_widget_t *i_key_focus, *i_child;
+extern i_widget_t *i_child, *i_key_focus, *i_mouse_focus;
 extern int i_key, i_key_shift, i_key_unicode, i_mouse_x, i_mouse_y, i_mouse;
 
 /* i_window.c */

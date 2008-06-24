@@ -28,9 +28,11 @@ int r_width_2d, r_height_2d, r_mode_hold, r_restart;
 /* Structure to wrap OpenGL extensions */
 r_ext_t r_ext;
 
-/* Restarts the video system */
+/* Set to TRUE to restart the video system on the next frame */
 int r_restart;
-static int init_frame;
+
+/* The frame number of the last video restart */
+int r_init_frame;
 
 /* Supported extensions */
 int r_extensions[R_EXTENSIONS];
@@ -186,10 +188,12 @@ static int set_video_mode(void)
                 SDL_GL_SetAttribute(SDL_GL_RED_SIZE, 5);
                 SDL_GL_SetAttribute(SDL_GL_GREEN_SIZE, 6);
                 SDL_GL_SetAttribute(SDL_GL_BLUE_SIZE, 5);
+                SDL_GL_SetAttribute(SDL_GL_ALPHA_SIZE, 0);
         } else {
                 SDL_GL_SetAttribute(SDL_GL_RED_SIZE, 8);
                 SDL_GL_SetAttribute(SDL_GL_GREEN_SIZE, 8);
                 SDL_GL_SetAttribute(SDL_GL_BLUE_SIZE, 8);
+                SDL_GL_SetAttribute(SDL_GL_ALPHA_SIZE, 0);
         }
         flags = SDL_OPENGL | SDL_DOUBLEBUF | SDL_HWPALETTE |
                 SDL_HWSURFACE | SDL_ANYFORMAT;
@@ -200,7 +204,7 @@ static int set_video_mode(void)
                 C_warning("Failed to set video mode: %s", SDL_GetError());
                 return FALSE;
         }
-        
+
         /* Set screen view */
         glViewport(0, 0, r_width.value.n, r_height.value.n);
 
@@ -373,7 +377,7 @@ void R_init(void)
 
         C_status("Opening window");
         C_count_reset(&r_count_faces);
-        
+
         /* Print the video driver name */
         SDL_VideoDriverName(buffer, sizeof (buffer));
         C_debug("SDL video driver '%s'", buffer);
@@ -578,7 +582,12 @@ void R_set_mode(r_mode_t mode)
         if (r_mode_hold)
                 return;
 
+        /* Make sure the texture coordinate matrix is identity */
+        glMatrixMode(GL_TEXTURE);
+        glLoadIdentity();
+
         /* Reset model-view matrices even if the mode didn't change */
+        glMatrixMode(GL_MODELVIEW);
         if (mode == R_MODE_3D)
                 glLoadMatrixf(r_cam_matrix);
         else if (mode == R_MODE_2D)
@@ -652,9 +661,9 @@ void R_start_frame(void)
         /* Video can only be restarted at the start of the frame */
         if (r_restart) {
                 set_video_mode();
-                if (r_color_bits.changed > init_frame)
+                if (r_color_bits.changed > r_init_frame)
                         R_realloc_textures();
-                init_frame = c_frame;
+                r_init_frame = c_frame;
                 r_restart = FALSE;
         }
 

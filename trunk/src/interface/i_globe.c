@@ -224,9 +224,13 @@ void I_globe_event(i_event_t event)
                         release_globe();
                 break;
         case I_EV_MOUSE_MOVE:
-                if (grabbing)
+                if (I_ring_shown())
+                        break;
+                if (i_mouse_focus != &i_root)
+                        G_mouse_ray_miss();
+                else if (grabbing)
                         rotate_globe(i_mouse_x, i_mouse_y);
-                else if (!I_ring_shown()) {
+                else {
                         c_vec3_t direction;
 
                         direction = screen_ray(i_mouse_x, i_mouse_y);

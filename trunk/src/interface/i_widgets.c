@@ -21,35 +21,27 @@ i_widget_t *i_key_focus;
 /* This is the child widget for an I_EV_ADD_CHILD event */
 i_widget_t *i_child;
 
+/* The most deeply nested widget that the mouse is hovering over */
+i_widget_t *i_mouse_focus;
+
 /* Event parameters */
 int i_key, i_key_shift, i_key_unicode, i_mouse_x, i_mouse_y, i_mouse;
 
-static i_widget_t *mouse_focus;
 static int widgets;
 
 /******************************************************************************\
  Initializes a widget name field with a unique name that includes the
  widget's class.
 \******************************************************************************/
-void I_widget_set_name(i_widget_t *widget, const char *class_name)
+void I_widget_init(i_widget_t *widget, const char *class_name)
 {
         C_assert(widget);
+        C_zero(widget);
         snprintf(widget->name, sizeof (widget->name),
                  "widget #%u (%s)", widgets++, class_name);
-}
-
-/******************************************************************************\
- Prints messages helpful for memory debugging. Call within a widget
- initialization function at the very end.
-\******************************************************************************/
-void I_widget_inited(const i_widget_t *widget)
-{
-        if (!widget->name[0])
-                C_error("Forgot to set name for widget");
-        if (!c_mem_check.value.n)
-                return;
-        if (i_debug.value.n)
+        if (c_mem_check.value.n && i_debug.value.n)
                 C_trace("Initialized %s", widget->name);
+        widget->shown = TRUE;
 }
 
 /******************************************************************************\
@@ -371,44 +363,61 @@ const char *I_event_string(i_event_t event)
 }
 
 /******************************************************************************\
- Call on a widget in hover or active state to check if the widget has lost
- mouse focus this frame. Will generate I_EV_MOUSE_OUT when applicable. Returns
- TRUE if the widget has lost mouse focus.
+ Call on a widget in hover or active state to check if the widget has mouse
+ focus this frame. Will generate I_EV_MOUSE_OUT when applicable. Returns
+ TRUE if the widget has mouse focus.
 \******************************************************************************/
-static int check_mouse_out(i_widget_t *widget)
+static int check_mouse_focus(i_widget_t *widget)
 {
         if (!widget)
-                return TRUE;
-        if (i_mouse_x >= widget->origin.x &&
-            i_mouse_y >= widget->origin.y &&
+                return FALSE;
+        if (i_mouse_x >= widget->origin.x && i_mouse_y >= widget->origin.y &&
             i_mouse_x < widget->origin.x + widget->size.x &&
             i_mouse_y < widget->origin.y + widget->size.y &&
             widget->shown && widget->clickable &&
             widget->state != I_WS_DISABLED) {
-                mouse_focus = widget;
-                return FALSE;
-        }
-        if (widget->state != I_WS_HOVER && widget->state != I_WS_ACTIVE)
+                i_mouse_focus = widget;
                 return TRUE;
-        if (i_debug.value.n >= 2)
-                C_trace("I_EV_MOUSE_OUT --> %s", widget->name);
-        widget->event_func(widget, I_EV_MOUSE_OUT);
-        widget->state = I_WS_READY;
-        return TRUE;
+        }
+        if (widget->state == I_WS_HOVER || widget->state == I_WS_ACTIVE)
+                I_widget_event(widget, I_EV_MOUSE_OUT);
+        return FALSE;
 }
 
 /******************************************************************************\
  When a widget is hidden, propagates up to the widget's parent and then to its
- parent and so on until mouse focus is claimed.
+ parent and so on until mouse focus is claimed. Does nothing if the mouse is
+ not within widget bounds.
 \******************************************************************************/
 static void mouse_focus_parent(i_widget_t *widget)
 {
-        while (widget) {
-                if (!check_mouse_out(widget))
+        i_widget_t *p;
+
+        /* See if the focus is this widget or within this widget */
+        if (!i_mouse_focus)
+                return;
+        p = i_mouse_focus;
+        while (p != widget) {
+                if (!p->parent)
                         return;
-                widget = widget->parent;
+                p = p->parent;
         }
-        mouse_focus = &i_root;
+
+        /* Propagate mouse out events */
+        p = i_mouse_focus;
+        while (p != widget) {
+                I_widget_event(p, I_EV_MOUSE_OUT);
+                p = p->parent;
+        }
+        I_widget_event(p, I_EV_MOUSE_OUT);
+
+        /* Propagate focus up */
+        while (widget->parent) {
+                widget = widget->parent;
+                if (check_mouse_focus(widget))
+                        return;
+        }
+        i_mouse_focus = &i_root;
 }
 
 /******************************************************************************\
@@ -444,9 +453,8 @@ void I_widget_event(i_widget_t *widget, i_event_t event)
                         C_trace("%s --> %s",
                                 I_event_string(event), widget->name);
                 case I_EV_RENDER:
-                case I_EV_MOUSE_IN:
-                case I_EV_MOUSE_OUT:
                 case I_EV_MOUSE_MOVE:
+                case I_EV_GRAB_FOCUS:
                         break;
                 }
 
@@ -469,31 +477,28 @@ void I_widget_event(i_widget_t *widget, i_event_t event)
                 widget->shown = FALSE;
                 if (i_key_focus == widget)
                         i_key_focus = NULL;
-                if (mouse_focus == widget) {
-                        widget->event_func(widget, I_EV_MOUSE_OUT);
-                        widget->state = I_WS_READY;
-                        mouse_focus_parent(widget);
-                }
-                break;
+                mouse_focus_parent(widget);
+                widget->event_func(widget, event);
+                return;
         case I_EV_MOUSE_IN:
+                if (widget->state == I_WS_READY && widget->clickable)
+                        widget->state = I_WS_HOVER;
+                widget->event_func(widget, event);
+                return;
         case I_EV_MOUSE_OUT:
-                /* These events are generated and handled directly from mouse
-                   motion events and should never be propagated. */
+                if (widget->state == I_WS_HOVER || widget->state == I_WS_ACTIVE)
+                        widget->state = I_WS_READY;
+                widget->event_func(widget, event);
                 return;
         case I_EV_MOUSE_MOVE:
 
-                /* Mouse left the widget area */
-                if (check_mouse_out(widget))
+                /* See if mouse left the widget area */
+                if (!check_mouse_focus(widget))
                         return;
 
                 /* Mouse entered the widget area */
-                if (widget->state == I_WS_READY) {
-                        if (i_debug.value.n >= 2)
-                                C_trace("I_EV_MOUSE_IN --> %s", widget->name);
-                        widget->event_func(widget, I_EV_MOUSE_IN);
-                        if (widget->state == I_WS_READY && widget->clickable)
-                                widget->state = I_WS_HOVER;
-                }
+                if (widget->state == I_WS_READY)
+                        I_widget_event(widget, I_EV_MOUSE_IN);
 
                 break;
         case I_EV_MOVED:
@@ -508,7 +513,12 @@ void I_widget_event(i_widget_t *widget, i_event_t event)
                 if (i_fade.value.f > 0.f) {
                         float target, rate;
 
-                        target = widget->shown ? 1.f : 0.f;
+                        target = 0.f;
+                        if (widget->shown) {
+                                target = 1.f;
+                                if (widget->parent)
+                                        target = widget->parent->fade;
+                        }
                         rate = i_fade.value.f * c_frame_sec;
                         if (widget->state == I_WS_DISABLED) {
                                 target /= 4.f;
@@ -531,8 +541,9 @@ void I_widget_event(i_widget_t *widget, i_event_t event)
                 break;
         case I_EV_SHOW:
                 widget->shown = TRUE;
-                check_mouse_out(widget);
-                break;
+                check_mouse_focus(widget);
+                widget->event_func(widget, event);
+                return;
         default:
                 break;
         }
@@ -553,7 +564,7 @@ void I_widget_event(i_widget_t *widget, i_event_t event)
                         C_zero(widget);
                 break;
         case I_EV_MOUSE_MOVE:
-                if (mouse_focus == widget && widget->entry)
+                if (i_mouse_focus == widget && widget->entry)
                         i_key_focus = widget;
                 break;
         default:
@@ -611,21 +622,21 @@ void I_dispatch(const SDL_Event *ev)
                 event = I_EV_MOUSE_MOVE;
                 i_mouse_x = (int)(ev->motion.x / r_pixel_scale.value.f + 0.5f);
                 i_mouse_y = (int)(ev->motion.y / r_pixel_scale.value.f + 0.5f);
-                check_mouse_out(mouse_focus);
+                check_mouse_focus(i_mouse_focus);
                 break;
         case SDL_MOUSEBUTTONDOWN:
                 event = I_EV_MOUSE_DOWN;
                 i_mouse = ev->button.button;
                 if (i_debug.value.n > 0)
                         C_trace("SDL_MOUSEBUTTONDOWN (%d)", i_mouse);
-                check_mouse_out(mouse_focus);
+                check_mouse_focus(i_mouse_focus);
                 break;
         case SDL_MOUSEBUTTONUP:
                 event = I_EV_MOUSE_UP;
                 i_mouse = ev->button.button;
                 if (i_debug.value.n > 0)
                         C_trace("SDL_MOUSEBUTTONUP (%d)", i_mouse);
-                check_mouse_out(mouse_focus);
+                check_mouse_focus(i_mouse_focus);
                 break;
         default:
                 return;
@@ -638,9 +649,10 @@ void I_dispatch(const SDL_Event *ev)
                     i_key_focus->shown && i_key_focus->state != I_WS_DISABLED)
                         i_key_focus->event_func(i_key_focus, event);
         } else if (event == I_EV_MOUSE_DOWN) {
-                if (mouse_focus && mouse_focus->event_func &&
-                    mouse_focus->shown && mouse_focus->state != I_WS_DISABLED)
-                        mouse_focus->event_func(mouse_focus, event);
+                if (i_mouse_focus && i_mouse_focus->event_func &&
+                    i_mouse_focus->shown &&
+                    i_mouse_focus->state != I_WS_DISABLED)
+                        i_mouse_focus->event_func(i_mouse_focus, event);
         } else
                 I_widget_event(&i_root, event);
 

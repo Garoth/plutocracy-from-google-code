@@ -96,7 +96,7 @@ void I_select_init(i_select_t *select, const char *label, const char **list,
         if (!select)
                 return;
         C_zero(select);
-        I_widget_set_name(&select->widget, "Select");
+        I_widget_init(&select->widget, "Select");
         select->widget.event_func = (i_event_f)I_select_event;
         select->widget.clickable = TRUE;
         select->widget.state = I_WS_READY;
@@ -110,10 +110,8 @@ void I_select_init(i_select_t *select, const char *label, const char **list,
         I_widget_add(&select->widget, &select->label.widget);
 
         /* Don't add buttons or item list if there is no list */
-        if (!list || !list[0]) {
-                I_widget_inited(&select->widget);
+        if (!list || !list[0])
                 return;
-        }
 
         /* Left button */
         I_button_init(&select->left, "gui/icons/arrow-left.png", NULL,
@@ -142,7 +140,5 @@ void I_select_init(i_select_t *select, const char *label, const char **list,
         if (initial >= select->list_len - 1)
                 select->right.widget.state = I_WS_DISABLED;
         I_widget_add(&select->widget, &select->right.widget);
-
-        I_widget_inited(&select->widget);
 }
 

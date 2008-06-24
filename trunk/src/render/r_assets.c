@@ -29,6 +29,9 @@ r_texture_t *r_white_tex;
 /* SDL format used for textures */
 SDL_PixelFormat r_sdl_format;
 
+/* Estimated video memory usage */
+int r_video_mem, r_video_mem_high;
+
 /* Font asset array */
 static struct {
         TTF_Font *ttf_font;
@@ -46,8 +49,8 @@ static void texture_cleanup(r_texture_t *pt)
         if (pt->surface) {
 
                 /* Keep track of free'd memory */
-                r_sdl_mem -= pt->surface->w * pt->surface->h *
-                             pt->surface->format->BytesPerPixel;
+                r_video_mem -= pt->surface->w * pt->surface->h *
+                               pt->surface->format->BytesPerPixel;
 
                 SDL_FreeSurface(pt->surface);
         }
@@ -553,12 +556,146 @@ void R_free_assets(void)
 {
         /* Print out estimated memory usage */
         if (c_mem_check.value.n)
-                C_debug("SDL surface memory high mark %.1fmb",
-                        r_sdl_mem_high / (1024.f * 1024.f));
+                C_debug("Estimated video memory high mark %.1fmb",
+                        r_video_mem_high / (1024.f * 1024.f));
 
         R_texture_free(r_terrain_tex);
         R_texture_free(r_white_tex);
         R_free_fonts();
         TTF_Quit();
+}
+
+/******************************************************************************\
+ Update vertex buffer data.
+\******************************************************************************/
+void R_vbo_update(r_vbo_t *vbo)
+{
+        r_ext.glBindBuffer(GL_ARRAY_BUFFER, vbo->vertices_name);
+        r_ext.glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, vbo->indices_name);
+        if (vbo->vertices)
+                r_ext.glBufferData(GL_ARRAY_BUFFER,
+                                   vbo->vertices_len * vbo->vertex_size,
+                                   vbo->vertices, GL_STATIC_DRAW);
+        if (vbo->indices)
+                r_ext.glBufferData(GL_ELEMENT_ARRAY_BUFFER,
+                                   vbo->indices_len * sizeof (unsigned short),
+                                   vbo->indices, GL_STATIC_DRAW);
+        r_ext.glBindBuffer(GL_ARRAY_BUFFER, 0);
+        r_ext.glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+        R_check_errors();
+}
+
+/******************************************************************************\
+ Upload vertex buffer object data.
+\******************************************************************************/
+static void vbo_upload(r_vbo_t *vbo)
+{
+        int size;
+
+        vbo->init_frame = c_frame;
+        if (!r_ext.vertex_buffers)
+                return;
+
+        /* First upload the vertex data */
+        vbo->vertices_name = 0;
+        if (vbo->vertices) {
+                r_video_mem += size = vbo->vertex_size * vbo->vertices_len;
+                r_ext.glGenBuffers(1, &vbo->vertices_name);
+        }
+
+        /* Now upload the indices */
+        vbo->indices_name = 0;
+        if (vbo->indices) {
+                r_video_mem += size = vbo->indices_len * sizeof (short);
+                r_ext.glGenBuffers(1, &vbo->indices_name);
+        }
+
+        /* Keep track of video memory */
+        if (r_video_mem > r_video_mem_high)
+                r_video_mem_high = r_video_mem;
+
+        R_check_errors();
+        R_vbo_update(vbo);
+}
+
+/******************************************************************************\
+ Bind and render a vertex buffer object.
+\******************************************************************************/
+void R_vbo_render(r_vbo_t *vbo)
+{
+#ifdef WINDOWS
+        /* Windows will lose everything in video memory if the resolution is
+           changed, so we need to check for this and reupload */
+        if (r_init_frame > vbo->init_frame)
+                vbo_upload(vbo);
+#endif
+
+        /* Use vertex buffer objects if supported */
+        if (r_ext.vertex_buffers) {
+                r_ext.glBindBuffer(GL_ARRAY_BUFFER, vbo->vertices_name);
+                r_ext.glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, vbo->indices_name);
+                glInterleavedArrays(vbo->vertex_format, vbo->vertex_size, NULL);
+                if (vbo->indices)
+                        glDrawElements(GL_TRIANGLES, vbo->indices_len,
+                                       GL_UNSIGNED_SHORT, NULL);
+                else
+                        glDrawArrays(GL_TRIANGLES, 0, vbo->vertices_len);
+                r_ext.glBindBuffer(GL_ARRAY_BUFFER, 0);
+                r_ext.glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+        }
+
+        /* Otherwise just make the rendering calls */
+        else {
+                glInterleavedArrays(vbo->vertex_format, vbo->vertex_size,
+                                    vbo->vertices);
+                if (vbo->indices)
+                        glDrawElements(GL_TRIANGLES, vbo->indices_len,
+                                       GL_UNSIGNED_SHORT, vbo->indices);
+                else
+                        glDrawArrays(GL_TRIANGLES, 0, vbo->vertices_len);
+        }
+
+        /* Make sure these are off after the interleaved array calls */
+        glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+        glDisableClientState(GL_NORMAL_ARRAY);
+        glDisableClientState(GL_VERTEX_ARRAY);
+
+        R_check_errors();
+}
+
+/******************************************************************************\
+ Cleanup a vertex buffer object.
+\******************************************************************************/
+void R_vbo_cleanup(r_vbo_t *vbo)
+{
+        if (!vbo)
+                return;
+        if (r_ext.vertex_buffers) {
+                if (vbo->vertices_name) {
+                        r_ext.glDeleteBuffers(1, &vbo->vertices_name);
+                        r_video_mem -= vbo->vertex_size * vbo->vertices_len;
+                }
+                if (vbo->indices_name) {
+                        r_ext.glDeleteBuffers(1, &vbo->indices_name);
+                        r_video_mem -= vbo->indices_len * sizeof (short);
+                }
+        }
+        C_zero(vbo);
+}
+
+/******************************************************************************\
+ Initialize a vertex buffer object. Assumes unsigned short indices. Note that
+ all data must remain in place as the [r_vbo_t] structure only stores pointers.
+\******************************************************************************/
+void R_vbo_init(r_vbo_t *vbo, void *vertices, int vertices_len, int vertex_size,
+                int vertex_format, void *indices, int indices_len)
+{
+        vbo->vertices = vertices;
+        vbo->vertices_len = vertices_len;
+        vbo->vertex_size = vertex_size;
+        vbo->vertex_format = vertex_format;
+        vbo->indices = indices;
+        vbo->indices_len = indices_len;
+        vbo_upload(vbo);
 }
 

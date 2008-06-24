@@ -125,14 +125,13 @@ int I_scrollback_event(i_scrollback_t *sb, i_event_t event)
 i_widget_t *I_scrollback_init(i_scrollback_t *sb)
 {
         C_zero(sb);
-        I_widget_set_name(&sb->widget, "Scrollback");
+        I_widget_init(&sb->widget, "Scrollback");
         sb->widget.event_func = (i_event_f)I_scrollback_event;
         sb->widget.state = I_WS_READY;
         sb->widget.expand = TRUE;
         sb->widget.clickable = TRUE;
         sb->limit = 100;
         sb->scroll = 0.f;
-        I_widget_inited(&sb->widget);
         return (i_widget_t *)sb;
 }
 
@@ -227,7 +226,7 @@ static void log_handler(c_log_level_t level, int margin, const char *string)
 void I_console_init(i_window_t *window)
 {
         I_window_init(window);
-        window->widget.size = C_vec2(480.f, 240.f);
+        window->natural_size = C_vec2(480.f, 240.f);
 
         /* Set log handler */
         c_log_func = log_handler;
