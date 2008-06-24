@@ -135,6 +135,7 @@ if windows:
                                       path('windows/lib/libpng.lib'),
                                       path('windows/lib/SDL_ttf.lib')]
         else:
+                plutocracy_env.Append(CPPPATH = ';windows/include/SDL')
                 plutocracy_env.Append(LIBS = ['zdll', 'libpng', 'SDL_ttf'])
 else:
         plutocracy_src.remove(path('src/common/c_os_windows.c'))
