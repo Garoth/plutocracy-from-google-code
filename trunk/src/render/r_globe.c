@@ -41,7 +41,7 @@ int r_tiles;
 /* Current selection color */
 c_color_t r_select_color;
 
-static r_vertex3_t select_verts[3];
+static r_vertex3_t select_verts[9];
 static r_texture_t *select_tex;
 static r_vbo_t globe_vbo;
 static c_color_t globe_colors[4];
@@ -337,9 +337,9 @@ void R_start_globe(void)
                 glColor4f(r_select_color.r, r_select_color.g,
                           r_select_color.b, r_select_color.a);
 
-                glInterleavedArrays(R_VERTEX3_FORMAT, sizeof (*select_verts),
+				glInterleavedArrays(R_VERTEX3_FORMAT, sizeof (*select_verts),
                                     select_verts);
-                glDrawArrays(GL_TRIANGLES, 0, 3);
+                glDrawArrays(GL_TRIANGLES, 0, sizeof (select_verts));
                 glColor4f(1.f, 1.f, 1.f, 1.f);
                 C_count_add(&r_count_faces, 1);
                 R_gl_restore();
@@ -660,9 +660,13 @@ void R_configure_globe(r_tile_t *tiles)
 \******************************************************************************/
 void R_select_tile(int tile)
 {
+	int neighbors[3];
+
         selected_tile = tile;
         if (tile < 0)
                 return;
+		
+	R_get_tile_neighbors(tile, neighbors);
 
         /* Copy coordinates */
         select_verts[0].co = vertices[3 * tile].co;
@@ -675,8 +679,40 @@ void R_select_tile(int tile)
         select_verts[2].no = vertices[3 * tile + 2].no;
 
         /* Set UV */
-        select_verts[0].uv = C_vec2(0.5f, 0.0f);
-        select_verts[1].uv = C_vec2(0.0f, 1.0f);
-        select_verts[2].uv = C_vec2(1.0f, 1.0f);
+        select_verts[0].uv = C_vec2(0.50f, 0.0f);
+        select_verts[1].uv = C_vec2(0.25f, 1.0f);
+        select_verts[2].uv = C_vec2(0.75f, 1.0f);
+
+
+		/* Copy coordinates */
+		select_verts[3].co = vertices[3 * neighbors[0] + 0].co;
+		select_verts[4].co = vertices[3 * neighbors[0] + 1].co;
+		select_verts[5].co = vertices[3 * neighbors[0] + 2].co;
+
+		/* Copy normals */
+		select_verts[3].no = vertices[3 * neighbors[0] + 0].no;
+		select_verts[4].no = vertices[3 * neighbors[0] + 1].no;
+		select_verts[5].no = vertices[3 * neighbors[0] + 2].no;
+
+		/* Set UV */
+		select_verts[3].uv = C_vec2(0.75f, 1.0f);
+		select_verts[4].uv = C_vec2(0.50f, 0.0f);
+		select_verts[5].uv = C_vec2(1.00f, 0.0f);
+
+
+		/* Copy coordinates */
+		select_verts[6].co = vertices[3 * neighbors[2] + 0].co;
+		select_verts[7].co = vertices[3 * neighbors[2] + 1].co;
+		select_verts[8].co = vertices[3 * neighbors[2] + 2].co;
+
+		/* Copy normals */
+		select_verts[6].no = vertices[3 * neighbors[2] + 0].no;
+		select_verts[7].no = vertices[3 * neighbors[2] + 1].no;
+		select_verts[8].no = vertices[3 * neighbors[2] + 2].no;
+		
+		/* Set UV */
+		select_verts[6].uv = C_vec2(0.75f, 1.0f);
+		select_verts[7].uv = C_vec2(1.00f, 0.0f);
+		select_verts[8].uv = C_vec2(0.50f, 0.0f);
 }
 
