@@ -140,7 +140,7 @@ void R_set_mode(r_mode_t);
 extern r_ext_t r_ext;
 extern r_mode_t r_mode;
 extern GLfloat r_proj_matrix[16];
-extern int r_mode_hold;
+extern int r_init_frame, r_mode_hold;
 
 /* r_prerender.c */
 void R_prerender(void);

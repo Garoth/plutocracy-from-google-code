@@ -181,7 +181,7 @@ typedef struct i_select {
         i_callback_f on_change;
         void *data;
         const char **list;
-        int list_len, index;
+        int list_len, index, reverse;
 } i_select_t;
 
 /* Toolbar widget used for the left and right toolbars on the screen */
