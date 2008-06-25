@@ -171,6 +171,7 @@ void I_video_init(i_window_t *window)
                       C_str("i-video-mode", "Resolution:"),
                       (const char **)list_modes, orig_indices[opt]);
         options[0].on_change = (i_callback_f)set_apply_state;
+        options[0].reverse = TRUE;
         I_widget_add(&window->widget, &options[opt].widget);
 
         /* Select color bits */

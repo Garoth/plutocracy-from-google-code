@@ -49,16 +49,28 @@ int I_select_event(i_select_t *select, i_event_t event)
 \******************************************************************************/
 static void select_change(i_select_t *select, int index)
 {
+        i_widget_t *low, *high;
+        
+        /* Reverse-order select options switch the button functions */
+        if (select->reverse) {
+                low = &select->right.widget;
+                high = &select->left.widget;
+        } else {
+                low = &select->left.widget;
+                high = &select->right.widget;
+        }
+
         if (index <= 0) {
                 index = 0;
-                select->left.widget.state = I_WS_DISABLED;
-        } else if (select->left.widget.state == I_WS_DISABLED)
-                select->left.widget.state = I_WS_READY;
+                low->state = I_WS_DISABLED;
+        } else if (low->state == I_WS_DISABLED) {
+                low->state = I_WS_READY;
+        }
         if (index >= select->list_len - 1) {
                 index = select->list_len - 1;
-                select->right.widget.state = I_WS_DISABLED;
-        } else if (select->right.widget.state == I_WS_DISABLED)
-                select->right.widget.state = I_WS_READY;
+                high->state = I_WS_DISABLED;
+        } else if (high->state == I_WS_DISABLED)
+                high->state = I_WS_READY;
         I_label_configure(&select->item, select->list[index]);
         select->index = index;
         if (select->on_change)
@@ -73,7 +85,8 @@ static void left_arrow_clicked(i_button_t *button)
         i_select_t *select;
 
         select = (i_select_t *)button->data;
-        select_change(select, --select->index);
+        select->index += select->reverse ? 1 : -1;
+        select_change(select, select->index);
 }
 
 /******************************************************************************\
@@ -84,7 +97,8 @@ static void right_arrow_clicked(i_button_t *button)
         i_select_t *select;
 
         select = (i_select_t *)button->data;
-        select_change(select, ++select->index);
+        select->index += select->reverse ? -1 : 1;
+        select_change(select, select->index);
 }
 
 /******************************************************************************\
