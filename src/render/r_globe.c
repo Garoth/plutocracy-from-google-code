@@ -41,7 +41,7 @@ int r_tiles;
 /* Current selection color */
 c_color_t r_select_color;
 
-static r_vertex3_t select_verts[9];
+static r_vertex3_t select_verts[12];
 static r_texture_t *select_tex;
 static r_vbo_t globe_vbo;
 static c_color_t globe_colors[4];
@@ -327,6 +327,9 @@ void R_start_globe(void)
 
         /* Render selection triangle */
         if (selected_tile >= 0) {
+		//int i;
+		//for (i = 0; i < r_tiles; i++) {
+		//		R_select_tile(i);
                 R_gl_disable(GL_LIGHTING);
                 R_texture_select(select_tex);
 
@@ -665,7 +668,7 @@ void R_select_tile(int tile)
         selected_tile = tile;
         if (tile < 0)
                 return;
-		
+
 	R_get_tile_neighbors(tile, neighbors);
 
         /* Copy coordinates */
@@ -679,40 +682,55 @@ void R_select_tile(int tile)
         select_verts[2].no = vertices[3 * tile + 2].no;
 
         /* Set UV */
-        select_verts[0].uv = C_vec2(0.50f, 0.0f);
-        select_verts[1].uv = C_vec2(0.25f, 1.0f);
-        select_verts[2].uv = C_vec2(0.75f, 1.0f);
+        select_verts[0].uv = C_vec2(0.50f, 0.25f);
+        select_verts[1].uv = C_vec2(0.25f, 0.75f);
+        select_verts[2].uv = C_vec2(0.75f, 0.75f);
+
+	/* Copy coordinates */
+	select_verts[3].co = vertices[3 * neighbors[0] + 0].co;
+	select_verts[4].co = vertices[3 * neighbors[0] + 1].co;
+	select_verts[5].co = vertices[3 * neighbors[0] + 2].co;
+
+	/* Copy normals */
+	select_verts[3].no = vertices[3 * neighbors[0] + 0].no;
+	select_verts[4].no = vertices[3 * neighbors[0] + 1].no;
+	select_verts[5].no = vertices[3 * neighbors[0] + 2].no;
+
+	/* Set UV */
+	select_verts[3].uv = C_vec2(0.75f, 0.75f);
+	select_verts[4].uv = C_vec2(0.50f, 0.25f);
+	select_verts[5].uv = C_vec2(1.00f, 0.25f);
 
 
-		/* Copy coordinates */
-		select_verts[3].co = vertices[3 * neighbors[0] + 0].co;
-		select_verts[4].co = vertices[3 * neighbors[0] + 1].co;
-		select_verts[5].co = vertices[3 * neighbors[0] + 2].co;
+	/* Copy coordinates */
+	select_verts[6].co = vertices[3 * neighbors[1] + 0].co;
+	select_verts[7].co = vertices[3 * neighbors[1] + 1].co;
+	select_verts[8].co = vertices[3 * neighbors[1] + 2].co;
 
-		/* Copy normals */
-		select_verts[3].no = vertices[3 * neighbors[0] + 0].no;
-		select_verts[4].no = vertices[3 * neighbors[0] + 1].no;
-		select_verts[5].no = vertices[3 * neighbors[0] + 2].no;
+	/* Copy normals */
+	select_verts[6].no = vertices[3 * neighbors[1] + 0].no;
+	select_verts[7].no = vertices[3 * neighbors[1] + 1].no;
+	select_verts[8].no = vertices[3 * neighbors[1] + 2].no;
 
-		/* Set UV */
-		select_verts[3].uv = C_vec2(0.75f, 1.0f);
-		select_verts[4].uv = C_vec2(0.50f, 0.0f);
-		select_verts[5].uv = C_vec2(1.00f, 0.0f);
+	/* Set UV */
+	select_verts[6].uv = C_vec2(0.50f, 1.25f);
+	select_verts[7].uv = C_vec2(0.25f, 0.75f);
+	select_verts[8].uv = C_vec2(0.75f, 0.75f);
 
 
-		/* Copy coordinates */
-		select_verts[6].co = vertices[3 * neighbors[2] + 0].co;
-		select_verts[7].co = vertices[3 * neighbors[2] + 1].co;
-		select_verts[8].co = vertices[3 * neighbors[2] + 2].co;
+	/* Copy coordinates */
+	select_verts[9].co = vertices[3 * neighbors[2] + 0].co;
+	select_verts[10].co = vertices[3 * neighbors[2] + 1].co;
+	select_verts[11].co = vertices[3 * neighbors[2] + 2].co;
 
-		/* Copy normals */
-		select_verts[6].no = vertices[3 * neighbors[2] + 0].no;
-		select_verts[7].no = vertices[3 * neighbors[2] + 1].no;
-		select_verts[8].no = vertices[3 * neighbors[2] + 2].no;
-		
-		/* Set UV */
-		select_verts[6].uv = C_vec2(0.75f, 1.0f);
-		select_verts[7].uv = C_vec2(1.00f, 0.0f);
-		select_verts[8].uv = C_vec2(0.50f, 0.0f);
+	/* Copy normals */
+	select_verts[9].no = vertices[3 * neighbors[2] + 0].no;
+	select_verts[10].no = vertices[3 * neighbors[2] + 1].no;
+	select_verts[11].no = vertices[3 * neighbors[2] + 2].no;
+
+	/* Set UV */
+	select_verts[9].uv = C_vec2(0.75f, 0.75f);
+	select_verts[10].uv = C_vec2(1.00f, 0.25f);
+	select_verts[11].uv = C_vec2(0.50f, 0.25f);
 }
 
