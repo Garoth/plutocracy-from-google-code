@@ -34,7 +34,7 @@ int i_limbo;
 static i_toolbar_t left_toolbar, right_toolbar;
 static r_sprite_t limbo_logo;
 static float limbo_fade;
-static int layout_frame;
+static int layout_frame, cleanup_theme;
 
 /******************************************************************************\
  Root window event function.
@@ -97,6 +97,20 @@ static int root_event(i_widget_t *root, i_event_t event)
 }
 
 /******************************************************************************\
+ Updates themeable widget assets.
+\******************************************************************************/
+static void theme_widgets(void)
+{
+        if (i_debug.value.n)
+                C_trace("Theming widgets");
+        I_theme_buttons();
+        I_theme_windows();
+        I_theme_entries();
+        I_theme_scrollbacks();
+        I_theme_ring();
+}
+
+/******************************************************************************\
  Updates after a theme change.
 \******************************************************************************/
 static void theme_configure(void)
@@ -104,20 +118,9 @@ static void theme_configure(void)
         float toolbar_height, toolbar_y;
 
         C_var_unlatch(&i_border);
-        C_var_unlatch(&i_button);
-        C_var_unlatch(&i_button_active);
-        C_var_unlatch(&i_button_hover);
         C_var_unlatch(&i_color);
         C_var_unlatch(&i_color_alt);
-        C_var_unlatch(&i_hanger);
-        C_var_unlatch(&i_ring);
-        C_var_unlatch(&i_round_active);
-        C_var_unlatch(&i_round_hover);
         C_var_unlatch(&i_shadow);
-        C_var_unlatch(&i_square_active);
-        C_var_unlatch(&i_square_hover);
-        C_var_unlatch(&i_window);
-        C_var_unlatch(&i_work_area);
 
         /* Root window */
         i_root.size = C_vec2((float)r_width_2d, (float)r_height_2d);
@@ -131,19 +134,33 @@ static void theme_configure(void)
         right_toolbar.widget.origin = C_vec2((float)(r_width_2d -
                                                      i_border.value.n),
                                              toolbar_y);
+
+        theme_widgets();
 }
 
 /******************************************************************************\
- Update function for i_theme. Will also reload fonts.
+ Parse the theme config. Does not unlatch [i_theme]. Returns FALSE if the theme
+ name is invalid.
 \******************************************************************************/
-static int theme_update(c_var_t *var, c_var_value_t value)
+static int parse_config(const char *name)
 {
-        if (!C_parse_config_file(value.s))
+        const char *filename;
+
+        /* The theme name should never modify the path */
+        if (C_is_path(name)) {
+                C_warning("Theme name contains path characters");
                 return FALSE;
-        theme_configure();
-        R_free_fonts();
-        R_load_fonts();
-        I_widget_event(&i_root, I_EV_CONFIGURE);
+        }
+
+        /* Reset blank theme name to default */
+        if (!name[0])
+                name = "default";
+
+        filename = C_va("gui/themes/%s/theme.cfg", name);
+        if (!C_parse_config_file(filename)) {
+                C_warning("Failed to parse theme config '%s'", filename);
+                return FALSE;
+        }
         return TRUE;
 }
 
@@ -153,7 +170,69 @@ static int theme_update(c_var_t *var, c_var_value_t value)
 void I_parse_config(void)
 {
         C_var_unlatch(&i_theme);
-        C_parse_config_file(i_theme.value.s);
+        if (!parse_config(i_theme.value.s))
+                i_theme.value = i_theme.stock;
+}
+
+/******************************************************************************\
+ Update function for i_theme. Will also reload fonts.
+\******************************************************************************/
+static int theme_update(c_var_t *var, c_var_value_t value)
+{
+        /* Reset theme variables before parsing the theme config */
+        C_var_reset(&i_border);
+        C_var_reset(&i_color);
+        C_var_reset(&i_color_alt);
+        C_var_reset(&i_shadow);
+        R_stock_fonts();
+
+        /* Treat blank as default */
+        if (!value.s[0])
+                C_strncpy_buf(value.s, "default");
+
+        /* Parse the theme configuration file, if there is one */
+        if (!parse_config(value.s))
+                return FALSE;
+        i_theme.value = value;
+
+        /* Reload fonts */
+        R_free_fonts();
+        R_load_fonts();
+
+        /* Update theme assets */
+        theme_configure();
+        I_widget_event(&i_root, I_EV_CONFIGURE);
+        return TRUE;
+}
+
+/******************************************************************************\
+ Convenience function that cleans up and reloads a texture. The [name] argument
+ is the filename of the texture file in the theme directory minus the image
+ format suffix.
+\******************************************************************************/
+void I_theme_texture(r_texture_t **ppt, const char *name)
+{
+        const char *filename;
+
+        R_texture_free(*ppt);
+        if (cleanup_theme)
+                return;
+        *ppt = NULL;
+
+        /* Load the file if it exists, otherwise avoid the warning */
+        filename = C_va("gui/themes/%s/%s.png", i_theme.value.s, name);
+        if (C_file_exists(filename))
+                *ppt = R_texture_load(filename, FALSE);
+
+        /* Try to load default if the selected theme is missing this texture */
+        if (!*ppt) {
+                C_debug("Theme '%s' is missing texture '%s'",
+                        i_theme.value.s, name);
+                filename = C_va("gui/themes/%s/%s.png", i_theme.stock.s, name);
+                *ppt = R_texture_load(filename, FALSE);
+                if (!*ppt)
+                        C_error("Stock texture '%s' is missing", filename);
+        }
 }
 
 /******************************************************************************\
@@ -223,7 +302,7 @@ void I_init(void)
         I_init_ring();
 
         /* Limbo resources */
-        R_sprite_init(&limbo_logo, "gui/logo.png");
+        R_sprite_load(&limbo_logo, "gui/logo.png");
 
         /* Configure all widgets */
         I_widget_event(&i_root, I_EV_CONFIGURE);
@@ -240,6 +319,12 @@ void I_cleanup(void)
 {
         I_widget_event(&i_root, I_EV_CLEANUP);
         R_sprite_cleanup(&limbo_logo);
+
+        /* We reuse the theme function calls to cleanup their textures by
+           setting a special mode */
+        cleanup_theme = TRUE;
+        theme_widgets();
+        cleanup_theme = FALSE;
 }
 
 /******************************************************************************\

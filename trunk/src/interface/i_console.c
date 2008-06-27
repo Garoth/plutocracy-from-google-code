@@ -15,7 +15,16 @@
 static i_label_t label;
 static i_entry_t entry;
 static i_scrollback_t scrollback;
+static r_texture_t *work_area;
 static int cols_max;
+
+/******************************************************************************\
+ Initialize entry widget themeable assets.
+\******************************************************************************/
+void I_theme_scrollbacks(void)
+{
+        I_theme_texture(&work_area, "work_area");
+}
 
 /******************************************************************************\
  Align the scrollback child widgets.
@@ -83,7 +92,7 @@ int I_scrollback_event(i_scrollback_t *sb, i_event_t event)
                 sb->children = 0;
 
                 R_window_cleanup(&sb->window);
-                R_window_init(&sb->window, i_work_area.value.s);
+                R_window_init(&sb->window, work_area);
                 if (!sb->widget.size.y)
                         sb->widget.size.y = (float)
                                             R_font_line_skip(R_FONT_CONSOLE);

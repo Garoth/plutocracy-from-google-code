@@ -49,7 +49,7 @@ void C_register_variables(void)
         C_register_string(&c_log_file, "c_log_file", "",
                           "filename to redirect log output to");
         C_register_integer(&c_log_throttle, "c_log_throttle", 25,
-                           "maximum log messages per second, 0 to disable");
+                           "maximum logs per second, 0 to disable");
         c_log_throttle.edit = C_VE_ANYTIME;
 
         /* FPS cap */

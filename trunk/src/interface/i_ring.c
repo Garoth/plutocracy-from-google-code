@@ -20,10 +20,11 @@
 #define RING_ICON_SIZE 32.f
 
 static i_widget_t ring_widget;
-static r_sprite_t ring_sprite;
-static c_vec2_t screen_origin;
 static i_ring_f callback;
 static i_button_t button_widgets[I_RING_ICONS];
+static r_texture_t *ring_texture;
+static r_sprite_t ring_sprite;
+static c_vec2_t screen_origin;
 static int buttons;
 
 /******************************************************************************\
@@ -70,7 +71,7 @@ static int ring_event(i_widget_t *widget, i_event_t event)
         switch (event) {
         case I_EV_CONFIGURE:
                 R_sprite_cleanup(&ring_sprite);
-                R_sprite_init(&ring_sprite, i_ring.value.s);
+                R_sprite_init(&ring_sprite, ring_texture);
                 ring_widget.size = ring_sprite.size;
                 I_widget_propagate(widget, I_EV_CONFIGURE);
                 position_and_pack();
@@ -205,5 +206,13 @@ void I_add_to_ring(i_ring_icon_t icon, int enabled)
 int I_ring_shown(void)
 {
         return ring_widget.shown;
+}
+
+/******************************************************************************\
+ Initialize themeable ring assets.
+\******************************************************************************/
+void I_theme_ring(void)
+{
+        I_theme_texture(&ring_texture, "ring");
 }
 

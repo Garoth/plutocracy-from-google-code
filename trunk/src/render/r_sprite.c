@@ -16,24 +16,38 @@
 #include "r_common.h"
 
 /******************************************************************************\
- Initialize a sprite structure. 2D mode textures are expected to be at the
- maximum pixel scale (2x).
+ Initialize a sprite structure with a preloaded texture. 2D mode textures are
+ expected to be at the maximum pixel scale (2x).
 \******************************************************************************/
-void R_sprite_init(r_sprite_t *sprite, const char *filename)
+void R_sprite_init(r_sprite_t *sprite, r_texture_t *texture)
 {
         if (!sprite)
                 return;
         C_zero(sprite);
         sprite->modulate = C_color(1., 1., 1., 1.);
+        if (!texture || !texture->surface)
+                return;
+        R_texture_ref(texture);
+        sprite->texture = texture;
+        sprite->size.x = texture->surface->w / R_PIXEL_SCALE_MAX;
+        sprite->size.y = texture->surface->h / R_PIXEL_SCALE_MAX;
+}
+
+/******************************************************************************\
+ Initialize a sprite with an image loaded from disk.
+\******************************************************************************/
+void R_sprite_load(r_sprite_t *sprite, const char *filename)
+{
+        r_texture_t *texture;
+
+        if (!sprite)
+                return;
+        C_zero(sprite);
         if (!filename || !filename[0])
                 return;
-        sprite->texture = R_texture_load(filename, FALSE);
-        if (sprite->texture) {
-                sprite->size.x = sprite->texture->surface->w /
-                                 R_PIXEL_SCALE_MAX;
-                sprite->size.y = sprite->texture->surface->h /
-                                 R_PIXEL_SCALE_MAX;
-        }
+        texture = R_texture_load(filename, FALSE);
+        R_sprite_init(sprite, texture);
+        R_texture_free(texture);
 }
 
 /******************************************************************************\
@@ -344,11 +358,11 @@ void R_text_render(r_text_t *text)
 /******************************************************************************\
  Initializes a window sprite.
 \******************************************************************************/
-void R_window_init(r_window_t *window, const char *path)
+void R_window_init(r_window_t *window, r_texture_t *texture)
 {
         if (!window)
                 return;
-        R_sprite_init(&window->sprite, path);
+        R_sprite_init(&window->sprite, texture);
         window->corner = C_vec2_divf(window->sprite.size, 4.f);
 }
 
@@ -446,11 +460,28 @@ void R_window_render(r_window_t *window)
 /******************************************************************************\
  Initializes a billboard point sprite.
 \******************************************************************************/
-void R_billboard_init(r_billboard_t *bb, const char *filename)
+void R_billboard_init(r_billboard_t *bb, r_texture_t *texture)
 {
-        R_sprite_init(&bb->sprite, filename);
+        R_sprite_init(&bb->sprite, texture);
         bb->size = (bb->sprite.size.x + bb->sprite.size.y) / 2;
         bb->world_origin = C_vec3(0.f, 0.f, 0.f);
+}
+
+/******************************************************************************\
+ Initialize a billboard point sprite with an image loaded from disk.
+\******************************************************************************/
+void R_billboard_load(r_billboard_t *bb, const char *filename)
+{
+        r_texture_t *texture;
+
+        if (!bb)
+                return;
+        C_zero(bb);
+        if (!filename || !filename[0])
+                return;
+        texture = R_texture_load(filename, FALSE);
+        R_billboard_init(bb, texture);
+        R_texture_free(texture);
 }
 
 /******************************************************************************\

@@ -55,9 +55,9 @@ void C_print(const char *string)
 {
         if (!c_log_func || c_log_mode != C_LM_NORMAL)
                 return;
-        c_log_mode = C_LM_HANDLER;
+        c_log_mode = C_LM_NO_FUNC;
         c_log_func(C_LOG_PRINT, 0, string);
-        if (c_log_mode == C_LM_HANDLER)
+        if (c_log_mode == C_LM_NO_FUNC)
                 c_log_mode = C_LM_NORMAL;
 }
 
@@ -209,10 +209,10 @@ void C_log(c_log_level_t level, const char *file, int line,
                 abort();
         if (c_log_mode != C_LM_NORMAL)
                 return;
-        c_log_mode = C_LM_HANDLER;
+        c_log_mode = C_LM_NO_FUNC;
         if (c_log_func)
                 c_log_func(level, margin, buffer);
-        if (c_log_mode == C_LM_HANDLER)
+        if (c_log_mode == C_LM_NO_FUNC)
                 c_log_mode = C_LM_NORMAL;
 }
 
