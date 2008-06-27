@@ -12,6 +12,16 @@
 
 #include "i_common.h"
 
+static r_texture_t *work_area;
+
+/******************************************************************************\
+ Initialize entry widget themeable assets.
+\******************************************************************************/
+void I_theme_entries(void)
+{
+        I_theme_texture(&work_area, "work_area");
+}
+
 /******************************************************************************\
  Set the entry widget cursor position.
 \******************************************************************************/
@@ -199,8 +209,9 @@ static void entry_auto_complete(i_entry_t *entry)
         int pos_i, swap, prehead_chars, head_chars, tail_len,
             token_len, token_chars;
 
-        if (!entry->auto_complete)
+        if (!entry->auto_complete || entry->just_tabbed)
                 return;
+        entry->just_tabbed = TRUE;
         pos_i = C_utf8_index(entry->buffer, entry->pos);
 
         /* Isolate and lookup the token we are trying to complete */
@@ -225,8 +236,15 @@ static void entry_auto_complete(i_entry_t *entry)
 
         /* Add the returned string to the end of the current token */
         token_len = C_utf8_strlen(token, &token_chars);
-        if (token[token_len - 1] == ' ' && *tail == ' ')
-                token_len--;
+        if (token[token_len - 1] == ' ') {
+                if (*tail == ' ')
+                        token_len--;
+
+                /* This is for pressing tab after a complete token, you then
+                   move to the start of a new token and get a different list
+                   for tab completion */
+                entry->just_tabbed = FALSE;
+        }
         tail_len = C_strlen(tail);
         if (tail + token_len + tail_len > entry->buffer +
                                           sizeof (entry->buffer))
@@ -256,7 +274,7 @@ int I_entry_event(i_entry_t *entry, i_event_t event)
 
                 /* Setup work area window */
                 R_window_cleanup(&entry->window);
-                R_window_init(&entry->window, i_work_area.value.s);
+                R_window_init(&entry->window, work_area);
                 entry->window.sprite.size = entry->widget.size;
 
         case I_EV_MOVED:
@@ -287,10 +305,12 @@ int I_entry_event(i_entry_t *entry, i_event_t event)
                 else if (i_key == SDLK_RETURN && entry->on_enter) {
                         entry_history_save(entry);
                         entry->on_enter(entry);
-                } else if (i_key == SDLK_TAB)
+                } else if (i_key == SDLK_TAB) {
                         entry_auto_complete(entry);
-                else if (i_key >= ' ' && i_key_unicode)
+                        break;
+                } else if (i_key >= ' ' && i_key_unicode)
                         entry_insert(entry, i_key_unicode);
+                entry->just_tabbed = FALSE;
                 break;
         case I_EV_RENDER:
                 entry->window.sprite.modulate.a = entry->widget.fade;

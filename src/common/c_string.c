@@ -498,3 +498,28 @@ void C_cleanup_lang(void)
                 C_free(translations[i].value);
 }
 
+/******************************************************************************\
+ Returns TRUE if the string contains path-modifying characters such as slashes
+ and lone or double dots.
+\******************************************************************************/
+int C_is_path(const char *s)
+{
+        if (!s)
+                return FALSE;
+
+        /* Single dot */
+        if (!s[1] && s[0] == '.')
+                return TRUE;
+
+        /* Double dot */
+        if (!s[2] && s[1] == '.' && s[0] == '.')
+                return TRUE;
+
+        /* Scan for POSIX or Windows slashes */
+        for (; *s; s++)
+                if (*s == '/' || *s == '\\')
+                        return TRUE;
+
+        return FALSE;
+}
+

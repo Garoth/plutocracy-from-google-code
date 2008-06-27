@@ -126,6 +126,10 @@ int R_font_line_skip(r_font_t);
 c_vec2_t R_font_size(r_font_t, const char *);
 int R_font_width(r_font_t);
 void R_load_fonts(void);
+void R_stock_fonts(void);
+#define R_texture_free(t) C_ref_down((c_ref_t *)(t))
+r_texture_t *R_texture_load(const char *filename, int mipmaps);
+#define R_texture_ref(t) C_ref_up((c_ref_t *)(t))
 
 /* r_camera.c */
 void R_move_cam_by(c_vec2_t);
@@ -181,12 +185,14 @@ void R_adjust_light_for(c_vec3_t origin);
 
 /* r_sprite.c */
 #define R_billboard_cleanup(p) R_sprite_cleanup(&(p)->sprite)
-void R_billboard_init(r_billboard_t *, const char *filename);
+void R_billboard_init(r_billboard_t *, r_texture_t *);
+void R_billboard_load(r_billboard_t *, const char *);
 void R_billboard_render(r_billboard_t *);
 void R_sprite_cleanup(r_sprite_t *);
-void R_sprite_init(r_sprite_t *, const char *filename);
+void R_sprite_init(r_sprite_t *, r_texture_t *);
 void R_sprite_init_text(r_sprite_t *, r_font_t, float wrap, float shadow,
                         int invert, const char *text);
+void R_sprite_load(r_sprite_t *, const char *filename);
 void R_sprite_render(const r_sprite_t *);
 #define R_text_init(t) C_zero(t)
 void R_text_configure(r_text_t *, r_font_t, float wrap, float shadow,
@@ -194,7 +200,7 @@ void R_text_configure(r_text_t *, r_font_t, float wrap, float shadow,
 #define R_text_cleanup(t) R_sprite_cleanup(&(t)->sprite)
 void R_text_render(r_text_t *);
 #define R_window_cleanup(w) R_sprite_cleanup(&(w)->sprite)
-void R_window_init(r_window_t *, const char *filename);
+void R_window_init(r_window_t *, r_texture_t *);
 void R_window_render(r_window_t *);
 
 /* r_tests.c */

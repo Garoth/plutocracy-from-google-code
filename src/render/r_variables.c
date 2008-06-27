@@ -134,7 +134,8 @@ void R_register_variables(void)
         C_register_integer(&r_font_console_pt, "r_font_console_pt", 12,
                            "size of console font in points");
         r_font_console_pt.archive = FALSE;
-        C_register_string(&r_font_gui, "r_font_gui", "gui/fonts/DejaVuSans.ttf",
+        C_register_string(&r_font_gui, "r_font_gui",
+                          "gui/fonts/DejaVuSans-Bold.ttf",
                           "path to GUI font TTF file");
         r_font_gui.archive = FALSE;
         C_register_integer(&r_font_gui_pt, "r_font_gui_pt", 12,

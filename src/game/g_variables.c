@@ -37,7 +37,7 @@ void G_register_variables(void)
         C_register_integer(&g_globe_subdiv4, "g_globe_subdiv4", 4,
                            "globe subdivision iterations, 0-5");
         C_register_integer(&g_globe_islands, "g_globe_islands", 0,
-                           "number of islands on the globe, 0 for default");
+                           "number of islands, 0 for default");
         C_register_integer(&g_globe_island_size, "g_globe_island_size", 0,
                            "maximum size of islands, 0 for default");
 }

@@ -14,6 +14,17 @@
 
 #include "i_common.h"
 
+static r_texture_t *decoration, *hanger;
+
+/******************************************************************************\
+ Initialize themeable window assets.
+\******************************************************************************/
+void I_theme_windows(void)
+{
+        I_theme_texture(&decoration, "window");
+        I_theme_texture(&hanger, "hanger");
+}
+
 /******************************************************************************\
  Window widget event function.
 \******************************************************************************/
@@ -32,11 +43,11 @@ static int window_event(i_window_t *window, i_event_t event)
                 I_widget_pack(&window->widget, window->pack_children,
                               window->fit);
                 if (window->decorated) {
-                        R_window_init(&window->window, i_window.value.s);
+                        R_window_init(&window->window, decoration);
                         window->window.sprite.origin = window->widget.origin;
                         window->window.sprite.size = window->widget.size;
                         R_sprite_cleanup(&window->hanger);
-                        R_sprite_init(&window->hanger, i_hanger.value.s);
+                        R_sprite_init(&window->hanger, hanger);
                         window->hanger.origin.y = window->widget.origin.y +
                                                   window->widget.size.y;
                         window->hanger.size.y = (float)i_border.value.n;

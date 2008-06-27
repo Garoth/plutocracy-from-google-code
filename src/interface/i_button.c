@@ -14,6 +14,26 @@
 
 #include "i_common.h"
 
+static r_texture_t *decor_normal, *decor_hover, *decor_active,
+                   *round_hover, *round_active, *square_hover, *square_active;
+
+/******************************************************************************\
+ Called when the button theme assets need to be initialized.
+\******************************************************************************/
+void I_theme_buttons(void)
+{
+        /* Decorated buttons */
+        I_theme_texture(&decor_normal, "button");
+        I_theme_texture(&decor_hover, "button_hover");
+        I_theme_texture(&decor_active, "button_active");
+
+        /* Icon buttons */
+        I_theme_texture(&round_hover, "round_hover");
+        I_theme_texture(&round_active, "round_active");
+        I_theme_texture(&square_hover, "square_hover");
+        I_theme_texture(&square_active, "square_active");
+}
+
 /******************************************************************************\
  Button widget event function.
 \******************************************************************************/
@@ -32,19 +52,15 @@ int I_button_event(i_button_t *button, i_event_t event)
                 R_sprite_cleanup(&button->icon_active);
                 R_sprite_cleanup(&button->icon_hover);
                 if (button->type == I_BT_DECORATED) {
-                        R_window_init(&button->normal, i_button.value.s);
-                        R_window_init(&button->hover, i_button_hover.value.s);
-                        R_window_init(&button->active, i_button_active.value.s);
+                        R_window_init(&button->normal, decor_normal);
+                        R_window_init(&button->hover, decor_hover);
+                        R_window_init(&button->active, decor_active);
                 } else if (button->type == I_BT_SQUARE) {
-                        R_sprite_init(&button->icon_active,
-                                      i_square_active.value.s);
-                        R_sprite_init(&button->icon_hover,
-                                      i_square_hover.value.s);
+                        R_sprite_init(&button->icon_active, square_active);
+                        R_sprite_init(&button->icon_hover, square_hover);
                 } else if (button->type == I_BT_ROUND) {
-                        R_sprite_init(&button->icon_active,
-                                      i_round_active.value.s);
-                        R_sprite_init(&button->icon_hover,
-                                      i_round_hover.value.s);
+                        R_sprite_init(&button->icon_active, round_active);
+                        R_sprite_init(&button->icon_hover, round_hover);
                 } else
                         C_error("Invalid button type %d", button->type);
 
@@ -198,7 +214,7 @@ void I_button_configure(i_button_t *button, const char *icon, const char *text,
                         i_button_type_t type)
 {
         button->type = type;
-        R_sprite_init(&button->icon, icon);
+        R_sprite_load(&button->icon, icon);
         C_strncpy_buf(button->buffer, text);
         I_widget_event(&button->widget, I_EV_CONFIGURE);
 }
@@ -217,7 +233,7 @@ void I_button_init(i_button_t *button, const char *icon, const char *text,
         button->widget.clickable = TRUE;
         button->on_click = NULL;
         button->type = type;
-        R_sprite_init(&button->icon, icon);
+        R_sprite_load(&button->icon, icon);
         C_strncpy_buf(button->buffer, text);
 }
 

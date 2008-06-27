@@ -210,8 +210,6 @@ static void init_sdl(void)
 \******************************************************************************/
 int main(int argc, char *argv[])
 {
-        const char *autoexec;
-
         /* Use the cleanup function instead of lots of atexit() calls to
            control the order of cleanup */
         atexit(cleanup);
@@ -224,9 +222,7 @@ int main(int argc, char *argv[])
 
         /* Parse configuration scripts and open the log file */
         C_parse_config_file(C_va("%s/autogen.cfg", C_user_dir()));
-        autoexec = C_va("%s/autoexec.cfg", C_user_dir());
-        if (C_file_exists(autoexec))
-                C_parse_config_file(autoexec);
+        C_parse_config_file(C_va("%s/autoexec.cfg", C_user_dir()));
         parse_config_args(argc, argv);
         I_parse_config();
         C_open_log_file();

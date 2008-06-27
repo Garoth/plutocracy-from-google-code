@@ -48,6 +48,7 @@ static int test_model_update(c_var_t *var, c_var_value_t value)
 \******************************************************************************/
 static int test_sprite_update(c_var_t *var, c_var_value_t value)
 {
+        r_texture_t *texture;
         int i;
 
         /* Cleanup old sprites */
@@ -65,16 +66,18 @@ static int test_sprite_update(c_var_t *var, c_var_value_t value)
         C_rand_seed((unsigned int)time(NULL));
         test_sprites = C_malloc(r_test_sprite_num.value.n *
                                 sizeof (*test_sprites));
+        texture = R_texture_load(r_test_sprite.value.s, TRUE);
         for (i = 0; i < r_test_sprite_num.value.n; i++) {
                 c_vec3_t origin;
 
-                R_billboard_init(test_sprites + i, r_test_sprite.value.s);
+                R_billboard_init(test_sprites + i, texture);
                 origin = C_vec3(r_globe_radius * (C_rand_real() - 0.5f),
                                 r_globe_radius * (C_rand_real() - 0.5f),
                                 r_globe_radius + 3.f);
                 test_sprites[i].world_origin = origin;
                 test_sprites[i].sprite.angle = C_rand_real();
         }
+        R_texture_free(texture);
 
         return TRUE;
 }

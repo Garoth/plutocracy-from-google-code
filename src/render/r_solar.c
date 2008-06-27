@@ -62,8 +62,8 @@ void R_init_solar(void)
         }
 
         /* Load solar object sprites */
-        R_billboard_init(&moon, "models/solar/moon.png");
-        R_billboard_init(&sun, "models/solar/sun.png");
+        R_billboard_load(&moon, "models/solar/moon.png");
+        R_billboard_load(&sun, "models/solar/sun.png");
 
         /* Sky is just a model */
         R_model_init(&sky, "models/solar/sky.plum");

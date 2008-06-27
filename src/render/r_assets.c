@@ -394,6 +394,8 @@ c_vec2_t R_font_size(r_font_t font, const char *text)
 {
         int w, h;
 
+        if (!fonts[font].ttf_font)
+                return C_vec2(0.f, 0.f);
         TTF_SizeUTF8(fonts[font].ttf_font, text, &w, &h);
         return C_vec2((float)w, (float)h);
 }
@@ -422,7 +424,7 @@ SDL_Surface *R_font_render(r_font_t font, const char *text)
  of the image height returned by TTF_RenderUTF8_Blended() so we account for
  that here.
 \******************************************************************************/
-static void load_font(r_font_t font, const char *path, int size)
+static void load_font(r_font_t font, c_var_t *var, int size)
 {
         int points;
 
@@ -430,11 +432,17 @@ static void load_font(r_font_t font, const char *path, int size)
         if (points < R_FONT_SIZE_MIN)
                 points = R_FONT_SIZE_MIN;
         C_zero(fonts + font);
-        fonts[font].ttf_font = TTF_OpenFont(path, points);
+        fonts[font].ttf_font = TTF_OpenFont(var->value.s, points);
         if (!fonts[font].ttf_font) {
                 C_warning("Failed to load font '%s' (%d -> %d pt)",
-                          path, size, points);
-                return;
+                          var->value.s, size, points);
+
+                /* Fallback to the stock font file */
+                fonts[font].ttf_font = TTF_OpenFont(var->stock.s, points);
+                if (!fonts[font].ttf_font)
+                        C_error("Failed to load font '%s' (%d -> %d pt) and "
+                                "stock font '%s'", var->value.s, size, points,
+                                var->stock.s);
         }
         fonts[font].height = TTF_FontHeight(fonts[font].ttf_font);
         fonts[font].line_skip = TTF_FontLineSkip(fonts[font].ttf_font) + 1;
@@ -442,6 +450,19 @@ static void load_font(r_font_t font, const char *path, int size)
         /* SDL_ttf won't tell us the width of the widest glyph directly so we
            assume it is the width of 'W' */
         fonts[font].width = (int)R_font_size(font, "W").x;
+}
+
+/******************************************************************************\
+ Reset font variables to stock values.
+\******************************************************************************/
+void R_stock_fonts(void)
+{
+        C_var_reset(&r_font_console);
+        C_var_reset(&r_font_console_pt);
+        C_var_reset(&r_font_gui);
+        C_var_reset(&r_font_gui_pt);
+        C_var_reset(&r_font_title);
+        C_var_reset(&r_font_title_pt);
 }
 
 /******************************************************************************\
@@ -455,6 +476,9 @@ void R_load_fonts(void)
         if (!ttf_inited)
                 return;
 
+        /* We can't print to the graphic console if our fonts aren't loaded */
+        c_log_mode = C_LM_NO_FUNC;
+
         /* Get the locale font override, if any */
         override = C_str("r-font-override", "");
         if (override[0]) {
@@ -466,22 +490,25 @@ void R_load_fonts(void)
         /* Console font */
         C_var_unlatch(&r_font_console);
         C_var_unlatch(&r_font_console_pt);
-        load_font(R_FONT_CONSOLE, r_font_console.value.s,
-                  r_font_console_pt.value.n);
+        load_font(R_FONT_CONSOLE, &r_font_console, r_font_console_pt.value.n);
 
         /* GUI font */
         C_var_unlatch(&r_font_gui);
         C_var_unlatch(&r_font_gui_pt);
-        load_font(R_FONT_GUI, r_font_gui.value.s, r_font_gui_pt.value.n);
+        load_font(R_FONT_GUI, &r_font_gui, r_font_gui_pt.value.n);
 
         /* Title font */
         C_var_unlatch(&r_font_title);
         C_var_unlatch(&r_font_title_pt);
-        load_font(R_FONT_TITLE, r_font_title.value.s, r_font_title_pt.value.n);
+        load_font(R_FONT_TITLE, &r_font_title, r_font_title_pt.value.n);
 
+        /* You didn't forget a font, did you? */
         for (i = 0; i < R_FONTS; i++)
                 if (!fonts[i].ttf_font)
                         C_error("Forgot to load font %d", i + 1);
+
+        /* We can print to the graphic console again */
+        c_log_mode = C_LM_NORMAL;
 }
 
 /******************************************************************************\

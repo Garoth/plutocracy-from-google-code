@@ -131,7 +131,7 @@ typedef enum {
 /* Log modes */
 typedef enum {
         C_LM_NORMAL,
-        C_LM_HANDLER,
+        C_LM_NO_FUNC,
         C_LM_CLEANUP,
 } c_log_mode_t;
 
@@ -331,6 +331,7 @@ char *C_escape_string(const char *);
 unsigned int C_hash_djb2(const char *);
 void C_init_lang(void);
 #define C_is_digit(c) (((c) >= '0' && (c) <= '9') || (c) == '.' || (c) == '-')
+int C_is_path(const char *);
 #define C_is_print(c) ((c) > 0 && (c) < 0x7f)
 #define C_is_space(c) ((c) > 0 && (c) <= ' ')
 char *C_skip_spaces(const char *str);
@@ -382,6 +383,7 @@ void C_register_variables(void);
 void C_reset_unsafe_vars(void);
 c_var_t *C_resolve_var(const char *name);
 void C_translate_vars(void);
+#define C_var_reset(v) ((v)->value = (v)->stock)
 void C_var_set(c_var_t *, const char *value);
 int C_var_unlatch(c_var_t *);
 #define C_var_update(v, u) C_var_update_data(v, u, NULL)

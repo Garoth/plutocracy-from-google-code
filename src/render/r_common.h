@@ -97,9 +97,6 @@ r_texture_t *R_texture_alloc_full(const char *file, int line, const char *func,
                                                 __func__, t)
 r_texture_t *R_texture_clone_full(const char *file, int line, const char *func,
                                   const r_texture_t *);
-#define R_texture_free(t) C_ref_down((c_ref_t *)(t))
-r_texture_t *R_texture_load(const char *filename, int mipmaps);
-#define R_texture_ref(t) C_ref_up((c_ref_t *)(t))
 void R_texture_render(r_texture_t *, int x, int y);
 int R_texture_save(const r_texture_t *, const char *filename);
 void R_texture_screenshot(r_texture_t *, int x, int y);
