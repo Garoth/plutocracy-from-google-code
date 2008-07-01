@@ -357,7 +357,20 @@ static void prerender_transitions(void)
 \******************************************************************************/
 void R_prerender(void)
 {
+        r_texture_t *generated_tex;
+
         C_status("Pre-rendering textures");
+
+        /* Check if we have a cached version of the finished texture */
+        generated_tex = R_texture_load("models/globe/terrain_full.png", TRUE);
+        if (generated_tex) {
+                R_texture_free(r_terrain_tex);
+                r_terrain_tex = generated_tex;
+                C_debug("Using existing terrain texture");
+                return;
+        }
+        C_debug("Generating terrain texture");
+
         C_var_unlatch(&r_test_prerender);
 
         /* Initialize with a custom 2D mode */
@@ -398,6 +411,12 @@ void R_prerender(void)
 
         prerender_tiles();
         prerender_transitions();
+
+        /* Save the resulting terrain texture */
+        if (R_surface_save(r_terrain_tex->surface,
+                           "models/globe/terrain_full.png"))
+                C_debug("Saved generated texture");
+
         r_mode_hold = FALSE;
 }
 

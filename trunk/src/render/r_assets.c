@@ -72,8 +72,8 @@ static void texture_check_npot(r_texture_t *pt)
         pt->not_pow2 = TRUE;
         if (r_ext.npot_textures)
                 return;
-        C_warning("Texture '%s' not power-of-two: %dx%d",
-                  pt->ref.name, pt->surface->w, pt->surface->h);
+        C_trace("Texture '%s' not power-of-two: %dx%d",
+                 pt->ref.name, pt->surface->w, pt->surface->h);
 }
 
 /*****************************************************************************\
@@ -96,9 +96,6 @@ r_texture_t *R_texture_alloc_full(const char *file, int line, const char *func,
         pt->ref.refs = 1;
         pt->ref.cleanup_func = (c_ref_cleanup_f)texture_cleanup;
 
-        /* Check if texture is power-of-two */
-        texture_check_npot(pt);
-
         /* Add texture to the allocated textures linked list */
         if (root_alloc) {
                 pt->ref.next = root_alloc;
@@ -119,6 +116,9 @@ r_texture_t *R_texture_alloc_full(const char *file, int line, const char *func,
         rect.w = width;
         rect.h = height;
         SDL_FillRect(pt->surface, &rect, 0);
+
+        /* Check if texture is power-of-two */
+        texture_check_npot(pt);
 
         /* Give the texture a unique OpenGL name */
         glGenTextures(1, &pt->gl_name);
@@ -299,7 +299,8 @@ r_texture_t *R_texture_load(const char *filename, int mipmaps)
 \******************************************************************************/
 void R_texture_select(r_texture_t *texture)
 {
-        if (!texture) {
+        if (!texture || !r_textures.value.n ||
+            (r_textures.value.n == 2 && texture->not_pow2)) {
                 glDisable(GL_TEXTURE_2D);
                 glBindTexture(GL_TEXTURE_2D, 0);
                 glDisable(GL_BLEND);
@@ -583,6 +584,8 @@ void R_load_assets(void)
         /* Generate procedural content */
         r_terrain_tex = R_texture_load("models/globe/terrain.png", TRUE);
         R_prerender();
+        if (!r_terrain_tex)
+                C_error("Failed to load terrain texture");
 
         /* Create a fake white texture */
         r_white_tex = R_texture_alloc(1, 1, FALSE);

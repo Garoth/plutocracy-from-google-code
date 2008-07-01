@@ -14,7 +14,9 @@
 
 #include "c_shared.h"
 #include <errno.h>
+#include <sys/types.h>
 #include <sys/stat.h>
+#include <unistd.h>
 
 /******************************************************************************\
  Creates directory if it does not already exist. Returns TRUE if the directory
@@ -46,5 +48,18 @@ const char *C_user_dir(void)
                 C_mkdir(user_dir);
         }
         return user_dir;
+}
+
+/******************************************************************************\
+ Returns the last time that [filename] was modified. Returns negative if an
+ error occurred.
+\******************************************************************************/
+int C_modified_time(const char *filename)
+{
+        struct stat s;
+
+        if (stat(filename, &s))
+                return -1;
+        return (int)s.st_mtime;
 }
 

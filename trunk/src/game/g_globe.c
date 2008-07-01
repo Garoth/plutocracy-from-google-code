@@ -475,6 +475,9 @@ static void test_ring_callback(i_ring_icon_t icon)
 \******************************************************************************/
 void G_mouse_ray_miss(void)
 {
+        if (selected_tile < 0)
+                return;
+        g_tiles[selected_tile].model.selected = FALSE;
         R_select_tile(selected_tile = -1);
 }
 
