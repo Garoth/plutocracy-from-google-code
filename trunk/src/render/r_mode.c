@@ -297,6 +297,15 @@ static void check_gl_extensions(void)
                 }
         } else
                 C_warning("Vertex buffer objects not supported");
+
+        /* Full support for non-power-of-two textures */
+        if (check_extension("GL_ARB_texture_non_power_of_two")) {
+                r_ext.npot_textures = TRUE;
+                C_debug("Non-power-of-two textures supported");
+        } else {
+                r_ext.npot_textures = FALSE;
+                C_warning("Non-power-of-two textures not supported");
+        }
 }
 
 /******************************************************************************\

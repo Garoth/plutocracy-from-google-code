@@ -54,7 +54,7 @@ struct r_texture {
         SDL_Surface *surface;
         GLuint gl_name;
         float anisotropy;
-        int alpha, mipmaps, additive;
+        int alpha, mipmaps, additive, not_pow2;
 };
 
 /* Render modes */
@@ -73,7 +73,7 @@ typedef struct r_ext {
         PFNGLACTIVETEXTUREPROC glActiveTexture;
         GLfloat anisotropy;
         GLint multitexture;
-        int point_sprites, vertex_buffers;
+        int point_sprites, vertex_buffers, npot_textures;
 } r_ext_t;
 
 /* Wrapper for vertex buffer objects */
