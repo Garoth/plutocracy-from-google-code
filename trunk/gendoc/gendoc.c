@@ -24,7 +24,7 @@ static int is_type(const char *token)
 {
         const char **type, *types[] = {"signed", "unsigned", "char", "int",
                                        "short", "long", "float", "single",
-                                       "double", "size_t", NULL};
+                                       "double", "size_t", "const", NULL};
 
         for (type = types; *type; type++)
                 if (!strcmp(token, *type))
@@ -258,7 +258,7 @@ static void output_header(const char *filename)
 static void output_html(const char *title, const char *header)
 {
         /* Header */
-        fprintf(d_file, 
+        fprintf(d_file,
                 "<html>\n"
                 "<head>\n"
                 "<link rel=StyleSheet href=\"gendoc.css\" type=\"text/css\">\n"
@@ -276,7 +276,7 @@ static void output_html(const char *title, const char *header)
                 "</script>\n"
                 "<body>\n", title);
         output_header(header);
-        fprintf(d_file, 
+        fprintf(d_file,
                "<div class=\"menu\">\n"
                "<a href=\"#Definitions\">Definitions</a> |\n"
                "<a href=\"#Types\">Types</a> |\n"
@@ -322,10 +322,13 @@ int main(int argc, char *argv[])
         /* Somebody didn't read directions */
         if (argc < 2) {
                 fprintf(stderr,
-                        "Usage: gendoc [input headers] [input sources]\n"
+                        "Usage: gendoc [--title TITLE] [--file OUTPUT] "
+                                      "[--header FILE] [input headers] "
+                                      "[input sources]\n"
                         "You shouldn't need to run this program directly, "
-                        "running 'make' should automatically "
-                        "run this with the correct arguments.\n");
+                        "running 'scons gendoc' from the root directory "
+                        "should automatically run GenDoc with the correct "
+                        "arguments.\n");
                 return 1;
         }
 
@@ -344,8 +347,8 @@ int main(int argc, char *argv[])
                 else if (!strcmp(argv[i], "--file") && i < argc - 1) {
                         d_file = fopen(argv[++i], "w");
                         if (!d_file) {
-                                fprintf(stderr, 
-                                        "Failed to open output file %s", 
+                                fprintf(stderr,
+                                        "Failed to open output file %s",
                                         argv[i]);
                                 return 1;
                         }

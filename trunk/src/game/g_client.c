@@ -13,12 +13,25 @@
 #include "g_common.h"
 
 /******************************************************************************\
- Host a new game.
+ Leave the current game.
 \******************************************************************************/
-void G_host_game(void)
+void G_quit_game(void)
 {
-        g_globe_seed.value.n = (int)time(NULL);
-        G_generate_globe();
-        I_popup(I_PI_NONE, "Hosted a new game.", NULL);
+        I_popup(I_PI_NONE, "Left the current game.", NULL);
+}
+
+/******************************************************************************\
+ Change the player's nation.
+\******************************************************************************/
+void G_change_nation(int index)
+{
+        if (index == 0)
+                I_popup(I_PI_NONE, "Joined the Ruby nation.", NULL);
+        else if (index == 1)
+                I_popup(I_PI_NONE, "Joined the Emerald nation.", NULL);
+        else if (index == 2)
+                I_popup(I_PI_NONE, "Joined the Sapphire nation.", NULL);
+        else if (index == 3)
+                I_popup(I_PI_NONE, "Became a pirate.", NULL);
 }
 

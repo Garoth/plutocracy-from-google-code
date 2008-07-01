@@ -271,13 +271,32 @@ static int parse_comment(void)
                 return FALSE;
         read_ch();
         if (cur_ch == '*') {
-                int i, end;
+                int i, end, long_comment;
 
-                while (cur_ch == '*' || cur_ch == '\\')
+                while (cur_ch == '*')
                         read_ch();
+
+                /* Style-guide long comments always end in backslash */
+                if ((long_comment = cur_ch == '\\'))
+                        read_ch();
+
                 for (end = i = 0; i < sizeof (comment) && cur_ch != EOF; i++) {
                         if (cur_ch == '/' && last_ch == '*')
                                 break;
+
+                        /* Short comments need two spaces trimmed from the start
+                           of every line to align correctly */
+                        if (cur_ch == '\n' && !long_comment) {
+                                comment[i] = '\n';
+                                read_ch();
+                                if (cur_ch == ' ') {
+                                        read_ch();
+                                        if (cur_ch == ' ')
+                                                read_ch();
+                                }
+                                continue;
+                        }
+
                         comment[i] = cur_ch;
                         if (cur_ch != '*' && cur_ch != '\\')
                                 end = i;

@@ -21,6 +21,8 @@ void G_render_globe(void);
 
 /* g_host.c */
 void G_host_game(void);
+void G_quit_game(void);
+void G_change_nation(int index);
 
 /* g_variables.c */
 void G_register_variables(void);

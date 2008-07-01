@@ -98,7 +98,6 @@ r_texture_t *R_texture_alloc_full(const char *file, int line, const char *func,
 r_texture_t *R_texture_clone_full(const char *file, int line, const char *func,
                                   const r_texture_t *);
 void R_texture_render(r_texture_t *, int x, int y);
-int R_texture_save(const r_texture_t *, const char *filename);
 void R_texture_screenshot(r_texture_t *, int x, int y);
 void R_texture_select(r_texture_t *);
 void R_texture_upload(const r_texture_t *);
@@ -108,7 +107,7 @@ void R_vbo_init(r_vbo_t *, void *vertices, int vertices_len, int vertex_size,
 void R_vbo_render(r_vbo_t *);
 void R_vbo_update(r_vbo_t *);
 
-extern r_texture_t *r_terrain_tex, *r_select_model_tex, *r_white_tex;
+extern r_texture_t *r_terrain_tex, *r_white_tex;
 extern SDL_PixelFormat r_sdl_format;
 extern int r_video_mem, r_video_mem_high;
 
@@ -163,7 +162,6 @@ SDL_Surface *R_surface_load_png(const char *filename, int *alpha);
 void R_surface_mask(SDL_Surface *dest, SDL_Surface *src);
 void R_surface_put(SDL_Surface *, int x, int y, c_color_t);
 int R_surface_save(SDL_Surface *, const char *filename);
-void R_surface_stats(void);
 
 /* r_test.c */
 void R_render_normals(int count, c_vec3_t *co, c_vec3_t *no, int stride);

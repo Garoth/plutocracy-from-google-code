@@ -54,7 +54,11 @@ void D_entry_add(const entry_t *current, entry_t **root)
                 if (cmp < 0)
                         break;
                 else if (!cmp) {
+                        entry_t *next;
+
+                        next = cur->next;
                         *cur = *current;
+                        cur->next = next;
                         return;
                 }
                 prev = cur;

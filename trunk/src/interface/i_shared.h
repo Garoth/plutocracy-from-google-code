@@ -23,6 +23,11 @@ typedef enum {
         I_RING_ICONS,
 } i_ring_icon_t;
 
+/* Popup icons */
+typedef enum {
+        I_PI_NONE,
+} i_popup_icon_t;
+
 /* Ring callback function */
 typedef void (*i_ring_f)(i_ring_icon_t);
 
@@ -42,4 +47,7 @@ void I_show_ring(i_ring_f callback);
 
 /* i_variables.c */
 void I_register_variables(void);
+
+/* i_window.c */
+void I_popup(i_popup_icon_t, const char *message, c_vec3_t *goto_pos);
 

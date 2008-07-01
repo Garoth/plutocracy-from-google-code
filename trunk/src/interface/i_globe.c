@@ -112,7 +112,16 @@ static void grab_globe(int x, int y)
 \******************************************************************************/
 static void release_globe(void)
 {
+        c_vec3_t direction;
+
         grabbing = FALSE;
+        if (i_mouse_focus != &i_root)
+                return;
+
+        /* After a mouse grab is released, we need to scan for selection */
+        direction = screen_ray(i_mouse_x, i_mouse_y);
+        direction = R_rotate_to_cam(direction);
+        G_mouse_ray(r_cam_origin, direction);
 }
 
 /******************************************************************************\

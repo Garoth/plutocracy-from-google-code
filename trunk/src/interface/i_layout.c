@@ -152,10 +152,6 @@ static int parse_config(const char *name)
                 return FALSE;
         }
 
-        /* Reset blank theme name to default */
-        if (!name[0])
-                name = "default";
-
         filename = C_va("gui/themes/%s/theme.cfg", name);
         if (!C_parse_config_file(filename)) {
                 C_warning("Failed to parse theme config '%s'", filename);
@@ -170,8 +166,16 @@ static int parse_config(const char *name)
 void I_parse_config(void)
 {
         C_var_unlatch(&i_theme);
-        if (!parse_config(i_theme.value.s))
+
+        /* Blank theme is equivalent to 'default' */
+        if (!i_theme.value.s[0])
                 i_theme.value = i_theme.stock;
+
+        /* Parse the configured config or fallback to stock */
+        if (!parse_config(i_theme.value.s)) {
+                i_theme.value = i_theme.stock;
+                parse_config(i_theme.stock.s);
+        }
 }
 
 /******************************************************************************\
@@ -298,8 +302,9 @@ void I_init(void)
         i_theme.update = (c_var_update_f)theme_update;
         i_theme.edit = C_VE_FUNCTION;
 
-        /* Create ring widgets */
+        /* Initialize special child widgets */
         I_init_ring();
+        I_init_popup();
 
         /* Limbo resources */
         R_sprite_load(&limbo_logo, "gui/logo.png");
@@ -340,6 +345,9 @@ void I_render(void)
                 I_widget_event(&i_root, I_EV_CONFIGURE);
                 layout_frame = c_frame;
         }
+
+        /* Popup message might have changed */
+        I_update_popup();
 
         I_widget_event(&i_root, I_EV_RENDER);
 }
