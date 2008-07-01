@@ -14,14 +14,34 @@
 
 #include "i_common.h"
 
-static r_texture_t *decoration, *hanger;
+/* Time in milliseconds that the popup widget will remain shown */
+#define POPUP_TIME 3000
+
+/* Maximum number of popup messages in the queue */
+#define POPUP_MESSAGES_MAX 8
+
+/* Type for queued popup messages */
+typedef struct popup_message {
+        i_popup_icon_t icon;
+        c_vec3_t goto_pos;
+        int has_goto_pos;
+        char message[128];
+} popup_message_t;
+
+static popup_message_t popup_messages[POPUP_MESSAGES_MAX];
+static i_label_t popup_label;
+static i_widget_t popup_widget;
+static r_window_t popup_window;
+static r_texture_t *decor_window, *hanger, *decor_popup;
+static int popup_mouse_time;
 
 /******************************************************************************\
  Initialize themeable window assets.
 \******************************************************************************/
 void I_theme_windows(void)
 {
-        I_theme_texture(&decoration, "window");
+        I_theme_texture(&decor_window, "window");
+        I_theme_texture(&decor_popup, "popup");
         I_theme_texture(&hanger, "hanger");
 }
 
@@ -43,7 +63,7 @@ static int window_event(i_window_t *window, i_event_t event)
                 I_widget_pack(&window->widget, window->pack_children,
                               window->fit);
                 if (window->decorated) {
-                        R_window_init(&window->window, decoration);
+                        R_window_init(&window->window, decor_window);
                         window->window.sprite.origin = window->widget.origin;
                         window->window.sprite.size = window->widget.size;
                         R_sprite_cleanup(&window->hanger);
@@ -223,5 +243,123 @@ void I_toolbar_add_button(i_toolbar_t *toolbar, const char *icon,
         I_widget_add(&i_root, &window->widget);
 
         toolbar->children++;
+}
+
+/******************************************************************************\
+ Configure the popup widget to display a message from the queue.
+\******************************************************************************/
+static void popup_configure()
+{
+        if (index < 0 || !popup_messages[0].message[0]) {
+                I_widget_show(&popup_widget, FALSE);
+                return;
+        }
+        I_label_configure(&popup_label, popup_messages[0].message);
+        I_widget_event(&popup_widget, I_EV_CONFIGURE);
+        I_widget_show(&popup_widget, TRUE);
+        popup_mouse_time = c_time_msec;
+}
+
+/******************************************************************************\
+ Popup widget event function.
+\******************************************************************************/
+static int popup_event(i_widget_t *widget, i_event_t event)
+{
+        c_vec2_t origin;
+
+        switch (event) {
+        case I_EV_CONFIGURE:
+                widget->size = C_vec2(0.f, 32.f);
+                I_widget_pack(widget, I_PACK_H, I_FIT_BOTTOM);
+                origin = C_vec2(r_width_2d / 2.f - widget->size.x / 2.f,
+                                r_height_2d - widget->size.y -
+                                i_border.value.n);
+                R_window_cleanup(&popup_window);
+                R_window_init(&popup_window, decor_popup);
+                I_widget_move(widget, origin);
+        case I_EV_MOVED:
+                popup_window.sprite.size = widget->size;
+                popup_window.sprite.origin = widget->origin;
+                return FALSE;
+        case I_EV_MOUSE_MOVE:
+                popup_mouse_time = c_time_msec;
+                break;
+        case I_EV_CLEANUP:
+                R_window_cleanup(&popup_window);
+                break;
+        case I_EV_RENDER:
+                if (c_time_msec - popup_mouse_time > POPUP_TIME)
+                        I_widget_show(&popup_widget, FALSE);
+                popup_window.sprite.modulate.a = widget->fade;
+                R_window_render(&popup_window);
+                break;
+        default:
+                break;
+        }
+        return TRUE;
+}
+
+/******************************************************************************\
+ Initialize popup widget and add it to the root widget.
+\******************************************************************************/
+void I_init_popup(void)
+{
+        I_widget_init(&popup_widget, "Popup");
+        popup_widget.event_func = (i_event_f)popup_event;
+        popup_widget.state = I_WS_READY;
+        popup_widget.shown = FALSE;
+        popup_widget.clickable = TRUE;
+        popup_widget.padding = 1.f;
+
+        /* Label */
+        I_label_init(&popup_label, NULL);
+        I_widget_add(&popup_widget, &popup_label.widget);
+
+        I_widget_add(&i_root, &popup_widget);
+}
+
+/******************************************************************************\
+ Updates the popup window.
+\******************************************************************************/
+void I_update_popup(void)
+{
+        if (popup_widget.shown || popup_widget.fade > 0.f ||
+            !popup_messages[0].message[0])
+                return;
+        memcpy(popup_messages, popup_messages + 1,
+               sizeof (popup_messages) - sizeof (*popup_messages));
+        popup_messages[POPUP_MESSAGES_MAX - 1].message[0] = NUL;
+        popup_configure();
+}
+
+/******************************************************************************\
+ Queues a new message to popup
+\******************************************************************************/
+void I_popup(i_popup_icon_t icon, const char *message, c_vec3_t *goto_pos)
+{
+        int i;
+
+        /* Find an open slot, if there isn't one, pump the queue */
+        for (i = 0; popup_messages[i].message[0]; i++)
+                if (i >= POPUP_MESSAGES_MAX) {
+                        memcpy(popup_messages, popup_messages + 1,
+                               sizeof (popup_messages) -
+                               sizeof (*popup_messages));
+                        i--;
+                        break;
+                }
+
+        /* Setup the queue entry */
+        popup_messages[i].icon = icon;
+        C_strncpy_buf(popup_messages[i].message, message);
+        if (goto_pos) {
+                popup_messages[i].has_goto_pos = TRUE;
+                popup_messages[i].goto_pos = *goto_pos;
+        } else
+                popup_messages[i].has_goto_pos = FALSE;
+
+        /* If the popup window is hidden, configure and open it */
+        if (!popup_widget.shown || i >= POPUP_MESSAGES_MAX - 1)
+                popup_configure();
 }
 

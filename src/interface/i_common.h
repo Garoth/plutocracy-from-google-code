@@ -241,9 +241,8 @@ void I_select_init(i_select_t *, const char *label, const char **list,
                    int initial);
 
 /* i_variables.c */
-extern c_var_t i_border, i_color, i_color_alt, i_debug, i_fade, i_hanger,
-               i_scroll_speed, i_shadow, i_test_globe, i_theme, i_window,
-               i_zoom_speed;
+extern c_var_t i_border, i_color, i_color_alt, i_debug, i_fade, i_scroll_speed,
+               i_shadow, i_test_globe, i_theme, i_zoom_speed;
 
 /* i_video.c */
 void I_video_init(i_window_t *);
@@ -268,8 +267,9 @@ extern i_widget_t *i_child, *i_key_focus, *i_mouse_focus;
 extern int i_key, i_key_shift, i_key_unicode, i_mouse_x, i_mouse_y, i_mouse;
 
 /* i_window.c */
+void I_init_popup(void);
+void I_update_popup(void);
 void I_theme_windows(void);
-void I_toolbar_init(i_toolbar_t *, int right_aligned);
 void I_toolbar_add_button(i_toolbar_t *, const char *icon,
                           i_callback_f init_func);
 void I_toolbar_init(i_toolbar_t *, int right);

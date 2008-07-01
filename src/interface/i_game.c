@@ -35,6 +35,7 @@ static int leave_button_event(i_button_t *button, i_event_t event)
 static void leave_button_clicked(i_button_t *button)
 {
         C_debug("Leave button clicked");
+        G_quit_game();
         I_widget_show(button->widget.parent, FALSE);
         I_enter_limbo();
 }

@@ -21,6 +21,7 @@ static i_button_t nations[4];
 static void nation_clicked(i_button_t *button)
 {
         I_widget_show(button->widget.parent, FALSE);
+        G_change_nation((int)(button - nations));
 }
 
 /******************************************************************************\
