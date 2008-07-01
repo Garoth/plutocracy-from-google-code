@@ -58,6 +58,24 @@ static void texture_cleanup(r_texture_t *pt)
         R_check_errors();
 }
 
+/******************************************************************************\
+ Checks if a texture is non-power-of-two. Prints warnings if it is and NPOT
+ textures are not supported.
+\******************************************************************************/
+static void texture_check_npot(r_texture_t *pt)
+{
+        if (!pt || !pt->surface ||
+            (C_is_pow2(pt->surface->w) && C_is_pow2(pt->surface->h))) {
+                pt->not_pow2 = FALSE;
+                return;
+        }
+        pt->not_pow2 = TRUE;
+        if (r_ext.npot_textures)
+                return;
+        C_warning("Texture '%s' not power-of-two: %dx%d",
+                  pt->ref.name, pt->surface->w, pt->surface->h);
+}
+
 /*****************************************************************************\
  Just allocate a texture object and cleared [width] by [height] SDL surface.
  Does not load anything or add the texture to the texture linked list. The
@@ -74,13 +92,14 @@ r_texture_t *R_texture_alloc_full(const char *file, int line, const char *func,
                 C_error_full(file, line, func,
                              "Invalid texture dimensions: %dx%d",
                              width, height);
-        if (!C_is_pow2(width) || !C_is_pow2(height))
-                C_warning_full(file, line, func,
-                               "Texture dimensions not power-of-two: %dx%d",
-                               width, height);
         pt = C_recalloc_full(file, line, func, NULL, sizeof (*pt));
         pt->ref.refs = 1;
         pt->ref.cleanup_func = (c_ref_cleanup_f)texture_cleanup;
+
+        /* Check if texture is power-of-two */
+        texture_check_npot(pt);
+
+        /* Add texture to the allocated textures linked list */
         if (root_alloc) {
                 pt->ref.next = root_alloc;
                 root_alloc->prev = &pt->ref;
@@ -91,6 +110,8 @@ r_texture_t *R_texture_alloc_full(const char *file, int line, const char *func,
                 C_strncpy_buf(pt->ref.name,
                               C_va("Texture #%d allocated by %s()",
                                    ++count, func));
+
+        /* Allocate the texture memory and fill it with black */
         pt->alpha = alpha;
         pt->surface = R_surface_alloc(width, height, alpha);
         rect.x = 0;
@@ -98,7 +119,10 @@ r_texture_t *R_texture_alloc_full(const char *file, int line, const char *func,
         rect.w = width;
         rect.h = height;
         SDL_FillRect(pt->surface, &rect, 0);
+
+        /* Give the texture a unique OpenGL name */
         glGenTextures(1, &pt->gl_name);
+
         R_check_errors();
         if (c_mem_check.value.n)
                 C_trace_full(file, line, func, "Allocated texture #%d", count);
@@ -258,6 +282,9 @@ r_texture_t *R_texture_load(const char *filename, int mipmaps)
                 return NULL;
         }
 
+        /* Check if texture is power-of-two */
+        texture_check_npot(pt);
+
         /* Load the texture into OpenGL */
         glGenTextures(1, &pt->gl_name);
         R_texture_upload(pt);
@@ -282,12 +309,17 @@ void R_texture_select(r_texture_t *texture)
         glEnable(GL_TEXTURE_2D);
         glBindTexture(GL_TEXTURE_2D, texture->gl_name);
 
-        /* Texture repeat */
-        glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-        glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+        /* Repeat wrapping (not supported for NPOT textures) */
+        if (!texture->not_pow2) {
+                glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+                glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+        } else {
+                glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
+                glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
+        }
 
-        /* Mipmaps */
-        if (texture->mipmaps) {
+        /* Mipmaps (not supported for NPOT textures) */
+        if (texture->mipmaps && !texture->not_pow2) {
                 glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,
                                 GL_LINEAR_MIPMAP_LINEAR);
                 if (texture->mipmaps > 1)
