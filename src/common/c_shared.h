@@ -315,6 +315,7 @@ extern c_var_t c_mem_check;
 
 /* c_os_posix, c_os_windows.c */
 int C_mkdir(const char *path);
+int C_modified_time(const char *filename);
 const char *C_user_dir(void);
 
 /* c_math.c */

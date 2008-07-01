@@ -18,7 +18,7 @@ c_var_t r_width, r_height, r_color_bits, r_depth_bits, r_windowed, r_vsync,
 
 /* Render testing */
 c_var_t r_globe, r_test_normals, r_test_model, r_test_prerender, r_test_sprite,
-        r_test_sprite_num, r_test_text;
+        r_test_sprite_num, r_test_text, r_textures;
 
 /* Effects parameters */
 c_var_t r_atmosphere, r_globe_smooth, r_globe_transitions;
@@ -80,6 +80,9 @@ void R_register_variables(void)
         C_register_integer(&r_globe, "r_globe", TRUE,
                            "disable to turn off globe rendering");
         r_globe.edit = C_VE_ANYTIME;
+        C_register_integer(&r_textures, "r_textures", TRUE,
+                           "disable to turn off textures");
+        r_textures.edit = C_VE_ANYTIME;
 
         /* Visual effects parameters */
         C_register_float(&r_globe_smooth, "r_globe_smooth", 1.f,
