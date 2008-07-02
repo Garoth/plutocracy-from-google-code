@@ -16,9 +16,23 @@
 
 import glob, os, sys
 
+# Get subversion revision
+def svn_revision():
+        revision = ''
+        in_stream, out_stream = os.popen2('svn info')
+        result = out_stream.read()
+        in_stream.close()
+        out_stream.close()
+        start = result.find('Revision: ')
+        if start < 0:
+                return ''
+        end = result.find('\n', start)
+        revision = '.' + result[start + 10:end]
+        return revision
+
 # Package parameters
 package = 'plutocracy'
-version = '0.0.0'
+version = '0.0.0' + svn_revision()
 
 # Platform considerations
 windows = sys.platform == 'win32'
@@ -268,20 +282,30 @@ GendocOutput('network.html', path('src/network'), 'Plutocracy Network')
 
 ################################################################################
 #
-# scons dist -- Distributing the package tarball
+# scons dist -- Distributing the source package tarball
 #
 ################################################################################
+
+# The compression command depends on the target system
+compress_cmd = 'tar -czf '
+compress_suffix = '.tar.gz'
+if windows:
+        compress_cmd = 'zip '
+        compress_suffix = '.zip'
+
 dist_name = package + '-' + version
-dist_tarball = dist_name + '.tar.gz'
+dist_tarball = dist_name + compress_suffix
 default_env.Depends(dist_name, 'gendoc')
 default_env.Command(dist_tarball, dist_name,
-                    ['tar -czf ' + dist_tarball + ' ' + dist_name])
+                    [compress_cmd + dist_tarball + ' ' + dist_name])
 default_env.Alias('dist', dist_tarball)
 default_env.AddPostAction(dist_tarball, Delete(dist_name))
 
-# Files that get distributed
+# Files that get distributed in a source package
+dist_dlls = glob.glob('*.dll')
 default_env.Install(dist_name, ['AUTHORS', 'ChangeLog', 'CC', 'COPYING',
-                                'README', 'SConstruct', 'todo.sh'])
+                                'README', 'SConstruct', 'todo.sh',
+                                'Makefile', 'genlang.py'] + dist_dlls)
 InstallRecursive(os.path.join(dist_name, 'blender'), 'blender')
 InstallRecursive(os.path.join(dist_name, 'gendoc'), 'gendoc',
                  [path('gendoc/gendoc')])
@@ -290,4 +314,29 @@ InstallRecursive(os.path.join(dist_name, 'models'), 'models')
 InstallRecursive(os.path.join(dist_name, 'src'), 'src')
 InstallRecursive(os.path.join(dist_name, 'windows'), 'windows',
                  ['windows/vc8/Debug', 'windows/vc8/Release'])
+
+################################################################################
+#
+# scons release -- Distributing the binary package tarball
+#
+################################################################################
+release_name = dist_name
+if windows:
+        release_name += '-win32'
+else:
+        release_name += '-posix'
+release_tarball = release_name + compress_suffix
+default_env.Depends(release_name, plutocracy)
+default_env.Command(release_tarball, release_name,
+                    [compress_cmd + release_tarball + ' ' + release_name])
+default_env.Alias('release', release_tarball)
+default_env.AddPostAction(release_tarball, Delete(release_name))
+
+# Files that get distributed in a binary release
+default_env.Install(release_name, ['AUTHORS', 'ChangeLog', 'CC', 'COPYING',
+                                   'README', plutocracy])
+InstallRecursive(os.path.join(release_name, 'gui'), 'gui')
+InstallRecursive(os.path.join(release_name, 'models'), 'models')
+if windows:
+        default_env.Install(release_name, dist_dlls)
 
