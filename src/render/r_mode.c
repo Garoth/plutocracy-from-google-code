@@ -670,6 +670,7 @@ void R_start_frame(void)
         /* Video can only be restarted at the start of the frame */
         if (r_restart) {
                 set_video_mode();
+				set_gl_state();
                 if (r_color_bits.changed > r_init_frame)
                         R_realloc_textures();
                 r_init_frame = c_frame;

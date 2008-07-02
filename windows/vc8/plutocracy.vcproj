@@ -78,7 +78,7 @@
 			/>
 			<Tool
 				Name="VCManifestTool"
-				EmbedManifest="false"
+				EmbedManifest="true"
 			/>
 			<Tool
 				Name="VCXDCMakeTool"
@@ -143,7 +143,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="SDL.lib SDLmain.lib SDL_image.lib SDL_ttf.lib OpenGL32.lib GlU32.lib user32.lib shell32.lib zdll.lib libpng.lib"
+				AdditionalDependencies="SDL.lib SDLmain.lib SDL_ttf.lib OpenGL32.lib GlU32.lib user32.lib shell32.lib zdll.lib libpng.lib"
 				OutputFile="..\..\plutocracy.exe"
 				LinkIncremental="1"
 				AdditionalLibraryDirectories="..\lib"
@@ -697,6 +697,20 @@
 		<Filter
 			Name="game"
 			>
+			<File
+				RelativePath="..\..\src\game\g_client.c"
+				>
+				<FileConfiguration
+					Name="Debug|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="1"
+						PrecompiledHeaderThrough="g_common.h"
+						PrecompiledHeaderFile="$(IntDir)\g_common.pch"
+					/>
+				</FileConfiguration>
+			</File>
 			<File
 				RelativePath="..\..\src\game\g_common.h"
 				>
