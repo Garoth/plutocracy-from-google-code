@@ -1,5 +1,10 @@
 #summary Various links relevant to Plutocracy
 
+= Downloads =
+
+All downloads currently available are hosted here:
+  * [http://pub.risujin.org/plutocracy]
+
 = Similar Games =
 
 == Inspirations ==
