@@ -51,10 +51,11 @@ typedef struct r_vertex2 {
 /* Texture class */
 struct r_texture {
         c_ref_t ref;
+        c_vec2_t uv_scale;
         SDL_Surface *surface;
         GLuint gl_name;
         float anisotropy;
-        int alpha, mipmaps, additive, not_pow2;
+        int alpha, mipmaps, additive, not_pow2, pow2_w, pow2_h;
 };
 
 /* Render modes */
@@ -155,6 +156,7 @@ extern c_color_t r_fog_color;
 
 /* r_surface.c */
 SDL_Surface *R_surface_alloc(int width, int height, int alpha);
+void R_surface_free(SDL_Surface *);
 void R_surface_flip_v(SDL_Surface *);
 c_color_t R_surface_get(const SDL_Surface *, int x, int y);
 void R_surface_invert(SDL_Surface *, int rgb, int alpha);

@@ -46,14 +46,7 @@ static int ttf_inited;
 \******************************************************************************/
 static void texture_cleanup(r_texture_t *pt)
 {
-        if (pt->surface) {
-
-                /* Keep track of free'd memory */
-                r_video_mem -= pt->surface->w * pt->surface->h *
-                               pt->surface->format->BytesPerPixel;
-
-                SDL_FreeSurface(pt->surface);
-        }
+        R_surface_free(pt->surface);
         glDeleteTextures(1, &pt->gl_name);
         R_check_errors();
 }
@@ -70,6 +63,10 @@ static void texture_check_npot(r_texture_t *pt)
                 return;
         }
         pt->not_pow2 = TRUE;
+        pt->pow2_w = C_next_pow2(pt->surface->w);
+        pt->pow2_h = C_next_pow2(pt->surface->h);
+        pt->uv_scale = C_vec2((float)pt->surface->w / pt->pow2_w,
+                              (float)pt->surface->h / pt->pow2_h);
         if (r_ext.npot_textures)
                 return;
         C_trace("Texture '%s' not power-of-two: %dx%d",
@@ -181,8 +178,27 @@ r_texture_t *R_texture_clone_full(const char *file, int line, const char *func,
 \******************************************************************************/
 void R_texture_upload(const r_texture_t *pt)
 {
+        SDL_Surface *surface, *pow2_surface;
         int gl_internal;
 
+        /* If this is a non-power-of-two texture, paste it onto a larger
+           power-of-two surface first */
+        surface = pt->surface;
+        pow2_surface = NULL;
+        if (pt->not_pow2) {
+                SDL_Rect rect;
+
+                pow2_surface = R_surface_alloc(pt->pow2_w, pt->pow2_h,
+                                               pt->alpha);
+                rect.x = 0;
+                rect.y = 0;
+                rect.w = pt->surface->w;
+                rect.h = pt->surface->h;
+                SDL_BlitSurface(pt->surface, NULL, pow2_surface, &rect);
+                surface = pow2_surface;
+        }
+
+        /* Select the OpenGL internal texture format */
         if (pt->alpha) {
                 gl_internal = GL_RGBA;
                 if (r_color_bits.value.n == 16)
@@ -196,16 +212,22 @@ void R_texture_upload(const r_texture_t *pt)
                 else if (r_color_bits.value.n == 32)
                         gl_internal = GL_RGB8;
         }
+
+        /* Upload the texture to OpenGL and build mipmaps */
         glBindTexture(GL_TEXTURE_2D, pt->gl_name);
         if (pt->mipmaps)
                 gluBuild2DMipmaps(GL_TEXTURE_2D, gl_internal,
-                                  pt->surface->w, pt->surface->h,
+                                  surface->w, surface->h,
                                   GL_RGBA, GL_UNSIGNED_BYTE,
-                                  pt->surface->pixels);
+                                  surface->pixels);
         else
                 glTexImage2D(GL_TEXTURE_2D, 0, gl_internal,
-                             pt->surface->w, pt->surface->h, 0,
-                             GL_RGBA, GL_UNSIGNED_BYTE, pt->surface->pixels);
+                             surface->w, surface->h, 0,
+                             GL_RGBA, GL_UNSIGNED_BYTE, surface->pixels);
+
+        /* Free the temporary surface if we used it */
+        R_surface_free(pow2_surface);
+
         R_check_errors();
 }
 
@@ -307,20 +329,16 @@ void R_texture_select(r_texture_t *texture)
                 glDisable(GL_ALPHA_TEST);
                 return;
         }
+
         glEnable(GL_TEXTURE_2D);
         glBindTexture(GL_TEXTURE_2D, texture->gl_name);
 
         /* Repeat wrapping (not supported for NPOT textures) */
-        if (!texture->not_pow2) {
-                glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-                glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-        } else {
-                glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
-                glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
-        }
+        glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+        glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 
         /* Mipmaps (not supported for NPOT textures) */
-        if (texture->mipmaps && !texture->not_pow2) {
+        if (texture->mipmaps) {
                 glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,
                                 GL_LINEAR_MIPMAP_LINEAR);
                 if (texture->mipmaps > 1)
@@ -361,6 +379,18 @@ void R_texture_select(r_texture_t *texture)
                         glDisable(GL_ALPHA_TEST);
                 }
         }
+
+        /* Non-power-of-two textures are pasted onto larger textures that
+           require a texture coordinate transformation */
+        if (texture->not_pow2) {
+                glMatrixMode(GL_TEXTURE);
+                glLoadIdentity();
+                glScalef(texture->uv_scale.x, texture->uv_scale.y, 1.f);
+        } else {
+                glMatrixMode(GL_TEXTURE);
+                glLoadIdentity();
+        }
+        glMatrixMode(GL_MODELVIEW);
 
         R_check_errors();
 }
