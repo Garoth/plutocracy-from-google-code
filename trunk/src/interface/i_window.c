@@ -250,7 +250,7 @@ void I_toolbar_add_button(i_toolbar_t *toolbar, const char *icon,
 \******************************************************************************/
 static void popup_configure()
 {
-        if (index < 0 || !popup_messages[0].message[0]) {
+        if (!popup_messages[0].message[0]) {
                 I_widget_show(&popup_widget, FALSE);
                 return;
         }
