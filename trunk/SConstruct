@@ -32,7 +32,7 @@ def svn_revision():
 
 # Package parameters
 package = 'plutocracy'
-version = '0.0.0' + svn_revision()
+version = '0.0.1' + svn_revision()
 
 # Platform considerations
 windows = sys.platform == 'win32'
@@ -290,7 +290,7 @@ GendocOutput('network.html', path('src/network'), 'Plutocracy Network')
 compress_cmd = 'tar -czf '
 compress_suffix = '.tar.gz'
 if windows:
-        compress_cmd = 'zip '
+        compress_cmd = 'windows\\bin\\zip -r '
         compress_suffix = '.zip'
 
 dist_name = package + '-' + version

@@ -30,9 +30,9 @@
 #include <windows.h>
 #include <tchar.h>
 
-/* Constants normally defined via configure.ac */
+/* Constants normally defined via SCons */
 #define PACKAGE "plutocracy"
-#define PACKAGE_STRING "Plutocracy 0.0.0"
+#define PACKAGE_STRING "Plutocracy 0.0.1.297"
 
 /* Compatibility */
 #define inline __inline
