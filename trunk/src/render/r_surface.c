@@ -174,7 +174,7 @@ SDL_Surface *R_surface_alloc(int width, int height, int alpha)
                                        r_sdl_format.BitsPerPixel,
                                        r_sdl_format.Rmask, r_sdl_format.Gmask,
                                        r_sdl_format.Bmask, r_sdl_format.Amask);
-        SDL_SetAlpha(surface, SDL_SRCALPHA | SDL_RLEACCEL, SDL_ALPHA_OPAQUE);
+        SDL_SetAlpha(surface, SDL_RLEACCEL, SDL_ALPHA_OPAQUE);
 
         /* Keep track of allocated memory */
         r_video_mem += width * height * r_sdl_format.BytesPerPixel;
@@ -182,6 +182,20 @@ SDL_Surface *R_surface_alloc(int width, int height, int alpha)
                 r_video_mem_high = r_video_mem;
 
         return surface;
+}
+
+/******************************************************************************\
+ Frees a surface, updating video memory estimate.
+\******************************************************************************/
+void R_surface_free(SDL_Surface *surface)
+{
+        if (!surface)
+                return;
+
+        /* Keep track of free'd memory */
+        r_video_mem -= surface->w * surface->h * surface->format->BytesPerPixel;
+
+        SDL_FreeSurface(surface);
 }
 
 /******************************************************************************\

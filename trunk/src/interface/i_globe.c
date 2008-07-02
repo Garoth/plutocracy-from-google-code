@@ -105,6 +105,7 @@ static void grab_globe(int x, int y)
         } else
                 grab_rolling = TRUE;
         I_close_ring();
+        G_mouse_ray_miss();
 }
 
 /******************************************************************************\

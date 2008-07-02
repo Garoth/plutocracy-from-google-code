@@ -320,6 +320,7 @@ const char *C_user_dir(void);
 
 /* c_math.c */
 #define C_is_pow2(n) !(n & (n - 1))
+int C_next_pow2(int);
 int C_rand(void);
 #define C_rand_real() ((float)(C_rand() & 0xffff) / 0xffff)
 void C_rand_seed(unsigned int);

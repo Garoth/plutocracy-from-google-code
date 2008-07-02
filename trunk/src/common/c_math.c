@@ -82,3 +82,16 @@ int C_rand(void)
         return (int)(tmp & LOWER_MASK);
 }
 
+/******************************************************************************\
+ Calculate the next power of two for any integer.
+\******************************************************************************/
+int C_next_pow2(int n)
+{
+        int p;
+
+        if (n < 1)
+                return 0;
+        for (p = 1; p < n; p <<= 1);
+        return p;
+}
+
