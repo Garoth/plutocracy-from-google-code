@@ -156,7 +156,7 @@ void R_register_variables(void)
         r_font_title_pt.archive = FALSE;
 
         /* Extension overrides */
-        C_register_integer(&r_ext_point_sprites, "r_ext_point_sprites", TRUE,
+        C_register_integer(&r_ext_point_sprites, "r_ext_point_sprites", FALSE,
                            "0 = disable hardware point sprites");
 }
 
