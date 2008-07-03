@@ -16,7 +16,11 @@
 
 import glob, os, sys
 
-# Get subversion revision
+# Package parameters
+package = 'plutocracy'
+version = '0.0.2'
+
+# Get subversion revision and add it to the version
 def svn_revision():
         revision = ''
         try:
@@ -32,10 +36,7 @@ def svn_revision():
         except:
                 pass
         return revision
-
-# Package parameters
-package = 'plutocracy'
-version = '0.0.1' + svn_revision()
+version += svn_revision()
 
 # Platform considerations
 windows = sys.platform == 'win32'
@@ -85,7 +86,8 @@ opts.Add(BoolOption('mingw', 'Set to True if compiling with MinGW', False))
 opts.Update(default_env)
 mingw = default_env.get('mingw')
 if mingw:
-        default_env = Environment(tools = ['mingw'], ENV = os.environ)
+        default_env = Environment(tools = ['mingw'], ENV = os.environ,
+                                  BUILDERS = {'GCH' : gch_builder})
 
 # Now load the rest of the options
 AddEnvOption(default_env, opts, 'CC', 'Compiler to use')
@@ -176,7 +178,7 @@ def PlutocracyPCH(header, deps = []):
         plutocracy_env.Depends(pch, deps)
         plutocracy_env.Depends(plutocracy_obj, pch)
         plutocracy_pch += pch
-if plutocracy_env['pch'] != 'no' and not windows:
+if plutocracy_env['pch'] != 'no':
         common_deps = glob.glob('src/common/*.h')
         PlutocracyPCH('src/common/c_shared.h', common_deps)
         if plutocracy_env['pch'] == 'all':
