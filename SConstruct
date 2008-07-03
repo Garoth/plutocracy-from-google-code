@@ -19,15 +19,18 @@ import glob, os, sys
 # Get subversion revision
 def svn_revision():
         revision = ''
-        in_stream, out_stream = os.popen2('svn info')
-        result = out_stream.read()
-        in_stream.close()
-        out_stream.close()
-        start = result.find('Revision: ')
-        if start < 0:
-                return ''
-        end = result.find('\n', start)
-        revision = '.' + result[start + 10:end]
+        try:
+                in_stream, out_stream = os.popen2('svn info')
+                result = out_stream.read()
+                in_stream.close()
+                out_stream.close()
+                start = result.find('Revision: ')
+                if start < 0:
+                        return ''
+                end = result.find('\n', start)
+                revision = '.' + result[start + 10:end]
+        except:
+                pass
         return revision
 
 # Package parameters

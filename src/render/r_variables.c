@@ -31,6 +31,9 @@ c_var_t r_globe_colors[4], r_globe_shininess, r_light, r_moon_colors[3],
 c_var_t r_font_console, r_font_console_pt, r_font_gui, r_font_gui_pt,
         r_font_title, r_font_title_pt;
 
+/* Extension overrides */
+c_var_t r_ext_point_sprites;
+
 /******************************************************************************\
  Registers the render namespace variables.
 \******************************************************************************/
@@ -151,5 +154,9 @@ void R_register_variables(void)
         C_register_integer(&r_font_title_pt, "r_font_title_pt", 18,
                            "size of title font in points");
         r_font_title_pt.archive = FALSE;
+
+        /* Extension overrides */
+        C_register_integer(&r_ext_point_sprites, "r_ext_point_sprites", TRUE,
+                           "0 = disable hardware point sprites");
 }
 

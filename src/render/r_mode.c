@@ -264,7 +264,9 @@ static void check_gl_extensions(void)
         }
 
         /* Point sprites */
-        if (check_extension("GL_ARB_point_sprite")) {
+        C_var_unlatch(&r_ext_point_sprites);
+        if (r_ext_point_sprites.value.n &&
+            check_extension("GL_ARB_point_sprite")) {
                 r_ext.point_sprites = TRUE;
                 C_debug("Hardware point sprites supported");
         } else {
