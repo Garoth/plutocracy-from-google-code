@@ -155,7 +155,8 @@ void R_register_variables(void)
                            "size of title font in points");
         r_font_title_pt.archive = FALSE;
 
-        /* Extension overrides */
+        /* Hardware point sprites are disabled by default because ATI drivers
+           choke on them */
         C_register_integer(&r_ext_point_sprites, "r_ext_point_sprites", FALSE,
                            "0 = disable hardware point sprites");
 }

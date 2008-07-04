@@ -13,7 +13,15 @@
 #include "../common/c_shared.h"
 #include "../render/r_shared.h"
 #include "../interface/i_shared.h"
+#include "../network/n_shared.h"
 #include "g_shared.h"
+
+/* Message tokens sent by clients */
+typedef enum {
+        G_CM_NONE,
+        G_CM_AFFILIATE,
+        G_CLIENT_MESSAGES,
+} g_client_msg_t;
 
 /* A tile on the globe */
 typedef struct g_tile {
@@ -23,6 +31,14 @@ typedef struct g_tile {
         struct g_tile *neighbors[3];
         int visible, island;
 } g_tile_t;
+
+/* Structure for each player */
+typedef struct g_client {
+        int connected, nation;
+} g_client_t;
+
+/* g_host.c */
+extern g_client_t g_clients[N_CLIENTS_MAX];
 
 /* g_globe.c */
 extern c_var_t g_globe_islands, g_globe_island_size, g_globe_seed,

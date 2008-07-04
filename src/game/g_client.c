@@ -12,11 +12,16 @@
 
 #include "g_common.h"
 
+/* The client's index */
+int g_client_id;
+
 /******************************************************************************\
  Leave the current game.
 \******************************************************************************/
 void G_quit_game(void)
 {
+        N_disconnect();
+        N_stop_server();
         I_popup(I_PI_NONE, "Left the current game.", NULL);
 }
 
@@ -25,6 +30,8 @@ void G_quit_game(void)
 \******************************************************************************/
 void G_change_nation(int index)
 {
+        N_send(0, "11", G_CM_AFFILIATE, index);
+        /*
         if (index == 0)
                 I_popup(I_PI_NONE, "Joined the Ruby nation.", NULL);
         else if (index == 1)
@@ -33,5 +40,6 @@ void G_change_nation(int index)
                 I_popup(I_PI_NONE, "Joined the Sapphire nation.", NULL);
         else if (index == 3)
                 I_popup(I_PI_NONE, "Became a pirate.", NULL);
+        */
 }
 

@@ -12,3 +12,32 @@
 
 #include "n_common.h"
 
+/* TRUE if the server is running */
+int n_serving;
+
+/******************************************************************************\
+ Open server sockets and begin accepting connections.
+\******************************************************************************/
+void N_start_server(n_receive_f receive_func)
+{
+        if (n_serving)
+                return;
+        n_serving = TRUE;
+        n_receive_server = receive_func;
+}
+
+/******************************************************************************\
+ Close server sockets and stop accepting connections.
+\******************************************************************************/
+void N_stop_server(void)
+{
+        n_serving = FALSE;
+}
+
+/******************************************************************************\
+ Poll connections and dispatch any messages that arrive.
+\******************************************************************************/
+void N_poll_server(void)
+{
+}
+

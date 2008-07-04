@@ -207,6 +207,7 @@ else:
                              '#define PKGDATADIR "' + install_data + '"\n')
                 config.close()
         plutocracy_config = plutocracy_env.Command('config.h', '', WriteConfigH)
+        plutocracy_env.Depends(plutocracy_config, 'SConstruct')
 
 plutocracy_env.Depends(plutocracy_obj + plutocracy_pch, plutocracy_config)
 plutocracy_env.Depends(plutocracy_config, config_file)
