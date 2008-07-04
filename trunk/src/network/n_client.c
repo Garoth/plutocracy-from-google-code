@@ -12,3 +12,18 @@
 
 #include "n_common.h"
 
+/******************************************************************************\
+ Connect the client to the given [address] (ip or hostname) and [port].
+\******************************************************************************/
+void N_connect(const char *address, int port, n_receive_f receive_func)
+{
+        n_receive_client = receive_func;
+}
+
+/******************************************************************************\
+ Close the client's connection to the server.
+\******************************************************************************/
+void N_disconnect(void)
+{
+}
+

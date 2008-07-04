@@ -12,3 +12,10 @@
 
 #include "../common/c_shared.h"
 #include "n_shared.h"
+
+/* n_server.c */
+extern int n_serving;
+
+/* n_sync.c */
+extern n_receive_f n_receive_client, n_receive_server;
+

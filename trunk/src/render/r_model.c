@@ -136,8 +136,6 @@ static void model_data_cleanup(model_data_t *data)
 /******************************************************************************\
  Allocate memory for and load model data and its textures. Data is cached so
  calling this function again will return and reference the cached data.
-
- FIXME: Does not account for material properties.
 \******************************************************************************/
 static model_data_t *model_data_load(const char *filename)
 {
