@@ -502,3 +502,23 @@ void C_ref_down_full(const char *file, int line, const char *function,
         C_free(ref);
 }
 
+/******************************************************************************\
+ Checks the endian-ness of the current system. I will be shocked if this is
+ warning ever gets raised for anyone.
+\******************************************************************************/
+void C_endian_check(void)
+{
+        union {
+                int n;
+                char s[sizeof (int)];
+        } u;
+        int i;
+
+        u.n = 0x03020100;
+        for (i = 0; i < 4 && i < sizeof (int); i++)
+                if (u.s[i] != i) {
+                        C_warning("Not a little endian system");
+                        return;
+                }
+}
+

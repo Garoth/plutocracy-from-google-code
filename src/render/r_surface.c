@@ -227,7 +227,7 @@ static void user_png_flush(png_structp png_ptr)
  Based on tutorial implementation in the libpng manual:
  http://www.libpng.org/pub/png/libpng-1.2.5-manual.html
 \******************************************************************************/
-SDL_Surface *R_surface_load_png(const char *filename, int *alpha)
+SDL_Surface *R_surface_load_png(const char *filename, bool *alpha)
 {
         SDL_Surface *surface;
         png_byte png_header[8];

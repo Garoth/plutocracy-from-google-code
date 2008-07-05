@@ -12,18 +12,22 @@
 
 #include "n_common.h"
 
-/* TRUE if the server is running */
-int n_serving;
+/* Client slots array */
+n_client_t n_clients[N_CLIENTS_MAX];
 
 /******************************************************************************\
  Open server sockets and begin accepting connections.
 \******************************************************************************/
-void N_start_server(n_receive_f receive_func)
+void N_start_server(n_callback_f server_func, n_callback_f client_func)
 {
-        if (n_serving)
-                return;
-        n_serving = TRUE;
-        n_receive_server = receive_func;
+        n_client_id = N_HOST_CLIENT_ID;
+        n_server_func = server_func;
+        n_client_func = client_func;
+        C_zero(&n_clients);
+
+        /* Setup the host's client */
+        n_clients[N_HOST_CLIENT_ID].connected = TRUE;
+        n_server_func(N_HOST_CLIENT_ID, N_EV_CONNECTED);
 }
 
 /******************************************************************************\
@@ -31,7 +35,8 @@ void N_start_server(n_receive_f receive_func)
 \******************************************************************************/
 void N_stop_server(void)
 {
-        n_serving = FALSE;
+        if (n_client_id != N_HOST_CLIENT_ID)
+                return;
 }
 
 /******************************************************************************\
@@ -39,5 +44,19 @@ void N_stop_server(void)
 \******************************************************************************/
 void N_poll_server(void)
 {
+        if (n_client_id != N_HOST_CLIENT_ID)
+                return;
+}
+
+/******************************************************************************\
+ Disconnect a client from the server.
+\******************************************************************************/
+void N_kick_client(int client)
+{
+        n_clients[client].connected = FALSE;
+        if (client == n_client_id) {
+                N_disconnect();
+                N_stop_server();
+        }
 }
 

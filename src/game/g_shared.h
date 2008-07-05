@@ -20,9 +20,10 @@ void G_generate_globe(void);
 void G_render_globe(void);
 
 /* g_host.c */
-void G_host_game(void);
-void G_quit_game(void);
 void G_change_nation(int index);
+void G_host_game(void);
+void G_update(void);
+void G_quit_game(void);
 
 /* g_variables.c */
 void G_register_variables(void);

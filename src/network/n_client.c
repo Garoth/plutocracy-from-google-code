@@ -12,12 +12,15 @@
 
 #include "n_common.h"
 
+/* ID of this client in the game */
+int n_client_id;
+
 /******************************************************************************\
  Connect the client to the given [address] (ip or hostname) and [port].
 \******************************************************************************/
-void N_connect(const char *address, int port, n_receive_f receive_func)
+void N_connect(const char *address, int port, n_callback_f client_func)
 {
-        n_receive_client = receive_func;
+        n_client_func = client_func;
 }
 
 /******************************************************************************\
@@ -25,5 +28,6 @@ void N_connect(const char *address, int port, n_receive_f receive_func)
 \******************************************************************************/
 void N_disconnect(void)
 {
+        n_client_func(N_SERVER_ID, N_EV_DISCONNECTED);
 }
 

@@ -14,16 +14,14 @@
 #include "SDL_endian.h"
 
 /* Largest amount of data that can be sent via a message */
-#define BUFFER_LEN 500
+#define BUFFER_LEN 1024
 
 /* Receive function that arriving messages are routed to */
-n_receive_f n_receive_client, n_receive_server;
+n_callback_f n_client_func, n_server_func;
 
 /* Little-Endian message data buffer */
 int n_sync_pos, n_sync_size;
 char n_sync_buffer[BUFFER_LEN];
-
-static char string_buffer[BUFFER_LEN];
 
 /******************************************************************************\
  Call these functions to retrieve an argument from the current message from
@@ -72,15 +70,20 @@ short N_receive_short(void)
         return value;
 }
 
-const char *N_receive_string(void)
+void N_receive_string(char *buffer, int size)
 {
-        int from;
+        int from, len;
 
+        C_assert(buffer && size > 0);
         for (from = n_sync_pos; n_sync_buffer[n_sync_pos]; n_sync_pos++)
-                if (n_sync_pos > n_sync_size)
-                        return "";
-        memmove(string_buffer, n_sync_buffer + from, ++n_sync_pos - from);
-        return string_buffer;
+                if (n_sync_pos > n_sync_size) {
+                        *buffer = NUL;
+                        return;
+                }
+        len = ++n_sync_pos - from;
+        if (len > size)
+                len = size;
+        memmove(buffer, n_sync_buffer + from, len);
 }
 
 /******************************************************************************\
@@ -93,12 +96,18 @@ const char *N_receive_string(void)
    f       float      4 bytes
    s       string     NULL-terminated
 
+ If a negative [client] id is given, all clients except -[client] will receive
+ the message. Note that you can either be receiving or sending. The moment you
+ send a new message, the one you were receiving is lost!
 \******************************************************************************/
 void N_send(int client, const char *format, ...)
 {
         va_list va;
         const char *string;
         int string_len;
+
+        /* Clients should never be sending messages to anyone but the server */
+        C_assert(n_client_id == N_HOST_CLIENT_ID || client == N_SERVER_ID);
 
         /* Pack the message into the sync buffer */
         va_start(va, format);
@@ -148,16 +157,18 @@ void N_send(int client, const char *format, ...)
 
         /* If we are the server, deliver messages to the server and to our
            client directly */
-        if (n_serving) {
+        if (n_client_id == N_HOST_CLIENT_ID) {
                 n_sync_pos = 0;
-                if (client == N_SERVER_ID)
-                        n_receive_server(N_HOST_CLIENT_ID);
-                else if (client == N_HOST_CLIENT_ID)
-                        n_receive_client(N_SERVER_ID);
-                return;
+                if (client == N_SERVER_ID) {
+                        n_server_func(N_HOST_CLIENT_ID, N_EV_MESSAGE);
+                        return;
+                }
+                if (client == N_HOST_CLIENT_ID || client == N_BROADCAST_ID ||
+                    (client < 0 && -client != n_client_id))
+                        n_client_func(N_SERVER_ID, N_EV_MESSAGE);
         }
 
-        /* TODO: Send stuff */
+        /* TODO: Send messages over the network */
 
         return;
 

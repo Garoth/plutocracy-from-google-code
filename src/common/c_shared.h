@@ -118,6 +118,10 @@
 /* Log files are wrapped to this many columns */
 #define C_LOG_WRAP_COLS 80
 
+/* Define a compact boolean type. This actually does not make much of an impact
+   as far as memory usage is concerned but is helpful to denote usage. */
+typedef unsigned char bool;
+
 /* Debug log levels, errors are fatal and will always abort */
 typedef enum {
         C_LOG_PRINT = -1,
@@ -194,8 +198,8 @@ struct c_var {
         c_var_type_t type;
         c_var_edit_t edit;
         c_var_update_f update;
-        int changed, unsafe;
-        char has_latched, archive;
+        int changed;
+        bool has_latched, archive, unsafe;
 };
 
 /* Resizing arrays */
@@ -208,7 +212,7 @@ typedef struct c_array {
 typedef struct c_token_file {
         char filename[256], buffer[C_TOKEN_SIZE], swap, *pos, *token;
         c_file_t file;
-        int eof;
+        bool eof;
 } c_token_file_t;
 
 /* Reference-counted linked-list. Memory allocated using the referenced
@@ -288,6 +292,7 @@ void C_array_reserve(c_array_t *, int n);
 void *C_array_steal(c_array_t *);
 #define C_calloc(s) C_recalloc_full(__FILE__, __LINE__, __func__, NULL, s)
 void C_check_leaks(void);
+void C_endian_check(void);
 #define C_free(p) C_free_full(__FILE__, __LINE__, __func__, p)
 void C_free_full(const char *file, int line, const char *function, void *ptr);
 #define C_malloc(s) C_realloc(NULL, s)
