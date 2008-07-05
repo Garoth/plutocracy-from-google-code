@@ -2,8 +2,9 @@
 
 = Downloads =
 
-All downloads currently available are hosted here:
-  * [http://pub.risujin.org/plutocracy]
+All downloads are available from [http://pub.risujin.org/plutocracy Risujin's public files].
+
+For a full list of current releases with descriptions check the [http://code.google.com/p/plutocracy/source/browse/trunk/ChangeLog ChangeLog].
 
 = Similar Games =
 
