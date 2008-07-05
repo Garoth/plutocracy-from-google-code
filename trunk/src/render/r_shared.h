@@ -55,8 +55,8 @@ typedef struct r_model {
         c_vec3_t origin, normal, forward;
         struct r_model_data *data;
         float scale;
-        int anim, frame, last_frame, last_frame_time, time_left, unlit,
-            selected;
+        int anim, frame, last_frame, last_frame_time, time_left;
+        bool unlit, selected;
 } r_model_t;
 
 /* 2D textured quad sprite, can only be rendered in 2D mode */
@@ -65,7 +65,7 @@ typedef struct r_sprite {
         c_vec2_t origin, size;
         c_color_t modulate;
         float angle, z;
-        int unscaled;
+        bool unscaled;
 } r_sprite_t;
 
 /* A point sprite in world space */
@@ -89,8 +89,9 @@ typedef struct r_text {
         r_sprite_t sprite;
         r_font_t font;
         float wrap, shadow;
-        int invert, frame;
+        int frame;
         char buffer[256];
+        bool invert;
 } r_text_t;
 
 /* A quad strip composed of nine quads that stretch with the size parameter

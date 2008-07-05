@@ -55,7 +55,8 @@ struct r_texture {
         SDL_Surface *surface;
         GLuint gl_name;
         float anisotropy;
-        int alpha, mipmaps, additive, not_pow2, pow2_w, pow2_h;
+        int mipmaps, pow2_w, pow2_h;
+        bool alpha, additive, not_pow2;
 };
 
 /* Render modes */
@@ -74,7 +75,7 @@ typedef struct r_ext {
         PFNGLACTIVETEXTUREPROC glActiveTexture;
         GLfloat anisotropy;
         GLint multitexture;
-        int point_sprites, vertex_buffers, npot_textures;
+        bool point_sprites, vertex_buffers, npot_textures;
 } r_ext_t;
 
 /* Wrapper for vertex buffer objects */
@@ -160,7 +161,7 @@ void R_surface_free(SDL_Surface *);
 void R_surface_flip_v(SDL_Surface *);
 c_color_t R_surface_get(const SDL_Surface *, int x, int y);
 void R_surface_invert(SDL_Surface *, int rgb, int alpha);
-SDL_Surface *R_surface_load_png(const char *filename, int *alpha);
+SDL_Surface *R_surface_load_png(const char *filename, bool *alpha);
 void R_surface_mask(SDL_Surface *dest, SDL_Surface *src);
 void R_surface_put(SDL_Surface *, int x, int y, c_color_t);
 int R_surface_save(SDL_Surface *, const char *filename);

@@ -33,7 +33,8 @@ static i_label_t popup_label;
 static i_widget_t popup_widget;
 static r_window_t popup_window;
 static r_texture_t *decor_window, *hanger, *decor_popup;
-static int popup_mouse_time;
+static int popup_time;
+static bool popup_wait;
 
 /******************************************************************************\
  Initialize themeable window assets.
@@ -257,7 +258,7 @@ static void popup_configure()
         I_label_configure(&popup_label, popup_messages[0].message);
         I_widget_event(&popup_widget, I_EV_CONFIGURE);
         I_widget_show(&popup_widget, TRUE);
-        popup_mouse_time = c_time_msec;
+        popup_time = c_time_msec;
 }
 
 /******************************************************************************\
@@ -281,14 +282,19 @@ static int popup_event(i_widget_t *widget, i_event_t event)
                 popup_window.sprite.size = widget->size;
                 popup_window.sprite.origin = widget->origin;
                 return FALSE;
-        case I_EV_MOUSE_MOVE:
-                popup_mouse_time = c_time_msec;
+        case I_EV_MOUSE_IN:
+                popup_wait = TRUE;
+                break;
+        case I_EV_MOUSE_OUT:
+                popup_wait = FALSE;
                 break;
         case I_EV_CLEANUP:
                 R_window_cleanup(&popup_window);
                 break;
         case I_EV_RENDER:
-                if (c_time_msec - popup_mouse_time > POPUP_TIME)
+                if (popup_wait)
+                        popup_time = c_time_msec;
+                else if (c_time_msec - popup_time > POPUP_TIME)
                         I_widget_show(&popup_widget, FALSE);
                 popup_window.sprite.modulate.a = widget->fade;
                 R_window_render(&popup_window);
@@ -359,7 +365,8 @@ void I_popup(i_popup_icon_t icon, const char *message, c_vec3_t *goto_pos)
                 popup_messages[i].has_goto_pos = FALSE;
 
         /* If the popup window is hidden, configure and open it */
-        if (!popup_widget.shown || i >= POPUP_MESSAGES_MAX - 1)
+        if ((!popup_widget.shown && popup_widget.fade <= 0.f) ||
+            i >= POPUP_MESSAGES_MAX - 1)
                 popup_configure();
 }
 

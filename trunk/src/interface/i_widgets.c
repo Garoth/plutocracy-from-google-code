@@ -438,8 +438,11 @@ static void mouse_focus_parent(i_widget_t *widget)
 \******************************************************************************/
 void I_widget_event(i_widget_t *widget, i_event_t event)
 {
-        if (!widget->name[0] || !widget->event_func)
+        if (!widget->name[0] || !widget->event_func) {
+                if (event == I_EV_CLEANUP)
+                        return;
                 C_error("Propagated event to uninitialized widget");
+        }
 
         /* The only event an unconfigured widget can handle is I_EV_CONFIGURE */
         if (widget->configured < 1 && event != I_EV_CONFIGURE)
@@ -514,16 +517,19 @@ void I_widget_event(i_widget_t *widget, i_event_t event)
                         float target, rate;
 
                         target = 0.f;
+
+                        /* Widgets inherit the parent widget's fade */
                         if (widget->shown) {
                                 target = 1.f;
                                 if (widget->parent)
                                         target = widget->parent->fade;
                         }
+
                         rate = i_fade.value.f * c_frame_sec;
                         if (widget->state == I_WS_DISABLED) {
-                                target /= 4.f;
+                                target *= 0.25f;
                                 if (widget->fade <= 0.25f)
-                                        rate /= 4.f;
+                                        rate *= 0.25f;
                         }
                         if (widget->fade < target) {
                                 widget->fade += rate;
@@ -534,6 +540,12 @@ void I_widget_event(i_widget_t *widget, i_event_t event)
                                 if (widget->fade < target)
                                         widget->fade = target;
                         }
+
+                        /* Widget should never be less faded than its parent */
+                        if (widget->parent &&
+                            widget->parent->fade < widget->fade)
+                                widget->fade = widget->parent->fade;
+
                         if (widget->fade <= 0.f)
                                 return;
                 } else if (!widget->shown)

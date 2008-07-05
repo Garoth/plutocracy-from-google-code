@@ -117,6 +117,9 @@ static void main_loop(void)
                 C_time_update();
                 C_throttle_fps();
 
+                /* Update the game after rendering everything */
+                G_update();
+
                 /* This check is a long-shot, but if there was rampant memory
                    corruption this variable's value may have been changed */
                 if (corrupt_check != CORRUPT_CHECK_VALUE)
@@ -228,6 +231,7 @@ int main(int argc, char *argv[])
         C_open_log_file();
 
         /* Run tests if they are enabled */
+        C_endian_check();
         C_test_mem_check();
 
         /* Initialize */

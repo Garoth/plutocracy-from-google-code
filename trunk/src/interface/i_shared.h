@@ -40,6 +40,12 @@ void I_leave_limbo(void);
 void I_parse_config(void);
 void I_render(void);
 
+/* i_nations.c */
+void I_add_nation(const char *short_name, const char *long_name, bool margin);
+void I_configure_nations(void);
+void I_reset_nations(void);
+void I_select_nation(int nation);
+
 /* i_ring.c */
 void I_reset_ring(void);
 void I_add_to_ring(i_ring_icon_t, int enabled);
