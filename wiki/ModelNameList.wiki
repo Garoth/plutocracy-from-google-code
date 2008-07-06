@@ -1,4 +1,4 @@
-﻿#summary This is a listing of the models that will be in the game, their names, and the hierarchy of folders needed (ie Buildings -> models/buildings/)
+﻿#summary This is a listing of the models that will be in the game, their names, and the hierarchy of folders needed, in the models folder.
 
 =MODEL NAME LISTING AND STATUS=
 
@@ -12,67 +12,65 @@ randlit: litter generated randomly at map generation
 
 ==Buildings==
 
-|| || field-compost.plum||
-|| || field-cotton.plum||
-|| || field-generic.plum||
-|| || field-sugar.plum||
-|| || field-wheat.plum||
-|| || guildhall-bakery.plum||
-|| || guildhall-furnisher.plum||
-|| || guildhall-gemcutter.plum||
-|| || guildhall-generic.plum||
-|| || guildhall-weaver.plum||
-|| || mill-cannery.plum||
-|| || mill-distillery.plum||
-|| || mill-generic.plum||
-|| || mill-sawmill.plum||
-|| || mill-steel.plum||
-|| || mine-gem.plum||
-|| || mine-generic.plum||
-|| || mine-ore.plum||
-|| || mine-sulfur.plum||
-|| || special-housing.plum||
-|| || special-townhall.plum||
-|| || special-warehouse.plum||
-|| || water-barricade.plum||
-|| || water-dock.plum||
-|| || water-shipyard.plum||
-|| || water-tower.plum||
-|| || workshop-armorer.plum||
-|| || workshop-arsenal.plum||
-|| || workshop-generic.plum||
-|| || workshop-ropemaker.plum||
-|| || workshop-sailmaker.plum||
+|| || building/field/compost.plum||
+|| || building/field/cotton.plum||
+|| || building/field/generic.plum||
+|| || building/field/sugar.plum||
+|| || building/field/wheat.plum||
+|| || building/guildhall/bakery.plum||
+|| || building/guildhall/furnisher.plum||
+|| || building/guildhall/gemcutter.plum||
+|| || building/guildhall/generic.plum||
+|| || building/guildhall/weaver.plum||
+|| || building/mill/cannery.plum||
+|| || building/mill/distillery.plum||
+|| || building/mill/generic.plum||
+|| || building/mill/sawmill.plum||
+|| || building/mill/steel.plum||
+|| || building/mine/gem.plum||
+|| || building/mine/generic.plum||
+|| || building/mine/ore.plum||
+|| || building/mine/sulfur.plum||
+|| || building/special/housing.plum||
+|| || building/special/townhall.plum||
+|| || building/special/warehouse.plum||
+|| || building/water/barricade.plum||
+|| || building/water/dock.plum||
+|| || building/water/shipyard.plum||
+|| || building/water/tower.plum||
+|| || building/workshop/armorer.plum||
+|| || building/workshop/arsenal.plum||
+|| || building/workshop/generic.plum||
+|| || building/workshop/ropemaker.plum||
+|| || building/workshop/sailmaker.plum||
 
 ==Ships==
 
-|| || part-cannon.plum||
-|| || part-cannonball.plum||
-|| || ship-brig.plum||
-|| || ship-fluyt.plum||
-|| || ship-frigate.plum||
-|| || ship-galleon.plum||
-||C|| ship-sloop.plum||
+|| || ship/cannon.plum||
+|| || ship/cannonball.plum||
+|| || ship/brig.plum||
+|| || ship/fluyt.plum||
+|| || ship/frigate.plum||
+|| || ship/galleon.plum||
+||C|| ship/sloop.plum||
 
 ==Environment==
 
-|| || genlit-cannonball.plum||
-|| || genlit-cargo.plum||
-|| || genlit-destroyed-building.plum||
-|| || genlit-destroyed-ship.plum||
-|| || genlit-floating-ship-remains.plum||
-|| || randlit-bird.plum||
-|| || randlit-oldciv-collapsed-bridge.plum||
-|| || randlit-oldciv-pillar.plum||
-|| || randlit-oldciv-ruin-land.plum||
-|| || randlit-oldciv-ruin-water.plum||
-|| || randlit-oldciv-statue-arc.plum||
-|| || randlit-oldciv-statue-human.plum||
-|| || randlit-oldciv-statue-tree.plum||
-||C|| randlit-rock.plum||
-|| || randlit-shrubbery.plum||
-|| || terrain-mountain.plum||
-|| || tree-bamboo.plum||
-|| || tree-conifer.plum||
-||C|| tree-deciduous.plum||
-|| || tree-palm.plum||
+|| || terrain/mountain.plum||
+||C|| litter/rock.plum||
+|| || litter/shrubbery.plum||
+|| || litter/bird.plum||
+|| || litter/bridge.plum||
+|| || litter/pillar.plum||
+|| || litter/ruin.plum||
+|| || gib/cannonball.plum||
+|| || gib/cargo.plum||
+|| || gib/building.plum||
+|| || gib/ship.plum||
+|| || tree/bamboo.plum||
+|| || tree/coniferous.plum||
+||C|| tree/deciduous.plum||
+|| || tree/palm.plum||
+|| || statue/arc.plum||
+|| || statue/human.plum||
+|| || statue/tree.plum||
