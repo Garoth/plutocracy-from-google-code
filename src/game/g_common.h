@@ -16,10 +16,6 @@
 #include "../network/n_shared.h"
 #include "g_shared.h"
 
-/* Nation indices */
-#define G_NATIONS 4
-#define G_NATION_PIRATE (G_NATIONS - 1)
-
 /* Message tokens sent by clients */
 typedef enum {
         G_CM_NONE,
@@ -37,9 +33,10 @@ typedef enum {
 
 /* A tile on the globe */
 typedef struct g_tile {
-        c_vec3_t origin, normal, forward;
+        g_ship_t *ship;
         r_model_t model;
         r_tile_t *render;
+        c_vec3_t origin, normal, forward;
         struct g_tile *neighbors[3];
         int island;
         bool visible;
@@ -52,19 +49,17 @@ typedef struct g_client {
         char name[16];
 } g_client_t;
 
-/* Structure for each nation */
-typedef struct g_nation {
-        const char *short_name, *long_name;
-} g_nation_t;
-
 /* g_client.c */
 void G_client_callback(int client, n_event_t);
 
 /* g_host.c */
 extern g_client_t g_clients[N_CLIENTS_MAX];
-extern g_nation_t g_nations[G_NATIONS];
 
 /* g_globe.c */
+void G_cleanup_globe(void);
+void G_init_globe(void);
+void G_generate_globe(void);
+
 extern g_tile_t g_tiles[R_TILES_MAX];
 extern c_var_t g_globe_islands, g_globe_island_size, g_globe_seed,
                g_globe_subdiv4;

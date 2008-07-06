@@ -22,13 +22,13 @@
 
 /* Type for queued popup messages */
 typedef struct popup_message {
-        i_popup_icon_t icon;
         c_vec3_t goto_pos;
         int has_goto_pos;
         char message[128];
 } popup_message_t;
 
 static popup_message_t popup_messages[POPUP_MESSAGES_MAX];
+static i_button_t zoom_button;
 static i_label_t popup_label;
 static i_widget_t popup_widget;
 static r_window_t popup_window;
@@ -256,6 +256,8 @@ static void popup_configure()
                 return;
         }
         I_label_configure(&popup_label, popup_messages[0].message);
+        zoom_button.widget.state = popup_messages[0].has_goto_pos ?
+                                   I_WS_READY : I_WS_DISABLED;
         I_widget_event(&popup_widget, I_EV_CONFIGURE);
         I_widget_show(&popup_widget, TRUE);
         popup_time = c_time_msec;
@@ -267,10 +269,14 @@ static void popup_configure()
 static int popup_event(i_widget_t *widget, i_event_t event)
 {
         c_vec2_t origin;
+        float height;
 
         switch (event) {
         case I_EV_CONFIGURE:
-                widget->size = C_vec2(0.f, 32.f);
+                height = R_font_height(R_FONT_GUI) / r_pixel_scale.value.f;
+                if (height < 16.f)
+                        height = 16.f;
+                widget->size = C_vec2(0.f, height + i_border.value.n * 2.f);
                 I_widget_pack(widget, I_PACK_H, I_FIT_BOTTOM);
                 origin = C_vec2(r_width_2d / 2.f - widget->size.x / 2.f,
                                 r_height_2d - widget->size.y -
@@ -306,6 +312,15 @@ static int popup_event(i_widget_t *widget, i_event_t event)
 }
 
 /******************************************************************************\
+ Popup zoom button was clicked.
+\******************************************************************************/
+static void popup_zoom(void)
+{
+        C_assert(popup_messages[0].has_goto_pos);
+        R_rotate_cam_to(popup_messages[0].goto_pos);
+}
+
+/******************************************************************************\
  Initialize popup widget and add it to the root widget.
 \******************************************************************************/
 void I_init_popup(void)
@@ -320,6 +335,12 @@ void I_init_popup(void)
         /* Label */
         I_label_init(&popup_label, NULL);
         I_widget_add(&popup_widget, &popup_label.widget);
+
+        /* Zoom button */
+        I_button_init(&zoom_button, "gui/icons/zoom.png", NULL, I_BT_ROUND);
+        zoom_button.widget.margin_front = 0.5f;
+        zoom_button.on_click = (i_callback_f)popup_zoom;
+        I_widget_add(&popup_widget, &zoom_button.widget);
 
         I_widget_add(&i_root, &popup_widget);
 }
@@ -341,7 +362,7 @@ void I_update_popup(void)
 /******************************************************************************\
  Queues a new message to popup
 \******************************************************************************/
-void I_popup(i_popup_icon_t icon, const char *message, c_vec3_t *goto_pos)
+void I_popup(c_vec3_t *goto_pos, const char *message)
 {
         int i;
 
@@ -356,7 +377,6 @@ void I_popup(i_popup_icon_t icon, const char *message, c_vec3_t *goto_pos)
                 }
 
         /* Setup the queue entry */
-        popup_messages[i].icon = icon;
         C_strncpy_buf(popup_messages[i].message, message);
         if (goto_pos) {
                 popup_messages[i].has_goto_pos = TRUE;

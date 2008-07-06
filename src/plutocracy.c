@@ -176,7 +176,7 @@ static void cleanup(void)
         ran_once = TRUE;
 
         C_status("Cleaning up");
-        G_cleanup_globe();
+        G_cleanup();
         I_cleanup();
         R_text_cleanup(&status_text);
         R_free_test_assets();
@@ -240,8 +240,8 @@ int main(int argc, char *argv[])
         C_translate_vars();
         init_sdl();
         R_init();
+        G_init();
         I_init();
-        G_init_globe();
         R_load_test_assets();
 
         /* Run the main loop */

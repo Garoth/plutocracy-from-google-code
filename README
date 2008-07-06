@@ -95,8 +95,8 @@
     development packages in addition to your normal compiling environment:
 
       libsdl-dev
-      libsdl-image-dev
       libsdl-ttf-dev
+      libpng12-dev
       zlib1g-dev
       scons
 
@@ -133,10 +133,6 @@
       zlib        http://www.zlib.net/
       libpng      http://www.libpng.org/
 
-    To run Plutocracy after compiling, download the runtime DLLs:
-
-      http://pub.risujin.org/plutocracy/plutocracy_win32_dlls.zip
-
 
   2.2  Windows with MinGW
   -----------------------
@@ -148,7 +144,7 @@
       SCons       http://www.scons.org/
       MinGW       http://www.mingw.org/download.shtml
 
-    Note that MinGW is required, MSys is not necessary. You will need to
+    Note that MinGW is required, but MSys is not necessary. You will need to
     configure the PATH environment variable to contain the path of the
     MinGW bin directory:
 
@@ -169,7 +165,7 @@
     You should now be able to open a command prompt, navigate to the
     Plutocracy directory and compile using scons:
 
-      C:\plutocracy> scons mingw=1
+      C:\plutocracy> scons mingw=yes
 
     For additional build targets run scons help:
 
@@ -179,6 +175,11 @@
     it will create 'custom.py', the configuration file, and draw its options
     from there instead of from the environment. Specify changes over the
     command-line after this point or remove the configuration file.
+
+    Please note that if you are not using version 4 of MinGW GCC, you will need
+    to disable percompiled headers:
+
+      C:\plutocracy> scons mingw=yes pch=no
 
 
 

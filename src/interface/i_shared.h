@@ -23,11 +23,6 @@ typedef enum {
         I_RING_ICONS,
 } i_ring_icon_t;
 
-/* Popup icons */
-typedef enum {
-        I_PI_NONE,
-} i_popup_icon_t;
-
 /* Ring callback function */
 typedef void (*i_ring_f)(i_ring_icon_t);
 
@@ -41,9 +36,6 @@ void I_parse_config(void);
 void I_render(void);
 
 /* i_nations.c */
-void I_add_nation(const char *short_name, const char *long_name, bool margin);
-void I_configure_nations(void);
-void I_reset_nations(void);
 void I_select_nation(int nation);
 
 /* i_ring.c */
@@ -55,5 +47,5 @@ void I_show_ring(i_ring_f callback);
 void I_register_variables(void);
 
 /* i_window.c */
-void I_popup(i_popup_icon_t, const char *message, c_vec3_t *goto_pos);
+void I_popup(c_vec3_t *goto_pos, const char *message);
 

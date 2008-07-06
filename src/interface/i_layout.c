@@ -63,7 +63,7 @@ static int root_event(i_widget_t *root, i_event_t event)
                                                     c_frame_sec / 60.f * C_PI /
                                                     R_MINUTES_PER_DAY, 0.f));
                 if (i_limbo) {
-                        R_zoom_cam_by((R_ZOOM_MAX - r_cam_zoom) * c_frame_sec);
+                        R_zoom_cam_by((r_zoom_max - r_cam_zoom) * c_frame_sec);
                         limbo_fade += i_fade.value.f * c_frame_sec *
                                       LIMBO_FADE_SCALE;
                         if (limbo_fade > 1.f)
