@@ -462,10 +462,10 @@ static void test_ring_callback(i_ring_icon_t icon)
                 set_tile_model(selected_tile, "models/test/mill.plum");
         else if (icon == I_RI_TEST_TREE)
                 set_tile_model(selected_tile,
-                               "models/environment/tree-deciduous.plum");
+                               "models/trees/deciduous.plum");
         else if (icon == I_RI_TEST_SHIP)
                 set_tile_model(selected_tile,
-                               "models/ships/ship-sloop.plum");
+                               "models/ships/sloop.plum");
         else
                 set_tile_model(selected_tile, "");
 }
