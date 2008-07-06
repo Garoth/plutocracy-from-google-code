@@ -6,43 +6,40 @@
 
 || || not committed||
 ||C|| committed (done)||
-genlit: litter generated through player actions (destroying ships)
-
-randlit: litter generated randomly at map generation
 
 ==Buildings==
 
-|| || building/field/compost.plum||
-|| || building/field/cotton.plum||
-|| || building/field/generic.plum||
-|| || building/field/sugar.plum||
-|| || building/field/wheat.plum||
-|| || building/guildhall/bakery.plum||
-|| || building/guildhall/furnisher.plum||
-|| || building/guildhall/gemcutter.plum||
-|| || building/guildhall/generic.plum||
-|| || building/guildhall/weaver.plum||
-|| || building/mill/cannery.plum||
-|| || building/mill/distillery.plum||
-|| || building/mill/generic.plum||
-|| || building/mill/sawmill.plum||
-|| || building/mill/steel.plum||
-|| || building/mine/gem.plum||
-|| || building/mine/generic.plum||
-|| || building/mine/ore.plum||
-|| || building/mine/sulfur.plum||
-|| || building/special/housing.plum||
-|| || building/special/townhall.plum||
-|| || building/special/warehouse.plum||
-|| || building/water/barricade.plum||
-|| || building/water/dock.plum||
-|| || building/water/shipyard.plum||
-|| || building/water/tower.plum||
-|| || building/workshop/armorer.plum||
-|| || building/workshop/arsenal.plum||
-|| || building/workshop/generic.plum||
-|| || building/workshop/ropemaker.plum||
-|| || building/workshop/sailmaker.plum||
+|| || field/compost.plum||
+|| || field/cotton.plum||
+|| || field/generic.plum||
+|| || field/sugar.plum||
+|| || field/wheat.plum||
+|| || guildhall/bakery.plum||
+|| || guildhall/furnisher.plum||
+|| || guildhall/gemcutter.plum||
+|| || guildhall/generic.plum||
+|| || guildhall/weaver.plum||
+|| || mill/cannery.plum||
+|| || mill/distillery.plum||
+|| || mill/generic.plum||
+|| || mill/sawmill.plum||
+|| || mill/steel.plum||
+|| || mine/gem.plum||
+|| || mine/generic.plum||
+|| || mine/ore.plum||
+|| || mine/sulfur.plum||
+|| || special/housing.plum||
+|| || special/townhall.plum||
+|| || special/warehouse.plum||
+|| || water/barricade.plum||
+|| || water/dock.plum||
+|| || water/shipyard.plum||
+|| || water/tower.plum||
+|| || workshop/armorer.plum||
+|| || workshop/arsenal.plum||
+|| || workshop/generic.plum||
+|| || workshop/ropemaker.plum||
+|| || workshop/sailmaker.plum||
 
 ==Ships==
 
