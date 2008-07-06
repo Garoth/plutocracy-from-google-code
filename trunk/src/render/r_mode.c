@@ -405,7 +405,7 @@ void R_init(void)
 
         check_gl_extensions();
         set_gl_state();
-        r_cam_zoom = R_ZOOM_MAX;
+        r_cam_zoom = 1000.f;
         R_clip_disable();
         R_load_assets();
         R_init_camera();

@@ -22,9 +22,10 @@
    so we need to set a minimum (in points). */
 #define R_FONT_SIZE_MIN 10
 
-/* Ranges for zooming in and out */
+/* Ranges for zooming in and out. Maximum zoom distance is a scale value of
+   the globe radius. */
 #define R_ZOOM_MIN 8.f
-#define R_ZOOM_MAX 16.f
+#define R_ZOOM_MAX_SCALE 0.5f
 
 /* OpenGL cannot address enough vertices to render more than 5 subdivisons'
    worth of tiles */
@@ -133,10 +134,11 @@ r_texture_t *R_texture_load(const char *filename, int mipmaps);
 #define R_texture_ref(t) C_ref_up((c_ref_t *)(t))
 
 /* r_camera.c */
-void R_move_cam_by(c_vec2_t);
+void R_move_cam_by(c_vec2_t distances);
 c_vec3_t R_project(c_vec3_t);
 c_vec3_t R_project_by_cam(c_vec3_t);
-void R_rotate_cam_by(c_vec3_t);
+void R_rotate_cam_by(c_vec3_t angles);
+void R_rotate_cam_to(c_vec3_t origin);
 c_vec3_t R_rotate_from_cam(c_vec3_t);
 c_vec3_t R_rotate_to_cam(c_vec3_t);
 void R_zoom_cam_by(float);
@@ -152,7 +154,7 @@ int R_get_tile_region(int tile, int neighbors[12]);
 void R_select_tile(int tile);
 void R_start_globe(void);
 
-extern float r_globe_light, r_globe_radius;
+extern float r_globe_light, r_globe_radius, r_zoom_max;
 extern int r_tiles;
 
 /* r_mode.c */

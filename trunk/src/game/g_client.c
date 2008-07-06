@@ -20,7 +20,7 @@ int g_client_id;
 \******************************************************************************/
 static void corrupt_disconnect(void)
 {
-        I_popup(I_PI_NONE, "Server sent invalid data, disconnected.", NULL);
+        I_popup(NULL, "Server sent invalid data, disconnected.");
         N_disconnect();
 }
 
@@ -29,20 +29,18 @@ static void corrupt_disconnect(void)
 \******************************************************************************/
 static void receive_popup(void)
 {
-        i_popup_icon_t icon;
         c_vec3_t *goto_pos;
         int focus_tile;
         char message[256];
 
-        icon = (i_popup_icon_t)N_receive_char();
         focus_tile = N_receive_short();
-        if (icon < 0 || focus_tile >= r_tiles) {
+        if (focus_tile >= r_tiles) {
                 corrupt_disconnect();
                 return;
         }
         goto_pos = focus_tile >= 0 ? &g_tiles[focus_tile].origin : NULL;
         N_receive_string(message, sizeof (message));
-        I_popup(icon, message, goto_pos);
+        I_popup(goto_pos, message);
 }
 
 /******************************************************************************\
@@ -50,12 +48,12 @@ static void receive_popup(void)
 \******************************************************************************/
 static void receive_affiliate(void)
 {
-        const char *format, *nation_name;
+        const char *fmt;
         int client, nation;
 
         client = N_receive_char();
         nation = N_receive_char();
-        if (nation < 0 || nation >= G_NATIONS || client < 0 ||
+        if (nation < 0 || nation >= G_NATION_NAMES || client < 0 ||
             client >= N_CLIENTS_MAX || !n_clients[client].connected) {
                 corrupt_disconnect();
                 return;
@@ -63,31 +61,27 @@ static void receive_affiliate(void)
         g_clients[client].nation = nation;
         if (client == n_client_id)
                 I_select_nation(nation);
-        nation_name = C_str(C_va("g-nation-%s", g_nations[nation].short_name),
-                            g_nations[nation].long_name);
 
         /* Special case for pirates */
-        if (nation == G_NATION_PIRATE) {
+        if (nation == G_NN_PIRATE) {
                 if (client == n_client_id) {
-                        I_popup(I_PI_NONE, C_str("g-join-pirate",
-                                                 "You became a pirate."), NULL);
+                        I_popup(NULL, C_str("g-join-pirate",
+                                            "You became a pirate."));
                         return;
                 }
-                format = C_str("g-join-pirate-client", "%s became a pirate.");
-                I_popup(I_PI_NONE, C_va(format, g_clients[client].name), NULL);
+                fmt = C_str("g-join-pirate-client", "%s became a pirate.");
+                I_popup(NULL, C_va(fmt, g_clients[client].name));
                 return;
         }
 
         /* Message for nations */
         if (client == n_client_id) {
-                format = C_str("g-join-nation-you",
-                               "You joined the %s nation.");
-                I_popup(I_PI_NONE, C_va(format, nation_name), NULL);
+                fmt = C_str("g-join-nation-you", "You joined the %s nation.");
+                I_popup(NULL, C_va(fmt, g_nations[nation].long_name));
         } else {
-                format = C_str("g-join-nation-client",
-                               "%s joined the %s nation.");
-                I_popup(I_PI_NONE, C_va(format, g_clients[client].name,
-                                        nation_name), NULL);
+                fmt = C_str("g-join-nation-client", "%s joined the %s nation.");
+                I_popup(NULL, C_va(fmt, g_clients[client].name,
+                                   g_nations[nation].long_name));
         }
 }
 
@@ -125,11 +119,11 @@ void G_client_callback(int client, n_event_t event)
 /******************************************************************************\
  Leave the current game.
 \******************************************************************************/
-void G_quit_game(void)
+void G_leave_game(void)
 {
         N_disconnect();
         N_stop_server();
-        I_popup(I_PI_NONE, "Left the current game.", NULL);
+        I_popup(NULL, "Left the current game.");
 }
 
 /******************************************************************************\

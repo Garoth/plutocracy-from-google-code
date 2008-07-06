@@ -35,6 +35,9 @@ float r_globe_radius;
 /* Modulates the globe material colors */
 float r_globe_light;
 
+/* Maximum zoom distance from globe surface */
+float r_zoom_max;
+
 /* Number of tiles on the globe */
 int r_tiles;
 
@@ -283,6 +286,9 @@ void R_generate_globe(int subdiv4)
 
         /* Delete any old vertex buffers */
         R_vbo_cleanup(&globe_vbo);
+
+        /* Maximum zoom distance is a function of the globe radius */
+        r_zoom_max = r_globe_radius * R_ZOOM_MAX_SCALE;
 
         selected_tile = -1;
         R_generate_halo();

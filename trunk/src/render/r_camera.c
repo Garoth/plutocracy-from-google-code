@@ -14,6 +14,12 @@
 
 #include "r_common.h"
 
+/* Proportion of the angle remaining that gradual rotation moves per second */
+#define GRADUAL_RATE 2.f
+
+/* Cut-off angle at which gradual rotation stops */
+#define GRADUAL_MARGIN 0.01f
+
 /* Camera location and orientation */
 c_vec3_t r_cam_origin, r_cam_forward, r_cam_normal;
 
@@ -23,9 +29,10 @@ float r_cam_zoom;
 /* The full camera matrix */
 GLfloat r_cam_matrix[16];
 
-static c_vec3_t cam_rot_diff;
+static c_vec3_t cam_rot_diff, gradual_axis;
 static GLfloat cam_rotation[16];
-static float cam_zoom_diff;
+static float cam_zoom_diff, gradual_angle;
+static bool cam_gradual;
 
 /******************************************************************************\
  Initialize camera structures.
@@ -84,10 +91,10 @@ void R_update_camera(void)
 
         /* Update zoom */
         r_cam_zoom += cam_zoom_diff;
+        if (r_cam_zoom > r_zoom_max)
+                r_cam_zoom = r_zoom_max;
         if (r_cam_zoom < R_ZOOM_MIN)
                 r_cam_zoom = R_ZOOM_MIN;
-        if (r_cam_zoom > R_ZOOM_MAX)
-                r_cam_zoom = R_ZOOM_MAX;
         cam_zoom_diff = 0.f;
 
         /* Apply the rotation differences from last frame to the rotation
@@ -100,9 +107,23 @@ void R_update_camera(void)
         glRotatef(C_rad_to_deg(cam_rot_diff.y), y_axis.x, y_axis.y, y_axis.z);
         glRotatef(C_rad_to_deg(cam_rot_diff.z), z_axis.x, z_axis.y, z_axis.z);
         cam_rot_diff = C_vec3(0.f, 0.f, 0.f);
-        glGetFloatv(GL_MODELVIEW_MATRIX, cam_rotation);
+
+        /* If we are in gradual rotation mode, update it */
+        if (cam_gradual) {
+                float angle;
+
+                angle = gradual_angle * GRADUAL_RATE * c_frame_sec;
+                if (angle > gradual_angle)
+                        angle = gradual_angle;
+                glRotatef(C_rad_to_deg(angle), gradual_axis.x,
+                          gradual_axis.y, gradual_axis.z);
+                gradual_angle -= angle;
+                if (gradual_angle < GRADUAL_MARGIN)
+                        cam_gradual = FALSE;
+        }
 
         /* Recreate the full camera matrix with the new rotation */
+        glGetFloatv(GL_MODELVIEW_MATRIX, cam_rotation);
         glLoadIdentity();
         glTranslatef(0, 0, -r_globe_radius - r_cam_zoom);
         glMultMatrixf(cam_rotation);
@@ -128,6 +149,9 @@ void R_update_camera(void)
 \******************************************************************************/
 void R_move_cam_by(c_vec2_t distance)
 {
+        if (!distance.x && !distance.y)
+                return;
+        cam_gradual = FALSE;
         cam_rot_diff.x += distance.y / (r_globe_radius * C_PI);
         cam_rot_diff.y += distance.x / (r_globe_radius * C_PI);
 }
@@ -138,6 +162,9 @@ void R_move_cam_by(c_vec2_t distance)
 \******************************************************************************/
 void R_rotate_cam_by(c_vec3_t angle)
 {
+        if (!angle.x && !angle.y && !angle.z)
+                return;
+        cam_gradual = FALSE;
         cam_rot_diff = C_vec3_add(cam_rot_diff, angle);
 }
 
@@ -183,5 +210,25 @@ c_vec3_t R_project(c_vec3_t co)
 c_vec3_t R_project_by_cam(c_vec3_t co)
 {
         return project_by_matrix(co, r_cam_matrix);
+}
+
+/******************************************************************************\
+ Begin a gradual rotation to the target normal.
+\******************************************************************************/
+void R_rotate_cam_to(c_vec3_t pos)
+{
+        c_vec3_t norm_origin;
+
+        if (!pos.x && !pos.y && !pos.z)
+                return;
+        norm_origin = C_vec3_norm(r_cam_origin);
+        pos = C_vec3_norm(pos);
+        gradual_axis = C_vec3_norm(C_vec3_cross(pos, norm_origin));
+        gradual_angle = acosf(C_vec3_dot(pos, norm_origin));
+        if (gradual_angle < 0.f) {
+                gradual_angle = -gradual_angle;
+                gradual_axis = C_vec3_scalef(gradual_axis, -1.f);
+        }
+        cam_gradual = TRUE;
 }
 
