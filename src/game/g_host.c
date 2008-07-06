@@ -52,7 +52,7 @@ void G_init(void)
         /* Setup ship classes */
         g_ship_classes[G_SN_SLOOP].name = C_str("g-ship-sloop", "Sloop");
         g_ship_classes[G_SN_SLOOP].speed = 1.f;
-        g_ship_classes[G_SN_SLOOP].model_path = "models/ships/sloop.plum";
+        g_ship_classes[G_SN_SLOOP].model_path = "models/ship/sloop.plum";
 
         /* Setup ships array */
         for (i = 0; i < G_SHIPS_MAX; i++)
