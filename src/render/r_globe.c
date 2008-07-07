@@ -47,7 +47,7 @@ c_color_t r_select_color;
 static r_vertex3_t select_verts[3];
 static r_texture_t *select_tex;
 static r_vbo_t globe_vbo;
-static c_color_t globe_colors[4];
+static c_color_t globe_colors[3];
 static c_vec3_t normals[R_TILES_MAX];
 static globe_vertex_t vertices[R_TILES_MAX * 3];
 static int flip_limit, selected_tile;
@@ -64,7 +64,7 @@ void R_init_globe(void)
         select_tex->additive = TRUE;
 
         /* Setup globe material properties */
-        for (i = 0; i < 4; i++)
+        for (i = 0; i < 3; i++)
                 C_var_update_data(r_globe_colors + i, C_color_update,
                                   globe_colors + i);
 }
@@ -318,7 +318,6 @@ void R_start_globe(void)
         glMaterialfv(GL_FRONT, GL_AMBIENT, modulate_globe_color(0));
         glMaterialfv(GL_FRONT, GL_DIFFUSE, modulate_globe_color(1));
         glMaterialfv(GL_FRONT, GL_SPECULAR, modulate_globe_color(2));
-        glMaterialfv(GL_FRONT, GL_EMISSION, modulate_globe_color(3));
 
         R_start_atmosphere();
         R_enable_light();

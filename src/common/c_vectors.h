@@ -277,6 +277,14 @@ static inline c_vec3_t C_vec3_lerp(c_vec3_t a, float lerp, c_vec3_t b)
                       a.z + lerp * (b.z - a.z));
 }
 
+static inline c_color_t C_color_lerp(c_color_t a, float lerp, c_color_t b)
+{
+        return C_color(a.r + lerp * (b.r - a.r),
+                       a.g + lerp * (b.g - a.g),
+                       a.b + lerp * (b.b - a.b),
+                       a.a + lerp * (b.a - a.a));
+}
+
 /******************************************************************************\
  Truncate vector values down to whole numbers. Negative values are also
  truncated down (-2.1 is rounded to -3).
