@@ -158,6 +158,7 @@ void R_adjust_light_for(c_vec3_t origin)
 
         if (!r_light.value.n)
                 return;
+        dist = C_vec3_dot(origin, sky.forward);
 
         /* Global as opposed to per-light ambient color is used. In order to
            fully light models close to the light source, we add some diffuse
@@ -170,7 +171,6 @@ void R_adjust_light_for(c_vec3_t origin)
         glLightModelfv(GL_LIGHT_MODEL_AMBIENT, C_ARRAYF(ambient));
 
         /* Setup per-light options */
-        dist = C_vec3_dot(origin, sky.forward);
         adjust_light(GL_LIGHT0, dist, sun_diffuse, sun_specular);
         adjust_light(GL_LIGHT1, -dist, moon_diffuse, moon_specular);
 }
