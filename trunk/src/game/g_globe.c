@@ -385,7 +385,8 @@ void G_render_globe(void)
 
         /* Render tile models */
         for (i = 0; i < r_tiles; i++)
-                if ((g_tiles[i].visible = tile_visible(i))) {
+                if ((g_tiles[i].visible = tile_visible(i)) &&
+                    g_tiles[i].model.data) {
                         R_adjust_light_for(g_tiles[i].origin);
                         R_model_render(&g_tiles[i].model);
                 }

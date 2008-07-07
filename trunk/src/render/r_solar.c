@@ -18,7 +18,7 @@
 #define SOLAR_DISTANCE 350.f
 
 /* Localized light parameters */
-#define LIGHT_TRANSITION 16.f
+#define LIGHT_TRANSITION 8.f
 
 /* Atmospheric fog and halo parameters */
 #define FOG_DISTANCE 12.f
@@ -40,7 +40,8 @@ c_color_t r_fog_color;
 
 static r_model_t sky;
 static r_billboard_t moon, sun;
-static c_color_t moon_colors[3], sun_colors[3];
+static c_color_t moon_diffuse, moon_specular, sun_diffuse, sun_specular,
+                 light_ambient;
 static halo_vertex_t halo_verts[2 + HALO_SEGMENTS * 2];
 static float sky_angle;
 
@@ -49,17 +50,14 @@ static float sky_angle;
 \******************************************************************************/
 void R_init_solar(void)
 {
-        int i;
-
         C_status("Initializing solar objects");
 
         /* Update light colors */
-        for (i = 0; i < 3; i++) {
-                C_var_update_data(r_sun_colors + i, C_color_update,
-                                  sun_colors + i);
-                C_var_update_data(r_moon_colors + i, C_color_update,
-                                  moon_colors + i);
-        }
+        C_var_update_data(&r_sun_diffuse, C_color_update, &sun_diffuse);
+        C_var_update_data(&r_sun_specular, C_color_update, &sun_specular);
+        C_var_update_data(&r_moon_diffuse, C_color_update, &moon_diffuse);
+        C_var_update_data(&r_moon_specular, C_color_update, &moon_specular);
+        C_var_update_data(&r_light_ambient, C_color_update, &light_ambient);
 
         /* Load solar object sprites */
         R_billboard_load(&moon, "models/solar/moon.png");
@@ -85,6 +83,7 @@ void R_cleanup_solar(void)
 \******************************************************************************/
 void R_enable_light(void)
 {
+        c_color_t black;
         float sun_pos[4], moon_pos[4];
 
         if (!r_light.value.n)
@@ -92,15 +91,19 @@ void R_enable_light(void)
         glEnable(GL_LIGHTING);
         glPushMatrix();
         glRotatef(C_rad_to_deg(sky_angle), 0.f, 1.f, 0.f);
+        black = C_color(0.f, 0.f, 0.f, 0.f);
+
+        /* Ambient light */
+        glLightModelfv(GL_LIGHT_MODEL_AMBIENT, C_ARRAYF(light_ambient));
 
         /* Sunlight */
         sun_pos[0] = r_globe_radius + r_moon_height.value.f;
         sun_pos[1] = sun_pos[2] = sun_pos[3] = 0.f;
         glEnable(GL_LIGHT0);
         glLightfv(GL_LIGHT0, GL_POSITION, C_ARRAYF(sun_pos));
-        glLightfv(GL_LIGHT0, GL_AMBIENT, (float *)sun_colors);
-        glLightfv(GL_LIGHT0, GL_DIFFUSE, (float *)(sun_colors + 1));
-        glLightfv(GL_LIGHT0, GL_SPECULAR, (float *)(sun_colors + 2));
+        glLightfv(GL_LIGHT0, GL_AMBIENT, C_ARRAYF(black));
+        glLightfv(GL_LIGHT0, GL_DIFFUSE, C_ARRAYF(sun_diffuse));
+        glLightfv(GL_LIGHT0, GL_SPECULAR, C_ARRAYF(sun_specular));
 
         /* Moonlight */
         moon_pos[0] = -sun_pos[0];
@@ -108,9 +111,9 @@ void R_enable_light(void)
         moon_pos[3] = 1.f;
         glEnable(GL_LIGHT1);
         glLightfv(GL_LIGHT1, GL_POSITION, C_ARRAYF(moon_pos));
-        glLightfv(GL_LIGHT1, GL_AMBIENT, (float *)moon_colors);
-        glLightfv(GL_LIGHT1, GL_DIFFUSE, (float *)(moon_colors + 1));
-        glLightfv(GL_LIGHT1, GL_SPECULAR, (float *)(moon_colors + 2));
+        glLightfv(GL_LIGHT1, GL_AMBIENT, C_ARRAYF(black));
+        glLightfv(GL_LIGHT1, GL_DIFFUSE, C_ARRAYF(moon_diffuse));
+        glLightfv(GL_LIGHT1, GL_SPECULAR, C_ARRAYF(moon_specular));
         glLightf(GL_LIGHT1, GL_QUADRATIC_ATTENUATION, r_moon_atten.value.f);
         glLightf(GL_LIGHT1, GL_LINEAR_ATTENUATION, 0.f);
         glLightf(GL_LIGHT1, GL_CONSTANT_ATTENUATION, 0.f);
@@ -119,28 +122,57 @@ void R_enable_light(void)
 }
 
 /******************************************************************************\
+ Adjust the colors for one light.
+\******************************************************************************/
+static void adjust_light(int light, float dist,
+                         c_color_t diffuse, c_color_t specular)
+{
+        float scale;
+
+        scale = dist / LIGHT_TRANSITION + 0.5f;
+        if (scale <= 0.f) {
+                glDisable(light);
+                return;
+        }
+
+        /* If the model is in the transition area, scale down the lights */
+        if (scale <= 1.f) {
+                diffuse = C_color_scalef(diffuse, scale);
+                specular = C_color_scalef(specular, scale);
+        }
+
+        /* Setup OpenGL parameters */
+        glEnable(light);
+        glLightfv(light, GL_DIFFUSE, C_ARRAYF(diffuse));
+        glLightfv(light, GL_SPECULAR, C_ARRAYF(specular));
+}
+
+/******************************************************************************\
  After light is enabled, modulates sunlight to prevent backlighting models on
  the night side of the globe.
 \******************************************************************************/
 void R_adjust_light_for(c_vec3_t origin)
 {
-        c_color_t diffuse, specular;
-        float dist, scale;
+        c_color_t ambient;
+        float dist;
 
         if (!r_light.value.n)
                 return;
+
+        /* Global as opposed to per-light ambient color is used. In order to
+           fully light models close to the light source, we add some diffuse
+           color to the ambient lighting. */
+        ambient = dist >= 0.f ?
+                  C_color_lerp(light_ambient, dist / r_globe_radius,
+                               sun_diffuse) :
+                  C_color_lerp(light_ambient, -dist / r_globe_radius,
+                               moon_diffuse);
+        glLightModelfv(GL_LIGHT_MODEL_AMBIENT, C_ARRAYF(ambient));
+
+        /* Setup per-light options */
         dist = C_vec3_dot(origin, sky.forward);
-        diffuse = sun_colors[1];
-        specular = sun_colors[2];
-        if (dist < LIGHT_TRANSITION / 2) {
-                scale = dist / LIGHT_TRANSITION + 0.5f;
-                if (scale < 0.f)
-                        scale = 0.f;
-                diffuse = C_color_scalef(diffuse, scale);
-                specular = C_color_scalef(specular, scale);
-        }
-        glLightfv(GL_LIGHT0, GL_DIFFUSE, C_ARRAYF(diffuse));
-        glLightfv(GL_LIGHT0, GL_SPECULAR, C_ARRAYF(specular));
+        adjust_light(GL_LIGHT0, dist, sun_diffuse, sun_specular);
+        adjust_light(GL_LIGHT1, -dist, moon_diffuse, moon_specular);
 }
 
 /******************************************************************************\
@@ -160,7 +192,8 @@ void R_render_solar(void)
 {
         if (!r_solar.value.n)
                 return;
-        sky_angle -= c_frame_sec * C_PI / 60.f / R_MINUTES_PER_DAY;
+        if (r_solar.value.n != 2)
+                sky_angle -= c_frame_sec * C_PI / 60.f / R_MINUTES_PER_DAY;
         sky.forward = C_vec3(cosf(-sky_angle), 0.f, sinf(-sky_angle));
         R_model_render(&sky);
 
