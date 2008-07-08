@@ -87,7 +87,7 @@ static int ring_event(i_widget_t *widget, i_event_t event)
                         I_close_ring();
                 break;
         case I_EV_MOUSE_DOWN:
-                if (radius <= RING_INNER_RADIUS)
+                if (radius <= RING_INNER_RADIUS || i_mouse != SDL_BUTTON_LEFT)
                         I_close_ring();
                 break;
         case I_EV_CLEANUP:

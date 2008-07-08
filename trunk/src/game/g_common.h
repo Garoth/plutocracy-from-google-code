@@ -16,6 +16,12 @@
 #include "../network/n_shared.h"
 #include "g_shared.h"
 
+/* Network protocol, increment when no longer compatible */
+#define G_PROTOCOL 0
+
+/* Invalid island index */
+#define G_ISLAND_INVALID 255
+
 /* Message tokens sent by clients */
 typedef enum {
         G_CM_NONE,
@@ -26,15 +32,23 @@ typedef enum {
 /* Message tokens sent by the server */
 typedef enum {
         G_SM_NONE,
+        G_SM_INIT,
         G_SM_POPUP,
         G_SM_AFFILIATE,
         G_SERVER_MESSAGES,
 } g_server_msg_t;
 
+/* Visibility values */
+typedef enum {
+        G_INVISIBLE = 0,
+        G_VISIBLE_FAR,
+        G_VISIBLE_NEAR,
+} g_visibility_t;
+
 /* A tile on the globe */
 typedef struct g_tile {
-        g_ship_t *ship;
         r_model_t model;
+        g_ship_t *ship;
         r_tile_t *render;
         c_vec3_t origin, normal, forward;
         struct g_tile *neighbors[3];
@@ -59,10 +73,17 @@ extern g_client_t g_clients[N_CLIENTS_MAX];
 void G_cleanup_globe(void);
 void G_init_globe(void);
 void G_generate_globe(void);
+int G_set_tile_model(int tile, const char *path);
 
 extern g_tile_t g_tiles[R_TILES_MAX];
 extern c_var_t g_globe_islands, g_globe_island_size, g_globe_seed,
                g_globe_subdiv4;
+
+/* g_ship.c */
+void G_cleanup_ships(void);
+void G_init_ships(void);
+void G_render_ships(void);
+g_ship_t *G_spawn_ship(int client, int tile, g_ship_name_t, int ship_index);
 
 /* g_variables.c */
 extern c_var_t g_test_globe, g_test_tile;

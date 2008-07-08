@@ -187,6 +187,18 @@ static void test_globe(void)
 }
 
 /******************************************************************************\
+ Emit a mouse ray from the mouse screen position.
+\******************************************************************************/
+static void mouse_ray(void)
+{
+        c_vec3_t direction;
+
+        direction = screen_ray(i_mouse_x, i_mouse_y);
+        direction = R_rotate_to_cam(direction);
+        G_mouse_ray(r_cam_origin, direction);
+}
+
+/******************************************************************************\
  Processes events from the root window that affect the globe.
 \******************************************************************************/
 void I_globe_event(i_event_t event)
@@ -220,17 +232,22 @@ void I_globe_event(i_event_t event)
                         globe_motion.y = 0.f;
                 break;
         case I_EV_MOUSE_DOWN:
-                if (i_mouse == SDL_BUTTON_WHEELDOWN)
+                if (i_mouse_focus != &i_root)
+                        break;
+                if (i_mouse == SDL_BUTTON_WHEELDOWN) {
                         R_zoom_cam_by(i_zoom_speed.value.f);
-                else if (i_mouse == SDL_BUTTON_WHEELUP)
+                        mouse_ray();
+                } else if (i_mouse == SDL_BUTTON_WHEELUP) {
                         R_zoom_cam_by(-i_zoom_speed.value.f);
-                else if (i_mouse == SDL_BUTTON_MIDDLE)
+                        mouse_ray();
+                } else if (i_mouse == SDL_BUTTON_MIDDLE ||
+                           i_mouse == SDL_BUTTON_RIGHT)
                         grab_globe(i_mouse_x, i_mouse_y);
                 else
                         G_process_click(i_mouse);
                 break;
         case I_EV_MOUSE_UP:
-                if (i_mouse == SDL_BUTTON_MIDDLE)
+                if (i_mouse == SDL_BUTTON_MIDDLE || i_mouse == SDL_BUTTON_RIGHT)
                         release_globe();
                 break;
         case I_EV_MOUSE_MOVE:
@@ -240,17 +257,15 @@ void I_globe_event(i_event_t event)
                         G_mouse_ray_miss();
                 else if (grabbing)
                         rotate_globe(i_mouse_x, i_mouse_y);
-                else {
-                        c_vec3_t direction;
-
-                        direction = screen_ray(i_mouse_x, i_mouse_y);
-                        direction = R_rotate_to_cam(direction);
-                        G_mouse_ray(r_cam_origin, direction);
-                }
+                else
+                        mouse_ray();
                 break;
         case I_EV_RENDER:
                 test_globe();
-                R_move_cam_by(C_vec2_scalef(globe_motion, c_frame_sec));
+                if (globe_motion.x || globe_motion.y) {
+                        R_move_cam_by(C_vec2_scalef(globe_motion, c_frame_sec));
+                        mouse_ray();
+                }
                 break;
         default:
                 break;

@@ -27,7 +27,7 @@ static void corrupt_disconnect(void)
 /******************************************************************************\
  Client is receving a popup message from the server.
 \******************************************************************************/
-static void receive_popup(void)
+static void client_popup(void)
 {
         c_vec3_t *goto_pos;
         int focus_tile;
@@ -46,13 +46,15 @@ static void receive_popup(void)
 /******************************************************************************\
  Some client changed their national affiliation.
 \******************************************************************************/
-static void receive_affiliate(void)
+static void client_affiliate(void)
 {
+        c_vec3_t *goto_pos;
         const char *fmt;
-        int client, nation;
+        int client, nation, tile;
 
         client = N_receive_char();
         nation = N_receive_char();
+        tile = N_receive_short();
         if (nation < 0 || nation >= G_NATION_NAMES || client < 0 ||
             client >= N_CLIENTS_MAX || !n_clients[client].connected) {
                 corrupt_disconnect();
@@ -62,27 +64,57 @@ static void receive_affiliate(void)
         if (client == n_client_id)
                 I_select_nation(nation);
 
+        /* Affiliation message might have a goto tile attached */
+        goto_pos = NULL;
+        if (tile >= 0 && tile < r_tiles)
+                goto_pos = &g_tiles[tile].origin;
+
         /* Special case for pirates */
         if (nation == G_NN_PIRATE) {
                 if (client == n_client_id) {
-                        I_popup(NULL, C_str("g-join-pirate",
-                                            "You became a pirate."));
+                        I_popup(goto_pos, C_str("g-join-pirate",
+                                                "You became a pirate."));
                         return;
                 }
                 fmt = C_str("g-join-pirate-client", "%s became a pirate.");
-                I_popup(NULL, C_va(fmt, g_clients[client].name));
+                I_popup(goto_pos, C_va(fmt, g_clients[client].name));
                 return;
         }
 
         /* Message for nations */
         if (client == n_client_id) {
                 fmt = C_str("g-join-nation-you", "You joined the %s nation.");
-                I_popup(NULL, C_va(fmt, g_nations[nation].long_name));
+                I_popup(goto_pos, C_va(fmt, g_nations[nation].long_name));
         } else {
                 fmt = C_str("g-join-nation-client", "%s joined the %s nation.");
-                I_popup(NULL, C_va(fmt, g_clients[client].name,
-                                   g_nations[nation].long_name));
+                I_popup(goto_pos, C_va(fmt, g_clients[client].name,
+                                       g_nations[nation].long_name));
         }
+}
+
+/******************************************************************************\
+ Client just connected to the server or the server has re-hosted.
+\******************************************************************************/
+static void client_init(void)
+{
+        int protocol, seed;
+        const char *msg;
+
+        protocol = N_receive_char();
+        if (protocol != G_PROTOCOL) {
+                msg = C_va("Server protocol (%d) does not match "
+                           "client protocol (%d), disconnecting.",
+                           protocol, G_PROTOCOL);
+                I_popup(NULL, C_str("g-incompatible", msg));
+                N_disconnect();
+                return;
+        }
+        seed = N_receive_int();
+        if (seed != g_globe_seed.value.n) {
+                g_globe_seed.value.n = seed;
+                G_generate_globe();
+        }
+        I_select_nation(-1);
 }
 
 /******************************************************************************\
@@ -105,13 +137,16 @@ void G_client_callback(int client, n_event_t event)
                 return;
         token = N_receive_char();
         switch (token) {
-        default:
-                break;
         case G_SM_POPUP:
-                receive_popup();
+                client_popup();
                 break;
         case G_SM_AFFILIATE:
-                receive_affiliate();
+                client_affiliate();
+                break;
+        case G_SM_INIT:
+                client_init();
+                break;
+        default:
                 break;
         }
 }

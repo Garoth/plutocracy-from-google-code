@@ -14,6 +14,7 @@
    also function as a server. */
 
 #include "common/c_shared.h"
+#include "network/n_shared.h"
 #include "render/r_shared.h"
 #include "interface/i_shared.h"
 #include "game/g_shared.h"
@@ -181,6 +182,7 @@ static void cleanup(void)
         R_text_cleanup(&status_text);
         R_free_test_assets();
         R_cleanup();
+        N_cleanup();
         SDL_Quit();
         C_cleanup_lang();
         C_check_leaks();
@@ -239,6 +241,7 @@ int main(int argc, char *argv[])
         C_init_lang();
         C_translate_vars();
         init_sdl();
+        N_init();
         R_init();
         G_init();
         I_init();

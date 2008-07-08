@@ -204,6 +204,7 @@ void R_text_configure(r_text_t *, r_font_t, float wrap, float shadow,
 void R_text_render(r_text_t *);
 #define R_window_cleanup(w) R_sprite_cleanup(&(w)->sprite)
 void R_window_init(r_window_t *, r_texture_t *);
+void R_window_load(r_window_t *, const char *filename);
 void R_window_render(r_window_t *);
 
 /* r_tests.c */

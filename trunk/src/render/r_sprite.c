@@ -367,6 +367,24 @@ void R_window_init(r_window_t *window, r_texture_t *texture)
 }
 
 /******************************************************************************\
+ Initializes a window sprite from disk.
+\******************************************************************************/
+void R_window_load(r_window_t *window, const char *filename)
+{
+        r_texture_t *texture;
+
+        if (!window)
+                return;
+        texture = R_texture_load(filename, FALSE);
+        if (!texture) {
+                C_zero(window);
+                return;
+        }
+        R_window_init(window, texture);
+        R_texture_free(texture);
+}
+
+/******************************************************************************\
  Renders a window sprite. A window sprite is composed of a grid of nine quads
  where the corner quads have a fixed size and the connecting quads stretch to
  fill the rest of the sprite size.

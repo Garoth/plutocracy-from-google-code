@@ -597,6 +597,20 @@ const char *I_key_string(int sym)
 }
 
 /******************************************************************************\
+ Delivers a mouse-down event to [widget] and propagates up through its
+ parents.
+\******************************************************************************/
+static void propagate_mouse_down(i_widget_t *widget)
+{
+        while (widget && widget->event_func) {
+                if (widget->shown && widget->state != I_WS_DISABLED &&
+                    widget->clickable)
+                        widget->event_func(i_mouse_focus, I_EV_MOUSE_DOWN);
+                widget = widget->parent;
+        }
+}
+
+/******************************************************************************\
  Handle an SDL event. Does not allow multiple keys or mouse buttons to be
  pressed at the same time.
 \******************************************************************************/
@@ -660,12 +674,9 @@ void I_dispatch(const SDL_Event *ev)
                 if (i_key_focus && i_key_focus->event_func &&
                     i_key_focus->shown && i_key_focus->state != I_WS_DISABLED)
                         i_key_focus->event_func(i_key_focus, event);
-        } else if (event == I_EV_MOUSE_DOWN) {
-                if (i_mouse_focus && i_mouse_focus->event_func &&
-                    i_mouse_focus->shown &&
-                    i_mouse_focus->state != I_WS_DISABLED)
-                        i_mouse_focus->event_func(i_mouse_focus, event);
-        } else
+        } else if (event == I_EV_MOUSE_DOWN)
+                propagate_mouse_down(i_mouse_focus);
+        else
                 I_widget_event(&i_root, event);
 
         /* After dispatch */
