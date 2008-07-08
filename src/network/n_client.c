@@ -29,5 +29,6 @@ void N_connect(const char *address, int port, n_callback_f client_func)
 void N_disconnect(void)
 {
         n_client_func(N_SERVER_ID, N_EV_DISCONNECTED);
+        n_client_id = N_INVALID_ID;
 }
 

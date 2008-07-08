@@ -11,10 +11,13 @@
 \******************************************************************************/
 
 /* Client code for the server */
-#define N_SERVER_ID 0
+#define N_SERVER_ID -1
 
 /* Client code for the hosting player */
-#define N_HOST_CLIENT_ID 1
+#define N_HOST_CLIENT_ID 0
+
+/* ID used when not connected */
+#define N_INVALID_ID -2
 
 /* Maximum number of players supported */
 #define N_CLIENTS_MAX 32
@@ -44,9 +47,11 @@ void N_disconnect(void);
 extern int n_client_id;
 
 /* n_server.c */
+void N_cleanup(void);
 void N_kick_client(int client);
+void N_init(void);
 void N_poll_server(void);
-void N_start_server(n_callback_f server, n_callback_f client);
+int N_start_server(n_callback_f server, n_callback_f client);
 void N_stop_server(void);
 
 extern n_client_t n_clients[N_CLIENTS_MAX];

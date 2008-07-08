@@ -26,13 +26,15 @@ static void nation_clicked(i_button_t *button)
 }
 
 /******************************************************************************\
- Disables one of the nation buttons.
+ Disables one of the nation buttons. Pass an invalid nation index to enable
+ all buttons.
 \******************************************************************************/
 void I_select_nation(int nation)
 {
-        C_assert(nation >= 0 && nation < G_NATION_NAMES);
         if (nation_buttons[selected].widget.state == I_WS_DISABLED)
                 nation_buttons[selected].widget.state = I_WS_READY;
+        if (nation < 0 || nation >= G_NATION_NAMES)
+                return;
         nation_buttons[selected = nation].widget.state = I_WS_DISABLED;
 }
 

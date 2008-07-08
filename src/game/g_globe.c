@@ -12,7 +12,7 @@
 
 #include "g_common.h"
 
-/* Maximum number of islands */
+/* Maximum number of islands. Do not set this value above G_ISLAND_INVALID. */
 #define ISLAND_NUM 128
 
 /* Maximum island size */
@@ -36,9 +36,10 @@ typedef struct g_island {
 /* Island tiles with game data */
 g_tile_t g_tiles[R_TILES_MAX];
 
-static r_tile_t render_tiles[R_TILES_MAX];
 static g_island_t islands[ISLAND_NUM];
-static float visible_limit;
+static i_ring_f ring_callback;
+static r_tile_t render_tiles[R_TILES_MAX];
+static float visible_near, visible_far;
 static int islands_len, selected_tile;
 
 /******************************************************************************\
@@ -122,6 +123,7 @@ skip_sand:      ;
                 if (islands[g_tiles[i].island].land < ISLAND_LAND) {
                         render_tiles[i].terrain = R_T_WATER;
                         render_tiles[i].height = 0.f;
+                        g_tiles[i].island = G_ISLAND_INVALID;
                         continue;
                 }
 
@@ -165,7 +167,7 @@ static void grow_islands(int num, int island_size)
         /* Disperse the initial seeds and set limits */
         for (i = 0; i < num; i++) {
                 islands[i].root = g_tiles + (C_rand() % r_tiles);
-                if (islands[i].root->island >= 0) {
+                if (islands[i].root->island != G_ISLAND_INVALID) {
                         num--;
                         i--;
                         continue;
@@ -195,7 +197,7 @@ static void grow_islands(int num, int island_size)
                         index = i * ISLAND_SIZE + (C_rand() % sizes[i]);
                         for (j = 0; j < 3; j++) {
                                 next = edges[index]->neighbors[j];
-                                if (next->island >= 0)
+                                if (next->island != G_ISLAND_INVALID)
                                         continue;
                                 edges[i * ISLAND_SIZE + sizes[i]++] = next;
                                 next->island = i;
@@ -215,9 +217,10 @@ static void grow_islands(int num, int island_size)
 }
 
 /******************************************************************************\
- Initialize and position a tile's model.
+ Initialize and position a tile's model. Returns FALSE if the model failed to
+ load.
 \******************************************************************************/
-static int set_tile_model(int tile, const char *filename)
+int G_set_tile_model(int tile, const char *filename)
 {
         R_model_cleanup(&g_tiles[tile].model);
         if (!R_model_init(&g_tiles[tile].model, filename))
@@ -250,7 +253,7 @@ static int test_tiles_update(c_var_t *var, c_var_value_t value)
         for (i = 0; i < r_tiles; i++)
                 if (g_tiles[i].render->terrain != R_T_WATER &&
                     g_tiles[i].render->terrain != R_T_SHALLOW &&
-                    !set_tile_model(i, value.s)) {
+                    !G_set_tile_model(i, value.s)) {
                         for (; i < r_tiles; i++)
                                 R_model_cleanup(&g_tiles[i].model);
                         return TRUE;
@@ -292,7 +295,7 @@ void G_generate_globe(void)
                 render_tiles[i].terrain = R_T_WATER;
                 render_tiles[i].height = 0;
                 g_tiles[i].render = render_tiles + i;
-                g_tiles[i].island = -1;
+                g_tiles[i].island = G_ISLAND_INVALID;
                 C_zero(&g_tiles[i].model);
                 R_get_tile_neighbors(i, neighbors);
                 for (j = 0; j < 3; j++) {
@@ -356,12 +359,14 @@ void G_generate_globe(void)
         /* We can now set test tiles */
         C_var_update(&g_test_tile, (c_var_update_f)test_tiles_update);
 
-        /* Set the invisible tile boundary */
-        visible_limit = 0.f;
+        /* Set the invisible tile boundary.
+           TODO: Compute this properly from globe radius. */
+        visible_far = 0.f;
         if (g_globe_subdiv4.value.n >= 4)
-                visible_limit = -11.25f;
+                visible_far = -11.25f;
         if (g_globe_subdiv4.value.n >= 5)
-                visible_limit = -36.f;
+                visible_far = -36.f;
+        visible_near = -r_globe_radius + 4.f;
 }
 
 /******************************************************************************\
@@ -369,9 +374,16 @@ void G_generate_globe(void)
  refers to how far along the camera forward vector the tile is. Smaller values
  are closer to the camera.
 \******************************************************************************/
-static int tile_visible(int tile)
+static g_visibility_t tile_visible(int tile)
 {
-        return C_vec3_dot(r_cam_forward, g_tiles[tile].origin) < visible_limit;
+        float dist;
+
+        dist = C_vec3_dot(r_cam_forward, g_tiles[tile].origin);
+        if (dist < visible_near)
+                return G_VISIBLE_NEAR;
+        if (dist < visible_far)
+                return G_VISIBLE_FAR;
+        return G_INVISIBLE;
 }
 
 /******************************************************************************\
@@ -381,16 +393,14 @@ void G_render_globe(void)
 {
         int i;
 
-        R_start_globe();
-
         /* Render tile models */
+        R_start_globe();
         for (i = 0; i < r_tiles; i++)
                 if ((g_tiles[i].visible = tile_visible(i)) &&
                     g_tiles[i].model.data) {
                         R_adjust_light_for(g_tiles[i].origin);
                         R_model_render(&g_tiles[i].model);
                 }
-
         R_finish_globe();
 
         /* Render a test line from the selected tile */
@@ -402,6 +412,8 @@ void G_render_globe(void)
                 R_render_test_line(g_tiles[selected_tile].origin, b,
                                    C_color(0.f, 1.f, 0.f, 1.f));
         }
+
+        G_render_ships();
 }
 
 /******************************************************************************\
@@ -460,15 +472,15 @@ static int ray_intersects_tile(c_vec3_t O, c_vec3_t D, int tile)
 static void test_ring_callback(i_ring_icon_t icon)
 {
         if (icon == I_RI_TEST_MILL)
-                set_tile_model(selected_tile, "models/test/mill.plum");
+                G_set_tile_model(selected_tile, "models/test/mill.plum");
         else if (icon == I_RI_TEST_TREE)
-                set_tile_model(selected_tile,
+                G_set_tile_model(selected_tile,
                                "models/tree/deciduous.plum");
         else if (icon == I_RI_TEST_SHIP)
-                set_tile_model(selected_tile,
+                G_set_tile_model(selected_tile,
                                "models/ship/sloop.plum");
         else
-                set_tile_model(selected_tile, "");
+                G_set_tile_model(selected_tile, "");
 }
 
 /******************************************************************************\
@@ -483,19 +495,61 @@ void G_mouse_ray_miss(void)
 }
 
 /******************************************************************************\
+ Setup the ring widget for interacting with the hovered over tile.
+\******************************************************************************/
+static int setup_ring(int tile)
+{
+        /* When globe testing is on, always show the test ring */
+        if (g_test_globe.value.n) {
+                I_reset_ring();
+                I_add_to_ring(I_RI_TEST_BLANK, TRUE);
+                I_add_to_ring(I_RI_TEST_MILL, TRUE);
+                I_add_to_ring(I_RI_TEST_TREE, TRUE);
+                I_add_to_ring(I_RI_TEST_SHIP, TRUE);
+                I_add_to_ring(I_RI_TEST_DISABLED, FALSE);
+                ring_callback = test_ring_callback;
+                return TRUE;
+        }
+
+        return FALSE;
+}
+
+/******************************************************************************\
+ Selects a tile during mouse hover. Pass -1 to deselect.
+\******************************************************************************/
+static void select_tile(int tile)
+{
+        C_assert(tile < r_tiles);
+
+        /* See if there is actually any interaction possible with this tile */
+        if (!setup_ring(tile))
+                tile = -1;
+
+        /* Select the new tile */
+        if (selected_tile != tile) {
+                if (selected_tile >= 0)
+                        g_tiles[selected_tile].model.selected = FALSE;
+                R_select_tile(selected_tile = tile);
+        }
+        if (tile < 0)
+                return;
+        g_tiles[selected_tile].model.selected = TRUE;
+}
+
+/******************************************************************************\
  The mouse screen position is transformed into a ray with [origin] and
  [forward] vector, this function will find which tile (if any) the mouse is
  hovering over.
 \******************************************************************************/
 void G_mouse_ray(c_vec3_t origin, c_vec3_t forward)
 {
-        float selected_z, z;
-        int i;
+        float tile_z, z;
+        int i, tile;
 
         /* We can quit early if the selected tile is still being hovered over */
         if (selected_tile >= 0 && g_tiles[selected_tile].visible &&
             ray_intersects_tile(origin, forward, selected_tile)) {
-                g_tiles[selected_tile].model.selected = TRUE;
+                select_tile(selected_tile);
                 return;
         }
 
@@ -504,25 +558,21 @@ void G_mouse_ray(c_vec3_t origin, c_vec3_t forward)
                 g_tiles[selected_tile].model.selected = FALSE;
 
         /* Iterate over all visible tiles to find the selected tile */
-        selected_z = 0.f;
-        R_select_tile(selected_tile = -1);
-        for (i = 0; i < r_tiles; i++) {
+        tile_z = 0.f;
+        for (i = 0, tile = -1; i < r_tiles; i++) {
                 if (!g_tiles[i].visible ||
                     !ray_intersects_tile(origin, forward, i))
                         continue;
 
                 /* Make sure we only select the closest match */
                 z = C_vec3_dot(r_cam_forward, g_tiles[i].origin);
-                if (z < selected_z) {
-                        selected_tile = i;
-                        selected_z = z;
+                if (z < tile_z) {
+                        tile = i;
+                        tile_z = z;
                 }
         }
-        if (selected_tile < 0)
-                return;
 
-        R_select_tile(selected_tile);
-        g_tiles[selected_tile].model.selected = TRUE;
+        select_tile(tile);
 }
 
 /******************************************************************************\
@@ -532,14 +582,6 @@ void G_process_click(int button)
 {
         if (selected_tile < 0)
                 return;
-
-        /* If we clicked on a valid tile, popup the ring menu */
-        I_reset_ring();
-        I_add_to_ring(I_RI_TEST_BLANK, TRUE);
-        I_add_to_ring(I_RI_TEST_MILL, TRUE);
-        I_add_to_ring(I_RI_TEST_TREE, TRUE);
-        I_add_to_ring(I_RI_TEST_SHIP, TRUE);
-        I_add_to_ring(I_RI_TEST_DISABLED, FALSE);
-        I_show_ring((i_ring_f)test_ring_callback);
+        I_show_ring(ring_callback);
 }
 

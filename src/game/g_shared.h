@@ -21,7 +21,7 @@ typedef enum {
         G_SN_SLOOP,
         G_SHIP_NAMES,
         G_SN_NONE,
-} g_ship_names_t;
+} g_ship_name_t;
 
 /* There is a fixed number of nations */
 typedef enum {
@@ -42,12 +42,15 @@ typedef struct g_nation {
 typedef struct g_ship_class {
         const char *model_path, *name;
         float speed;
+        int health;
 } g_ship_class_t;
 
 /* Structure containing ship information */
 typedef struct g_ship {
-        short tile;
-        char ship_class, path[G_PATH_LEN];
+        g_ship_name_t class_name;
+        int tile, client, health;
+        char path[G_PATH_LEN];
+        bool in_use;
 } g_ship_t;
 
 /* g_globe.c */
@@ -65,6 +68,8 @@ void G_leave_game(void);
 void G_update(void);
 
 extern g_nation_t g_nations[G_NATION_NAMES];
+
+/* g_ship.c */
 extern g_ship_class_t g_ship_classes[G_SHIP_NAMES];
 extern g_ship_t g_ships[G_SHIPS_MAX];
 
