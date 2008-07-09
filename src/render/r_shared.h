@@ -134,9 +134,11 @@ r_texture_t *R_texture_load(const char *filename, int mipmaps);
 #define R_texture_ref(t) C_ref_up((c_ref_t *)(t))
 
 /* r_camera.c */
+void R_grab_cam(void);
 void R_move_cam_by(c_vec2_t distances);
 c_vec3_t R_project(c_vec3_t);
 c_vec3_t R_project_by_cam(c_vec3_t);
+void R_release_cam(void);
 void R_rotate_cam_by(c_vec3_t angles);
 void R_rotate_cam_to(c_vec3_t origin);
 c_vec3_t R_rotate_from_cam(c_vec3_t);
@@ -185,6 +187,10 @@ void R_model_render(r_model_t *);
 
 /* r_solar.c */
 void R_adjust_light_for(c_vec3_t origin);
+
+/* r_ship.c */
+void R_render_ship_status(const r_model_t *model, float left, float left_max,
+                          float right, float right_max, c_color_t modulate);
 
 /* r_sprite.c */
 #define R_billboard_cleanup(p) R_sprite_cleanup(&(p)->sprite)

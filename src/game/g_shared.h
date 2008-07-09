@@ -35,6 +35,7 @@ typedef enum {
 
 /* Structure for each nation */
 typedef struct g_nation {
+        c_color_t color;
         const char *short_name, *long_name;
 } g_nation_t;
 
@@ -48,7 +49,7 @@ typedef struct g_ship_class {
 /* Structure containing ship information */
 typedef struct g_ship {
         g_ship_name_t class_name;
-        int tile, client, health;
+        int tile, client, health, armor;
         char path[G_PATH_LEN];
         bool in_use;
 } g_ship_t;

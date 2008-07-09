@@ -86,5 +86,5 @@ void G_render_ships(void);
 g_ship_t *G_spawn_ship(int client, int tile, g_ship_name_t, int ship_index);
 
 /* g_variables.c */
-extern c_var_t g_test_globe, g_test_tile;
+extern c_var_t g_nation_colors[G_NATION_NAMES], g_test_globe, g_test_tile;
 

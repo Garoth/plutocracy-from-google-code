@@ -29,12 +29,20 @@ void G_init(void)
         /* Setup nations */
         g_nations[G_NN_RED].short_name = "red";
         g_nations[G_NN_RED].long_name = C_str("g-nation-red", "Ruby");
+        C_var_update_data(g_nation_colors + G_NN_RED, C_color_update,
+                          &g_nations[G_NN_RED].color);
         g_nations[G_NN_GREEN].short_name = "green";
         g_nations[G_NN_GREEN].long_name = C_str("g-nation-green", "Emerald");
+        C_var_update_data(g_nation_colors + G_NN_GREEN, C_color_update,
+                          &g_nations[G_NN_GREEN].color);
         g_nations[G_NN_BLUE].short_name = "blue";
         g_nations[G_NN_BLUE].long_name = C_str("g-nation-blue", "Sapphire");
+        C_var_update_data(g_nation_colors + G_NN_BLUE, C_color_update,
+                          &g_nations[G_NN_BLUE].color);
         g_nations[G_NN_PIRATE].short_name = "pirate";
         g_nations[G_NN_PIRATE].long_name = C_str("g-nation-pirate", "Pirate");
+        C_var_update_data(g_nation_colors + G_NN_PIRATE, C_color_update,
+                          &g_nations[G_NN_PIRATE].color);
 
         /* Prepare initial state */
         G_init_globe();
@@ -81,11 +89,8 @@ static void server_affiliate(int client)
            try to give them a starter ship */
         tile = -1;
         if (old == G_NN_NONE &&
-            (ship = G_spawn_ship(client, -1, G_SN_SLOOP, -1))) {
+            (ship = G_spawn_ship(client, -1, G_SN_SLOOP, -1)))
                 tile = ship->tile;
-
-                ship->health = 50;
-        }
 
         N_send(N_BROADCAST_ID, "1112", G_SM_AFFILIATE, client, nation, tile);
 }
@@ -133,7 +138,10 @@ void G_host_game(void)
         memset(g_clients, 0, sizeof (g_clients));
 
         /* Generate a new globe */
-        g_globe_seed.value.n = (int)time(NULL);
+        if (g_globe_seed.has_latched)
+                C_var_unlatch(&g_globe_seed);
+        else
+                g_globe_seed.value.n = (int)time(NULL);
         G_generate_globe();
 
         if (!N_start_server((n_callback_f)server_callback,

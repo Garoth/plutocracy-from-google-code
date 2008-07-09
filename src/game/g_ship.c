@@ -12,12 +12,12 @@
 
 #include "g_common.h"
 
+/* Maximum health value */
+#define HEALTH_MAX 100
+
 /* Ships and ship classes */
 g_ship_t g_ships[G_SHIPS_MAX];
 g_ship_class_t g_ship_classes[G_SHIP_NAMES];
-
-static r_window_t bar_bg, bar_fg;
-static float bar_width;
 
 /******************************************************************************\
  Initialize ship assets.
@@ -37,11 +37,6 @@ void G_init_ships(void)
         pc->model_path = "models/ship/sloop.plum";
         pc->speed = 1.f;
         pc->health = 100;
-
-        /* Ship bars */
-        R_window_load(&bar_bg, "gui/ship/bar_bg.png");
-        R_window_load(&bar_fg, "gui/ship/bar_fg.png");
-        bar_width = bar_fg.sprite.size.x;
 }
 
 /******************************************************************************\
@@ -49,8 +44,6 @@ void G_init_ships(void)
 \******************************************************************************/
 void G_cleanup_ships(void)
 {
-        R_window_cleanup(&bar_fg);
-        R_window_cleanup(&bar_bg);
 }
 
 /******************************************************************************\
@@ -120,6 +113,8 @@ g_ship_t *G_spawn_ship(int client, int tile, g_ship_name_t name, int index)
         g_ships[index].tile = tile;
         g_ships[index].path[0] = -1;
         g_ships[index].client = client;
+        g_ships[index].health = g_ship_classes[name].health;
+        g_ships[index].armor = 0;
 
         /* Place the ship on the tile */
         g_tiles[tile].ship = g_ships + index;
@@ -131,38 +126,31 @@ g_ship_t *G_spawn_ship(int client, int tile, g_ship_name_t name, int index)
 }
 
 /******************************************************************************\
- The model of the ship has already been rendered so this function only renders
- UI effects.
-\******************************************************************************/
-static void ship_render(g_ship_t *ship)
-{
-        g_tile_t *tile;
-        c_vec3_t screen;
-
-        if (!ship->in_use)
-                return;
-        tile = g_tiles + ship->tile;
-        if (tile->visible != G_VISIBLE_NEAR)
-                return;
-        screen = R_project_by_cam(tile->origin);
-        screen.y += 8.f - bar_bg.sprite.size.y / 2.f;
-        screen.x -= bar_bg.sprite.size.x / 2.f;
-        bar_fg.sprite.size.x = bar_width * ship->health /
-                               g_ship_classes[ship->class_name].health;
-        bar_bg.sprite.origin = C_vec2(screen.x, screen.y);
-        bar_fg.sprite.origin = bar_bg.sprite.origin;
-        R_window_render(&bar_bg);
-        R_window_render(&bar_fg);
-}
-
-/******************************************************************************\
  Render ship 2D effects.
 \******************************************************************************/
 void G_render_ships(void)
 {
+        const g_ship_class_t *ship_class;
+        const g_ship_t *ship;
+        const g_tile_t *tile;
+        c_color_t color;
+        float armor, health, health_max;
         int i;
 
-        for (i = 0; i < G_SHIPS_MAX; i++)
-                ship_render(g_ships + i);
+        for (i = 0; i < G_SHIPS_MAX; i++) {
+                ship = g_ships + i;
+                if (!ship->in_use)
+                        continue;
+                tile = g_tiles + ship->tile;
+                if (tile->visible != G_VISIBLE_NEAR)
+                        return;
+                ship_class = g_ship_classes + ship->class_name;
+                armor = (float)ship->armor / HEALTH_MAX;
+                health = (float)ship_class->health / HEALTH_MAX;
+                health_max = (float)ship_class->health / HEALTH_MAX;
+                color = g_nations[g_clients[ship->client].nation].color;
+                R_render_ship_status(&tile->model, armor, health_max,
+                                     health, health_max, color);
+        }
 }
 
