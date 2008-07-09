@@ -416,7 +416,6 @@ void R_model_render(r_model_t *model)
 {
         c_vec3_t side;
         mesh_t *meshes;
-        GLfloat m[16];
         int i;
 
         if (!model || !model->data)
@@ -428,30 +427,30 @@ void R_model_render(r_model_t *model)
         side = C_vec3_cross(model->normal, model->forward);
 
         /* X */
-        m[0] = side.x * model->scale;
-        m[4] = model->normal.x * model->scale;
-        m[8] = model->forward.x * model->scale;
-        m[12] = model->origin.x;
+        model->matrix[0] = side.x * model->scale;
+        model->matrix[4] = model->normal.x * model->scale;
+        model->matrix[8] = model->forward.x * model->scale;
+        model->matrix[12] = model->origin.x;
 
         /* Y */
-        m[1] = side.y * model->scale;
-        m[5] = model->normal.y * model->scale;
-        m[9] = model->forward.y * model->scale;
-        m[13] = model->origin.y;
+        model->matrix[1] = side.y * model->scale;
+        model->matrix[5] = model->normal.y * model->scale;
+        model->matrix[9] = model->forward.y * model->scale;
+        model->matrix[13] = model->origin.y;
 
         /* Z */
-        m[2] = side.z * model->scale;
-        m[6] = model->normal.z * model->scale;
-        m[10] = model->forward.z * model->scale;
-        m[14] = model->origin.z;
+        model->matrix[2] = side.z * model->scale;
+        model->matrix[6] = model->normal.z * model->scale;
+        model->matrix[10] = model->forward.z * model->scale;
+        model->matrix[14] = model->origin.z;
 
         /* W */
-        m[3] = 0.f;
-        m[7] = 0.f;
-        m[11] = 0.f;
-        m[15] = 1.f;
+        model->matrix[3] = 0.f;
+        model->matrix[7] = 0.f;
+        model->matrix[11] = 0.f;
+        model->matrix[15] = 1.f;
 
-        glMultMatrixf(m);
+        glMultMatrixf(model->matrix);
         R_check_errors();
 
         /* Animate meshes. Interpolating here between frames is slow, it is best

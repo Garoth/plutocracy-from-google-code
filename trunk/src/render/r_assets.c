@@ -319,7 +319,7 @@ r_texture_t *R_texture_load(const char *filename, int mipmaps)
  Selects (binds) a texture for rendering in OpenGL. Also sets whatever options
  are necessary to get the texture to show up properly.
 \******************************************************************************/
-void R_texture_select(r_texture_t *texture)
+void R_texture_select(const r_texture_t *texture)
 {
         if (!texture || !r_textures.value.n ||
             (r_textures.value.n == 2 && texture->not_pow2)) {

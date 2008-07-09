@@ -46,12 +46,12 @@ void G_register_variables(void)
 
         /* Nation colors */
         C_register_string(g_nation_colors + G_NN_RED, "g_color_red",
-                          "#ff0000", "red national color");
+                          "#60ef2929", "red national color");
         C_register_string(g_nation_colors + G_NN_GREEN, "g_color_green",
-                          "#ff0000", "green national color");
+                          "#608ae234", "green national color");
         C_register_string(g_nation_colors + G_NN_BLUE, "g_color_blue",
-                          "#ff0000", "blue national color");
+                          "#60729fcf", "blue national color");
         C_register_string(g_nation_colors + G_NN_PIRATE, "g_color_pirate",
-                          "#ff0000", "pirate color");
+                          "#60888a85", "pirate color");
 }
 

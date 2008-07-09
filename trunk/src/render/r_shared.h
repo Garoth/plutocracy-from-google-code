@@ -54,6 +54,7 @@ typedef struct r_texture r_texture_t;
 /* Model instance type */
 typedef struct r_model {
         c_vec3_t origin, normal, forward;
+        GLfloat matrix[16];
         struct r_model_data *data;
         float scale;
         int anim, frame, last_frame, last_frame_time, time_left;
@@ -190,7 +191,8 @@ void R_adjust_light_for(c_vec3_t origin);
 
 /* r_ship.c */
 void R_render_ship_status(const r_model_t *model, float left, float left_max,
-                          float right, float right_max, c_color_t modulate);
+                          float right, float right_max, c_color_t modulate,
+                          int selected);
 
 /* r_sprite.c */
 #define R_billboard_cleanup(p) R_sprite_cleanup(&(p)->sprite)
