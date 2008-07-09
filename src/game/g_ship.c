@@ -116,6 +116,9 @@ g_ship_t *G_spawn_ship(int client, int tile, g_ship_name_t name, int index)
         g_ships[index].health = g_ship_classes[name].health;
         g_ships[index].armor = 0;
 
+        g_ships[index].health = g_ship_classes[name].health * 0.6f;
+        g_ships[index].armor = g_ship_classes[name].health * 0.4f;
+
         /* Place the ship on the tile */
         g_tiles[tile].ship = g_ships + index;
         G_set_tile_model(tile, g_ship_classes[name].model_path);
@@ -142,15 +145,15 @@ void G_render_ships(void)
                 if (!ship->in_use)
                         continue;
                 tile = g_tiles + ship->tile;
-                if (tile->visible != G_VISIBLE_NEAR)
+                if (!tile->visible)
                         return;
                 ship_class = g_ship_classes + ship->class_name;
                 armor = (float)ship->armor / HEALTH_MAX;
-                health = (float)ship_class->health / HEALTH_MAX;
+                health = (float)ship->health / HEALTH_MAX;
                 health_max = (float)ship_class->health / HEALTH_MAX;
                 color = g_nations[g_clients[ship->client].nation].color;
                 R_render_ship_status(&tile->model, armor, health_max,
-                                     health, health_max, color);
+                                     health, health_max, color, FALSE);
         }
 }
 

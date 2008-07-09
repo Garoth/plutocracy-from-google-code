@@ -17,7 +17,7 @@
 /* Sine-wave blending modulation for the tile selection */
 #define SELECT_FREQ 0.005f
 #define SELECT_AMP 0.250f
-#define SELECT_MODULATE 0.33f
+#define SELECT_MODULATE 0.67f
 
 /* Globe vertex type */
 #pragma pack(push, 4)
@@ -337,8 +337,8 @@ void R_start_globe(void)
 
                 /* Sine-wave modulate the selection highlight */
                 r_select_color = r_fog_color;
-                r_select_color.a = SELECT_MODULATE * (1.f - SELECT_AMP *
-                                   (1.f - sinf(SELECT_FREQ * c_time_msec)));
+                r_select_color.a *= SELECT_MODULATE * (1.f - SELECT_AMP *
+                                    (1.f - sinf(SELECT_FREQ * c_time_msec)));
                 glColor4f(r_select_color.r, r_select_color.g,
                           r_select_color.b, r_select_color.a);
 

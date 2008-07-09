@@ -101,7 +101,7 @@ r_texture_t *R_texture_clone_full(const char *file, int line, const char *func,
                                   const r_texture_t *);
 void R_texture_render(r_texture_t *, int x, int y);
 void R_texture_screenshot(r_texture_t *, int x, int y);
-void R_texture_select(r_texture_t *);
+void R_texture_select(const r_texture_t *);
 void R_texture_upload(const r_texture_t *);
 void R_vbo_cleanup(r_vbo_t *);
 void R_vbo_init(r_vbo_t *, void *vertices, int vertices_len, int vertex_size,
@@ -142,6 +142,10 @@ extern int r_init_frame, r_mode_hold;
 
 /* r_prerender.c */
 void R_prerender(void);
+
+/* r_ship.c */
+void R_cleanup_ships(void);
+void R_init_ships(void);
 
 /* r_solar.c */
 void R_cleanup_solar(void);
