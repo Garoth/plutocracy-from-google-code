@@ -106,6 +106,7 @@ static void grab_globe(int x, int y)
                 grab_rolling = TRUE;
         I_close_ring();
         G_mouse_ray_miss();
+        R_grab_cam();
 }
 
 /******************************************************************************\
@@ -113,16 +114,8 @@ static void grab_globe(int x, int y)
 \******************************************************************************/
 static void release_globe(void)
 {
-        c_vec3_t direction;
-
         grabbing = FALSE;
-        if (i_mouse_focus != &i_root)
-                return;
-
-        /* After a mouse grab is released, we need to scan for selection */
-        direction = screen_ray(i_mouse_x, i_mouse_y);
-        direction = R_rotate_to_cam(direction);
-        G_mouse_ray(r_cam_origin, direction);
+        R_release_cam();
 }
 
 /******************************************************************************\
@@ -187,18 +180,6 @@ static void test_globe(void)
 }
 
 /******************************************************************************\
- Emit a mouse ray from the mouse screen position.
-\******************************************************************************/
-static void mouse_ray(void)
-{
-        c_vec3_t direction;
-
-        direction = screen_ray(i_mouse_x, i_mouse_y);
-        direction = R_rotate_to_cam(direction);
-        G_mouse_ray(r_cam_origin, direction);
-}
-
-/******************************************************************************\
  Processes events from the root window that affect the globe.
 \******************************************************************************/
 void I_globe_event(i_event_t event)
@@ -234,14 +215,12 @@ void I_globe_event(i_event_t event)
         case I_EV_MOUSE_DOWN:
                 if (i_mouse_focus != &i_root)
                         break;
-                if (i_mouse == SDL_BUTTON_WHEELDOWN) {
+                if (i_mouse == SDL_BUTTON_WHEELDOWN)
                         R_zoom_cam_by(i_zoom_speed.value.f);
-                        mouse_ray();
-                } else if (i_mouse == SDL_BUTTON_WHEELUP) {
+                else if (i_mouse == SDL_BUTTON_WHEELUP)
                         R_zoom_cam_by(-i_zoom_speed.value.f);
-                        mouse_ray();
-                } else if (i_mouse == SDL_BUTTON_MIDDLE ||
-                           i_mouse == SDL_BUTTON_RIGHT)
+                else if (i_mouse == SDL_BUTTON_MIDDLE ||
+                         i_mouse == SDL_BUTTON_RIGHT)
                         grab_globe(i_mouse_x, i_mouse_y);
                 else
                         G_process_click(i_mouse);
@@ -257,14 +236,20 @@ void I_globe_event(i_event_t event)
                         G_mouse_ray_miss();
                 else if (grabbing)
                         rotate_globe(i_mouse_x, i_mouse_y);
-                else
-                        mouse_ray();
                 break;
         case I_EV_RENDER:
                 test_globe();
-                if (globe_motion.x || globe_motion.y) {
+                if (globe_motion.x || globe_motion.y)
                         R_move_cam_by(C_vec2_scalef(globe_motion, c_frame_sec));
-                        mouse_ray();
+
+                /* Because the globe can move by itself for various reasons,
+                   do the mouse trace every frame */
+                if (!I_ring_shown() && i_mouse_focus == &i_root && !grabbing) {
+                        c_vec3_t direction;
+
+                        direction = screen_ray(i_mouse_x, i_mouse_y);
+                        direction = R_rotate_to_cam(direction);
+                        G_mouse_ray(r_cam_origin, direction);
                 }
                 break;
         default:

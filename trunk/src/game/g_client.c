@@ -100,6 +100,7 @@ static void client_init(void)
         int protocol, seed;
         const char *msg;
 
+        /* Check the server's protocol */
         protocol = N_receive_char();
         if (protocol != G_PROTOCOL) {
                 msg = C_va("Server protocol (%d) does not match "
@@ -109,12 +110,16 @@ static void client_init(void)
                 N_disconnect();
                 return;
         }
+
+        /* Generate a new globe to match the server's */
         seed = N_receive_int();
         if (seed != g_globe_seed.value.n) {
                 g_globe_seed.value.n = seed;
                 G_generate_globe();
         }
-        I_select_nation(-1);
+
+        /* Start off nation-less */
+        I_select_nation(G_NN_NONE);
 }
 
 /******************************************************************************\

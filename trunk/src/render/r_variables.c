@@ -118,15 +118,15 @@ void R_register_variables(void)
                           "globe diffuse light color");
         C_register_string(r_globe_colors + 2, "r_globe_specular", "white",
                           "globe specular light color");
-        C_register_string(&r_light_ambient, "r_light_ambient", "#402010",
+        C_register_string(&r_light_ambient, "r_light_ambient", "#804020",
                           "universal ambient light color");
         C_register_string(&r_sun_diffuse, "r_sun_diffuse", "white",
                           "sun diffuse light color");
         C_register_string(&r_sun_specular, "r_sun_specular", "#606060",
                           "sun specular light color");
-        C_register_string(&r_moon_diffuse, "r_moon_diffuse", "#000c20",
+        C_register_string(&r_moon_diffuse, "r_moon_diffuse", "#001040",
                           "moon diffuse light color");
-        C_register_string(&r_moon_specular, "r_moon_specular", "#030404",
+        C_register_string(&r_moon_specular, "r_moon_specular", "#040810",
                           "moon specular light color");
 
         /* Fonts */
