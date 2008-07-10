@@ -182,7 +182,7 @@ extern int r_width_2d, r_height_2d, r_restart;
 
 /* r_model.c */
 void R_model_cleanup(r_model_t *);
-int R_model_init(r_model_t *, const char *filename);
+int R_model_init(r_model_t *, const char *filename, bool cull);
 void R_model_play(r_model_t *, const char *anim_name);
 void R_model_render(r_model_t *);
 

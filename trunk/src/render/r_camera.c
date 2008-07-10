@@ -234,27 +234,6 @@ c_vec3_t R_project_by_cam(c_vec3_t co)
 }
 
 /******************************************************************************\
- Begin a gradual rotation to the target normal.
-\******************************************************************************/
-void R_rotate_cam_to(c_vec3_t pos)
-{
-        c_vec3_t norm_origin;
-
-        if (!pos.x && !pos.y && !pos.z)
-                return;
-        norm_origin = C_vec3_norm(r_cam_origin);
-        pos = C_vec3_norm(pos);
-        gradual_axis = C_vec3_norm(C_vec3_cross(pos, norm_origin));
-        gradual_angle = acosf(C_vec3_dot(pos, norm_origin));
-        if (gradual_angle < 0.f) {
-                gradual_angle = -gradual_angle;
-                gradual_axis = C_vec3_scalef(gradual_axis, -1.f);
-        }
-        cam_gradual = TRUE;
-        cam_momentum = FALSE;
-}
-
-/******************************************************************************\
  Use the previous camera move to calculate camera velocity and let the globe
  spin by itself until it is grabbed again.
 \******************************************************************************/
@@ -275,5 +254,26 @@ void R_grab_cam(void)
         cam_gradual = FALSE;
         cam_momentum = FALSE;
         cam_rot_diff = C_vec3(0.f, 0.f, 0.f);
+}
+
+/******************************************************************************\
+ Begin a gradual rotation to the target normal.
+\******************************************************************************/
+void R_rotate_cam_to(c_vec3_t pos)
+{
+        c_vec3_t norm_origin;
+
+        if (!pos.x && !pos.y && !pos.z)
+                return;
+        norm_origin = C_vec3_norm(r_cam_origin);
+        pos = C_vec3_norm(pos);
+        gradual_axis = C_vec3_norm(C_vec3_cross(pos, norm_origin));
+        gradual_angle = acosf(C_vec3_dot(pos, norm_origin));
+        if (gradual_angle < 0.f) {
+                gradual_angle = -gradual_angle;
+                gradual_axis = C_vec3_scalef(gradual_axis, -1.f);
+        }
+        R_grab_cam();
+        cam_gradual = TRUE;
 }
 

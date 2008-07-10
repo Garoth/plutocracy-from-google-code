@@ -40,7 +40,7 @@ static int test_model_update(c_var_t *var, c_var_value_t value)
         R_model_cleanup(&test_model);
         if (!value.s[0])
                 return TRUE;
-        return R_model_init(&test_model, value.s);
+        return R_model_init(&test_model, value.s, FALSE);
 }
 
 /******************************************************************************\
@@ -90,7 +90,7 @@ void R_load_test_assets(void)
         /* Test model */
         C_var_unlatch(&r_test_model);
         if (*r_test_model.value.s)
-                R_model_init(&test_model, r_test_model.value.s);
+                R_model_init(&test_model, r_test_model.value.s, FALSE);
         r_test_model.edit = C_VE_FUNCTION;
         r_test_model.update = test_model_update;
 

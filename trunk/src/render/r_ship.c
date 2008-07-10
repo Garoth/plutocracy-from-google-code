@@ -20,6 +20,9 @@
 /* Vertical offset for the status plane */
 #define QUAD_Z 0.05f
 
+/* Modulation for background bars */
+#define BAR_BACKGROUND 0.33f
+
 static r_vertex3_t vertices[7];
 static r_texture_t *quad_tex, *select_tex, *bars_tex;
 
@@ -32,11 +35,9 @@ void R_init_ships(void)
 
         /* Load textures */
         quad_tex = R_texture_load("models/ship/status_circle.png", TRUE);
-        quad_tex->additive = TRUE;
+        bars_tex = R_texture_load("models/ship/status_bars.png", TRUE);
         select_tex = R_texture_load("models/ship/status_select.png", TRUE);
         select_tex->additive = TRUE;
-        bars_tex = R_texture_load("models/ship/status_bars.png", TRUE);
-        bars_tex->additive = TRUE;
 
         /* Quad vertices never change */
         up = C_vec3(0.f, 1.f, 0.f);
@@ -113,23 +114,24 @@ void R_render_ship_status(const r_model_t *model, float left, float left_max,
                           int selected)
 {
         R_push_mode(R_MODE_3D);
-        if (model->selected)
-                modulate.a *= r_select_color.a;
+        R_gl_disable(GL_LIGHTING);
         glColor4f(modulate.r, modulate.g, modulate.b, modulate.a);
         glMultMatrixf(model->matrix);
         glDepthMask(GL_FALSE);
         render_quad(quad_tex);
         if (selected) {
                 glColor4f(r_select_color.r, r_select_color.g, r_select_color.b,
-                          model->selected ? r_select_color.a : r_fog_color.a);
+                          r_fog_color.a);
                 render_quad(select_tex);
         }
         if (r_multisample.value.n)
                 R_gl_enable(GL_MULTISAMPLE);
-        glColor4f(modulate.r, modulate.g, modulate.b, modulate.a * 0.5f);
+        glColor4f(modulate.r, modulate.g, modulate.b,
+                  modulate.a * BAR_BACKGROUND);
         render_bars(left_max, right_max);
-        glColor4f(modulate.r, modulate.g, modulate.b, modulate.a);
         glDepthMask(GL_TRUE);
+        glColor4f(modulate.r, modulate.g, modulate.b,
+                  modulate.a * (1.f - BAR_BACKGROUND));
         render_bars(left, right);
 
         /* Make sure these are off after the interleaved array calls */

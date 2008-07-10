@@ -153,7 +153,8 @@ void G_render_ships(void)
                 health_max = (float)ship_class->health / HEALTH_MAX;
                 color = g_nations[g_clients[ship->client].nation].color;
                 R_render_ship_status(&tile->model, armor, health_max,
-                                     health, health_max, color, FALSE);
+                                     health, health_max, color,
+                                     g_selected_ship == ship);
         }
 }
 

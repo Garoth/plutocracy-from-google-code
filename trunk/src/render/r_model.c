@@ -134,16 +134,53 @@ static void model_data_cleanup(model_data_t *data)
 }
 
 /******************************************************************************\
+ Adds the [indices] given to the [array] if they are not culled. If they are,
+ returns 1. Poorly-made models can contain faces that we can cull without
+ losing much visual effect. This function checks if a face can be dropped.
+\******************************************************************************/
+static int add_face(const void *p, unsigned short indices[3], c_array_t *array,
+                    bool cull)
+{
+        const r_vertex3_t *verts;
+        c_vec3_t ab, ac, normal;
+        float area;
+
+        if (cull && r_model_lod.value.f > 0.f) {
+                verts = (r_vertex3_t *)p;
+
+                /* Cull faces that are too small */
+                ab = C_vec3_sub(verts[indices[1]].co, verts[indices[0]].co);
+                ac = C_vec3_sub(verts[indices[2]].co, verts[indices[0]].co);
+                normal = C_vec3_cross(C_vec3_norm(ab), ac);
+                area = C_vec3_len(normal);
+                if (area < 0.02f * r_model_lod.value.f)
+                        return 1;
+
+                /* Cull faces that are downward-facing */
+                normal = C_vec3_norm(normal);
+                if (normal.y < -0.67f)
+                        return 1;
+        }
+
+        /* Face is good to be added */
+        C_array_append(array, &indices[0]);
+        C_array_append(array, &indices[1]);
+        C_array_append(array, &indices[2]);
+
+        return 0;
+}
+
+/******************************************************************************\
  Allocate memory for and load model data and its textures. Data is cached so
  calling this function again will return and reference the cached data.
 \******************************************************************************/
-static model_data_t *model_data_load(const char *filename)
+static model_data_t *model_data_load(const char *filename, bool cull)
 {
         c_token_file_t token_file;
         c_array_t anims, objects, verts, indices;
         model_data_t *data;
         const char *token;
-        int found, quoted, object, frame, verts_parsed;
+        int found, quoted, object, frame, verts_parsed, faces_culled;
 
         if (!filename || !filename[0])
                 return NULL;
@@ -217,6 +254,7 @@ static model_data_t *model_data_load(const char *filename)
         data->objects = C_array_steal(&objects);
 
         /* Load frames into matrix */
+        faces_culled = 0;
         data->matrix = C_calloc(data->frames * data->objects_len *
                                 sizeof (mesh_t));
         for (frame = -1, object = -1, verts_parsed = 0; token[0] || quoted;
@@ -286,13 +324,13 @@ static model_data_t *model_data_load(const char *filename)
                            new face containing them */
                         if (verts_parsed >= 3) {
                                 int i;
-                                unsigned short index;
+                                unsigned short face[3];
 
-                                for (i = 0; i < 3; i++) {
-                                        index = (unsigned short)
-                                                (verts.len - 3 + i);
-                                        C_array_append(&indices, &index);
-                                }
+                                for (i = 0; i < 3; i++)
+                                        face[i] = (unsigned short)
+                                                  (verts.len - 3 + i);
+                                faces_culled += add_face(verts.elems, face,
+                                                         &indices, cull);
                                 verts_parsed = 0;
                         }
                         continue;
@@ -302,18 +340,19 @@ static model_data_t *model_data_load(const char *filename)
                    existing vertices */
                 if (!strcmp(token, "i")) {
                         int i;
-                        unsigned short index;
+                        unsigned short face[3];
 
                         for (i = 0; i < 3; i++) {
                                 token = C_token_file_read(&token_file);
-                                index = (unsigned short)atoi(token);
-                                if (index > verts.len) {
+                                face[i] = (unsigned short)atoi(token);
+                                if (face[i] > verts.len) {
                                         C_warning("PLUM file '%s' contains "
                                                   "invalid index", filename);
                                         goto error;
                                 }
-                                C_array_append(&indices, &index);
                         }
+                        faces_culled += add_face(verts.elems, face,
+                                                 &indices, cull);
                         verts_parsed = 0;
                         continue;
                 }
@@ -333,6 +372,8 @@ static model_data_t *model_data_load(const char *filename)
         C_token_file_cleanup(&token_file);
         C_debug("Loaded '%s' (%d frm, %d obj, %d anim)",
                 filename, data->frames, data->objects_len, data->anims_len);
+        if (faces_culled > 0)
+                C_debug("Culled %d faces total", faces_culled);
         return data;
 
 error:  C_token_file_cleanup(&token_file);
@@ -347,12 +388,12 @@ error:  C_token_file_cleanup(&token_file);
  memory. Returns FALSE and invalidates the model instance if the model data
  failed to load.
 \******************************************************************************/
-int R_model_init(r_model_t *model, const char *filename)
+int R_model_init(r_model_t *model, const char *filename, bool cull)
 {
         if (!model)
                 return FALSE;
         C_zero(model);
-        model->data = model_data_load(filename);
+        model->data = model_data_load(filename, cull);
         model->scale = 1.f;
         model->time_left = -1;
         model->normal = C_vec3(0.f, 1.f, 0.f);
