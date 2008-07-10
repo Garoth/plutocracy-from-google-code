@@ -312,7 +312,6 @@ dist_dlls = glob.glob('*.dll')
 default_env.Install(dist_name, ['AUTHORS', 'ChangeLog', 'CC', 'COPYING',
                                 'README', 'SConstruct', 'todo.sh',
                                 'Makefile', 'genlang.py'] + dist_dlls)
-InstallRecursive(os.path.join(dist_name, 'blender'), 'blender')
 InstallRecursive(os.path.join(dist_name, 'gendoc'), 'gendoc',
                  [path('gendoc/gendoc')])
 InstallRecursive(os.path.join(dist_name, 'gui'), 'gui')
