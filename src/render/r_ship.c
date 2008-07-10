@@ -35,7 +35,9 @@ void R_init_ships(void)
 
         /* Load textures */
         quad_tex = R_texture_load("models/ship/status_circle.png", TRUE);
+        quad_tex->additive = TRUE;
         bars_tex = R_texture_load("models/ship/status_bars.png", TRUE);
+        bars_tex->additive = TRUE;
         select_tex = R_texture_load("models/ship/status_select.png", TRUE);
         select_tex->additive = TRUE;
 
