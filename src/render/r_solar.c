@@ -64,7 +64,7 @@ void R_init_solar(void)
         R_billboard_load(&sun, "models/solar/sun.png");
 
         /* Sky is just a model */
-        R_model_init(&sky, "models/solar/sky.plum");
+        R_model_init(&sky, "models/solar/sky.plum", FALSE);
         sky.scale = 400.f;
 }
 

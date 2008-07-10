@@ -21,7 +21,7 @@ c_var_t r_globe, r_test_normals, r_test_model, r_test_prerender, r_test_sprite,
         r_test_sprite_num, r_test_text, r_textures;
 
 /* Effects parameters */
-c_var_t r_atmosphere, r_globe_smooth, r_globe_transitions;
+c_var_t r_atmosphere, r_globe_smooth, r_globe_transitions, r_model_lod;
 
 /* Lighting parameters */
 c_var_t r_globe_colors[3], r_globe_shininess, r_light, r_light_ambient,
@@ -95,6 +95,8 @@ void R_register_variables(void)
                           "#c06080a0", "color of the atmosphere");
         C_register_integer(&r_globe_transitions, "r_globe_transitions", 1,
                            "use transition tiles");
+        C_register_float(&r_model_lod, "r_model_lod", 1.f,
+                         "model level-of-detail: 0.0-...");
 
         /* Lighting parameters */
         C_register_integer(&r_light, "r_light", TRUE,

@@ -330,18 +330,18 @@ void R_start_globe(void)
         /* Render the globe through a vertex buffer object */
         R_vbo_render(&globe_vbo);
 
+        /* Sine-wave modulate the selection highlight. Even though no tile may
+           be selected, this color could be used elsewhere. */
+        r_select_color = r_fog_color;
+        r_select_color.a *= SELECT_MODULATE * (1.f - SELECT_AMP *
+                            (1.f - sinf(SELECT_FREQ * c_time_msec)));
+
         /* Render selection triangle */
         if (selected_tile >= 0) {
                 R_gl_disable(GL_LIGHTING);
                 R_texture_select(select_tex);
-
-                /* Sine-wave modulate the selection highlight */
-                r_select_color = r_fog_color;
-                r_select_color.a *= SELECT_MODULATE * (1.f - SELECT_AMP *
-                                    (1.f - sinf(SELECT_FREQ * c_time_msec)));
                 glColor4f(r_select_color.r, r_select_color.g,
                           r_select_color.b, r_select_color.a);
-
                 glInterleavedArrays(R_VERTEX3_FORMAT, sizeof (*select_verts),
                                     select_verts);
                 glDrawArrays(GL_TRIANGLES, 0, 3);

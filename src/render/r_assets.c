@@ -583,6 +583,7 @@ void R_load_assets(void)
         const SDL_version *linked;
 
         C_status("Loading render assets");
+        C_var_unlatch(&r_model_lod);
 
         /* Setup the texture pixel format, RGBA in 32 bits */
         r_sdl_format.BitsPerPixel = 32;

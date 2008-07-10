@@ -222,8 +222,7 @@ void I_globe_event(i_event_t event)
                 else if (i_mouse == SDL_BUTTON_MIDDLE ||
                          i_mouse == SDL_BUTTON_RIGHT)
                         grab_globe(i_mouse_x, i_mouse_y);
-                else
-                        G_process_click(i_mouse);
+                G_process_click(i_mouse);
                 break;
         case I_EV_MOUSE_UP:
                 if (i_mouse == SDL_BUTTON_MIDDLE || i_mouse == SDL_BUTTON_RIGHT)

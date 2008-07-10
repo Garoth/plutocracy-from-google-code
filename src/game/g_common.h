@@ -76,6 +76,7 @@ void G_generate_globe(void);
 int G_set_tile_model(int tile, const char *path);
 
 extern g_tile_t g_tiles[R_TILES_MAX];
+extern g_ship_t *g_selected_ship;
 extern c_var_t g_globe_islands, g_globe_island_size, g_globe_seed,
                g_globe_subdiv4;
 

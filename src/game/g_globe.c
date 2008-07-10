@@ -36,6 +36,9 @@ typedef struct g_island {
 /* Island tiles with game data */
 g_tile_t g_tiles[R_TILES_MAX];
 
+/* The currently selected ship index */
+g_ship_t *g_selected_ship;
+
 static g_island_t islands[ISLAND_NUM];
 static i_ring_f ring_callback;
 static r_tile_t render_tiles[R_TILES_MAX];
@@ -223,7 +226,7 @@ static void grow_islands(int num, int island_size)
 int G_set_tile_model(int tile, const char *filename)
 {
         R_model_cleanup(&g_tiles[tile].model);
-        if (!R_model_init(&g_tiles[tile].model, filename))
+        if (!R_model_init(&g_tiles[tile].model, filename, TRUE))
                 return FALSE;
         g_tiles[tile].model.origin = g_tiles[tile].origin;
         g_tiles[tile].model.normal = g_tiles[tile].normal;
@@ -266,8 +269,6 @@ static int test_tiles_update(c_var_t *var, c_var_value_t value)
 \******************************************************************************/
 void G_init_globe(void)
 {
-        selected_tile = -1;
-
         /* Generate a starter globe */
         G_generate_globe();
 }
@@ -367,6 +368,10 @@ void G_generate_globe(void)
         if (g_globe_subdiv4.value.n >= 5)
                 visible_far = -36.f;
         visible_near = -r_globe_radius + 4.f;
+
+        /* Deselect everything */
+        selected_tile = -1;
+        g_selected_ship = NULL;
 }
 
 /******************************************************************************\
@@ -521,19 +526,20 @@ static void select_tile(int tile)
 {
         C_assert(tile < r_tiles);
 
+        /* Deselect the old tile */
+        if (selected_tile >= 0)
+                g_tiles[selected_tile].model.selected = FALSE;
+        R_select_tile(selected_tile = -1);
+
         /* See if there is actually any interaction possible with this tile */
-        if (!setup_ring(tile))
-                tile = -1;
+        if (tile < 0 || (!setup_ring(tile) && !g_tiles[tile].ship))
+                return;
 
         /* Select the new tile */
-        if (selected_tile != tile) {
-                if (selected_tile >= 0)
-                        g_tiles[selected_tile].model.selected = FALSE;
-                R_select_tile(selected_tile = tile);
-        }
-        if (tile < 0)
-                return;
-        g_tiles[selected_tile].model.selected = TRUE;
+        if (!g_tiles[tile].ship)
+                R_select_tile(tile);
+        g_tiles[tile].model.selected = TRUE;
+        selected_tile = tile;
 }
 
 /******************************************************************************\
@@ -580,8 +586,23 @@ void G_mouse_ray(c_vec3_t origin, c_vec3_t forward)
 \******************************************************************************/
 void G_process_click(int button)
 {
-        if (selected_tile < 0)
+        /* Right-click cancels selection */
+        if (button == SDL_BUTTON_RIGHT)
+                g_selected_ship = NULL;
+
+        if (selected_tile < 0 || button != SDL_BUTTON_LEFT)
                 return;
+
+        /* Left-clicked on a ship */
+        if (g_tiles[selected_tile].ship) {
+                if (g_selected_ship == g_tiles[selected_tile].ship)
+                        g_selected_ship = NULL;
+                else
+                        g_selected_ship = g_tiles[selected_tile].ship;
+                return;
+        }
+
+        /* Left-clicked on a tile */
         I_show_ring(ring_callback);
 }
 
