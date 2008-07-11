@@ -262,7 +262,6 @@ void I_widget_pack(i_widget_t *, i_pack_t, i_fit_t);
 void I_widget_propagate(i_widget_t *, i_event_t);
 void I_widget_remove(i_widget_t *, int cleanup);
 void I_widget_remove_children(i_widget_t *, int cleanup);
-void I_widget_show(i_widget_t *, int show);
 
 extern c_color_t i_colors[I_COLORS];
 extern i_widget_t *i_child, *i_key_focus, *i_mouse_focus;

@@ -163,7 +163,7 @@ int I_toolbar_event(i_toolbar_t *toolbar, i_event_t event)
                 return FALSE;
         case I_EV_HIDE:
                 for (i = 0; i < toolbar->children; i++)
-                        I_widget_show(&toolbar->windows[i].widget, FALSE);
+                        I_widget_event(&toolbar->windows[i].widget, I_EV_HIDE);
                 break;
         default:
                 break;
@@ -199,13 +199,13 @@ static void toolbar_button_click(i_button_t *button)
         toolbar = (i_toolbar_t *)button->data;
         window = toolbar->windows + (int)(button - toolbar->buttons);
         if (toolbar->open_window && toolbar->open_window->widget.shown) {
-                I_widget_show(&toolbar->open_window->widget, FALSE);
+                I_widget_event(&toolbar->open_window->widget, I_EV_HIDE);
                 if (toolbar->open_window == window) {
                         toolbar->open_window = NULL;
                         return;
                 }
         }
-        I_widget_show(&window->widget, TRUE);
+        I_widget_event(&window->widget, I_EV_SHOW);
         toolbar->open_window = window;
 }
 
@@ -252,14 +252,14 @@ void I_toolbar_add_button(i_toolbar_t *toolbar, const char *icon,
 static void popup_configure()
 {
         if (!popup_messages[0].message[0]) {
-                I_widget_show(&popup_widget, FALSE);
+                I_widget_event(&popup_widget, I_EV_HIDE);
                 return;
         }
         I_label_configure(&popup_label, popup_messages[0].message);
         zoom_button.widget.state = popup_messages[0].has_goto_pos ?
                                    I_WS_READY : I_WS_DISABLED;
         I_widget_event(&popup_widget, I_EV_CONFIGURE);
-        I_widget_show(&popup_widget, TRUE);
+        I_widget_event(&popup_widget, I_EV_SHOW);
         popup_time = c_time_msec;
 }
 
@@ -301,7 +301,7 @@ static int popup_event(i_widget_t *widget, i_event_t event)
                 if (popup_wait)
                         popup_time = c_time_msec;
                 else if (c_time_msec - popup_time > POPUP_TIME)
-                        I_widget_show(&popup_widget, FALSE);
+                        I_widget_event(&popup_widget, I_EV_HIDE);
                 popup_window.sprite.modulate.a = widget->fade;
                 R_window_render(&popup_window);
                 break;

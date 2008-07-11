@@ -245,7 +245,7 @@ void I_theme_texture(r_texture_t **ppt, const char *name)
 void I_leave_limbo(void)
 {
         i_limbo = FALSE;
-        I_widget_show(&right_toolbar.widget, TRUE);
+        I_widget_event(&right_toolbar.widget, I_EV_SHOW);
 }
 
 /******************************************************************************\
@@ -254,7 +254,7 @@ void I_leave_limbo(void)
 void I_enter_limbo(void)
 {
         i_limbo = TRUE;
-        I_widget_show(&right_toolbar.widget, FALSE);
+        I_widget_event(&right_toolbar.widget, I_EV_HIDE);
 }
 
 /******************************************************************************\

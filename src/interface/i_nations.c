@@ -21,7 +21,7 @@ static int selected;
 \******************************************************************************/
 static void nation_clicked(i_button_t *button)
 {
-        I_widget_show(button->widget.parent, FALSE);
+        I_widget_event(button->widget.parent, I_EV_HIDE);
         G_change_nation((int)(button - nation_buttons));
 }
 

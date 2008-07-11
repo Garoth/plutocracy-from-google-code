@@ -147,20 +147,6 @@ void I_widget_move(i_widget_t *widget, c_vec2_t origin)
 }
 
 /******************************************************************************\
- Show or hide a widget and all of its children. Will not generate events if
- the visibility status did not change.
-\******************************************************************************/
-void I_widget_show(i_widget_t *widget, int show)
-{
-        if (widget->shown == show)
-                return;
-        if (show)
-                I_widget_event(widget, I_EV_SHOW);
-        else
-                I_widget_event(widget, I_EV_HIDE);
-}
-
-/******************************************************************************\
  Gives extra space to expanding child widgets.
 \******************************************************************************/
 static void expand_children(i_widget_t *widget, c_vec2_t size, int expanders)
@@ -477,6 +463,8 @@ void I_widget_event(i_widget_t *widget, i_event_t event)
                         i_key_focus = widget;
                 break;
         case I_EV_HIDE:
+                if (!widget->shown)
+                        return;
                 widget->shown = FALSE;
                 if (i_key_focus == widget)
                         i_key_focus = NULL;
@@ -552,6 +540,8 @@ void I_widget_event(i_widget_t *widget, i_event_t event)
                         return;
                 break;
         case I_EV_SHOW:
+                if (widget->shown)
+                        return;
                 widget->shown = TRUE;
                 check_mouse_focus(widget);
                 widget->event_func(widget, event);
@@ -604,8 +594,9 @@ static void propagate_mouse_down(i_widget_t *widget)
 {
         while (widget && widget->event_func) {
                 if (widget->shown && widget->state != I_WS_DISABLED &&
-                    widget->clickable)
-                        widget->event_func(i_mouse_focus, I_EV_MOUSE_DOWN);
+                    widget->clickable &&
+                    !widget->event_func(i_mouse_focus, I_EV_MOUSE_DOWN))
+                        return;
                 widget = widget->parent;
         }
 }

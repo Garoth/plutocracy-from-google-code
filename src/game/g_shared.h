@@ -10,9 +10,6 @@
  FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
 \******************************************************************************/
 
-/* Longest length of a path a ship can take */
-#define G_PATH_LEN 128
-
 /* Maximum number of ships in a game */
 #define G_SHIPS_MAX 128
 
@@ -50,14 +47,16 @@ typedef struct g_ship_class {
 typedef struct g_ship {
         g_ship_name_t class_name;
         int tile, client, health, armor;
-        char path[G_PATH_LEN];
+        char path[R_PATH_MAX];
         bool in_use;
 } g_ship_t;
+
+/* g_client.c */
+void G_process_click(int button);
 
 /* g_globe.c */
 void G_mouse_ray(c_vec3_t origin, c_vec3_t forward);
 void G_mouse_ray_miss(void);
-void G_process_click(int button);
 void G_render_globe(void);
 
 /* g_host.c */

@@ -44,16 +44,16 @@ void R_init_ships(void)
         /* Quad vertices never change */
         up = C_vec3(0.f, 1.f, 0.f);
         vertices[0].co = C_vec3(-QUAD_HALF, QUAD_Z, QUAD_HALF);
-        vertices[0].uv = C_vec2(0.f, 0.f);
+        vertices[0].uv = C_vec2(1.f, 0.f);
         vertices[0].no = up;
         vertices[1].co = C_vec3(QUAD_HALF, QUAD_Z, QUAD_HALF);
-        vertices[1].uv = C_vec2(1.f, 0.f);
+        vertices[1].uv = C_vec2(0.f, 0.f);
         vertices[1].no = up;
         vertices[2].co = C_vec3(-QUAD_HALF, QUAD_Z, -QUAD_HALF);
-        vertices[2].uv = C_vec2(0.f, 1.f);
+        vertices[2].uv = C_vec2(1.f, 1.f);
         vertices[2].no = up;
         vertices[3].co = C_vec3(QUAD_HALF, QUAD_Z, -QUAD_HALF);
-        vertices[3].uv = C_vec2(1.f, 1.f);
+        vertices[3].uv = C_vec2(0.f, 1.f);
         vertices[3].no = up;
 
         /* The center vertex of the bars also don't change */
@@ -91,15 +91,15 @@ static void render_quad(const r_texture_t *texture)
 \******************************************************************************/
 static void render_bars(float left, float right)
 {
-        const unsigned short indices[6] = {5, 4, 2, 4, 6, 3};
+        const unsigned short indices[6] = {5, 4, 2, 6, 3, 4};
 
         /* Dynamically position the top left and right vertices */
-        left = -cosf(left * C_PI / 2.f + C_PI / 4.f);
-        right = -cosf(right * C_PI / 2.f + C_PI / 4.f);
-        vertices[5].co = C_vec3(-QUAD_HALF, QUAD_Z, QUAD_HALF * left);
-        vertices[5].uv = C_vec2(0.f, 0.5f - 0.5f * left);
-        vertices[6].co = C_vec3(QUAD_HALF, QUAD_Z, QUAD_HALF * right);
-        vertices[6].uv = C_vec2(1.f, 0.5f - 0.5f * right);
+        left = cosf(left * C_PI / 2.f + C_PI / 4.f);
+        right = cosf(right * C_PI / 2.f + C_PI / 4.f);
+        vertices[6].co = C_vec3(QUAD_HALF, QUAD_Z, -QUAD_HALF * left);
+        vertices[6].uv = C_vec2(0.f, 0.5f + 0.5f * left);
+        vertices[5].co = C_vec3(-QUAD_HALF, QUAD_Z, -QUAD_HALF * right);
+        vertices[5].uv = C_vec2(1.f, 0.5f + 0.5f * right);
 
         R_texture_select(bars_tex);
         glInterleavedArrays(R_VERTEX3_FORMAT, 0, vertices);

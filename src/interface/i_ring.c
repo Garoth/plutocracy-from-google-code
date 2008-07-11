@@ -87,8 +87,12 @@ static int ring_event(i_widget_t *widget, i_event_t event)
                         I_close_ring();
                 break;
         case I_EV_MOUSE_DOWN:
-                if (radius <= RING_INNER_RADIUS || i_mouse != SDL_BUTTON_LEFT)
+                if (i_mouse != SDL_BUTTON_LEFT)
                         I_close_ring();
+                if (radius <= RING_INNER_RADIUS) {
+                        I_close_ring();
+                        return FALSE;
+                }
                 break;
         case I_EV_CLEANUP:
                 R_sprite_cleanup(&ring_sprite);
@@ -155,7 +159,7 @@ void I_show_ring(i_ring_f _callback)
 
         screen_origin = C_vec2((float)i_mouse_x, (float)i_mouse_y);
         position_and_pack();
-        I_widget_show(&ring_widget, TRUE);
+        I_widget_event(&ring_widget, I_EV_SHOW);
         callback = _callback;
 
         /* Set button widgets to activate on hover, they will clear this flag
@@ -169,7 +173,7 @@ void I_show_ring(i_ring_f _callback)
 \******************************************************************************/
 void I_close_ring(void)
 {
-        I_widget_show(&ring_widget, FALSE);
+        I_widget_event(&ring_widget, I_EV_HIDE);
 }
 
 /******************************************************************************\
@@ -180,7 +184,7 @@ void I_reset_ring(void)
         int i;
 
         for (i = 0; i < I_RING_ICONS; i++) {
-                I_widget_show(&button_widgets[i].widget, FALSE);
+                I_widget_event(&button_widgets[i].widget, I_EV_HIDE);
                 button_widgets[i].widget.fade = 0.f;
         }
         buttons = 0;
@@ -194,7 +198,7 @@ void I_add_to_ring(i_ring_icon_t icon, int enabled)
         C_assert(icon >= 0 && icon < I_RING_ICONS);
         if (button_widgets[icon].widget.shown)
                 return;
-        I_widget_show(&button_widgets[icon].widget, TRUE);
+        I_widget_event(&button_widgets[icon].widget, I_EV_SHOW);
         button_widgets[icon].widget.state = enabled ? I_WS_READY :
                                                       I_WS_DISABLED;
         buttons++;
