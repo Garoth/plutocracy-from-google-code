@@ -49,7 +49,7 @@ void G_cleanup_ships(void)
 /******************************************************************************\
  Returns TRUE if a ship can sail into the given tile.
 \******************************************************************************/
-static bool open_tile(int tile)
+bool G_open_tile(int tile)
 {
         return !g_tiles[tile].ship &&
                (g_tiles[tile].render->terrain == R_T_SHALLOW ||
@@ -86,7 +86,7 @@ g_ship_t *G_spawn_ship(int client, int tile, g_ship_name_t name, int index)
                 /* FIXME: This isn't a great way to pick a random open tile and
                           it doesn't guarantee success */
                 tile = C_rand() % r_tiles;
-                for (i = 0; !open_tile(tile); i++) {
+                for (i = 0; !G_open_tile(tile); i++) {
                         if (i >= 100)
                                 return NULL;
                         tile = C_rand() % r_tiles;
@@ -94,13 +94,13 @@ g_ship_t *G_spawn_ship(int client, int tile, g_ship_name_t name, int index)
         }
 
         /* Find an available tile to start the ship on */
-        else if (!open_tile(tile)) {
+        else if (!G_open_tile(tile)) {
                 int i, neighbors[12], len;
 
                 /* Not being able to fit a ship in is common, so don't complain
                    if this happens */
                 len = R_get_tile_region(tile, neighbors);
-                for (i = 0; !open_tile(neighbors[i]); i++)
+                for (i = 0; !G_open_tile(neighbors[i]); i++)
                         if (i >= len)
                                 return NULL;
                 tile = neighbors[i];
@@ -152,9 +152,20 @@ void G_render_ships(void)
                 health = (float)ship->health / HEALTH_MAX;
                 health_max = (float)ship_class->health / HEALTH_MAX;
                 color = g_nations[g_clients[ship->client].nation].color;
-                R_render_ship_status(&tile->model, armor, health_max,
-                                     health, health_max, color,
+                R_render_ship_status(&tile->model, health, health_max,
+                                     armor, health_max, color,
                                      g_selected_ship == ship);
         }
+}
+
+/******************************************************************************\
+ Find a path from where the [ship] is to the target [tile]. Outputs to [path].
+\******************************************************************************/
+void G_ship_path(const g_ship_t *ship, char *path)
+{
+        path[0] = 0;
+        path[1] = 1;
+        path[2] = 2;
+        path[3] = -1;
 }
 

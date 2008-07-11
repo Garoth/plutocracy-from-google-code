@@ -48,6 +48,12 @@ typedef struct r_vertex2 {
 #pragma pack(pop)
 #define R_VERTEX2_FORMAT GL_T2F_V3F
 
+/* Globe vertex type */
+typedef struct r_globe_vertex {
+        r_vertex3_t v;
+        int next;
+} r_globe_vertex_t;
+
 /* Texture class */
 struct r_texture {
         c_ref_t ref;
@@ -169,6 +175,10 @@ SDL_Surface *R_surface_load_png(const char *filename, bool *alpha);
 void R_surface_mask(SDL_Surface *dest, SDL_Surface *src);
 void R_surface_put(SDL_Surface *, int x, int y, c_color_t);
 int R_surface_save(SDL_Surface *, const char *filename);
+
+/* r_terrain.c */
+extern r_globe_vertex_t r_globe_verts[R_TILES_MAX * 3];
+extern r_vbo_t r_globe_vbo;
 
 /* r_test.c */
 void R_render_normals(int count, c_vec3_t *co, c_vec3_t *no, int stride);

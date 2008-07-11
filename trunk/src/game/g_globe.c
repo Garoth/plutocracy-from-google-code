@@ -36,14 +36,16 @@ typedef struct g_island {
 /* Island tiles with game data */
 g_tile_t g_tiles[R_TILES_MAX];
 
-/* The currently selected ship index */
+/* The currently selected ship */
 g_ship_t *g_selected_ship;
 
+/* The currently selected tile index */
+int g_selected_tile;
+
 static g_island_t islands[ISLAND_NUM];
-static i_ring_f ring_callback;
 static r_tile_t render_tiles[R_TILES_MAX];
 static float visible_near, visible_far;
-static int islands_len, selected_tile;
+static int islands_len;
 
 /******************************************************************************\
  Randomly selects a tile ground terrain based on climate approximations.
@@ -229,9 +231,9 @@ int G_set_tile_model(int tile, const char *filename)
         if (!R_model_init(&g_tiles[tile].model, filename, TRUE))
                 return FALSE;
         g_tiles[tile].model.origin = g_tiles[tile].origin;
-        g_tiles[tile].model.normal = g_tiles[tile].normal;
+        g_tiles[tile].model.normal = r_tile_normals[tile];
         g_tiles[tile].model.forward = g_tiles[tile].forward;
-        g_tiles[tile].model.selected = selected_tile == tile;
+        g_tiles[tile].model.selected = g_selected_tile == tile;
         return TRUE;
 }
 
@@ -338,7 +340,7 @@ void G_generate_globe(void)
 
         /* Calculate tile vectors */
         for (i = 0; i < r_tiles; i++) {
-                c_vec3_t coords[3], ab, ac;
+                c_vec3_t coords[3];
 
                 R_get_tile_coords(i, coords);
 
@@ -346,11 +348,6 @@ void G_generate_globe(void)
                 g_tiles[i].origin = C_vec3_add(coords[0], coords[1]);
                 g_tiles[i].origin = C_vec3_add(g_tiles[i].origin, coords[2]);
                 g_tiles[i].origin = C_vec3_divf(g_tiles[i].origin, 3.f);
-
-                /* Normal Vector */
-                ab = C_vec3_sub(coords[1], coords[0]);
-                ac = C_vec3_sub(coords[2], coords[0]);
-                g_tiles[i].normal = C_vec3_norm(C_vec3_cross(ab, ac));
 
                 /* Forward Vector */
                 g_tiles[i].forward = C_vec3_norm(C_vec3_sub(coords[0],
@@ -370,7 +367,7 @@ void G_generate_globe(void)
         visible_near = -r_globe_radius + 4.f;
 
         /* Deselect everything */
-        selected_tile = -1;
+        g_selected_tile = -1;
         g_selected_ship = NULL;
 }
 
@@ -409,12 +406,12 @@ void G_render_globe(void)
         R_finish_globe();
 
         /* Render a test line from the selected tile */
-        if (g_test_globe.value.n && selected_tile >= 0) {
+        if (g_test_globe.value.n && g_selected_tile >= 0) {
                 c_vec3_t b;
 
-                b = C_vec3_add(g_tiles[selected_tile].origin,
-                               g_tiles[selected_tile].normal);
-                R_render_test_line(g_tiles[selected_tile].origin, b,
+                b = C_vec3_add(g_tiles[g_selected_tile].origin,
+                               r_tile_normals[g_selected_tile]);
+                R_render_test_line(g_tiles[g_selected_tile].origin, b,
                                    C_color(0.f, 1.f, 0.f, 1.f));
         }
 
@@ -440,15 +437,15 @@ static int ray_intersects_tile(c_vec3_t O, c_vec3_t D, int tile)
 
         /* Find [P], the ray's location in the triangle plane */
         O = C_vec3_sub(O, triangle[0]);
-        t = C_vec3_dot(g_tiles[tile].normal, O) /
-            -C_vec3_dot(g_tiles[tile].normal, D);
+        t = C_vec3_dot(r_tile_normals[tile], O) /
+            -C_vec3_dot(r_tile_normals[tile], D);
         if (t <= 0.f)
                 return FALSE;
         P = C_vec3_add(O, C_vec3_scalef(D, t));
 
         /* Project the points onto one axis to simplify calculations. Choose the
            dominant axis of the normal for numeric stability. */
-        axis = C_vec3_dominant(g_tiles[tile].normal);
+        axis = C_vec3_dominant(r_tile_normals[tile]);
         Q = C_vec2_from_3(P, axis);
         B = C_vec2_from_3(C_vec3_sub(triangle[1], triangle[0]), axis);
         C = C_vec2_from_3(C_vec3_sub(triangle[2], triangle[0]), axis);
@@ -463,7 +460,7 @@ static int ray_intersects_tile(c_vec3_t O, c_vec3_t D, int tile)
                 if (g_test_globe.value.n) {
                         P = C_vec3_add(P, triangle[0]);
                         R_render_test_line(P,
-                                           C_vec3_add(P, g_tiles[tile].normal),
+                                           C_vec3_add(P, r_tile_normals[tile]),
                                            C_color(1.f, 0.f, 0.f, 1.f));
                 }
                 return TRUE;
@@ -472,74 +469,14 @@ static int ray_intersects_tile(c_vec3_t O, c_vec3_t D, int tile)
 }
 
 /******************************************************************************\
- Test ring callback function.
-\******************************************************************************/
-static void test_ring_callback(i_ring_icon_t icon)
-{
-        if (icon == I_RI_TEST_MILL)
-                G_set_tile_model(selected_tile, "models/test/mill.plum");
-        else if (icon == I_RI_TEST_TREE)
-                G_set_tile_model(selected_tile,
-                               "models/tree/deciduous.plum");
-        else if (icon == I_RI_TEST_SHIP)
-                G_set_tile_model(selected_tile,
-                               "models/ship/sloop.plum");
-        else
-                G_set_tile_model(selected_tile, "");
-}
-
-/******************************************************************************\
  Call when we know the mouse ray missed without or after tracing it.
 \******************************************************************************/
 void G_mouse_ray_miss(void)
 {
-        if (selected_tile < 0)
+        if (g_selected_tile < 0)
                 return;
-        g_tiles[selected_tile].model.selected = FALSE;
-        R_select_tile(selected_tile = -1);
-}
-
-/******************************************************************************\
- Setup the ring widget for interacting with the hovered over tile.
-\******************************************************************************/
-static int setup_ring(int tile)
-{
-        /* When globe testing is on, always show the test ring */
-        if (g_test_globe.value.n) {
-                I_reset_ring();
-                I_add_to_ring(I_RI_TEST_BLANK, TRUE);
-                I_add_to_ring(I_RI_TEST_MILL, TRUE);
-                I_add_to_ring(I_RI_TEST_TREE, TRUE);
-                I_add_to_ring(I_RI_TEST_SHIP, TRUE);
-                I_add_to_ring(I_RI_TEST_DISABLED, FALSE);
-                ring_callback = test_ring_callback;
-                return TRUE;
-        }
-
-        return FALSE;
-}
-
-/******************************************************************************\
- Selects a tile during mouse hover. Pass -1 to deselect.
-\******************************************************************************/
-static void select_tile(int tile)
-{
-        C_assert(tile < r_tiles);
-
-        /* Deselect the old tile */
-        if (selected_tile >= 0)
-                g_tiles[selected_tile].model.selected = FALSE;
-        R_select_tile(selected_tile = -1);
-
-        /* See if there is actually any interaction possible with this tile */
-        if (tile < 0 || (!setup_ring(tile) && !g_tiles[tile].ship))
-                return;
-
-        /* Select the new tile */
-        if (!g_tiles[tile].ship)
-                R_select_tile(tile);
-        g_tiles[tile].model.selected = TRUE;
-        selected_tile = tile;
+        g_tiles[g_selected_tile].model.selected = FALSE;
+        R_select_tile(g_selected_tile = -1, R_ST_NONE);
 }
 
 /******************************************************************************\
@@ -553,15 +490,15 @@ void G_mouse_ray(c_vec3_t origin, c_vec3_t forward)
         int i, tile;
 
         /* We can quit early if the selected tile is still being hovered over */
-        if (selected_tile >= 0 && g_tiles[selected_tile].visible &&
-            ray_intersects_tile(origin, forward, selected_tile)) {
-                select_tile(selected_tile);
+        if (g_selected_tile >= 0 && g_tiles[g_selected_tile].visible &&
+            ray_intersects_tile(origin, forward, g_selected_tile)) {
+                G_select_tile(g_selected_tile);
                 return;
         }
 
         /* Disable selected tile effect for old model */
-        if (selected_tile >= 0)
-                g_tiles[selected_tile].model.selected = FALSE;
+        if (g_selected_tile >= 0)
+                g_tiles[g_selected_tile].model.selected = FALSE;
 
         /* Iterate over all visible tiles to find the selected tile */
         tile_z = 0.f;
@@ -578,31 +515,6 @@ void G_mouse_ray(c_vec3_t origin, c_vec3_t forward)
                 }
         }
 
-        select_tile(tile);
-}
-
-/******************************************************************************\
- Called when the interface root window receives a click.
-\******************************************************************************/
-void G_process_click(int button)
-{
-        /* Right-click cancels selection */
-        if (button == SDL_BUTTON_RIGHT)
-                g_selected_ship = NULL;
-
-        if (selected_tile < 0 || button != SDL_BUTTON_LEFT)
-                return;
-
-        /* Left-clicked on a ship */
-        if (g_tiles[selected_tile].ship) {
-                if (g_selected_ship == g_tiles[selected_tile].ship)
-                        g_selected_ship = NULL;
-                else
-                        g_selected_ship = g_tiles[selected_tile].ship;
-                return;
-        }
-
-        /* Left-clicked on a tile */
-        I_show_ring(ring_callback);
+        G_select_tile(tile);
 }
 

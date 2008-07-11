@@ -48,6 +48,38 @@
 /* tan(R_FOV / 2) */
 #define R_FOV_HALF_TAN 1.f
 
+/* Longest renderable ship path */
+#define R_PATH_MAX 128
+
+/* There is a fixed set of fonts available for the game */
+typedef enum {
+        R_FONT_CONSOLE,
+        R_FONT_GUI,
+        R_FONT_TITLE,
+        R_FONTS
+} r_font_t;
+
+/* Terrain enumeration */
+typedef enum {
+        R_T_SHALLOW = 0,
+        R_T_SAND = 1,
+        R_T_GROUND = 2,
+        R_T_GROUND_HOT = 3,
+        R_T_GROUND_COLD = 4,
+        R_T_WATER = 5,
+        R_T_BASES = 3,
+        R_T_TRANSITION = 6,
+} r_terrain_t;
+
+/* Tile selection types */
+typedef enum {
+        R_ST_TILE,
+        R_ST_GOTO,
+        R_ST_PATH,
+        R_SELECT_TYPES,
+        R_ST_NONE,
+} r_select_type_t;
+
 /* Opaque texture object */
 typedef struct r_texture r_texture_t;
 
@@ -77,14 +109,6 @@ typedef struct r_billboard {
         float size;
 } r_billboard_t;
 
-/* There is a fixed set of fonts available for the game */
-typedef enum {
-        R_FONT_CONSOLE,
-        R_FONT_GUI,
-        R_FONT_TITLE,
-        R_FONTS
-} r_font_t;
-
 /* Sometimes it is convenient to store the source text for a text sprite in a
    generic buffer and only re-render it if it has changed */
 typedef struct r_text {
@@ -103,18 +127,6 @@ typedef struct r_window {
         r_sprite_t sprite;
         c_vec2_t corner;
 } r_window_t;
-
-/* Terrain enumeration */
-typedef enum {
-        R_T_SHALLOW = 0,
-        R_T_SAND = 1,
-        R_T_GROUND = 2,
-        R_T_GROUND_HOT = 3,
-        R_T_GROUND_COLD = 4,
-        R_T_WATER = 5,
-        R_T_BASES = 3,
-        R_T_TRANSITION = 6,
-} r_terrain_t;
 
 /* Structure that contains configuration parameters for a tile */
 typedef struct r_tile {
@@ -147,18 +159,12 @@ c_vec3_t R_rotate_to_cam(c_vec3_t);
 void R_zoom_cam_by(float);
 
 /* r_globe.c */
-void R_configure_globe(r_tile_t *array);
 void R_finish_globe(void);
-void R_generate_globe(int subdiv4);
-void R_get_tile_coords(int index, c_vec3_t verts[3]);
-float R_get_tile_latitude(int tile);
-void R_get_tile_neighbors(int tile, int neighbors[3]);
-int R_get_tile_region(int tile, int neighbors[12]);
-void R_select_tile(int tile);
+void R_select_path(int tile, const char *path);
+void R_select_tile(int tile, r_select_type_t);
 void R_start_globe(void);
 
 extern float r_globe_light, r_globe_radius, r_zoom_max;
-extern int r_tiles;
 
 /* r_mode.c */
 void R_cleanup(void);
@@ -214,6 +220,17 @@ void R_text_render(r_text_t *);
 void R_window_init(r_window_t *, r_texture_t *);
 void R_window_load(r_window_t *, const char *filename);
 void R_window_render(r_window_t *);
+
+/* r_terrain.c */
+void R_configure_globe(r_tile_t *array);
+void R_generate_globe(int subdiv4);
+void R_get_tile_coords(int index, c_vec3_t verts[3]);
+float R_get_tile_latitude(int tile);
+void R_get_tile_neighbors(int tile, int neighbors[3]);
+int R_get_tile_region(int tile, int neighbors[12]);
+
+extern c_vec3_t r_tile_normals[R_TILES_MAX];
+extern int r_tiles;
 
 /* r_tests.c */
 void R_free_test_assets(void);

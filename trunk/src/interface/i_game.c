@@ -36,7 +36,7 @@ static void leave_button_clicked(i_button_t *button)
 {
         C_debug("Leave button clicked");
         G_leave_game();
-        I_widget_show(button->widget.parent, FALSE);
+        I_widget_event(button->widget.parent, I_EV_HIDE);
 }
 
 /******************************************************************************\
@@ -46,7 +46,7 @@ static void host_button_clicked(i_button_t *button)
 {
         C_debug("Host button clicked");
         G_host_game();
-        I_widget_show(button->widget.parent, FALSE);
+        I_widget_event(button->widget.parent, I_EV_HIDE);
 }
 
 /******************************************************************************\

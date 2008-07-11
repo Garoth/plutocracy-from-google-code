@@ -160,7 +160,7 @@ static void I_console_print(i_color_t color, const char *string)
         label->font = R_FONT_CONSOLE;
         label->color = color;
         I_widget_add(&scrollback.widget, &label->widget);
-        I_widget_show(&label->widget, TRUE);
+        I_widget_event(&label->widget, I_EV_SHOW);
         locked = FALSE;
 }
 

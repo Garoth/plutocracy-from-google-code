@@ -15,10 +15,10 @@
 #include "r_common.h"
 
 /* Proportion of the angle remaining that gradual rotation moves per second */
-#define GRADUAL_RATE 2.f
+#define GRADUAL_RATE 3.f
 
-/* Cut-off angle at which gradual rotation stops */
-#define GRADUAL_MARGIN 0.01f
+/* Cut-off angle at which gradual and inertial rotation stops */
+#define STOP_MARGIN 0.01f
 
 /* Proportion of the camera momentum removed over one second */
 #define CAM_FRICTION 0.75f
@@ -112,8 +112,13 @@ void R_update_camera(void)
                 if (prop <= 0.f) {
                         cam_rot_diff = C_vec3(0.f, 0.f, 0.f);
                         cam_momentum = FALSE;
-                } else
+                } else {
                         cam_rot_diff = C_vec3_scalef(cam_rot_diff, prop);
+                        if (C_vec3_len(cam_rot_diff) < STOP_MARGIN) {
+                                cam_rot_diff = C_vec3(0.f, 0.f, 0.f);
+                                cam_momentum = FALSE;
+                        }
+                }
         } else
                 cam_rot_diff = C_vec3(0.f, 0.f, 0.f);
 
@@ -137,7 +142,7 @@ void R_update_camera(void)
                 glRotatef(C_rad_to_deg(angle), gradual_axis.x,
                           gradual_axis.y, gradual_axis.z);
                 gradual_angle -= angle;
-                if (gradual_angle < GRADUAL_MARGIN)
+                if (gradual_angle < STOP_MARGIN)
                         cam_gradual = FALSE;
         }
 
