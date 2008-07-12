@@ -36,15 +36,9 @@ typedef struct g_island {
 /* Island tiles with game data */
 g_tile_t g_tiles[R_TILES_MAX];
 
-/* The currently selected ship */
-g_ship_t *g_selected_ship;
-
-/* The currently selected tile index */
-int g_selected_tile;
-
 static g_island_t islands[ISLAND_NUM];
 static r_tile_t render_tiles[R_TILES_MAX];
-static float visible_near, visible_far;
+static float visible_range;
 static int islands_len;
 
 /******************************************************************************\
@@ -249,19 +243,21 @@ void G_cleanup_globe(void)
 }
 
 /******************************************************************************\
- Update function for [g_test_tiles].
+ Update function for [g_test_tiles]. Only land tiles are used for testing.
 \******************************************************************************/
 static int test_tiles_update(c_var_t *var, c_var_value_t value)
 {
         int i;
+        bool failed;
 
+        failed = FALSE;
         for (i = 0; i < r_tiles; i++)
                 if (g_tiles[i].render->terrain != R_T_WATER &&
-                    g_tiles[i].render->terrain != R_T_SHALLOW &&
-                    !G_set_tile_model(i, value.s)) {
-                        for (; i < r_tiles; i++)
-                                R_model_cleanup(&g_tiles[i].model);
-                        return TRUE;
+                    g_tiles[i].render->terrain != R_T_SHALLOW) {
+                        if (failed)
+                                G_set_tile_model(i, "");
+                        else
+                                failed = !G_set_tile_model(i, value.s);
                 }
         return TRUE;
 }
@@ -291,7 +287,7 @@ void G_generate_globe(void)
         R_generate_globe(g_globe_subdiv4.value.n);
         C_rand_seed(g_globe_seed.value.n);
 
-        /* Locate tile neighbors */
+        /* Initialize tile structures */
         for (i = 0; i < r_tiles; i++) {
                 int neighbors[3];
 
@@ -299,6 +295,7 @@ void G_generate_globe(void)
                 render_tiles[i].height = 0;
                 g_tiles[i].render = render_tiles + i;
                 g_tiles[i].island = G_ISLAND_INVALID;
+                g_tiles[i].ship = -1;
                 C_zero(&g_tiles[i].model);
                 R_get_tile_neighbors(i, neighbors);
                 for (j = 0; j < 3; j++) {
@@ -359,16 +356,15 @@ void G_generate_globe(void)
 
         /* Set the invisible tile boundary.
            TODO: Compute this properly from globe radius. */
-        visible_far = 0.f;
+        visible_range = 0.f;
         if (g_globe_subdiv4.value.n >= 4)
-                visible_far = -11.25f;
+                visible_range = -11.25f;
         if (g_globe_subdiv4.value.n >= 5)
-                visible_far = -36.f;
-        visible_near = -r_globe_radius + 4.f;
+                visible_range = -36.f;
 
         /* Deselect everything */
         g_selected_tile = -1;
-        g_selected_ship = NULL;
+        g_selected_ship = -1;
 }
 
 /******************************************************************************\
@@ -376,16 +372,14 @@ void G_generate_globe(void)
  refers to how far along the camera forward vector the tile is. Smaller values
  are closer to the camera.
 \******************************************************************************/
-static g_visibility_t tile_visible(int tile)
+static bool tile_visible(int tile)
 {
         float dist;
 
         dist = C_vec3_dot(r_cam_forward, g_tiles[tile].origin);
-        if (dist < visible_near)
-                return G_VISIBLE_NEAR;
-        if (dist < visible_far)
-                return G_VISIBLE_FAR;
-        return G_INVISIBLE;
+        if (dist < visible_range)
+                return TRUE;
+        return FALSE;
 }
 
 /******************************************************************************\
@@ -516,5 +510,6 @@ void G_mouse_ray(c_vec3_t origin, c_vec3_t forward)
         }
 
         G_select_tile(tile);
+        C_debug("changed selection to tile %d", tile);
 }
 

@@ -617,6 +617,7 @@ void R_load_assets(void)
         R_prerender();
         if (!r_terrain_tex)
                 C_error("Failed to load terrain texture");
+        r_terrain_tex->anisotropy = 2.f;
 
         /* Create a fake white texture */
         r_white_tex = R_texture_alloc(1, 1, FALSE);

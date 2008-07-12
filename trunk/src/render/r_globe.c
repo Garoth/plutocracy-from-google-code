@@ -198,14 +198,17 @@ void R_select_tile(int tile, r_select_type_t type)
 \******************************************************************************/
 void R_select_path(int tile, const char *path)
 {
+        int index;
+
         path_len = 0;
-        if (!path || path[0] < 0)
+        if (!path || path[0] < 1 || tile < 0)
                 return;
         for (; path_len < R_PATH_MAX; path_len++) {
                 copy_tile_vertices(tile, path_verts + path_len * 3);
-                if (path[path_len] < 0)
+                index = path[path_len] - 1;
+                if (index < 0 || index > 2)
                         break;
-                tile = r_globe_verts[3 * tile + path_len].next;
+                tile = r_globe_verts[3 * tile + index].next;
         }
 }
 
