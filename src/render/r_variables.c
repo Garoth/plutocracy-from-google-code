@@ -128,7 +128,7 @@ void R_register_variables(void)
                           "sun specular light color");
         C_register_string(&r_moon_diffuse, "r_moon_diffuse", "#001040",
                           "moon diffuse light color");
-        C_register_string(&r_moon_specular, "r_moon_specular", "#040810",
+        C_register_string(&r_moon_specular, "r_moon_specular", "#000008",
                           "moon specular light color");
 
         /* Fonts */

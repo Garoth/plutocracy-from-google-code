@@ -520,7 +520,7 @@ void R_configure_globe(r_tile_t *tiles)
                 r_globe_verts[3 * i + 1].v.uv = C_vec2(left, bottom);
                 r_globe_verts[3 * i + 2].v.uv = C_vec2(right, bottom);
 
-                /* Set normal vector */
+                /* Set tile normal vector */
                 ab = C_vec3_sub(r_globe_verts[3 * i].v.co,
                                 r_globe_verts[3 * i + 1].v.co);
                 ac = C_vec3_sub(r_globe_verts[3 * i].v.co,

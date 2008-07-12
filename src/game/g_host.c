@@ -10,6 +10,10 @@
  FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
 \******************************************************************************/
 
+/* Initializes the game structures. Primarily handles client messages for the
+   server. Remember that the client is not trusted and all input must be
+   checked for validity! */
+
 #include "g_common.h"
 
 /* Array of connected clients */
@@ -72,8 +76,7 @@ static void corrupt_kick(int client)
 \******************************************************************************/
 static void server_affiliate(int client)
 {
-        int nation, old, tile;
-        g_ship_t *ship;
+        int nation, old, tile, ship;
 
         nation = N_receive_char();
         if (nation < 0 || nation >= G_NATION_NAMES) {
@@ -89,10 +92,30 @@ static void server_affiliate(int client)
            try to give them a starter ship */
         tile = -1;
         if (old == G_NN_NONE &&
-            (ship = G_spawn_ship(client, -1, G_SN_SLOOP, -1)))
-                tile = ship->tile;
+            (ship = G_spawn_ship(client, -1, G_SN_SLOOP, -1)) >= 0)
+                tile = g_ships[ship].tile;
 
         N_send(N_BROADCAST_ID, "1112", G_SM_AFFILIATE, client, nation, tile);
+}
+
+/******************************************************************************\
+ Handles orders to move ships.
+\******************************************************************************/
+static void server_ship_move(int client)
+{
+        int ship, tile;
+
+        ship = N_receive_char();
+        tile = N_receive_short();
+        if (ship < 0 || ship >= G_SHIPS_MAX || tile < 0 || tile >= r_tiles) {
+                corrupt_kick(client);
+                return;
+        }
+        if (g_ships[ship].client != client)
+                return;
+        G_ship_path(ship, tile);
+
+        /* TODO: Tell all other clients about the path change */
 }
 
 /******************************************************************************\
@@ -122,6 +145,9 @@ static void server_callback(int client, n_event_t event)
         switch (token) {
         case G_CM_AFFILIATE:
                 server_affiliate(client);
+                break;
+        case G_CM_SHIP_MOVE:
+                server_ship_move(client);
                 break;
         default:
                 break;

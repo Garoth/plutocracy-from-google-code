@@ -12,6 +12,10 @@
 
 #include "g_common.h"
 
+/* The currently selected tile and ship index. Negative values indicate an
+   invalid selection. */
+int g_selected_tile, g_selected_ship;
+
 static bool ring_valid;
 
 /******************************************************************************\
@@ -202,12 +206,12 @@ void G_select_tile(int tile)
         ring_valid = can_interact(tile);
 
         /* Selecting a ship */
-        if (g_tiles[tile].ship) {
+        if (g_tiles[tile].ship >= 0) {
         }
 
         /* If we are controlling a ship, we might want to move here */
-        else if (g_selected_ship && g_selected_ship->client == n_client_id &&
-                 G_open_tile(tile)) {
+        else if (g_selected_ship >= 0 && G_open_tile(tile) &&
+                 g_ships[g_selected_ship].client == n_client_id) {
                 R_select_tile(tile, R_ST_GOTO);
                 g_selected_tile = tile;
                 return;
@@ -256,25 +260,37 @@ void G_process_click(int button)
 
         /* Clicking on an unusable space deselects */
         if (g_selected_tile < 0 || button != SDL_BUTTON_LEFT) {
-                g_selected_ship = NULL;
+                g_selected_ship = -1;
                 return;
         }
 
         /* Left-clicked on a ship */
-        if (g_tiles[g_selected_tile].ship) {
-                if (g_selected_ship != g_tiles[g_selected_tile].ship)
+        if (g_tiles[g_selected_tile].ship >= 0) {
+                if (g_selected_ship != g_tiles[g_selected_tile].ship) {
                         g_selected_ship = g_tiles[g_selected_tile].ship;
-                else
-                        g_selected_ship = NULL;
+                        R_select_path(g_ships[g_selected_ship].tile,
+                                      g_ships[g_selected_ship].path);
+                } else {
+                        g_selected_ship = -1;
+                        R_select_path(-1, NULL);
+                }
                 return;
         }
 
         /* Controlling a ship */
-        if (g_selected_ship && g_selected_ship->client == n_client_id)
-                return;
+        if (g_selected_ship >= 0 &&
+            g_ships[g_selected_ship].client == n_client_id) {
+
+                /* Ordered an ocean move */
+                if (g_selected_tile >= 0 && G_open_tile(g_selected_tile)) {
+                        N_send(N_SERVER_ID, "112", G_CM_SHIP_MOVE,
+                               g_selected_ship, g_selected_tile);
+                        return;
+                }
+        }
 
         /* Left-clicked on a tile */
-        g_selected_ship = NULL;
+        g_selected_ship = -1;
         if (!ring_valid)
                 return;
 

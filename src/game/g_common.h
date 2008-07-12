@@ -39,21 +39,13 @@ typedef enum {
         G_SERVER_MESSAGES,
 } g_server_msg_t;
 
-/* Visibility values */
-typedef enum {
-        G_INVISIBLE = 0,
-        G_VISIBLE_FAR,
-        G_VISIBLE_NEAR,
-} g_visibility_t;
-
 /* A tile on the globe */
 typedef struct g_tile {
         r_model_t model;
-        g_ship_t *ship;
         r_tile_t *render;
         c_vec3_t origin, forward;
         struct g_tile *neighbors[3];
-        int island;
+        int island, ship;
         bool visible;
 } g_tile_t;
 
@@ -68,6 +60,8 @@ typedef struct g_client {
 void G_client_callback(int client, n_event_t);
 void G_select_tile(int tile);
 
+extern int g_selected_ship, g_selected_tile;
+
 /* g_host.c */
 extern g_client_t g_clients[N_CLIENTS_MAX];
 
@@ -78,19 +72,17 @@ void G_generate_globe(void);
 int G_set_tile_model(int tile, const char *path);
 
 extern g_tile_t g_tiles[R_TILES_MAX];
-extern g_ship_t *g_selected_ship;
-extern c_var_t g_globe_islands, g_globe_island_size, g_globe_seed,
-               g_globe_subdiv4;
-extern int g_selected_tile;
 
 /* g_ship.c */
 void G_cleanup_ships(void);
 void G_init_ships(void);
 bool G_open_tile(int tile);
 void G_render_ships(void);
-void G_ship_path(const g_ship_t *, char *path);
-g_ship_t *G_spawn_ship(int client, int tile, g_ship_name_t, int ship);
+void G_ship_path(int ship, int tile);
+int G_spawn_ship(int client, int tile, g_ship_name_t, int ship);
 
 /* g_variables.c */
-extern c_var_t g_nation_colors[G_NATION_NAMES], g_test_globe, g_test_tile;
+extern c_var_t g_globe_islands, g_globe_island_size, g_globe_seed,
+               g_globe_subdiv4, g_nation_colors[G_NATION_NAMES],
+               g_test_globe, g_test_tile;
 

@@ -20,7 +20,7 @@
 static c_vec3_t grab_normal;
 static c_vec2_t globe_motion;
 static float grab_angle;
-static int grabbing, grab_rolling, last_right_click;
+static int grabbing, grab_rolling, grab_times[2];
 
 /******************************************************************************\
  Performs ray-sphere intersection between an arbitrary ray and the globe. The
@@ -103,6 +103,8 @@ static void grab_globe(int x, int y)
         if (grabbing)
                 return;
         grabbing = TRUE;
+        grab_times[0] = grab_times[1];
+        grab_times[1] = c_time_msec;
         if (screen_to_normal(x, y, &grab_normal, &grab_angle)) {
                 grab_rolling = FALSE;
                 grab_normal = R_rotate_from_cam(grab_normal);
@@ -118,8 +120,19 @@ static void grab_globe(int x, int y)
 \******************************************************************************/
 static void release_globe(void)
 {
+        c_vec3_t normal;
+
         grabbing = FALSE;
         R_release_cam();
+
+        /* Check if this is a double right click */
+        if (i_mouse_focus != &i_root ||
+            c_time_msec - grab_times[0] > DOUBLE_CLICK_MSEC ||
+            !screen_to_normal(i_mouse_x, i_mouse_y, &normal, NULL))
+                return;
+        grab_times[0] = 0;
+        grab_times[1] = 0;
+        R_rotate_cam_to(normal);
 }
 
 /******************************************************************************\
@@ -184,24 +197,6 @@ static void test_globe(void)
 }
 
 /******************************************************************************\
- If this is a double click, rotates the camera to the new location and
- returns TRUE.
-\******************************************************************************/
-static int double_right_click(void)
-{
-        c_vec3_t normal;
-
-        if (c_time_msec - last_right_click > DOUBLE_CLICK_MSEC ||
-            !screen_to_normal(i_mouse_x, i_mouse_y, &normal, NULL)) {
-                last_right_click = c_time_msec;
-                return FALSE;
-        }
-        release_globe();
-        R_rotate_cam_to(normal);
-        return TRUE;
-}
-
-/******************************************************************************\
  Processes events from the root window that affect the globe.
 \******************************************************************************/
 void I_globe_event(i_event_t event)
@@ -241,16 +236,12 @@ void I_globe_event(i_event_t event)
                         R_zoom_cam_by(i_zoom_speed.value.f);
                 else if (i_mouse == SDL_BUTTON_WHEELUP)
                         R_zoom_cam_by(-i_zoom_speed.value.f);
-                else if (i_mouse == SDL_BUTTON_RIGHT) {
-                        if (double_right_click())
-                                break;
+                else if (i_mouse == SDL_BUTTON_RIGHT)
                         grab_globe(i_mouse_x, i_mouse_y);
-                        last_right_click = c_time_msec;
-                }
                 G_process_click(i_mouse);
                 break;
         case I_EV_MOUSE_UP:
-                if (grabbing && i_mouse == SDL_BUTTON_RIGHT)
+                if (i_mouse == SDL_BUTTON_RIGHT)
                         release_globe();
                 break;
         case I_EV_MOUSE_MOVE:

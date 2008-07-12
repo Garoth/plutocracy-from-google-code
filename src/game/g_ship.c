@@ -51,7 +51,7 @@ void G_cleanup_ships(void)
 \******************************************************************************/
 bool G_open_tile(int tile)
 {
-        return !g_tiles[tile].ship &&
+        return g_tiles[tile].ship < 0 &&
                (g_tiles[tile].render->terrain == R_T_SHALLOW ||
                 g_tiles[tile].render->terrain == R_T_WATER);
 }
@@ -62,12 +62,12 @@ bool G_open_tile(int tile)
  a random open tile. If [index] is negative, the first available slot will be
  used.
 \******************************************************************************/
-g_ship_t *G_spawn_ship(int client, int tile, g_ship_name_t name, int index)
+int G_spawn_ship(int client, int tile, g_ship_name_t name, int index)
 {
         if (index >= G_SHIPS_MAX) {
                 C_warning("Failed to spawn ship at tile %d, "
                           "index out of range (%d)", tile, index);
-                return NULL;
+                return -1;
         }
 
         /* Find an available ship slot if [index] is not given */
@@ -76,7 +76,7 @@ g_ship_t *G_spawn_ship(int client, int tile, g_ship_name_t name, int index)
                         if (index >= G_SHIPS_MAX) {
                                 C_warning("Failed to spawn ship at tile %d, "
                                           "array full", tile);
-                                return NULL;
+                                return -1;
                         }
 
         /* If we are to spawn the ship anywhere, pick a random tile */
@@ -88,7 +88,7 @@ g_ship_t *G_spawn_ship(int client, int tile, g_ship_name_t name, int index)
                 tile = C_rand() % r_tiles;
                 for (i = 0; !G_open_tile(tile); i++) {
                         if (i >= 100)
-                                return NULL;
+                                return -1;
                         tile = C_rand() % r_tiles;
                 }
         }
@@ -102,7 +102,7 @@ g_ship_t *G_spawn_ship(int client, int tile, g_ship_name_t name, int index)
                 len = R_get_tile_region(tile, neighbors);
                 for (i = 0; !G_open_tile(neighbors[i]); i++)
                         if (i >= len)
-                                return NULL;
+                                return -1;
                 tile = neighbors[i];
         }
 
@@ -116,16 +116,13 @@ g_ship_t *G_spawn_ship(int client, int tile, g_ship_name_t name, int index)
         g_ships[index].health = g_ship_classes[name].health;
         g_ships[index].armor = 0;
 
-        g_ships[index].health = g_ship_classes[name].health * 0.6f;
-        g_ships[index].armor = g_ship_classes[name].health * 0.4f;
-
         /* Place the ship on the tile */
-        g_tiles[tile].ship = g_ships + index;
+        g_tiles[tile].ship = index;
         G_set_tile_model(tile, g_ship_classes[name].model_path);
 
         /* TODO: If we are the server, tell other clients */
 
-        return g_ships + index;
+        return index;
 }
 
 /******************************************************************************\
@@ -154,15 +151,19 @@ void G_render_ships(void)
                 color = g_nations[g_clients[ship->client].nation].color;
                 R_render_ship_status(&tile->model, health, health_max,
                                      armor, health_max, color,
-                                     g_selected_ship == ship);
+                                     g_selected_ship == i);
         }
 }
 
 /******************************************************************************\
- Find a path from where the [ship] is to the target [tile]. Outputs to [path].
+ Find a path from where the [ship] is to the target [tile] and sets that as
+ the ship's new path.
 \******************************************************************************/
-void G_ship_path(const g_ship_t *ship, char *path)
+void G_ship_path(int ship, int tile)
 {
+        char *path;
+
+        path = g_ships[ship].path;
         path[0] = 0;
         path[1] = 1;
         path[2] = 2;

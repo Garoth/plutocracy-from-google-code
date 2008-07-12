@@ -18,7 +18,7 @@
 #define R_TILE_SHEET_H 3
 
 /* Proportion of a tile that is used as a buffer against its neighbors */
-#define R_TILE_BORDER (8.f / 256)
+#define R_TILE_BORDER (6.f / 256)
 
 /* Supported extensions */
 typedef enum {
