@@ -353,8 +353,8 @@ void I_update_popup(void)
         if (popup_widget.shown || popup_widget.fade > 0.f ||
             !popup_messages[0].message[0])
                 return;
-        memcpy(popup_messages, popup_messages + 1,
-               sizeof (popup_messages) - sizeof (*popup_messages));
+        memmove(popup_messages, popup_messages + 1,
+                sizeof (popup_messages) - sizeof (*popup_messages));
         popup_messages[POPUP_MESSAGES_MAX - 1].message[0] = NUL;
         popup_configure();
 }

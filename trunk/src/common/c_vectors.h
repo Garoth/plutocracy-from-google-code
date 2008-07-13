@@ -307,6 +307,29 @@ static inline c_vec3_t C_vec3_clamp(c_vec3_t v, float u)
 }
 
 /******************************************************************************\
+ Returns the vector with absolute valued members.
+\******************************************************************************/
+static inline c_vec2_t C_vec2_abs(c_vec2_t v)
+{
+        if (v.x < 0.f)
+                v.x = -v.x;
+        if (v.y < 0.f)
+                v.y = -v.y;
+        return v;
+}
+
+static inline c_vec3_t C_vec3_abs(c_vec3_t v)
+{
+        if (v.x < 0.f)
+                v.x = -v.x;
+        if (v.y < 0.f)
+                v.y = -v.y;
+        if (v.z < 0.f)
+                v.z = -v.z;
+        return v;
+}
+
+/******************************************************************************\
  Applies a transformation matrix to a vector. Matrix [m] should be in column
  major order as OpenGL expects.
 \******************************************************************************/
@@ -327,12 +350,13 @@ static inline c_vec3_t C_vec3_tfm(c_vec3_t v, GLfloat m[16])
 \******************************************************************************/
 static inline int C_vec3_dominant(c_vec3_t v)
 {
-        if (v.x > v.y) {
-                if (v.x > v.z)
+        v = C_vec3_abs(v);
+        if (v.x >= v.y) {
+                if (v.x >= v.z)
                         return 0;
                 return 2;
         }
-        if (v.y > v.z)
+        if (v.y >= v.z)
                 return 1;
         return 2;
 }
