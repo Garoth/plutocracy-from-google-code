@@ -397,6 +397,6 @@ int C_var_unlatch(c_var_t *);
 void C_var_update_data(c_var_t *, c_var_update_f, void *);
 void C_write_autogen(void);
 
-extern c_var_t c_max_fps, c_show_fps;
+extern c_var_t c_max_fps, c_show_fps, c_test_int;
 extern int c_exit;
 

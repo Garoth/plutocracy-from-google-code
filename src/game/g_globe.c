@@ -420,45 +420,45 @@ void G_render_globe(void)
  whether the triangle was hit. Source:
  http://www.devmaster.net/wiki/Ray-triangle_intersection
 \******************************************************************************/
-static int ray_intersects_tile(c_vec3_t O, c_vec3_t D, int tile)
+static int ray_intersects_tile(c_vec3_t o, c_vec3_t d, int tile)
 {
-        c_vec3_t P, triangle[3];
-        c_vec2_t Q, B, C;
+        c_vec3_t p, triangle[3], normal;
+        c_vec2_t q, b, c;
         float t, u, v, b_cross_c;
         int axis;
 
         R_get_tile_coords(tile, triangle);
+        normal = r_tile_normals[tile];
 
         /* Find [P], the ray's location in the triangle plane */
-        O = C_vec3_sub(O, triangle[0]);
-        t = C_vec3_dot(r_tile_normals[tile], O) /
-            -C_vec3_dot(r_tile_normals[tile], D);
+        o = C_vec3_sub(o, triangle[0]);
+        t = C_vec3_dot(normal, o) / -C_vec3_dot(normal, d);
         if (t <= 0.f)
                 return FALSE;
-        P = C_vec3_add(O, C_vec3_scalef(D, t));
+        p = C_vec3_add(o, C_vec3_scalef(d, t));
 
         /* Project the points onto one axis to simplify calculations. Choose the
            dominant axis of the normal for numeric stability. */
-        axis = C_vec3_dominant(r_tile_normals[tile]);
-        Q = C_vec2_from_3(P, axis);
-        B = C_vec2_from_3(C_vec3_sub(triangle[1], triangle[0]), axis);
-        C = C_vec2_from_3(C_vec3_sub(triangle[2], triangle[0]), axis);
+        axis = C_vec3_dominant(normal);
+        q = C_vec2_from_3(p, axis);
+        b = C_vec2_from_3(C_vec3_sub(triangle[1], triangle[0]), axis);
+        c = C_vec2_from_3(C_vec3_sub(triangle[2], triangle[0]), axis);
 
         /* Find the barycentric coordinates */
-        b_cross_c = C_vec2_cross(B, C);
-        u = C_vec2_cross(Q, C) / b_cross_c;
-        v = C_vec2_cross(Q, B) / -b_cross_c;
+        b_cross_c = C_vec2_cross(b, c);
+        u = C_vec2_cross(q, c) / b_cross_c;
+        v = C_vec2_cross(q, b) / -b_cross_c;
 
         /* Check if the point is within triangle bounds */
         if (u >= 0.f && v >= 0.f && u + v <= 1.f) {
                 if (g_test_globe.value.n) {
-                        P = C_vec3_add(P, triangle[0]);
-                        R_render_test_line(P,
-                                           C_vec3_add(P, r_tile_normals[tile]),
+                        p = C_vec3_add(p, triangle[0]);
+                        R_render_test_line(p, C_vec3_add(p, normal),
                                            C_color(1.f, 0.f, 0.f, 1.f));
                 }
                 return TRUE;
         }
+
         return FALSE;
 }
 
@@ -495,8 +495,7 @@ void G_mouse_ray(c_vec3_t origin, c_vec3_t forward)
                 g_tiles[g_selected_tile].model.selected = FALSE;
 
         /* Iterate over all visible tiles to find the selected tile */
-        tile_z = 0.f;
-        for (i = 0, tile = -1; i < r_tiles; i++) {
+        for (i = 0, tile = -1, tile_z = 0.f; i < r_tiles; i++) {
                 if (!g_tiles[i].visible ||
                     !ray_intersects_tile(origin, forward, i))
                         continue;
@@ -510,6 +509,5 @@ void G_mouse_ray(c_vec3_t origin, c_vec3_t forward)
         }
 
         G_select_tile(tile);
-        C_debug("changed selection to tile %d", tile);
 }
 

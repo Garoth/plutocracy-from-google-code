@@ -254,11 +254,11 @@ void R_generate_globe(int subdiv4)
 /******************************************************************************\
  Returns the vertices associated with a specific tile via [verts].
 \******************************************************************************/
-void R_get_tile_coords(int index, c_vec3_t verts[3])
+void R_get_tile_coords(int tile, c_vec3_t verts[3])
 {
-        verts[0] = r_globe_verts[3 * index].v.co;
-        verts[1] = r_globe_verts[3 * index + 1].v.co;
-        verts[2] = r_globe_verts[3 * index + 2].v.co;
+        verts[0] = r_globe_verts[3 * tile].v.co;
+        verts[1] = r_globe_verts[3 * tile + 1].v.co;
+        verts[2] = r_globe_verts[3 * tile + 2].v.co;
 }
 
 /******************************************************************************\
