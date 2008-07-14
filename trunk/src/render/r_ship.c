@@ -94,8 +94,8 @@ static void render_bars(float left, float right)
         const unsigned short indices[6] = {5, 4, 2, 6, 3, 4};
 
         /* Dynamically position the top left and right vertices */
-        left = cosf(left * C_PI / 2.f + C_PI / 4.f);
-        right = cosf(right * C_PI / 2.f + C_PI / 4.f);
+        left = cosf(left * C_PI / 2.f + C_PI / 4.f) / C_COS_45;
+        right = cosf(right * C_PI / 2.f + C_PI / 4.f) / C_COS_45;
         vertices[6].co = C_vec3(QUAD_HALF, QUAD_Z, -QUAD_HALF * left);
         vertices[6].uv = C_vec2(0.f, 0.5f + 0.5f * left);
         vertices[5].co = C_vec3(-QUAD_HALF, QUAD_Z, -QUAD_HALF * right);

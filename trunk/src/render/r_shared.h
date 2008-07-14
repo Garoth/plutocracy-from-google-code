@@ -48,8 +48,10 @@
 /* tan(R_FOV / 2) */
 #define R_FOV_HALF_TAN 1.f
 
-/* Longest renderable ship path */
-#define R_PATH_MAX 128
+/* Longest renderable ship path. This is used throughout the program. The
+   two biggest constraints on this value are network transmission and stack
+   space usage. */
+#define R_PATH_MAX 256
 
 /* There is a fixed set of fonts available for the game */
 typedef enum {

@@ -261,6 +261,7 @@ void G_process_click(int button)
         /* Clicking on an unusable space deselects */
         if (g_selected_tile < 0 || button != SDL_BUTTON_LEFT) {
                 g_selected_ship = -1;
+                R_select_path(-1, NULL);
                 return;
         }
 
@@ -291,6 +292,7 @@ void G_process_click(int button)
 
         /* Left-clicked on a tile */
         g_selected_ship = -1;
+        R_select_path(-1, NULL);
         if (!ring_valid)
                 return;
 

@@ -44,8 +44,7 @@ typedef struct g_tile {
         r_model_t model;
         r_tile_t *render;
         c_vec3_t origin, forward;
-        struct g_tile *neighbors[3];
-        int island, ship;
+        int island, ship, search_parent, search_stamp;
         bool visible;
 } g_tile_t;
 
