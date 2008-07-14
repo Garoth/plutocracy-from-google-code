@@ -15,6 +15,15 @@
 /* Maximum health value */
 #define HEALTH_MAX 100
 
+/* Maximum breadth of a path search */
+#define SEARCH_BREADTH (R_PATH_MAX * 3)
+
+/* Structure for searched tile nodes */
+typedef struct search_node {
+        float dist;
+        int tile;
+} search_node_t;
+
 /* Ships and ship classes */
 g_ship_t g_ships[G_SHIPS_MAX];
 g_ship_class_t g_ship_classes[G_SHIP_NAMES];
@@ -156,17 +165,114 @@ void G_render_ships(void)
 }
 
 /******************************************************************************\
+ Returns the linear distance from one tile to another. This is the search
+ function heuristic.
+\******************************************************************************/
+static float tile_dist(int a, int b)
+{
+        return C_vec3_len(C_vec3_sub(g_tiles[b].origin, g_tiles[a].origin));
+}
+
+/******************************************************************************\
  Find a path from where the [ship] is to the target [tile] and sets that as
  the ship's new path.
 \******************************************************************************/
-void G_ship_path(int ship, int tile)
+void G_ship_path(int ship, int target)
 {
-        char *path;
+        static int search_stamp;
+        search_node_t nodes[SEARCH_BREADTH];
+        int i, nodes_len, closest, path_len, neighbors[3];
 
-        path = g_ships[ship].path;
-        path[0] = 1;
-        path[1] = 2;
-        path[2] = 3;
-        path[3] = 0;
+        search_stamp++;
+
+        /* Clear the ship's old path */
+        g_ships[ship].path[0] = 0;
+        if (g_ships[ship].tile == target || !G_open_tile(target))
+                return;
+
+        /* Start with just the initial tile open */
+        nodes[0].tile = g_ships[ship].tile;
+        nodes[0].dist = tile_dist(nodes[0].tile, target);
+        nodes_len = 1;
+        g_tiles[nodes[0].tile].search_parent = -1;
+        g_tiles[nodes[0].tile].search_stamp = search_stamp;
+        closest = 0;
+
+        for (;;) {
+                search_node_t node;
+
+                node = nodes[closest];
+
+                /* Ran out of search nodes -- no path to target */
+                if (nodes_len < 1)
+                        return;
+
+                /* Remove the node from the list */
+                nodes_len--;
+                memmove(nodes + closest, nodes + closest + 1,
+                        (nodes_len - closest) * sizeof (*nodes));
+
+                /* Add its children */
+                R_get_tile_neighbors(node.tile, neighbors);
+                for (i = 0; i < 3; i++) {
+                        int stamp;
+
+                        /* Already opened? */
+                        stamp = g_tiles[neighbors[i]].search_stamp;
+                        C_assert(stamp <= search_stamp);
+                        if (stamp == search_stamp || !G_open_tile(neighbors[i]))
+                                continue;
+                        g_tiles[neighbors[i]].search_stamp = search_stamp;
+
+                        /* Out of space? */
+                        if (nodes_len >= SEARCH_BREADTH) {
+                                C_warning("Out of search space");
+                                return;
+                        }
+
+                        /* Add to array */
+                        nodes[nodes_len].tile = neighbors[i];
+                        g_tiles[neighbors[i]].search_parent = node.tile;
+
+                        /* Did we make it? */
+                        if (neighbors[i] == target)
+                                goto rewind;
+
+                        /* Distance to destination */
+                        nodes[nodes_len].dist = tile_dist(neighbors[i], target);
+
+                        nodes_len++;
+                }
+
+                /* Find the new closest node */
+                for (closest = 0, i = 1; i < nodes_len; i++)
+                        if (nodes[i].dist < nodes[closest].dist)
+                                closest = i;
+        }
+
+rewind: /* Count length of the path */
+        path_len = -1;
+        for (i = nodes[nodes_len].tile; i >= 0; i = g_tiles[i].search_parent)
+                path_len++;
+
+        /* The path is too long */
+        if (path_len > R_PATH_MAX) {
+                C_warning("Path is too long (%d tiles)", path_len);
+                return;
+        }
+
+        /* Write the path backwards */
+        g_ships[ship].path[path_len] = 0;
+        for (i = nodes[nodes_len].tile; i >= 0; ) {
+                int j, parent;
+
+                parent = g_tiles[i].search_parent;
+                if (parent < 0)
+                        break;
+                R_get_tile_neighbors(parent, neighbors);
+                for (j = 0; neighbors[j] != i; j++);
+                g_ships[ship].path[--path_len] = j + 1;
+                i = parent;
+        }
 }
 

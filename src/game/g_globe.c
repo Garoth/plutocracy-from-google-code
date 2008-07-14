@@ -29,8 +29,7 @@
 
 /* Island structure */
 typedef struct g_island {
-        g_tile_t *root;
-        int tiles, land;
+        int tiles, land, root;
 } g_island_t;
 
 /* Island tiles with game data */
@@ -154,8 +153,8 @@ skip_sand:      ;
 \******************************************************************************/
 static void grow_islands(int num, int island_size)
 {
-        g_tile_t *edges[ISLAND_NUM * ISLAND_SIZE];
-        int i, j, expanded, sizes[ISLAND_NUM], limits[ISLAND_NUM];
+        int i, j, expanded, sizes[ISLAND_NUM], limits[ISLAND_NUM],
+            edges[ISLAND_NUM * ISLAND_SIZE];
 
         if (num > ISLAND_NUM)
                 num = ISLAND_NUM;
@@ -165,8 +164,8 @@ static void grow_islands(int num, int island_size)
 
         /* Disperse the initial seeds and set limits */
         for (i = 0; i < num; i++) {
-                islands[i].root = g_tiles + (C_rand() % r_tiles);
-                if (islands[i].root->island != G_ISLAND_INVALID) {
+                islands[i].root = C_rand() % r_tiles;
+                if (g_tiles[islands[i].root].island != G_ISLAND_INVALID) {
                         num--;
                         i--;
                         continue;
@@ -177,7 +176,7 @@ static void grow_islands(int num, int island_size)
                                    1.f) * island_size);
                 if (limits[i] > ISLAND_SIZE)
                         limits[i] = ISLAND_SIZE;
-                islands[i].root->island = i;
+                g_tiles[islands[i].root].island = i;
                 islands[i].tiles = 1;
                 islands[i].land = 0;
         }
@@ -187,26 +186,26 @@ static void grow_islands(int num, int island_size)
         for (expanded = TRUE; expanded; ) {
                 expanded = FALSE;
                 for (i = 0; i < num; i++) {
-                        g_tile_t *next;
-                        int index;
+                        int index, next, neighbors[3];
 
                         if (!sizes[i] || islands[i].tiles >= limits[i])
                                 continue;
                         expanded = TRUE;
                         index = i * ISLAND_SIZE + (C_rand() % sizes[i]);
+                        R_get_tile_neighbors(edges[index], neighbors);
                         for (j = 0; j < 3; j++) {
-                                next = edges[index]->neighbors[j];
-                                if (next->island != G_ISLAND_INVALID)
+                                next = neighbors[j];
+                                if (g_tiles[next].island != G_ISLAND_INVALID)
                                         continue;
                                 edges[i * ISLAND_SIZE + sizes[i]++] = next;
-                                next->island = i;
+                                g_tiles[next].island = i;
                                 break;
                         }
                         if (j < 3) {
-                                islands[next->island].tiles++;
+                                islands[g_tiles[next].island].tiles++;
                                 continue;
                         }
-                        edges[index]->render->terrain = R_T_SHALLOW;
+                        g_tiles[edges[index]].render->terrain = R_T_SHALLOW;
                         memmove(edges + index, edges + index + 1,
                                 ((i + 1) * ISLAND_SIZE - index - 1) *
                                 sizeof (*edges));
@@ -276,7 +275,7 @@ void G_init_globe(void)
 \******************************************************************************/
 void G_generate_globe(void)
 {
-        int i, j, islands, island_size;
+        int i, islands, island_size;
 
         C_status("Generating globe");
         C_var_unlatch(&g_globe_seed);
@@ -289,21 +288,12 @@ void G_generate_globe(void)
 
         /* Initialize tile structures */
         for (i = 0; i < r_tiles; i++) {
-                int neighbors[3];
-
                 render_tiles[i].terrain = R_T_WATER;
                 render_tiles[i].height = 0;
                 g_tiles[i].render = render_tiles + i;
                 g_tiles[i].island = G_ISLAND_INVALID;
                 g_tiles[i].ship = -1;
                 C_zero(&g_tiles[i].model);
-                R_get_tile_neighbors(i, neighbors);
-                for (j = 0; j < 3; j++) {
-                        if (neighbors[j] < 0 || neighbors[j] >= r_tiles)
-                                C_error("Invalid neighboring tile %d",
-                                        neighbors[j]);
-                        g_tiles[i].neighbors[j] = g_tiles + neighbors[j];
-                }
         }
 
         /* Grow the islands and set terrain. Globe size affects the island

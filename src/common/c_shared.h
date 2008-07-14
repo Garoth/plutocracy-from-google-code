@@ -68,6 +68,9 @@
 #define C_SIN_60 0.86602540378443865f
 #define C_SIN_30 0.5f
 
+/* Square root of two divided by two */
+#define C_COS_45 0.70710678118654752f
+
 /* If you are going to use the C_va* functions, keep in mind that after calling
    any of those functions [C_VA_BUFFERS] times, you will begin overwriting
    the buffers starting from the first. Each buffer also has a fixed size.
