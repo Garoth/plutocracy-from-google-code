@@ -51,12 +51,18 @@ void R_init_globe(void)
         select_tex[R_ST_GOTO] = R_texture_load("models/globe/select_goto.png",
                                                TRUE);
         select_tex[R_ST_GOTO]->additive = TRUE;
+        select_tex[R_ST_PATH] = R_texture_load("models/globe/select_path.png",
+                                               TRUE);
+        select_tex[R_ST_PATH]->additive = TRUE;
         select_type = R_ST_NONE;
 
         /* Setup globe material properties */
         for (i = 0; i < 3; i++)
                 C_var_update_data(r_globe_colors + i, C_color_update,
                                   globe_colors + i);
+
+        /* Clear path */
+        path_len = 0;
 }
 
 /******************************************************************************\
@@ -204,11 +210,11 @@ void R_select_path(int tile, const char *path)
         if (!path || path[0] < 1 || tile < 0)
                 return;
         for (; path_len < R_PATH_MAX; path_len++) {
-                copy_tile_vertices(tile, path_verts + path_len * 3);
                 index = path[path_len] - 1;
                 if (index < 0 || index > 2)
                         break;
-                tile = r_globe_verts[3 * tile + index].next;
+                tile = r_globe_verts[3 * tile + index].next / 3;
+                copy_tile_vertices(tile, path_verts + path_len * 3);
         }
 }
 

@@ -111,9 +111,10 @@ static void server_ship_move(int client)
                 corrupt_kick(client);
                 return;
         }
-        if (g_ships[ship].client != client)
+        if (!g_ships[ship].in_use || g_ships[ship].client != client)
                 return;
         G_ship_path(ship, tile);
+        R_select_path(g_ships[ship].tile, g_ships[ship].path);
 
         /* TODO: Tell all other clients about the path change */
 }

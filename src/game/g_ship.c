@@ -111,7 +111,7 @@ int G_spawn_ship(int client, int tile, g_ship_name_t name, int index)
         g_ships[index].in_use = TRUE;
         g_ships[index].class_name = name;
         g_ships[index].tile = tile;
-        g_ships[index].path[0] = -1;
+        g_ships[index].path[0] = 0;
         g_ships[index].client = client;
         g_ships[index].health = g_ship_classes[name].health;
         g_ships[index].armor = 0;
@@ -164,9 +164,9 @@ void G_ship_path(int ship, int tile)
         char *path;
 
         path = g_ships[ship].path;
-        path[0] = 0;
-        path[1] = 1;
-        path[2] = 2;
-        path[3] = -1;
+        path[0] = 1;
+        path[1] = 2;
+        path[2] = 3;
+        path[3] = 0;
 }
 
