@@ -180,7 +180,7 @@ void R_finish_frame(void);
 void R_init(void);
 void R_pop_clip(void);
 void R_push_clip(void);
-void R_save_screenshot(const char *filename);
+const char *R_save_screenshot(void);
 void R_start_frame(void);
 
 extern c_count_t r_count_faces;

@@ -35,6 +35,9 @@ c_var_t r_font_console, r_font_console_pt, r_font_gui, r_font_gui_pt,
 /* Extension overrides */
 c_var_t r_ext_point_sprites;
 
+/* Screenshots */
+c_var_t r_screenshots_dir;
+
 /******************************************************************************\
  Registers the render namespace variables.
 \******************************************************************************/
@@ -158,5 +161,11 @@ void R_register_variables(void)
            choke on them */
         C_register_integer(&r_ext_point_sprites, "r_ext_point_sprites", FALSE,
                            "0 = disable hardware point sprites");
+
+        /* Screenshots Directory */
+        C_register_string(&r_screenshots_dir, "r_screenshots_dir",
+                          C_va("%s/screenshots", C_user_dir()),
+                          "directory where screenshots are saved");
+        r_screenshots_dir.edit = C_VE_ANYTIME;
 }
 

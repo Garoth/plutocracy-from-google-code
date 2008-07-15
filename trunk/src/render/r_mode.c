@@ -696,16 +696,45 @@ void R_start_frame(void)
 }
 
 /******************************************************************************\
- Mark this frame for saving a screenshot when the buffer flips.
+ Mark this frame for saving a screenshot when the buffer flips. Returns the
+ full path and filename of the image saved or NULL if there was a problem.
 \******************************************************************************/
-void R_save_screenshot(const char *filename)
+const char *R_save_screenshot(void)
 {
+        time_t msec;
+        struct tm *local;
+        const char *filename;
+        int i;
+
+        if (!C_mkdir(r_screenshots_dir.value.s))
+                return NULL;
+
+        /* Can't take two screenshots per frame */
         if (screenshot[0]) {
                 C_warning("Can't save '%s', screenshot '%s' queued",
                           filename, screenshot);
-                return;
+                return NULL;
         }
+
+        time(&msec);
+        local = localtime(&msec);
+
+        /* Start off with a path based on the current date and time */
+        filename = C_va("%s/%d-%02d-%02d--%02d%02d.png",
+                        r_screenshots_dir.value.s, local->tm_year + 1900,
+                        local->tm_mon + 1, local->tm_mday, local->tm_hour,
+                        local->tm_min);
+
+        /* If this is taken, start adding letters to the end of it */
+        for (i = 0; C_file_exists(filename) && i < 26; i++)
+                filename = C_va("%s/%d-%02d-%02d--%02d%02d%c.png",
+                                r_screenshots_dir.value.s,
+                                local->tm_year + 1900,
+                                local->tm_mon + 1, local->tm_mday,
+                                local->tm_hour, local->tm_min, 'a' + i);
+
         C_strncpy_buf(screenshot, filename);
+        return filename;
 }
 
 /******************************************************************************\
