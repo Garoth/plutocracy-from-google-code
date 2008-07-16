@@ -224,8 +224,12 @@ void G_ship_path(int ship, int target)
                 node = nodes[closest];
 
                 /* Ran out of search nodes -- no path to target */
-                if (nodes_len < 1)
+                if (nodes_len < 1) {
+                        N_send(g_ships[ship].client, "12s", G_SM_POPUP,
+                               g_ships[ship].tile,
+                               "Ship can't reach destination.");
                         return;
+                }
 
                 /* Remove the node from the list */
                 nodes_len--;
@@ -297,6 +301,7 @@ rewind: /* Count length of the path */
         }
 
         g_ships[ship].target = target;
+        return;
 }
 
 /******************************************************************************\
@@ -368,6 +373,9 @@ void G_update_ships(void)
                         int old_tile, new_tile, neighbors[3];
                         bool arrived;
 
+                        /* Update the path */
+                        G_ship_path(i, g_ships[i].target);
+
                         /* Get new destination tile */
                         if (!(arrived = g_ships[i].path[0] <= 0)) {
                                 old_tile = g_ships[i].tile;
@@ -386,11 +394,6 @@ void G_update_ships(void)
                                 g_ships[i].path[0] = 0;
                                 g_ships[i].rear_tile = -1;
                                 position_ship(i);
-
-                                /* If we hit an obstacle, try a new path */
-                                if (g_ships[i].target != new_tile)
-                                        G_ship_path(i, g_ships[i].target);
-
                                 continue;
                         }
 
