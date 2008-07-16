@@ -210,7 +210,7 @@ void G_select_tile(int tile)
         }
 
         /* If we are controlling a ship, we might want to move here */
-        else if (g_selected_ship >= 0 && G_open_tile(tile) &&
+        else if (g_selected_ship >= 0 && G_open_tile(tile, -1) &&
                  g_ships[g_selected_ship].client == n_client_id) {
                 R_select_tile(tile, R_ST_GOTO);
                 g_selected_tile = tile;
@@ -283,7 +283,7 @@ void G_process_click(int button)
             g_ships[g_selected_ship].client == n_client_id) {
 
                 /* Ordered an ocean move */
-                if (g_selected_tile >= 0 && G_open_tile(g_selected_tile)) {
+                if (g_selected_tile >= 0 && G_open_tile(g_selected_tile, -1)) {
                         N_send(N_SERVER_ID, "112", G_CM_SHIP_MOVE,
                                g_selected_ship, g_selected_tile);
                         return;

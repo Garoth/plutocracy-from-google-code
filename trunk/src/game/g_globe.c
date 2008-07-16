@@ -358,18 +358,11 @@ void G_generate_globe(void)
 }
 
 /******************************************************************************\
- Returns TRUE if the tile is within the visible hemisphere. The visible limit
- refers to how far along the camera forward vector the tile is. Smaller values
- are closer to the camera.
+ Returns TRUE if the point is within the visible globe hemisphere.
 \******************************************************************************/
-static bool tile_visible(int tile)
+static bool is_visible(c_vec3_t origin)
 {
-        float dist;
-
-        dist = C_vec3_dot(r_cam_forward, g_tiles[tile].origin);
-        if (dist < visible_range)
-                return TRUE;
-        return FALSE;
+        return C_vec3_dot(r_cam_forward, origin) < visible_range;
 }
 
 /******************************************************************************\
@@ -381,12 +374,14 @@ void G_render_globe(void)
 
         /* Render tile models */
         R_start_globe();
-        for (i = 0; i < r_tiles; i++)
-                if ((g_tiles[i].visible = tile_visible(i)) &&
-                    g_tiles[i].model.data) {
-                        R_adjust_light_for(g_tiles[i].origin);
+        for (i = 0; i < r_tiles; i++) {
+                g_tiles[i].visible = is_visible(g_tiles[i].origin);
+                g_tiles[i].model_visible = is_visible(g_tiles[i].model.origin);
+                if (g_tiles[i].model_visible && g_tiles[i].model.data) {
+                        R_adjust_light_for(g_tiles[i].model.origin);
                         R_model_render(&g_tiles[i].model);
                 }
+        }
         R_finish_globe();
 
         /* Render a test line from the selected tile */

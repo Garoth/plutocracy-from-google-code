@@ -45,7 +45,7 @@ typedef struct g_tile {
         r_tile_t *render;
         c_vec3_t origin, forward;
         int island, ship, search_parent, search_stamp;
-        bool visible;
+        bool visible, model_visible;
 } g_tile_t;
 
 /* Structure for each player */
@@ -67,6 +67,7 @@ extern g_client_t g_clients[N_CLIENTS_MAX];
 /* g_globe.c */
 void G_cleanup_globe(void);
 void G_init_globe(void);
+bool G_is_visible(c_vec3_t origin);
 void G_generate_globe(void);
 int G_set_tile_model(int tile, const char *path);
 
@@ -75,7 +76,7 @@ extern g_tile_t g_tiles[R_TILES_MAX];
 /* g_ship.c */
 void G_cleanup_ships(void);
 void G_init_ships(void);
-bool G_open_tile(int tile);
+bool G_open_tile(int tile, int exclude_ship);
 void G_render_ships(void);
 void G_ship_path(int ship, int tile);
 int G_spawn_ship(int client, int tile, g_ship_name_t, int ship);
