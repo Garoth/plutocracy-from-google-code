@@ -46,13 +46,15 @@ typedef struct g_ship_class {
 /* Structure containing ship information */
 typedef struct g_ship {
         g_ship_name_t class_name;
-        int tile, client, health, armor;
+        float progress;
+        int tile, rear_tile, client, health, armor;
         char path[R_PATH_MAX];
         bool in_use;
 } g_ship_t;
 
 /* g_client.c */
 void G_process_click(int button);
+void G_update_client(void);
 
 /* g_globe.c */
 void G_mouse_ray(c_vec3_t origin, c_vec3_t forward);
@@ -65,7 +67,7 @@ void G_cleanup(void);
 void G_host_game(void);
 void G_init(void);
 void G_leave_game(void);
-void G_update(void);
+void G_update_host(void);
 
 extern g_nation_t g_nations[G_NATION_NAMES];
 

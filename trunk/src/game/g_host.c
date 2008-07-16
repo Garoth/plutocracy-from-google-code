@@ -179,9 +179,9 @@ void G_host_game(void)
 }
 
 /******************************************************************************\
- Updates the game for this frame.
+ Called to update server-side structures. Does nothing if not hosting.
 \******************************************************************************/
-void G_update(void)
+void G_update_host(void)
 {
         if (n_client_id != N_HOST_CLIENT_ID)
                 return;

@@ -106,7 +106,8 @@ static void main_loop(void)
                 C_throttle_fps();
 
                 /* Update the game after rendering everything */
-                G_update();
+                G_update_host();
+                G_update_client();
 
                 /* This check is a long-shot, but if there was rampant memory
                    corruption this variable's value may have been changed */

@@ -18,6 +18,9 @@
 /* Maximum breadth of a path search */
 #define SEARCH_BREADTH (R_PATH_MAX * 3)
 
+/* Proportion of rotation a ship does per second */
+#define ROTATION_RATE 8.f
+
 /* Structure for searched tile nodes */
 typedef struct search_node {
         float dist;
@@ -120,10 +123,10 @@ int G_spawn_ship(int client, int tile, g_ship_name_t name, int index)
         g_ships[index].in_use = TRUE;
         g_ships[index].class_name = name;
         g_ships[index].tile = tile;
-        g_ships[index].path[0] = 0;
+        g_ships[index].rear_tile = -1;
+        g_ships[index].progress = 1.f;
         g_ships[index].client = client;
         g_ships[index].health = g_ship_classes[name].health;
-        g_ships[index].armor = 0;
 
         /* Place the ship on the tile */
         g_tiles[tile].ship = index;
@@ -273,6 +276,118 @@ rewind: /* Count length of the path */
                 for (j = 0; neighbors[j] != i; j++);
                 g_ships[ship].path[--path_len] = j + 1;
                 i = parent;
+        }
+}
+
+/******************************************************************************\
+ Position and orient the ship's model.
+\******************************************************************************/
+static void position_ship(int ship)
+{
+        r_model_t *model;
+        int new_tile, old_tile;
+
+        new_tile = g_ships[ship].tile;
+        old_tile = g_ships[ship].rear_tile;
+        model = &g_tiles[new_tile].model;
+
+        /* If the ship is not moving, just place it on the tile */
+        if (g_ships[ship].rear_tile < 0) {
+                model->normal = r_tile_normals[new_tile];
+                model->origin = g_tiles[new_tile].origin;
+        }
+
+        /* Otherwise interpolate */
+        else {
+                c_vec3_t forward;
+                float lerp;
+
+                /* Interpolate normal */
+                model->normal = C_vec3_lerp(r_tile_normals[old_tile],
+                                            g_ships[ship].progress,
+                                            r_tile_normals[new_tile]);
+                model->normal = C_vec3_norm(model->normal);
+
+                /* Interpolate origin */
+                model->origin = C_vec3_lerp(g_tiles[old_tile].origin,
+                                            g_ships[ship].progress,
+                                            g_tiles[new_tile].origin);
+
+                /* Gradually rotate */
+                forward = C_vec3_norm(C_vec3_sub(g_tiles[new_tile].origin,
+                                                 g_tiles[old_tile].origin));
+                lerp = ROTATION_RATE * c_frame_sec;
+                if (lerp > 1.f)
+                        lerp = 1.f;
+                model->forward = C_vec3_lerp(model->forward, lerp, forward);
+        }
+
+        /* Make sure the forward vector is valid */
+        model->forward = C_vec3_in_plane(model->forward, model->normal);
+        model->forward = C_vec3_norm(model->forward);
+}
+
+/******************************************************************************\
+ Updates ship positions and actions.
+\******************************************************************************/
+void G_update_ships(void)
+{
+        int i;
+
+        for (i = 0; i < G_SHIPS_MAX; i++) {
+                float speed;
+
+                if (!g_ships[i].in_use ||
+                    (g_ships[i].path[0] <= 0 && g_ships[i].rear_tile < 0))
+                        continue;
+                speed = g_ship_classes[g_ships[i].class_name].speed;
+                g_ships[i].progress += c_frame_sec * speed;
+
+                /* Started moving to a new tile */
+                if (g_ships[i].progress >= 1.f || g_ships[i].rear_tile < 0) {
+                        int old_tile, new_tile, neighbors[3];
+                        bool arrived;
+
+                        /* Get new destination tile */
+                        if (!(arrived = g_ships[i].path[0] <= 0)) {
+                                old_tile = g_ships[i].tile;
+                                R_get_tile_neighbors(old_tile, neighbors);
+                                new_tile = (int)(g_ships[i].path[0] - 1);
+                                new_tile = neighbors[new_tile];
+                        }
+
+                        /* Remove this ship from the old tile */
+                        if (g_ships[i].rear_tile >= 0)
+                                g_tiles[g_ships[i].rear_tile].ship = -1;
+
+                        /* If we arrived or hit an obstacle, stop */
+                        if (arrived || !G_open_tile(new_tile)) {
+                                g_ships[i].progress = 1.f;
+                                g_ships[i].path[0] = 0;
+                                g_ships[i].rear_tile = -1;
+                                position_ship(i);
+                                continue;
+                        }
+
+                        /* Transfer model data with the ship */
+                        R_model_cleanup(&g_tiles[new_tile].model);
+                        g_tiles[new_tile].model = g_tiles[old_tile].model;
+                        C_zero(&g_tiles[old_tile].model);
+
+                        /* Consume a path move */
+                        memmove(g_ships[i].path, g_ships[i].path + 1,
+                                R_PATH_MAX - 1);
+                        if (g_selected_ship == i)
+                                R_select_path(new_tile, g_ships[i].path);
+
+                        g_ships[i].progress = g_ships[i].progress - 1.f;
+                        g_ships[i].rear_tile = g_ships[i].tile;
+                        g_ships[i].tile = new_tile;
+                        g_tiles[new_tile].ship = i;
+                }
+
+                /* Position the ship visually */
+                position_ship(i);
         }
 }
 

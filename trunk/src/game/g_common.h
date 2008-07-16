@@ -79,6 +79,7 @@ bool G_open_tile(int tile);
 void G_render_ships(void);
 void G_ship_path(int ship, int tile);
 int G_spawn_ship(int client, int tile, g_ship_name_t, int ship);
+void G_update_ships(void);
 
 /* g_variables.c */
 extern c_var_t g_globe_islands, g_globe_island_size, g_globe_seed,
