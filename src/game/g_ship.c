@@ -193,6 +193,28 @@ static float tile_dist(int a, int b)
 }
 
 /******************************************************************************\
+ Scan along a ship's path and find that farthest out open tile. Returns the
+ new target tile. Note that any special rules that constrict path-finding
+ must be applied here as well or the path-finding function could fall into
+ an infinite loop.
+\******************************************************************************/
+static int farthest_path_tile(int ship)
+{
+        int tile, next, path_len, neighbors[3];
+
+        tile = g_ships[ship].tile;
+        for (path_len = 0; ; tile = next) {
+                next = g_ships[ship].path[path_len++];
+                if (next <= 0)
+                        return tile;
+                R_get_tile_neighbors(tile, neighbors);
+                next = neighbors[next - 1];
+                if (!G_open_tile(next, ship))
+                        return tile;
+        }
+}
+
+/******************************************************************************\
  Find a path from where the [ship] is to the target [tile] and sets that as
  the ship's new path.
 \******************************************************************************/
@@ -203,12 +225,13 @@ void G_ship_path(int ship, int target)
         int i, nodes_len, closest, path_len, neighbors[3];
 
         search_stamp++;
-
-        /* Clear the ship's old path */
-        g_ships[ship].path[0] = 0;
         g_ships[ship].target = g_ships[ship].tile;
-        if (g_ships[ship].tile == target || !G_open_tile(target, ship))
+        if (g_ships[ship].tile == target) {
+                g_ships[ship].path[0] = 0;
                 return;
+        }
+        if (!G_open_tile(target, ship))
+                goto failed;
 
         /* Start with just the initial tile open */
         nodes[0].tile = g_ships[ship].tile;
@@ -225,12 +248,8 @@ void G_ship_path(int ship, int target)
                 node = nodes[closest];
 
                 /* Ran out of search nodes -- no path to target */
-                if (nodes_len < 1) {
-                        N_send(g_ships[ship].client, "12s", G_SM_POPUP,
-                               g_ships[ship].tile,
-                               "Ship can't reach destination.");
-                        return;
-                }
+                if (nodes_len < 1)
+                        goto failed;
 
                 /* Remove the node from the list */
                 nodes_len--;
@@ -305,6 +324,17 @@ rewind: /* Count length of the path */
 
         g_ships[ship].target = target;
         return;
+
+failed: /* If we can't reach the target, and we have a valid path, try
+           to at least get through some of it */
+        i = farthest_path_tile(ship);
+        if (i != target)
+                G_ship_path(ship, i);
+        else
+                g_ships[ship].path[0] = 0;
+
+        N_send(g_ships[ship].client, "12s", G_SM_POPUP, g_ships[ship].tile,
+               "Ship can't reach destination.");
 }
 
 /******************************************************************************\
