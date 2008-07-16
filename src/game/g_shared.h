@@ -47,7 +47,7 @@ typedef struct g_ship_class {
 typedef struct g_ship {
         g_ship_name_t class_name;
         float progress;
-        int tile, rear_tile, client, health, armor;
+        int tile, rear_tile, target, client, health, armor;
         char path[R_PATH_MAX];
         bool in_use;
 } g_ship_t;

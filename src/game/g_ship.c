@@ -61,9 +61,10 @@ void G_cleanup_ships(void)
 /******************************************************************************\
  Returns TRUE if a ship can sail into the given tile.
 \******************************************************************************/
-bool G_open_tile(int tile)
+bool G_open_tile(int tile, int ship)
 {
-        return g_tiles[tile].ship < 0 &&
+        return (g_tiles[tile].ship < 0 ||
+                (ship >= 0 && g_tiles[tile].ship == ship)) &&
                (g_tiles[tile].render->terrain == R_T_SHALLOW ||
                 g_tiles[tile].render->terrain == R_T_WATER);
 }
@@ -98,7 +99,7 @@ int G_spawn_ship(int client, int tile, g_ship_name_t name, int index)
                 /* FIXME: This isn't a great way to pick a random open tile and
                           it doesn't guarantee success */
                 tile = C_rand() % r_tiles;
-                for (i = 0; !G_open_tile(tile); i++) {
+                for (i = 0; !G_open_tile(tile, -1); i++) {
                         if (i >= 100)
                                 return -1;
                         tile = C_rand() % r_tiles;
@@ -106,13 +107,13 @@ int G_spawn_ship(int client, int tile, g_ship_name_t name, int index)
         }
 
         /* Find an available tile to start the ship on */
-        else if (!G_open_tile(tile)) {
+        else if (!G_open_tile(tile, -1)) {
                 int i, neighbors[12], len;
 
                 /* Not being able to fit a ship in is common, so don't complain
                    if this happens */
                 len = R_get_tile_region(tile, neighbors);
-                for (i = 0; !G_open_tile(neighbors[i]); i++)
+                for (i = 0; !G_open_tile(neighbors[i], -1); i++)
                         if (i >= len)
                                 return -1;
                 tile = neighbors[i];
@@ -153,9 +154,24 @@ void G_render_ships(void)
                 ship = g_ships + i;
                 if (!ship->in_use)
                         continue;
+                C_assert(ship->tile >= 0 && ship->tile < r_tiles);
+                C_assert(g_tiles[ship->tile].ship == i);
                 tile = g_tiles + ship->tile;
-                if (!tile->visible)
-                        return;
+
+                /* If globe testing is on, draw a line from ship tile origins */
+                if (g_test_globe.value.n) {
+                        c_vec3_t b;
+
+                        b = C_vec3_add(tile->origin, C_vec3_norm(tile->origin));
+                        R_render_test_line(tile->origin, b,
+                                           C_color(0.f, 1.f, 1.f, 1.f));
+                }
+
+                /* Don't bother rendering if the ship isn't visible */
+                if (!tile->model_visible)
+                        continue;
+
+                /* Draw the status display */
                 ship_class = g_ship_classes + ship->class_name;
                 armor = (float)ship->armor / HEALTH_MAX;
                 health = (float)ship->health / HEALTH_MAX;
@@ -190,7 +206,8 @@ void G_ship_path(int ship, int target)
 
         /* Clear the ship's old path */
         g_ships[ship].path[0] = 0;
-        if (g_ships[ship].tile == target || !G_open_tile(target))
+        g_ships[ship].target = g_ships[ship].tile;
+        if (g_ships[ship].tile == target || !G_open_tile(target, ship))
                 return;
 
         /* Start with just the initial tile open */
@@ -223,7 +240,8 @@ void G_ship_path(int ship, int target)
                         /* Already opened? */
                         stamp = g_tiles[neighbors[i]].search_stamp;
                         C_assert(stamp <= search_stamp);
-                        if (stamp == search_stamp || !G_open_tile(neighbors[i]))
+                        if (stamp == search_stamp ||
+                            !G_open_tile(neighbors[i], ship))
                                 continue;
                         g_tiles[neighbors[i]].search_stamp = search_stamp;
 
@@ -277,6 +295,8 @@ rewind: /* Count length of the path */
                 g_ships[ship].path[--path_len] = j + 1;
                 i = parent;
         }
+
+        g_ships[ship].target = target;
 }
 
 /******************************************************************************\
@@ -361,17 +381,23 @@ void G_update_ships(void)
                                 g_tiles[g_ships[i].rear_tile].ship = -1;
 
                         /* If we arrived or hit an obstacle, stop */
-                        if (arrived || !G_open_tile(new_tile)) {
+                        if (arrived || !G_open_tile(new_tile, i)) {
                                 g_ships[i].progress = 1.f;
                                 g_ships[i].path[0] = 0;
                                 g_ships[i].rear_tile = -1;
                                 position_ship(i);
+
+                                /* If we hit an obstacle, try a new path */
+                                if (g_ships[i].target != new_tile)
+                                        G_ship_path(i, g_ships[i].target);
+
                                 continue;
                         }
 
                         /* Transfer model data with the ship */
                         R_model_cleanup(&g_tiles[new_tile].model);
                         g_tiles[new_tile].model = g_tiles[old_tile].model;
+                        g_tiles[new_tile].model.selected = FALSE;
                         C_zero(&g_tiles[old_tile].model);
 
                         /* Consume a path move */

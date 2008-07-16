@@ -15,7 +15,7 @@
 #include "i_common.h"
 
 /* Time in milliseconds that the popup widget will remain shown */
-#define POPUP_TIME 3000
+#define POPUP_TIME 2000
 
 /* Maximum number of popup messages in the queue */
 #define POPUP_MESSAGES_MAX 8
