@@ -24,7 +24,7 @@
 /* Structure for searched tile nodes */
 typedef struct search_node {
         float dist;
-        int tile;
+        int tile, moves;
 } search_node_t;
 
 /* Ships and ship classes */
@@ -213,6 +213,7 @@ void G_ship_path(int ship, int target)
         /* Start with just the initial tile open */
         nodes[0].tile = g_ships[ship].tile;
         nodes[0].dist = tile_dist(nodes[0].tile, target);
+        nodes[0].moves = 0;
         nodes_len = 1;
         g_tiles[nodes[0].tile].search_parent = -1;
         g_tiles[nodes[0].tile].search_stamp = search_stamp;
@@ -265,13 +266,15 @@ void G_ship_path(int ship, int target)
 
                         /* Distance to destination */
                         nodes[nodes_len].dist = tile_dist(neighbors[i], target);
+                        nodes[nodes_len].moves = node.moves + 1;
 
                         nodes_len++;
                 }
 
                 /* Find the new closest node */
                 for (closest = 0, i = 1; i < nodes_len; i++)
-                        if (nodes[i].dist < nodes[closest].dist)
+                        if (2 * nodes[i].moves + nodes[i].dist <
+                            2 * nodes[closest].moves + nodes[closest].dist)
                                 closest = i;
         }
 
