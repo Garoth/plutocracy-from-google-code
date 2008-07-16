@@ -362,6 +362,14 @@ static inline int C_vec3_dominant(c_vec3_t v)
 }
 
 /******************************************************************************\
+ Returns the vector's projection into the plane given by [normal].
+\******************************************************************************/
+static inline c_vec3_t C_vec3_in_plane(c_vec3_t v, c_vec3_t normal)
+{
+        return C_vec3_sub(v, C_vec3_scalef(normal, C_vec3_dot(v, normal)));
+}
+
+/******************************************************************************\
  Construct a 2D vector from a 3D vector by projecting onto one axis.
 \******************************************************************************/
 static inline c_vec2_t C_vec2_from_3(c_vec3_t v, int axis)

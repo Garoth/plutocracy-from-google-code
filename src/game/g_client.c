@@ -308,3 +308,11 @@ void G_process_click(int button)
         }
 }
 
+/******************************************************************************\
+ Called to update client-side structures.
+\******************************************************************************/
+void G_update_client(void)
+{
+        G_update_ships();
+}
+
