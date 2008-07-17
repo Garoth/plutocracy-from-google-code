@@ -16,11 +16,7 @@
 
 import glob, os, sys
 
-# Package parameters
-package = 'plutocracy'
-version = '0.0.2'
-
-# Get subversion revision and add it to the version
+# Get subversion revision
 def svn_revision():
         revision = ''
         try:
@@ -36,7 +32,10 @@ def svn_revision():
         except:
                 pass
         return revision
-version += svn_revision()
+
+# Package parameters
+package = 'plutocracy'
+version = '0.0.1' + svn_revision()
 
 # Platform considerations
 windows = sys.platform == 'win32'
@@ -86,8 +85,7 @@ opts.Add(BoolOption('mingw', 'Set to True if compiling with MinGW', False))
 opts.Update(default_env)
 mingw = default_env.get('mingw')
 if mingw:
-        default_env = Environment(tools = ['mingw'], ENV = os.environ,
-                                  BUILDERS = {'GCH' : gch_builder})
+        default_env = Environment(tools = ['mingw'], ENV = os.environ)
 
 # Now load the rest of the options
 AddEnvOption(default_env, opts, 'CC', 'Compiler to use')
@@ -178,7 +176,7 @@ def PlutocracyPCH(header, deps = []):
         plutocracy_env.Depends(pch, deps)
         plutocracy_env.Depends(plutocracy_obj, pch)
         plutocracy_pch += pch
-if plutocracy_env['pch'] != 'no':
+if plutocracy_env['pch'] != 'no' and not windows:
         common_deps = glob.glob('src/common/*.h')
         PlutocracyPCH('src/common/c_shared.h', common_deps)
         if plutocracy_env['pch'] == 'all':
@@ -207,7 +205,6 @@ else:
                              '#define PKGDATADIR "' + install_data + '"\n')
                 config.close()
         plutocracy_config = plutocracy_env.Command('config.h', '', WriteConfigH)
-        plutocracy_env.Depends(plutocracy_config, 'SConstruct')
 
 plutocracy_env.Depends(plutocracy_obj + plutocracy_pch, plutocracy_config)
 plutocracy_env.Depends(plutocracy_config, config_file)
@@ -312,6 +309,7 @@ dist_dlls = glob.glob('*.dll')
 default_env.Install(dist_name, ['AUTHORS', 'ChangeLog', 'CC', 'COPYING',
                                 'README', 'SConstruct', 'todo.sh',
                                 'Makefile', 'genlang.py'] + dist_dlls)
+InstallRecursive(os.path.join(dist_name, 'blender'), 'blender')
 InstallRecursive(os.path.join(dist_name, 'gendoc'), 'gendoc',
                  [path('gendoc/gendoc')])
 InstallRecursive(os.path.join(dist_name, 'gui'), 'gui')

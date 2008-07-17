@@ -12,23 +12,3 @@
 
 #include "n_common.h"
 
-/* ID of this client in the game */
-int n_client_id;
-
-/******************************************************************************\
- Connect the client to the given [address] (ip or hostname) and [port].
-\******************************************************************************/
-void N_connect(const char *address, int port, n_callback_f client_func)
-{
-        n_client_func = client_func;
-}
-
-/******************************************************************************\
- Close the client's connection to the server.
-\******************************************************************************/
-void N_disconnect(void)
-{
-        n_client_func(N_SERVER_ID, N_EV_DISCONNECTED);
-        n_client_id = N_INVALID_ID;
-}
-

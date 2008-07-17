@@ -63,7 +63,7 @@ static int root_event(i_widget_t *root, i_event_t event)
                                                     c_frame_sec / 60.f * C_PI /
                                                     R_MINUTES_PER_DAY, 0.f));
                 if (i_limbo) {
-                        R_zoom_cam_by((r_zoom_max - r_cam_zoom) * c_frame_sec);
+                        R_zoom_cam_by((R_ZOOM_MAX - r_cam_zoom) * c_frame_sec);
                         limbo_fade += i_fade.value.f * c_frame_sec *
                                       LIMBO_FADE_SCALE;
                         if (limbo_fade > 1.f)
@@ -245,7 +245,7 @@ void I_theme_texture(r_texture_t **ppt, const char *name)
 void I_leave_limbo(void)
 {
         i_limbo = FALSE;
-        I_widget_event(&right_toolbar.widget, I_EV_SHOW);
+        I_widget_show(&right_toolbar.widget, TRUE);
 }
 
 /******************************************************************************\
@@ -254,7 +254,7 @@ void I_leave_limbo(void)
 void I_enter_limbo(void)
 {
         i_limbo = TRUE;
-        I_widget_event(&right_toolbar.widget, I_EV_HIDE);
+        I_widget_show(&right_toolbar.widget, FALSE);
 }
 
 /******************************************************************************\

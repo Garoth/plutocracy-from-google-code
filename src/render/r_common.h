@@ -48,12 +48,6 @@ typedef struct r_vertex2 {
 #pragma pack(pop)
 #define R_VERTEX2_FORMAT GL_T2F_V3F
 
-/* Globe vertex type */
-typedef struct r_globe_vertex {
-        r_vertex3_t v;
-        int next;
-} r_globe_vertex_t;
-
 /* Texture class */
 struct r_texture {
         c_ref_t ref;
@@ -61,8 +55,7 @@ struct r_texture {
         SDL_Surface *surface;
         GLuint gl_name;
         float anisotropy;
-        int mipmaps, pow2_w, pow2_h;
-        bool alpha, additive, not_pow2;
+        int alpha, mipmaps, additive, not_pow2, pow2_w, pow2_h;
 };
 
 /* Render modes */
@@ -81,7 +74,7 @@ typedef struct r_ext {
         PFNGLACTIVETEXTUREPROC glActiveTexture;
         GLfloat anisotropy;
         GLint multitexture;
-        bool point_sprites, vertex_buffers, npot_textures;
+        int point_sprites, vertex_buffers, npot_textures;
 } r_ext_t;
 
 /* Wrapper for vertex buffer objects */
@@ -107,7 +100,7 @@ r_texture_t *R_texture_clone_full(const char *file, int line, const char *func,
                                   const r_texture_t *);
 void R_texture_render(r_texture_t *, int x, int y);
 void R_texture_screenshot(r_texture_t *, int x, int y);
-void R_texture_select(const r_texture_t *);
+void R_texture_select(r_texture_t *);
 void R_texture_upload(const r_texture_t *);
 void R_vbo_cleanup(r_vbo_t *);
 void R_vbo_init(r_vbo_t *, void *vertices, int vertices_len, int vertex_size,
@@ -149,10 +142,6 @@ extern int r_init_frame, r_mode_hold;
 /* r_prerender.c */
 void R_prerender(void);
 
-/* r_ship.c */
-void R_cleanup_ships(void);
-void R_init_ships(void);
-
 /* r_solar.c */
 void R_cleanup_solar(void);
 void R_disable_light(void);
@@ -171,14 +160,10 @@ void R_surface_free(SDL_Surface *);
 void R_surface_flip_v(SDL_Surface *);
 c_color_t R_surface_get(const SDL_Surface *, int x, int y);
 void R_surface_invert(SDL_Surface *, int rgb, int alpha);
-SDL_Surface *R_surface_load_png(const char *filename, bool *alpha);
+SDL_Surface *R_surface_load_png(const char *filename, int *alpha);
 void R_surface_mask(SDL_Surface *dest, SDL_Surface *src);
 void R_surface_put(SDL_Surface *, int x, int y, c_color_t);
 int R_surface_save(SDL_Surface *, const char *filename);
-
-/* r_terrain.c */
-extern r_globe_vertex_t r_globe_verts[R_TILES_MAX * 3];
-extern r_vbo_t r_globe_vbo;
 
 /* r_test.c */
 void R_render_normals(int count, c_vec3_t *co, c_vec3_t *no, int stride);
@@ -186,11 +171,10 @@ void R_render_tests(void);
 
 /* r_variables.c */
 extern c_var_t r_clear, r_depth_bits, r_ext_point_sprites, r_globe,
-               r_globe_colors[3], r_atmosphere, r_globe_shininess,
+               r_globe_colors[4], r_atmosphere, r_globe_shininess,
                r_globe_smooth, r_globe_transitions, r_gl_errors, r_light,
-               r_light_ambient, r_model_lod, r_moon_atten, r_moon_diffuse,
-               r_moon_height, r_moon_specular, r_screenshots_dir, r_solar,
-               r_sun_diffuse, r_sun_specular, r_test_normals, r_test_sprite_num,
+               r_moon_atten, r_moon_colors[3], r_moon_height, r_solar,
+               r_sun_colors[3], r_test_normals, r_test_sprite_num,
                r_test_sprite, r_test_model, r_test_prerender, r_test_text,
                r_textures, r_vsync;
 

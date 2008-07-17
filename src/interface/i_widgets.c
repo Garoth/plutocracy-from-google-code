@@ -147,6 +147,20 @@ void I_widget_move(i_widget_t *widget, c_vec2_t origin)
 }
 
 /******************************************************************************\
+ Show or hide a widget and all of its children. Will not generate events if
+ the visibility status did not change.
+\******************************************************************************/
+void I_widget_show(i_widget_t *widget, int show)
+{
+        if (widget->shown == show)
+                return;
+        if (show)
+                I_widget_event(widget, I_EV_SHOW);
+        else
+                I_widget_event(widget, I_EV_HIDE);
+}
+
+/******************************************************************************\
  Gives extra space to expanding child widgets.
 \******************************************************************************/
 static void expand_children(i_widget_t *widget, c_vec2_t size, int expanders)
@@ -424,11 +438,8 @@ static void mouse_focus_parent(i_widget_t *widget)
 \******************************************************************************/
 void I_widget_event(i_widget_t *widget, i_event_t event)
 {
-        if (!widget->name[0] || !widget->event_func) {
-                if (event == I_EV_CLEANUP)
-                        return;
+        if (!widget->name[0] || !widget->event_func)
                 C_error("Propagated event to uninitialized widget");
-        }
 
         /* The only event an unconfigured widget can handle is I_EV_CONFIGURE */
         if (widget->configured < 1 && event != I_EV_CONFIGURE)
@@ -463,8 +474,6 @@ void I_widget_event(i_widget_t *widget, i_event_t event)
                         i_key_focus = widget;
                 break;
         case I_EV_HIDE:
-                if (!widget->shown)
-                        return;
                 widget->shown = FALSE;
                 if (i_key_focus == widget)
                         i_key_focus = NULL;
@@ -505,19 +514,16 @@ void I_widget_event(i_widget_t *widget, i_event_t event)
                         float target, rate;
 
                         target = 0.f;
-
-                        /* Widgets inherit the parent widget's fade */
                         if (widget->shown) {
                                 target = 1.f;
                                 if (widget->parent)
                                         target = widget->parent->fade;
                         }
-
                         rate = i_fade.value.f * c_frame_sec;
                         if (widget->state == I_WS_DISABLED) {
-                                target *= 0.25f;
+                                target /= 4.f;
                                 if (widget->fade <= 0.25f)
-                                        rate *= 0.25f;
+                                        rate /= 4.f;
                         }
                         if (widget->fade < target) {
                                 widget->fade += rate;
@@ -528,20 +534,12 @@ void I_widget_event(i_widget_t *widget, i_event_t event)
                                 if (widget->fade < target)
                                         widget->fade = target;
                         }
-
-                        /* Widget should never be less faded than its parent */
-                        if (widget->parent &&
-                            widget->parent->fade < widget->fade)
-                                widget->fade = widget->parent->fade;
-
                         if (widget->fade <= 0.f)
                                 return;
                 } else if (!widget->shown)
                         return;
                 break;
         case I_EV_SHOW:
-                if (widget->shown)
-                        return;
                 widget->shown = TRUE;
                 check_mouse_focus(widget);
                 widget->event_func(widget, event);
@@ -584,21 +582,6 @@ const char *I_key_string(int sym)
         if (sym >= ' ' && sym < 0x7f)
                 return C_va("%c", sym);
         return C_va("0x%x", sym);
-}
-
-/******************************************************************************\
- Delivers a mouse-down event to [widget] and propagates up through its
- parents.
-\******************************************************************************/
-static void propagate_mouse_down(i_widget_t *widget)
-{
-        while (widget && widget->event_func) {
-                if (widget->shown && widget->state != I_WS_DISABLED &&
-                    widget->clickable &&
-                    !widget->event_func(i_mouse_focus, I_EV_MOUSE_DOWN))
-                        return;
-                widget = widget->parent;
-        }
 }
 
 /******************************************************************************\
@@ -665,9 +648,12 @@ void I_dispatch(const SDL_Event *ev)
                 if (i_key_focus && i_key_focus->event_func &&
                     i_key_focus->shown && i_key_focus->state != I_WS_DISABLED)
                         i_key_focus->event_func(i_key_focus, event);
-        } else if (event == I_EV_MOUSE_DOWN)
-                propagate_mouse_down(i_mouse_focus);
-        else
+        } else if (event == I_EV_MOUSE_DOWN) {
+                if (i_mouse_focus && i_mouse_focus->event_func &&
+                    i_mouse_focus->shown &&
+                    i_mouse_focus->state != I_WS_DISABLED)
+                        i_mouse_focus->event_func(i_mouse_focus, event);
+        } else
                 I_widget_event(&i_root, event);
 
         /* After dispatch */

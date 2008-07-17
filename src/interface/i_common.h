@@ -105,7 +105,7 @@ typedef struct i_widget {
         i_event_f event_func;
         i_widget_state_t state;
         float fade, margin_front, margin_rear, padding;
-        bool configured, entry, clickable, expand, shown, heap;
+        int configured, entry, clickable, expand, shown, heap;
 } i_widget_t;
 
 /* Windows are decorated containers */
@@ -118,7 +118,7 @@ typedef struct i_window {
         r_sprite_t hanger;
         c_vec2_t natural_size;
         float hanger_x;
-        bool hanger_shown, decorated;
+        int hanger_shown, decorated;
 } i_window_t;
 
 /* Button type */
@@ -136,8 +136,8 @@ typedef struct i_button {
         i_callback_f on_click;
         i_button_type_t type;
         void *data;
+        int hover_activate;
         char buffer[64];
-        bool hover_activate;
 } i_button_t;
 
 /* Labels only have text */
@@ -158,9 +158,8 @@ typedef struct i_entry {
         i_callback_f on_enter;
         i_auto_complete_f auto_complete;
         float scroll;
-        int pos, history_pos, history_size;
+        int pos, history_pos, history_size, just_tabbed;
         char buffer[256], history[I_ENTRY_HISTORY][256];
-        bool just_tabbed;
 } i_entry_t;
 
 /* A fixed-size, work-area widget that can dynamically add new components
@@ -182,8 +181,7 @@ typedef struct i_select {
         i_callback_f on_change;
         void *data;
         const char **list;
-        int list_len, index;
-        bool reverse;
+        int list_len, index, reverse;
 } i_select_t;
 
 /* Toolbar widget used for the left and right toolbars on the screen */
@@ -191,7 +189,7 @@ typedef struct i_toolbar {
         i_widget_t widget;
         i_window_t window, windows[I_TOOLBAR_BUTTONS], *open_window;
         i_button_t buttons[I_TOOLBAR_BUTTONS];
-        bool right, children;
+        int right, children;
 } i_toolbar_t;
 
 /* i_button.c */
@@ -262,6 +260,7 @@ void I_widget_pack(i_widget_t *, i_pack_t, i_fit_t);
 void I_widget_propagate(i_widget_t *, i_event_t);
 void I_widget_remove(i_widget_t *, int cleanup);
 void I_widget_remove_children(i_widget_t *, int cleanup);
+void I_widget_show(i_widget_t *, int show);
 
 extern c_color_t i_colors[I_COLORS];
 extern i_widget_t *i_child, *i_key_focus, *i_mouse_focus;

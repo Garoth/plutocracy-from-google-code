@@ -277,14 +277,6 @@ static inline c_vec3_t C_vec3_lerp(c_vec3_t a, float lerp, c_vec3_t b)
                       a.z + lerp * (b.z - a.z));
 }
 
-static inline c_color_t C_color_lerp(c_color_t a, float lerp, c_color_t b)
-{
-        return C_color(a.r + lerp * (b.r - a.r),
-                       a.g + lerp * (b.g - a.g),
-                       a.b + lerp * (b.b - a.b),
-                       a.a + lerp * (b.a - a.a));
-}
-
 /******************************************************************************\
  Truncate vector values down to whole numbers. Negative values are also
  truncated down (-2.1 is rounded to -3).
@@ -304,29 +296,6 @@ static inline c_vec2_t C_vec2_clamp(c_vec2_t v, float u)
 static inline c_vec3_t C_vec3_clamp(c_vec3_t v, float u)
 {
         return C_vec3(C_clamp(v.x, u), C_clamp(v.y, u), C_clamp(v.z, u));
-}
-
-/******************************************************************************\
- Returns the vector with absolute valued members.
-\******************************************************************************/
-static inline c_vec2_t C_vec2_abs(c_vec2_t v)
-{
-        if (v.x < 0.f)
-                v.x = -v.x;
-        if (v.y < 0.f)
-                v.y = -v.y;
-        return v;
-}
-
-static inline c_vec3_t C_vec3_abs(c_vec3_t v)
-{
-        if (v.x < 0.f)
-                v.x = -v.x;
-        if (v.y < 0.f)
-                v.y = -v.y;
-        if (v.z < 0.f)
-                v.z = -v.z;
-        return v;
 }
 
 /******************************************************************************\
@@ -350,23 +319,14 @@ static inline c_vec3_t C_vec3_tfm(c_vec3_t v, GLfloat m[16])
 \******************************************************************************/
 static inline int C_vec3_dominant(c_vec3_t v)
 {
-        v = C_vec3_abs(v);
-        if (v.x >= v.y) {
-                if (v.x >= v.z)
+        if (v.x > v.y) {
+                if (v.x > v.z)
                         return 0;
                 return 2;
         }
-        if (v.y >= v.z)
+        if (v.y > v.z)
                 return 1;
         return 2;
-}
-
-/******************************************************************************\
- Returns the vector's projection into the plane given by [normal].
-\******************************************************************************/
-static inline c_vec3_t C_vec3_in_plane(c_vec3_t v, c_vec3_t normal)
-{
-        return C_vec3_sub(v, C_vec3_scalef(normal, C_vec3_dot(v, normal)));
 }
 
 /******************************************************************************\

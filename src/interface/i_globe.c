@@ -14,13 +14,10 @@
 
 #include "i_common.h"
 
-/* Time in milliseconds since the last click to qualify as a double-click */
-#define DOUBLE_CLICK_MSEC 500
-
 static c_vec3_t grab_normal;
 static c_vec2_t globe_motion;
 static float grab_angle;
-static int grabbing, grab_rolling, grab_times[2];
+static int grabbing, grab_rolling;
 
 /******************************************************************************\
  Performs ray-sphere intersection between an arbitrary ray and the globe. The
@@ -61,7 +58,7 @@ static c_vec3_t screen_ray(int x, int y)
 
 /******************************************************************************\
  Converts a screen coordinate to a globe [normal]. Returns TRUE if the globe
- was clicked on and [normal] was set. Otherwise, returns FALSE and sets
+ was clicked on and [normal] was set. Otherwise, returns FALSe and sets
  [angle] to the roll angle.
 \******************************************************************************/
 static int screen_to_normal(int x, int y, c_vec3_t *normal, float *angle)
@@ -90,8 +87,7 @@ static int screen_to_normal(int x, int y, c_vec3_t *normal, float *angle)
         }
 
         /* If there was no intersection, find the roll angle of the mouse */
-        if (angle)
-                *angle = atan2f(direction.y, direction.x);
+        *angle = atan2f(direction.y, direction.x);
         return FALSE;
 }
 
@@ -103,8 +99,6 @@ static void grab_globe(int x, int y)
         if (grabbing)
                 return;
         grabbing = TRUE;
-        grab_times[0] = grab_times[1];
-        grab_times[1] = c_time_msec;
         if (screen_to_normal(x, y, &grab_normal, &grab_angle)) {
                 grab_rolling = FALSE;
                 grab_normal = R_rotate_from_cam(grab_normal);
@@ -112,7 +106,6 @@ static void grab_globe(int x, int y)
                 grab_rolling = TRUE;
         I_close_ring();
         G_mouse_ray_miss();
-        R_grab_cam();
 }
 
 /******************************************************************************\
@@ -120,19 +113,16 @@ static void grab_globe(int x, int y)
 \******************************************************************************/
 static void release_globe(void)
 {
-        c_vec3_t normal;
+        c_vec3_t direction;
 
         grabbing = FALSE;
-        R_release_cam();
-
-        /* Check if this is a double right click */
-        if (i_mouse_focus != &i_root ||
-            c_time_msec - grab_times[0] > DOUBLE_CLICK_MSEC ||
-            !screen_to_normal(i_mouse_x, i_mouse_y, &normal, NULL))
+        if (i_mouse_focus != &i_root)
                 return;
-        grab_times[0] = 0;
-        grab_times[1] = 0;
-        R_rotate_cam_to(normal);
+
+        /* After a mouse grab is released, we need to scan for selection */
+        direction = screen_ray(i_mouse_x, i_mouse_y);
+        direction = R_rotate_to_cam(direction);
+        G_mouse_ray(r_cam_origin, direction);
 }
 
 /******************************************************************************\
@@ -230,18 +220,17 @@ void I_globe_event(i_event_t event)
                         globe_motion.y = 0.f;
                 break;
         case I_EV_MOUSE_DOWN:
-                if (i_mouse_focus != &i_root)
-                        break;
                 if (i_mouse == SDL_BUTTON_WHEELDOWN)
                         R_zoom_cam_by(i_zoom_speed.value.f);
                 else if (i_mouse == SDL_BUTTON_WHEELUP)
                         R_zoom_cam_by(-i_zoom_speed.value.f);
-                else if (i_mouse == SDL_BUTTON_RIGHT)
+                else if (i_mouse == SDL_BUTTON_MIDDLE)
                         grab_globe(i_mouse_x, i_mouse_y);
-                G_process_click(i_mouse);
+                else
+                        G_process_click(i_mouse);
                 break;
         case I_EV_MOUSE_UP:
-                if (i_mouse == SDL_BUTTON_RIGHT)
+                if (i_mouse == SDL_BUTTON_MIDDLE)
                         release_globe();
                 break;
         case I_EV_MOUSE_MOVE:
@@ -251,21 +240,17 @@ void I_globe_event(i_event_t event)
                         G_mouse_ray_miss();
                 else if (grabbing)
                         rotate_globe(i_mouse_x, i_mouse_y);
-                break;
-        case I_EV_RENDER:
-                test_globe();
-                if (globe_motion.x || globe_motion.y)
-                        R_move_cam_by(C_vec2_scalef(globe_motion, c_frame_sec));
-
-                /* Because the globe can move by itself for various reasons,
-                   do the mouse trace every frame */
-                if (!I_ring_shown() && i_mouse_focus == &i_root && !grabbing) {
+                else {
                         c_vec3_t direction;
 
                         direction = screen_ray(i_mouse_x, i_mouse_y);
                         direction = R_rotate_to_cam(direction);
                         G_mouse_ray(r_cam_origin, direction);
                 }
+                break;
+        case I_EV_RENDER:
+                test_globe();
+                R_move_cam_by(C_vec2_scalef(globe_motion, c_frame_sec));
                 break;
         default:
                 break;

@@ -53,10 +53,6 @@ void C_time_update(void)
         c_frame_sec = c_frame_msec / 1000.f;
         last_msec = c_time_msec;
         c_frame++;
-
-        /* Report when a frame takes an unusually long time */
-        if (c_frame_msec > 500)
-                C_debug("Frame %d lagged, %d msec", c_frame, c_frame_msec);
 }
 
 /******************************************************************************\

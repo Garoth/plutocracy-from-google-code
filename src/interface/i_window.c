@@ -15,26 +15,25 @@
 #include "i_common.h"
 
 /* Time in milliseconds that the popup widget will remain shown */
-#define POPUP_TIME 2000
+#define POPUP_TIME 3000
 
 /* Maximum number of popup messages in the queue */
 #define POPUP_MESSAGES_MAX 8
 
 /* Type for queued popup messages */
 typedef struct popup_message {
+        i_popup_icon_t icon;
         c_vec3_t goto_pos;
         int has_goto_pos;
         char message[128];
 } popup_message_t;
 
 static popup_message_t popup_messages[POPUP_MESSAGES_MAX];
-static i_button_t zoom_button;
 static i_label_t popup_label;
 static i_widget_t popup_widget;
 static r_window_t popup_window;
 static r_texture_t *decor_window, *hanger, *decor_popup;
-static int popup_time;
-static bool popup_wait;
+static int popup_mouse_time;
 
 /******************************************************************************\
  Initialize themeable window assets.
@@ -163,7 +162,7 @@ int I_toolbar_event(i_toolbar_t *toolbar, i_event_t event)
                 return FALSE;
         case I_EV_HIDE:
                 for (i = 0; i < toolbar->children; i++)
-                        I_widget_event(&toolbar->windows[i].widget, I_EV_HIDE);
+                        I_widget_show(&toolbar->windows[i].widget, FALSE);
                 break;
         default:
                 break;
@@ -199,13 +198,13 @@ static void toolbar_button_click(i_button_t *button)
         toolbar = (i_toolbar_t *)button->data;
         window = toolbar->windows + (int)(button - toolbar->buttons);
         if (toolbar->open_window && toolbar->open_window->widget.shown) {
-                I_widget_event(&toolbar->open_window->widget, I_EV_HIDE);
+                I_widget_show(&toolbar->open_window->widget, FALSE);
                 if (toolbar->open_window == window) {
                         toolbar->open_window = NULL;
                         return;
                 }
         }
-        I_widget_event(&window->widget, I_EV_SHOW);
+        I_widget_show(&window->widget, TRUE);
         toolbar->open_window = window;
 }
 
@@ -252,15 +251,13 @@ void I_toolbar_add_button(i_toolbar_t *toolbar, const char *icon,
 static void popup_configure()
 {
         if (!popup_messages[0].message[0]) {
-                I_widget_event(&popup_widget, I_EV_HIDE);
+                I_widget_show(&popup_widget, FALSE);
                 return;
         }
         I_label_configure(&popup_label, popup_messages[0].message);
-        zoom_button.widget.state = popup_messages[0].has_goto_pos ?
-                                   I_WS_READY : I_WS_DISABLED;
         I_widget_event(&popup_widget, I_EV_CONFIGURE);
-        I_widget_event(&popup_widget, I_EV_SHOW);
-        popup_time = c_time_msec;
+        I_widget_show(&popup_widget, TRUE);
+        popup_mouse_time = c_time_msec;
 }
 
 /******************************************************************************\
@@ -269,14 +266,10 @@ static void popup_configure()
 static int popup_event(i_widget_t *widget, i_event_t event)
 {
         c_vec2_t origin;
-        float height;
 
         switch (event) {
         case I_EV_CONFIGURE:
-                height = R_font_height(R_FONT_GUI) / r_pixel_scale.value.f;
-                if (height < 16.f)
-                        height = 16.f;
-                widget->size = C_vec2(0.f, height + i_border.value.n * 2.f);
+                widget->size = C_vec2(0.f, 32.f);
                 I_widget_pack(widget, I_PACK_H, I_FIT_BOTTOM);
                 origin = C_vec2(r_width_2d / 2.f - widget->size.x / 2.f,
                                 r_height_2d - widget->size.y -
@@ -288,20 +281,15 @@ static int popup_event(i_widget_t *widget, i_event_t event)
                 popup_window.sprite.size = widget->size;
                 popup_window.sprite.origin = widget->origin;
                 return FALSE;
-        case I_EV_MOUSE_IN:
-                popup_wait = TRUE;
-                break;
-        case I_EV_MOUSE_OUT:
-                popup_wait = FALSE;
+        case I_EV_MOUSE_MOVE:
+                popup_mouse_time = c_time_msec;
                 break;
         case I_EV_CLEANUP:
                 R_window_cleanup(&popup_window);
                 break;
         case I_EV_RENDER:
-                if (popup_wait)
-                        popup_time = c_time_msec;
-                else if (c_time_msec - popup_time > POPUP_TIME)
-                        I_widget_event(&popup_widget, I_EV_HIDE);
+                if (c_time_msec - popup_mouse_time > POPUP_TIME)
+                        I_widget_show(&popup_widget, FALSE);
                 popup_window.sprite.modulate.a = widget->fade;
                 R_window_render(&popup_window);
                 break;
@@ -309,15 +297,6 @@ static int popup_event(i_widget_t *widget, i_event_t event)
                 break;
         }
         return TRUE;
-}
-
-/******************************************************************************\
- Popup zoom button was clicked.
-\******************************************************************************/
-static void popup_zoom(void)
-{
-        C_assert(popup_messages[0].has_goto_pos);
-        R_rotate_cam_to(popup_messages[0].goto_pos);
 }
 
 /******************************************************************************\
@@ -336,12 +315,6 @@ void I_init_popup(void)
         I_label_init(&popup_label, NULL);
         I_widget_add(&popup_widget, &popup_label.widget);
 
-        /* Zoom button */
-        I_button_init(&zoom_button, "gui/icons/zoom.png", NULL, I_BT_ROUND);
-        zoom_button.widget.margin_front = 0.5f;
-        zoom_button.on_click = (i_callback_f)popup_zoom;
-        I_widget_add(&popup_widget, &zoom_button.widget);
-
         I_widget_add(&i_root, &popup_widget);
 }
 
@@ -353,8 +326,8 @@ void I_update_popup(void)
         if (popup_widget.shown || popup_widget.fade > 0.f ||
             !popup_messages[0].message[0])
                 return;
-        memmove(popup_messages, popup_messages + 1,
-                sizeof (popup_messages) - sizeof (*popup_messages));
+        memcpy(popup_messages, popup_messages + 1,
+               sizeof (popup_messages) - sizeof (*popup_messages));
         popup_messages[POPUP_MESSAGES_MAX - 1].message[0] = NUL;
         popup_configure();
 }
@@ -362,7 +335,7 @@ void I_update_popup(void)
 /******************************************************************************\
  Queues a new message to popup
 \******************************************************************************/
-void I_popup(c_vec3_t *goto_pos, const char *message)
+void I_popup(i_popup_icon_t icon, const char *message, c_vec3_t *goto_pos)
 {
         int i;
 
@@ -377,6 +350,7 @@ void I_popup(c_vec3_t *goto_pos, const char *message)
                 }
 
         /* Setup the queue entry */
+        popup_messages[i].icon = icon;
         C_strncpy_buf(popup_messages[i].message, message);
         if (goto_pos) {
                 popup_messages[i].has_goto_pos = TRUE;
@@ -385,8 +359,7 @@ void I_popup(c_vec3_t *goto_pos, const char *message)
                 popup_messages[i].has_goto_pos = FALSE;
 
         /* If the popup window is hidden, configure and open it */
-        if ((!popup_widget.shown && popup_widget.fade <= 0.f) ||
-            i >= POPUP_MESSAGES_MAX - 1)
+        if (!popup_widget.shown || i >= POPUP_MESSAGES_MAX - 1)
                 popup_configure();
 }
 

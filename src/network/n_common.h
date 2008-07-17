@@ -12,7 +12,3 @@
 
 #include "../common/c_shared.h"
 #include "n_shared.h"
-
-/* n_sync.c */
-extern n_callback_f n_client_func, n_server_func;
-

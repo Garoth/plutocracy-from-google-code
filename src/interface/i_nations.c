@@ -13,29 +13,15 @@
 #include "i_common.h"
 
 static i_label_t title;
-static i_button_t nation_buttons[G_NATION_NAMES];
-static int selected;
+static i_button_t nations[4];
 
 /******************************************************************************\
  A nation button was clicked.
 \******************************************************************************/
 static void nation_clicked(i_button_t *button)
 {
-        I_widget_event(button->widget.parent, I_EV_HIDE);
-        G_change_nation((int)(button - nation_buttons));
-}
-
-/******************************************************************************\
- Disables one of the nation buttons. Pass an invalid nation index to enable
- all buttons.
-\******************************************************************************/
-void I_select_nation(int nation)
-{
-        if (nation_buttons[selected].widget.state == I_WS_DISABLED)
-                nation_buttons[selected].widget.state = I_WS_READY;
-        if (nation < 0 || nation >= G_NATION_NAMES)
-                return;
-        nation_buttons[selected = nation].widget.state = I_WS_DISABLED;
+        I_widget_show(button->widget.parent, FALSE);
+        G_change_nation((int)(button - nations));
 }
 
 /******************************************************************************\
@@ -43,9 +29,6 @@ void I_select_nation(int nation)
 \******************************************************************************/
 void I_nations_init(i_window_t *window)
 {
-        const char *long_name;
-        int i;
-
         I_window_init(window);
         window->natural_size = C_vec2(200.f, 0.f);
         window->fit = I_FIT_TOP;
@@ -55,17 +38,29 @@ void I_nations_init(i_window_t *window)
         title.font = R_FONT_TITLE;
         I_widget_add(&window->widget, &title.widget);
 
-        /* Setup nation buttons */
-        for (i = 0; i < G_NATION_NAMES; i++) {
-                long_name = C_str(C_va("c-team-%s", g_nations[i].short_name),
-                                  g_nations[i].long_name);
-                I_button_init(nation_buttons + i,
-                              C_va("gui/flags/%s.png", g_nations[i].short_name),
-                              long_name, I_BT_DECORATED);
-                nation_buttons[i].on_click = (i_callback_f)nation_clicked;
-                if (i == G_NATION_NAMES - 1)
-                        nation_buttons[i].widget.margin_front = 1.f;
-                I_widget_add(&window->widget, &nation_buttons[i].widget);
-        }
+        /* Ruby nation */
+        I_button_init(nations, "gui/flags/red.png",
+                      C_str("c-team-red", "Ruby"), I_BT_DECORATED);
+        nations[0].on_click = (i_callback_f)nation_clicked;
+        I_widget_add(&window->widget, &nations[0].widget);
+
+        /* Emerald nation */
+        I_button_init(nations + 1, "gui/flags/green.png",
+                      C_str("c-team-green", "Emerald"), I_BT_DECORATED);
+        nations[1].on_click = (i_callback_f)nation_clicked;
+        I_widget_add(&window->widget, &nations[1].widget);
+
+        /* Sapphire nation */
+        I_button_init(nations + 2, "gui/flags/blue.png",
+                      C_str("c-team-blue", "Sapphire"), I_BT_DECORATED);
+        nations[2].on_click = (i_callback_f)nation_clicked;
+        I_widget_add(&window->widget, &nations[2].widget);
+
+        /* Pirates */
+        I_button_init(nations + 3, "gui/flags/pirate.png",
+                      C_str("c-team-pirate", "Pirate"), I_BT_DECORATED);
+        nations[3].widget.margin_front = 1.f;
+        nations[3].on_click = (i_callback_f)nation_clicked;
+        I_widget_add(&window->widget, &nations[3].widget);
 }
 

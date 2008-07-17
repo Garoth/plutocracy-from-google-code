@@ -18,9 +18,6 @@ c_var_t g_test_globe, g_test_tile;
 /* Globe variables */
 c_var_t g_globe_islands, g_globe_island_size, g_globe_seed, g_globe_subdiv4;
 
-/* Nation colors */
-c_var_t g_nation_colors[G_NATION_NAMES];
-
 /******************************************************************************\
  Registers the game namespace variables.
 \******************************************************************************/
@@ -43,15 +40,5 @@ void G_register_variables(void)
                            "number of islands, 0 for default");
         C_register_integer(&g_globe_island_size, "g_globe_island_size", 0,
                            "maximum size of islands, 0 for default");
-
-        /* Nation colors */
-        C_register_string(g_nation_colors + G_NN_RED, "g_color_red",
-                          "#80ef2929", "red national color");
-        C_register_string(g_nation_colors + G_NN_GREEN, "g_color_green",
-                          "#808ae234", "green national color");
-        C_register_string(g_nation_colors + G_NN_BLUE, "g_color_blue",
-                          "#80729fcf", "blue national color");
-        C_register_string(g_nation_colors + G_NN_PIRATE, "g_color_pirate",
-                          "#60ffffff", "pirate color");
 }
 

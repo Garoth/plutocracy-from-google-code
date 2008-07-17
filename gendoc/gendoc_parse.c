@@ -70,7 +70,6 @@ int D_is_keyword(const char *buf, entry_t **entry, int *type)
                 int type;
         } keywords[] = {
                 { "#define",    2 },
-                { "bool",       0 },
                 { "break",      1 },
                 { "char",       0 },
                 { "case",       1 },
