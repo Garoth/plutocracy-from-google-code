@@ -36,7 +36,6 @@ typedef struct g_island {
 g_tile_t g_tiles[R_TILES_MAX];
 
 static g_island_t islands[ISLAND_NUM];
-static r_tile_t render_tiles[R_TILES_MAX];
 static float visible_range;
 static int islands_len;
 
@@ -72,14 +71,14 @@ static void sanitise_terrain(void)
         /* During the first pass we convert shallow tiles to sand tiles */
         land = 0;
         for (i = 0; i < r_tiles; i++) {
-                if (render_tiles[i].terrain != R_T_SHALLOW)
+                if (r_tile_params[i].terrain != R_T_SHALLOW)
                         continue;
                 region_len = R_get_tile_region(i, region);
                 for (j = 0; j < region_len; j++)
-                        if (render_tiles[region[j]].terrain == R_T_WATER ||
+                        if (r_tile_params[region[j]].terrain == R_T_WATER ||
                             g_tiles[region[j]].island != g_tiles[i].island)
                                 goto skip_shallow;
-                render_tiles[i].terrain = R_T_SAND;
+                r_tile_params[i].terrain = R_T_SAND;
                 islands[g_tiles[i].island].land++;
                 land++;
 skip_shallow:   ;
@@ -89,25 +88,25 @@ skip_shallow:   ;
            set terrain height */
         hot = cold = temp = 0;
         for (i = 0; i < r_tiles; i++) {
-                if (render_tiles[i].terrain != R_T_SAND)
+                if (r_tile_params[i].terrain != R_T_SAND)
                         continue;
                 region_len = R_get_tile_region(i, region);
                 for (j = 0; j < region_len; j++)
-                        if (render_tiles[region[j]].terrain == R_T_SHALLOW ||
-                            render_tiles[region[j]].terrain == R_T_WATER ||
+                        if (r_tile_params[region[j]].terrain == R_T_SHALLOW ||
+                            r_tile_params[region[j]].terrain == R_T_WATER ||
                             g_tiles[region[j]].island != g_tiles[i].island)
                                 goto skip_sand;
-                render_tiles[i].terrain = choose_terrain(i);
+                r_tile_params[i].terrain = choose_terrain(i);
 
                 /* Give height to tile region */
-                render_tiles[i].height = C_rand_real() * ISLAND_HEIGHT;
+                r_tile_params[i].height = C_rand_real() * ISLAND_HEIGHT;
 
                 /* Keep track of terrain statistics */
-                if (render_tiles[i].terrain == R_T_GROUND)
+                if (r_tile_params[i].terrain == R_T_GROUND)
                         temp++;
-                else if (render_tiles[i].terrain == R_T_GROUND_HOT)
+                else if (r_tile_params[i].terrain == R_T_GROUND_HOT)
                         hot++;
-                else if (render_tiles[i].terrain == R_T_GROUND_COLD)
+                else if (r_tile_params[i].terrain == R_T_GROUND_COLD)
                         cold++;
 skip_sand:      ;
         }
@@ -119,8 +118,8 @@ skip_sand:      ;
 
                 /* Remove this tile if it belongs to a failed island */
                 if (islands[g_tiles[i].island].land < ISLAND_LAND) {
-                        render_tiles[i].terrain = R_T_WATER;
-                        render_tiles[i].height = 0.f;
+                        r_tile_params[i].terrain = R_T_WATER;
+                        r_tile_params[i].height = 0.f;
                         g_tiles[i].island = G_ISLAND_INVALID;
                         continue;
                 }
@@ -128,8 +127,8 @@ skip_sand:      ;
                 /* Smooth the height */
                 region_len = R_get_tile_region(i, region);
                 for (j = 0, height = 0.f; j < region_len; j++)
-                        height += render_tiles[region[j]].height;
-                render_tiles[i].height = (render_tiles[i].height +
+                        height += r_tile_params[region[j]].height;
+                r_tile_params[i].height = (r_tile_params[i].height +
                                           height / region_len) / 2.f;
         }
 
@@ -205,7 +204,7 @@ static void grow_islands(int num, int island_size)
                                 islands[g_tiles[next].island].tiles++;
                                 continue;
                         }
-                        g_tiles[edges[index]].render->terrain = R_T_SHALLOW;
+                        r_tile_params[edges[index]].terrain = R_T_SHALLOW;
                         memmove(edges + index, edges + index + 1,
                                 ((i + 1) * ISLAND_SIZE - index - 1) *
                                 sizeof (*edges));
@@ -224,7 +223,7 @@ int G_set_tile_model(int tile, const char *filename)
         if (!R_model_init(&g_tiles[tile].model, filename, TRUE))
                 return FALSE;
         g_tiles[tile].model.origin = g_tiles[tile].origin;
-        g_tiles[tile].model.normal = r_tile_normals[tile];
+        g_tiles[tile].model.normal = r_tile_params[tile].normal;
         g_tiles[tile].model.forward = g_tiles[tile].forward;
         g_tiles[tile].model.selected = g_selected_tile == tile;
         return TRUE;
@@ -251,8 +250,7 @@ static int test_tiles_update(c_var_t *var, c_var_value_t value)
 
         failed = FALSE;
         for (i = 0; i < r_tiles; i++)
-                if (g_tiles[i].render->terrain != R_T_WATER &&
-                    g_tiles[i].render->terrain != R_T_SHALLOW) {
+                if (R_water_terrain(r_tile_params[i].terrain)) {
                         if (failed)
                                 G_set_tile_model(i, "");
                         else
@@ -288,9 +286,8 @@ void G_generate_globe(void)
 
         /* Initialize tile structures */
         for (i = 0; i < r_tiles; i++) {
-                render_tiles[i].terrain = R_T_WATER;
-                render_tiles[i].height = 0;
-                g_tiles[i].render = render_tiles + i;
+                r_tile_params[i].terrain = R_T_WATER;
+                r_tile_params[i].height = 0;
                 g_tiles[i].island = G_ISLAND_INVALID;
                 g_tiles[i].ship = -1;
                 C_zero(&g_tiles[i].model);
@@ -323,7 +320,7 @@ void G_generate_globe(void)
         sanitise_terrain();
 
         /* This call actually raises the tiles to match terrain height */
-        R_configure_globe(render_tiles);
+        R_configure_globe();
 
         /* Calculate tile vectors */
         for (i = 0; i < r_tiles; i++) {
@@ -389,7 +386,7 @@ void G_render_globe(void)
                 c_vec3_t b;
 
                 b = C_vec3_add(g_tiles[g_selected_tile].origin,
-                               r_tile_normals[g_selected_tile]);
+                               r_tile_params[g_selected_tile].normal);
                 R_render_test_line(g_tiles[g_selected_tile].origin, b,
                                    C_color(0.f, 1.f, 0.f, 1.f));
         }
@@ -413,7 +410,7 @@ static int ray_intersects_tile(c_vec3_t o, c_vec3_t d, int tile)
         int axis;
 
         R_get_tile_coords(tile, triangle);
-        normal = r_tile_normals[tile];
+        normal = r_tile_params[tile].normal;
 
         /* Find [P], the ray's location in the triangle plane */
         o = C_vec3_sub(o, triangle[0]);

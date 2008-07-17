@@ -91,14 +91,9 @@ static void server_affiliate(int client)
         /* If this client just joined a nation for the first time,
            try to give them a starter ship */
         tile = -1;
-        if (old == G_NN_NONE) {
+        if (old == G_NN_NONE)
                 if ((ship = G_spawn_ship(client, -1, G_SN_SLOOP, -1)) >= 0)
                         tile = g_ships[ship].tile;
-                G_spawn_ship(client, -1, G_SN_SLOOP, -1);
-                G_spawn_ship(client, -1, G_SN_SLOOP, -1);
-                G_spawn_ship(client, -1, G_SN_SLOOP, -1);
-                G_spawn_ship(client, -1, G_SN_SLOOP, -1);
-        }
 
         N_send(N_BROADCAST_ID, "1112", G_SM_AFFILIATE, client, nation, tile);
 }

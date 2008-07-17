@@ -131,10 +131,11 @@ typedef struct r_window {
 } r_window_t;
 
 /* Structure that contains configuration parameters for a tile */
-typedef struct r_tile {
+typedef struct r_tile_param {
         r_terrain_t terrain;
+        c_vec3_t normal;
         float height;
-} r_tile_t;
+} r_tile_param_t;
 
 /* r_assets.c */
 void R_free_fonts(void);
@@ -224,14 +225,16 @@ void R_window_load(r_window_t *, const char *filename);
 void R_window_render(r_window_t *);
 
 /* r_terrain.c */
-void R_configure_globe(r_tile_t *array);
+void R_configure_globe(void);
 void R_generate_globe(int subdiv4);
 void R_get_tile_coords(int index, c_vec3_t verts[3]);
 float R_get_tile_latitude(int tile);
 void R_get_tile_neighbors(int tile, int neighbors[3]);
 int R_get_tile_region(int tile, int neighbors[12]);
+int R_land_bridge(int tile_a, int tile_b);
+int R_water_terrain(int terrain);
 
-extern c_vec3_t r_tile_normals[R_TILES_MAX];
+extern r_tile_param_t r_tile_params[R_TILES_MAX];
 extern int r_tiles;
 
 /* r_tests.c */
