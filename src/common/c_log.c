@@ -197,7 +197,7 @@ void C_log(c_log_level_t level, const char *file, int line,
         if (log_file.type)
                 C_file_write(&log_file, wrapped, len);
         else
-                fputs(wrapped, stderr);
+                fputs(wrapped, stdout);
 
 #ifdef WIN32
         /* Display a messagebox in Windows */

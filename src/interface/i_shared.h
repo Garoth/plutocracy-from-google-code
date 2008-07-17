@@ -35,6 +35,8 @@ void I_leave_limbo(void);
 void I_parse_config(void);
 void I_render(void);
 
+extern int i_limbo;
+
 /* i_nations.c */
 void I_select_nation(int nation);
 

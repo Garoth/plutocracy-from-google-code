@@ -226,7 +226,6 @@ i_label_t *I_label_new(const char *);
 /* i_layout.c */
 void I_theme_texture(r_texture_t **, const char *name);
 
-extern int i_limbo;
 extern i_widget_t i_root;
 
 /* i_nations.c */

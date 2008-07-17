@@ -32,7 +32,7 @@
 
 /* Constants normally defined via SCons */
 #define PACKAGE "plutocracy"
-#define PACKAGE_STRING "Plutocracy 0.0.2.300"
+#define PACKAGE_STRING "Plutocracy 0.0.2.335"
 
 /* Compatibility */
 #define inline __inline

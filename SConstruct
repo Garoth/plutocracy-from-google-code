@@ -145,17 +145,19 @@ if windows:
         plutocracy_src.remove(path('src/common/c_os_posix.c'))
         plutocracy_env.Append(CPPPATH = 'windows/include')
         plutocracy_env.Append(LIBPATH = 'windows/lib')
-        plutocracy_env.Append(LIBS = ['SDL', 'SDLmain', 'OpenGL32', 'GlU32',
+        plutocracy_env.Append(LIBS = ['SDLmain', 'OpenGL32', 'GlU32',
                                       'user32', 'shell32'])
         if mingw:
                 plutocracy_env.ParseConfig('sh sdl-config --prefix=windows' +
                                                         ' --cflags --libs')
                 plutocracy_objlibs = [path('windows/lib/zdll.lib'),
                                       path('windows/lib/libpng.lib'),
+                                      path('windows/lib/SDL.lib'),
                                       path('windows/lib/SDL_ttf.lib')]
         else:
                 plutocracy_env.Append(CPPPATH = ';windows/include/SDL')
-                plutocracy_env.Append(LIBS = ['zdll', 'libpng', 'SDL_ttf'])
+                plutocracy_env.Append(LIBS = ['zdll', 'libpng', 'SDL', 
+                                              'SDLmain', 'SDL_ttf'])
 else:
         plutocracy_src.remove(path('src/common/c_os_windows.c'))
         plutocracy_env.Append(CPPPATH = '.')
@@ -178,7 +180,7 @@ def PlutocracyPCH(header, deps = []):
         plutocracy_env.Depends(pch, deps)
         plutocracy_env.Depends(plutocracy_obj, pch)
         plutocracy_pch += pch
-if plutocracy_env['pch'] != 'no':
+if plutocracy_env['pch'] != 'no' and (not windows or mingw):
         common_deps = glob.glob('src/common/*.h')
         PlutocracyPCH('src/common/c_shared.h', common_deps)
         if plutocracy_env['pch'] == 'all':

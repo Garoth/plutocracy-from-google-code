@@ -758,6 +758,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\src\game\g_ship.c"
+				>
+			</File>
+			<File
 				RelativePath="..\..\src\game\g_variables.c"
 				>
 				<FileConfiguration
@@ -839,6 +843,10 @@
 			</File>
 			<File
 				RelativePath="..\..\src\network\n_shared.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\src\network\n_sync.c"
 				>
 			</File>
 		</Filter>
@@ -988,6 +996,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\src\render\r_ship.c"
+				>
+			</File>
+			<File
 				RelativePath="..\..\src\render\r_solar.c"
 				>
 				<FileConfiguration
@@ -1048,6 +1060,10 @@
 						PrecompiledHeaderFile="$(IntDir)\r_common.pch"
 					/>
 				</FileConfiguration>
+			</File>
+			<File
+				RelativePath="..\..\src\render\r_terrain.c"
+				>
 			</File>
 			<File
 				RelativePath="..\..\src\render\r_test.c"
