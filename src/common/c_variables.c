@@ -32,10 +32,6 @@ c_var_t c_mem_check;
    changes */
 c_var_t c_lang;
 
-/* Variable that can be used to input information from the game interface to
-   a debugging function */
-c_var_t c_test_int;
-
 /* This should be set to TRUE when the main loop needs to exit properly */
 int c_exit;
 
@@ -71,12 +67,6 @@ void C_register_variables(void)
         /* Language selection */
         C_register_string(&c_lang, "c_lang", "",
                           "language used for all text in the game");
-
-        /* Testing variables */
-        C_register_integer(&c_test_int, "c_test_int", 0,
-                           "integer value used for testing");
-        c_test_int.archive = FALSE;
-        c_test_int.edit = C_VE_ANYTIME;
 }
 
 /******************************************************************************\

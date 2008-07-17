@@ -319,7 +319,7 @@ r_texture_t *R_texture_load(const char *filename, int mipmaps)
  Selects (binds) a texture for rendering in OpenGL. Also sets whatever options
  are necessary to get the texture to show up properly.
 \******************************************************************************/
-void R_texture_select(const r_texture_t *texture)
+void R_texture_select(r_texture_t *texture)
 {
         if (!texture || !r_textures.value.n ||
             (r_textures.value.n == 2 && texture->not_pow2)) {
@@ -583,7 +583,6 @@ void R_load_assets(void)
         const SDL_version *linked;
 
         C_status("Loading render assets");
-        C_var_unlatch(&r_model_lod);
 
         /* Setup the texture pixel format, RGBA in 32 bits */
         r_sdl_format.BitsPerPixel = 32;
@@ -617,7 +616,6 @@ void R_load_assets(void)
         R_prerender();
         if (!r_terrain_tex)
                 C_error("Failed to load terrain texture");
-        r_terrain_tex->anisotropy = 2.f;
 
         /* Create a fake white texture */
         r_white_tex = R_texture_alloc(1, 1, FALSE);

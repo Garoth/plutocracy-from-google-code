@@ -14,7 +14,6 @@
    also function as a server. */
 
 #include "common/c_shared.h"
-#include "network/n_shared.h"
 #include "render/r_shared.h"
 #include "interface/i_shared.h"
 #include "game/g_shared.h"
@@ -61,12 +60,25 @@ static void render_status(void)
 \******************************************************************************/
 static void take_screenshot(void)
 {
+        struct tm *local;
+        time_t msec;
+        int i;
         const char *filename;
 
-        filename = R_save_screenshot();
-        if (!filename || !filename[0])
+        if (!C_mkdir(C_va("%s/screenshots", C_user_dir())))
                 return;
-        I_popup(NULL, C_va("Saved screenshot: %s", filename));
+        time(&msec);
+        local = localtime(&msec);
+        filename = C_va("%s/screenshots/%d-%02d-%02d--%02d%02d.png",
+                        C_user_dir(), local->tm_year + 1900, local->tm_mon + 1,
+                        local->tm_mday, local->tm_hour, local->tm_min);
+        for (i = 0; C_file_exists(filename) && i < 26; i++)
+                filename = C_va("%s/screenshots/%d-%02d-%02d--%02d%02d%c.png",
+                                C_user_dir(), local->tm_year + 1900,
+                                local->tm_mon + 1, local->tm_mday,
+                                local->tm_hour, local->tm_min,
+                                'a' + i);
+        R_save_screenshot(filename);
 }
 
 /******************************************************************************\
@@ -104,10 +116,6 @@ static void main_loop(void)
                 R_finish_frame();
                 C_time_update();
                 C_throttle_fps();
-
-                /* Update the game after rendering everything */
-                G_update_host();
-                G_update_client();
 
                 /* This check is a long-shot, but if there was rampant memory
                    corruption this variable's value may have been changed */
@@ -165,12 +173,11 @@ static void cleanup(void)
         ran_once = TRUE;
 
         C_status("Cleaning up");
-        G_cleanup();
+        G_cleanup_globe();
         I_cleanup();
         R_text_cleanup(&status_text);
         R_free_test_assets();
         R_cleanup();
-        N_cleanup();
         SDL_Quit();
         C_cleanup_lang();
         C_check_leaks();
@@ -221,7 +228,6 @@ int main(int argc, char *argv[])
         C_open_log_file();
 
         /* Run tests if they are enabled */
-        C_endian_check();
         C_test_mem_check();
 
         /* Initialize */
@@ -229,10 +235,9 @@ int main(int argc, char *argv[])
         C_init_lang();
         C_translate_vars();
         init_sdl();
-        N_init();
         R_init();
-        G_init();
         I_init();
+        G_init_globe();
         R_load_test_assets();
 
         /* Run the main loop */

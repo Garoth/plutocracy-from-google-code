@@ -21,22 +21,15 @@ c_var_t r_globe, r_test_normals, r_test_model, r_test_prerender, r_test_sprite,
         r_test_sprite_num, r_test_text, r_textures;
 
 /* Effects parameters */
-c_var_t r_atmosphere, r_globe_smooth, r_globe_transitions, r_model_lod;
+c_var_t r_atmosphere, r_globe_smooth, r_globe_transitions;
 
 /* Lighting parameters */
-c_var_t r_globe_colors[3], r_globe_shininess, r_light, r_light_ambient,
-        r_moon_atten, r_moon_diffuse, r_moon_height, r_moon_specular, r_solar,
-        r_sun_diffuse, r_sun_specular;
+c_var_t r_globe_colors[4], r_globe_shininess, r_light, r_moon_colors[3],
+        r_moon_atten, r_moon_height, r_solar, r_sun_colors[3];
 
 /* Fonts */
 c_var_t r_font_console, r_font_console_pt, r_font_gui, r_font_gui_pt,
         r_font_title, r_font_title_pt;
-
-/* Extension overrides */
-c_var_t r_ext_point_sprites;
-
-/* Screenshots */
-c_var_t r_screenshots_dir;
 
 /******************************************************************************\
  Registers the render namespace variables.
@@ -98,15 +91,13 @@ void R_register_variables(void)
                           "#c06080a0", "color of the atmosphere");
         C_register_integer(&r_globe_transitions, "r_globe_transitions", 1,
                            "use transition tiles");
-        C_register_float(&r_model_lod, "r_model_lod", 1.f,
-                         "model level-of-detail: 0.0-...");
 
-        /* Lighting parameters */
+        /* Lighting parameters: ambient, diffuse, specular, emissive */
         C_register_integer(&r_light, "r_light", TRUE,
                           "enable light from the sun and moon");
         r_light.edit = C_VE_ANYTIME;
         C_register_integer(&r_solar, "r_solar", TRUE,
-                          "0 = no sky, 1 = rotating, 2 = static");
+                          "render the sky, sun and moon sprites");
         r_solar.edit = C_VE_ANYTIME;
         C_register_integer(&r_globe_shininess, "r_globe_shininess", 32,
                           "globe specular shininess: 0-128");
@@ -117,21 +108,25 @@ void R_register_variables(void)
         C_register_float(&r_moon_atten, "r_moon_atten", 0.0001f,
                          "moonlight quadratic attenuation");
         r_moon_atten.edit = C_VE_ANYTIME;
-        C_register_string(r_globe_colors, "r_globe_ambient", "#808080",
+        C_register_string(r_globe_colors, "r_globe_ambient", "#303030",
                           "globe ambient light color");
         C_register_string(r_globe_colors + 1, "r_globe_diffuse", "#c0c0c0",
                           "globe diffuse light color");
-        C_register_string(r_globe_colors + 2, "r_globe_specular", "white",
+        C_register_string(r_globe_colors + 2, "r_globe_specular", "#ffffff",
                           "globe specular light color");
-        C_register_string(&r_light_ambient, "r_light_ambient", "#804020",
-                          "universal ambient light color");
-        C_register_string(&r_sun_diffuse, "r_sun_diffuse", "white",
+        C_register_string(r_globe_colors + 3, "r_globe_emission", "",
+                          "globe emission light color");
+        C_register_string(r_sun_colors, "r_sun_ambient", "#d04060",
+                          "sun ambient light color");
+        C_register_string(r_sun_colors + 1, "r_sun_diffuse", "#ffffd0",
                           "sun diffuse light color");
-        C_register_string(&r_sun_specular, "r_sun_specular", "#606060",
+        C_register_string(r_sun_colors + 2, "r_sun_specular", "#606060",
                           "sun specular light color");
-        C_register_string(&r_moon_diffuse, "r_moon_diffuse", "#001040",
+        C_register_string(r_moon_colors, "r_moon_ambient", "#002040",
+                          "moon ambient light color");
+        C_register_string(r_moon_colors + 1, "r_moon_diffuse", "#040406",
                           "moon diffuse light color");
-        C_register_string(&r_moon_specular, "r_moon_specular", "#000008",
+        C_register_string(r_moon_colors + 2, "r_moon_specular", "#030404",
                           "moon specular light color");
 
         /* Fonts */
@@ -156,16 +151,5 @@ void R_register_variables(void)
         C_register_integer(&r_font_title_pt, "r_font_title_pt", 18,
                            "size of title font in points");
         r_font_title_pt.archive = FALSE;
-
-        /* Hardware point sprites are disabled by default because ATI drivers
-           choke on them */
-        C_register_integer(&r_ext_point_sprites, "r_ext_point_sprites", FALSE,
-                           "0 = disable hardware point sprites");
-
-        /* Screenshots Directory */
-        C_register_string(&r_screenshots_dir, "r_screenshots_dir",
-                          C_va("%s/screenshots", C_user_dir()),
-                          "directory where screenshots are saved");
-        r_screenshots_dir.edit = C_VE_ANYTIME;
 }
 

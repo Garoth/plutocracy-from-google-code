@@ -68,9 +68,6 @@
 #define C_SIN_60 0.86602540378443865f
 #define C_SIN_30 0.5f
 
-/* Square root of two divided by two */
-#define C_COS_45 0.70710678118654752f
-
 /* If you are going to use the C_va* functions, keep in mind that after calling
    any of those functions [C_VA_BUFFERS] times, you will begin overwriting
    the buffers starting from the first. Each buffer also has a fixed size.
@@ -120,10 +117,6 @@
 
 /* Log files are wrapped to this many columns */
 #define C_LOG_WRAP_COLS 80
-
-/* Define a compact boolean type. This actually does not make much of an impact
-   as far as memory usage is concerned but is helpful to denote usage. */
-typedef unsigned char bool;
 
 /* Debug log levels, errors are fatal and will always abort */
 typedef enum {
@@ -201,8 +194,8 @@ struct c_var {
         c_var_type_t type;
         c_var_edit_t edit;
         c_var_update_f update;
-        int changed;
-        bool has_latched, archive, unsafe;
+        int changed, unsafe;
+        char has_latched, archive;
 };
 
 /* Resizing arrays */
@@ -215,7 +208,7 @@ typedef struct c_array {
 typedef struct c_token_file {
         char filename[256], buffer[C_TOKEN_SIZE], swap, *pos, *token;
         c_file_t file;
-        bool eof;
+        int eof;
 } c_token_file_t;
 
 /* Reference-counted linked-list. Memory allocated using the referenced
@@ -295,7 +288,6 @@ void C_array_reserve(c_array_t *, int n);
 void *C_array_steal(c_array_t *);
 #define C_calloc(s) C_recalloc_full(__FILE__, __LINE__, __func__, NULL, s)
 void C_check_leaks(void);
-void C_endian_check(void);
 #define C_free(p) C_free_full(__FILE__, __LINE__, __func__, p)
 void C_free_full(const char *file, int line, const char *function, void *ptr);
 #define C_malloc(s) C_realloc(NULL, s)
@@ -400,6 +392,6 @@ int C_var_unlatch(c_var_t *);
 void C_var_update_data(c_var_t *, c_var_update_f, void *);
 void C_write_autogen(void);
 
-extern c_var_t c_max_fps, c_show_fps, c_test_int;
+extern c_var_t c_max_fps, c_show_fps;
 extern int c_exit;
 

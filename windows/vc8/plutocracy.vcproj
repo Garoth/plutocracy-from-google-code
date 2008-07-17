@@ -1099,11 +1099,11 @@
 			</File>
 		</Filter>
 		<File
-			RelativePath="..\..\AUTHORS"
+			RelativePath="..\AUTHORS"
 			>
 		</File>
 		<File
-			RelativePath="..\..\ChangeLog"
+			RelativePath="..\ChangeLog"
 			>
 		</File>
 		<File

@@ -22,10 +22,9 @@
    so we need to set a minimum (in points). */
 #define R_FONT_SIZE_MIN 10
 
-/* Ranges for zooming in and out. Maximum zoom distance is a scale value of
-   the globe radius. */
+/* Ranges for zooming in and out */
 #define R_ZOOM_MIN 8.f
-#define R_ZOOM_MAX_SCALE 0.5f
+#define R_ZOOM_MAX 16.f
 
 /* OpenGL cannot address enough vertices to render more than 5 subdivisons'
    worth of tiles */
@@ -48,10 +47,33 @@
 /* tan(R_FOV / 2) */
 #define R_FOV_HALF_TAN 1.f
 
-/* Longest renderable ship path. This is used throughout the program. The
-   two biggest constraints on this value are network transmission and stack
-   space usage. */
-#define R_PATH_MAX 256
+/* Opaque texture object */
+typedef struct r_texture r_texture_t;
+
+/* Model instance type */
+typedef struct r_model {
+        c_vec3_t origin, normal, forward;
+        struct r_model_data *data;
+        float scale;
+        int anim, frame, last_frame, last_frame_time, time_left, unlit,
+            selected;
+} r_model_t;
+
+/* 2D textured quad sprite, can only be rendered in 2D mode */
+typedef struct r_sprite {
+        r_texture_t *texture;
+        c_vec2_t origin, size;
+        c_color_t modulate;
+        float angle, z;
+        int unscaled;
+} r_sprite_t;
+
+/* A point sprite in world space */
+typedef struct r_billboard {
+        r_sprite_t sprite;
+        c_vec3_t world_origin;
+        float size;
+} r_billboard_t;
 
 /* There is a fixed set of fonts available for the game */
 typedef enum {
@@ -60,6 +82,24 @@ typedef enum {
         R_FONT_TITLE,
         R_FONTS
 } r_font_t;
+
+/* Sometimes it is convenient to store the source text for a text sprite in a
+   generic buffer and only re-render it if it has changed */
+typedef struct r_text {
+        r_sprite_t sprite;
+        r_font_t font;
+        float wrap, shadow;
+        int invert, frame;
+        char buffer[256];
+} r_text_t;
+
+/* A quad strip composed of nine quads that stretch with the size parameter
+   of the sprite. Adjust sprite parameters to change how the window is
+   displayed. */
+typedef struct r_window {
+        r_sprite_t sprite;
+        c_vec2_t corner;
+} r_window_t;
 
 /* Terrain enumeration */
 typedef enum {
@@ -73,69 +113,11 @@ typedef enum {
         R_T_TRANSITION = 6,
 } r_terrain_t;
 
-/* Tile selection types */
-typedef enum {
-        R_ST_TILE,
-        R_ST_GOTO,
-        R_ST_PATH,
-        R_SELECT_TYPES,
-        R_ST_NONE,
-} r_select_type_t;
-
-/* Opaque texture object */
-typedef struct r_texture r_texture_t;
-
-/* Model instance type */
-typedef struct r_model {
-        c_vec3_t origin, normal, forward;
-        GLfloat matrix[16];
-        struct r_model_data *data;
-        float scale;
-        int anim, frame, last_frame, last_frame_time, time_left;
-        bool unlit, selected;
-} r_model_t;
-
-/* 2D textured quad sprite, can only be rendered in 2D mode */
-typedef struct r_sprite {
-        r_texture_t *texture;
-        c_vec2_t origin, size;
-        c_color_t modulate;
-        float angle, z;
-        bool unscaled;
-} r_sprite_t;
-
-/* A point sprite in world space */
-typedef struct r_billboard {
-        r_sprite_t sprite;
-        c_vec3_t world_origin;
-        float size;
-} r_billboard_t;
-
-/* Sometimes it is convenient to store the source text for a text sprite in a
-   generic buffer and only re-render it if it has changed */
-typedef struct r_text {
-        r_sprite_t sprite;
-        r_font_t font;
-        float wrap, shadow;
-        int frame;
-        char buffer[256];
-        bool invert;
-} r_text_t;
-
-/* A quad strip composed of nine quads that stretch with the size parameter
-   of the sprite. Adjust sprite parameters to change how the window is
-   displayed. */
-typedef struct r_window {
-        r_sprite_t sprite;
-        c_vec2_t corner;
-} r_window_t;
-
 /* Structure that contains configuration parameters for a tile */
-typedef struct r_tile_param {
+typedef struct r_tile {
         r_terrain_t terrain;
-        c_vec3_t normal;
         float height;
-} r_tile_param_t;
+} r_tile_t;
 
 /* r_assets.c */
 void R_free_fonts(void);
@@ -150,24 +132,27 @@ r_texture_t *R_texture_load(const char *filename, int mipmaps);
 #define R_texture_ref(t) C_ref_up((c_ref_t *)(t))
 
 /* r_camera.c */
-void R_grab_cam(void);
-void R_move_cam_by(c_vec2_t distances);
+void R_move_cam_by(c_vec2_t);
 c_vec3_t R_project(c_vec3_t);
 c_vec3_t R_project_by_cam(c_vec3_t);
-void R_release_cam(void);
-void R_rotate_cam_by(c_vec3_t angles);
-void R_rotate_cam_to(c_vec3_t origin);
+void R_rotate_cam_by(c_vec3_t);
 c_vec3_t R_rotate_from_cam(c_vec3_t);
 c_vec3_t R_rotate_to_cam(c_vec3_t);
 void R_zoom_cam_by(float);
 
 /* r_globe.c */
+void R_configure_globe(r_tile_t *array);
 void R_finish_globe(void);
-void R_select_path(int tile, const char *path);
-void R_select_tile(int tile, r_select_type_t);
+void R_generate_globe(int subdiv4);
+void R_get_tile_coords(int index, c_vec3_t verts[3]);
+float R_get_tile_latitude(int tile);
+void R_get_tile_neighbors(int tile, int neighbors[3]);
+int R_get_tile_region(int tile, int neighbors[12]);
+void R_select_tile(int tile);
 void R_start_globe(void);
 
-extern float r_globe_light, r_globe_radius, r_zoom_max;
+extern float r_globe_light, r_globe_radius;
+extern int r_tiles;
 
 /* r_mode.c */
 void R_cleanup(void);
@@ -181,7 +166,7 @@ void R_finish_frame(void);
 void R_init(void);
 void R_pop_clip(void);
 void R_push_clip(void);
-const char *R_save_screenshot(void);
+void R_save_screenshot(const char *filename);
 void R_start_frame(void);
 
 extern c_count_t r_count_faces;
@@ -191,17 +176,12 @@ extern int r_width_2d, r_height_2d, r_restart;
 
 /* r_model.c */
 void R_model_cleanup(r_model_t *);
-int R_model_init(r_model_t *, const char *filename, bool cull);
+int R_model_init(r_model_t *, const char *filename);
 void R_model_play(r_model_t *, const char *anim_name);
 void R_model_render(r_model_t *);
 
 /* r_solar.c */
 void R_adjust_light_for(c_vec3_t origin);
-
-/* r_ship.c */
-void R_render_ship_status(const r_model_t *model, float left, float left_max,
-                          float right, float right_max, c_color_t modulate,
-                          int selected);
 
 /* r_sprite.c */
 #define R_billboard_cleanup(p) R_sprite_cleanup(&(p)->sprite)
@@ -221,21 +201,7 @@ void R_text_configure(r_text_t *, r_font_t, float wrap, float shadow,
 void R_text_render(r_text_t *);
 #define R_window_cleanup(w) R_sprite_cleanup(&(w)->sprite)
 void R_window_init(r_window_t *, r_texture_t *);
-void R_window_load(r_window_t *, const char *filename);
 void R_window_render(r_window_t *);
-
-/* r_terrain.c */
-void R_configure_globe(void);
-void R_generate_globe(int subdiv4);
-void R_get_tile_coords(int index, c_vec3_t verts[3]);
-float R_get_tile_latitude(int tile);
-void R_get_tile_neighbors(int tile, int neighbors[3]);
-int R_get_tile_region(int tile, int neighbors[12]);
-int R_land_bridge(int tile_a, int tile_b);
-int R_water_terrain(int terrain);
-
-extern r_tile_param_t r_tile_params[R_TILES_MAX];
-extern int r_tiles;
 
 /* r_tests.c */
 void R_free_test_assets(void);

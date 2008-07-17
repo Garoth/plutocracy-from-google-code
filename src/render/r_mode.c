@@ -264,9 +264,7 @@ static void check_gl_extensions(void)
         }
 
         /* Point sprites */
-        C_var_unlatch(&r_ext_point_sprites);
-        if (r_ext_point_sprites.value.n &&
-            check_extension("GL_ARB_point_sprite")) {
+        if (check_extension("GL_ARB_point_sprite")) {
                 r_ext.point_sprites = TRUE;
                 C_debug("Hardware point sprites supported");
         } else {
@@ -405,13 +403,12 @@ void R_init(void)
 
         check_gl_extensions();
         set_gl_state();
-        r_cam_zoom = 1000.f;
+        r_cam_zoom = R_ZOOM_MAX;
         R_clip_disable();
         R_load_assets();
         R_init_camera();
         R_init_solar();
         R_init_globe();
-        R_init_ships();
 
         /* Set updatable variables */
         C_var_update(&r_clear, clear_update);
@@ -425,7 +422,6 @@ void R_cleanup(void)
 {
         R_cleanup_globe();
         R_cleanup_solar();
-        R_cleanup_ships();
         R_free_assets();
 }
 
@@ -674,7 +670,7 @@ void R_start_frame(void)
         /* Video can only be restarted at the start of the frame */
         if (r_restart) {
                 set_video_mode();
-                set_gl_state();
+				set_gl_state();
                 if (r_color_bits.changed > r_init_frame)
                         R_realloc_textures();
                 r_init_frame = c_frame;
@@ -696,45 +692,16 @@ void R_start_frame(void)
 }
 
 /******************************************************************************\
- Mark this frame for saving a screenshot when the buffer flips. Returns the
- full path and filename of the image saved or NULL if there was a problem.
+ Mark this frame for saving a screenshot when the buffer flips.
 \******************************************************************************/
-const char *R_save_screenshot(void)
+void R_save_screenshot(const char *filename)
 {
-        time_t msec;
-        struct tm *local;
-        const char *filename;
-        int i;
-
-        if (!C_mkdir(r_screenshots_dir.value.s))
-                return NULL;
-
-        /* Can't take two screenshots per frame */
         if (screenshot[0]) {
                 C_warning("Can't save '%s', screenshot '%s' queued",
                           filename, screenshot);
-                return NULL;
+                return;
         }
-
-        time(&msec);
-        local = localtime(&msec);
-
-        /* Start off with a path based on the current date and time */
-        filename = C_va("%s/%d-%02d-%02d--%02d%02d.png",
-                        r_screenshots_dir.value.s, local->tm_year + 1900,
-                        local->tm_mon + 1, local->tm_mday, local->tm_hour,
-                        local->tm_min);
-
-        /* If this is taken, start adding letters to the end of it */
-        for (i = 0; C_file_exists(filename) && i < 26; i++)
-                filename = C_va("%s/%d-%02d-%02d--%02d%02d%c.png",
-                                r_screenshots_dir.value.s,
-                                local->tm_year + 1900,
-                                local->tm_mon + 1, local->tm_mday,
-                                local->tm_hour, local->tm_min, 'a' + i);
-
         C_strncpy_buf(screenshot, filename);
-        return filename;
 }
 
 /******************************************************************************\
