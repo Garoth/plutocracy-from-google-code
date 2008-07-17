@@ -595,7 +595,7 @@ static void propagate_mouse_down(i_widget_t *widget)
         while (widget && widget->event_func) {
                 if (widget->shown && widget->state != I_WS_DISABLED &&
                     widget->clickable &&
-                    !widget->event_func(i_mouse_focus, I_EV_MOUSE_DOWN))
+                    !widget->event_func(widget, I_EV_MOUSE_DOWN))
                         return;
                 widget = widget->parent;
         }
