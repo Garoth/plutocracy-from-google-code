@@ -1,0 +1,293 @@
+................................................................................
+
+   ____  _       _
+  |  _ \| |_   _| |_ ___   ___ _ __ __ _  ___ _   _
+  | |_) | | | | | __/ _ \ / __| '__/ _` |/ __| | | |
+  |  __/| | |_| | || (_) | (__| | | (_| | (__| |_| |
+  |_|   |_|\__,_|\__\___/ \___|_|  \__,_|\___|\__, |  README
+                                              |___/
+
+  1. Release Information
+
+     1.1  Reporting Bugs and Known Issues
+     1.2  Credits and Thanks
+
+  2. Compiling and Installing Plutocracy
+
+     2.1  POSIX systems
+     2.2  Windows with Visual Studio
+     2.3  Windows with MinGW
+
+  3. Playing Plutocracy
+
+  4. License and Copying
+
+     4.1  GPL License
+     4.2  GPL-Compatible Exceptions
+     4.3  CC License Exceptions
+     4.4  Bitstream Vera Fonts
+     4.5  Additional Fonts
+     4.6  SDL Notice
+     4.7  zlib Notice
+
+
+
+1. Release Information
+======================
+
+  This is an SVN development version and has not officially been released. There
+  is no guarantee of compatibility or that it will even compile!
+
+
+  1.1  Reporting Bugs and Known Issues
+  ------------------------------------
+
+    Please check the project issue tracker before reporting bugs:
+    http://plutocracy.googlecode.com/
+
+    If the issue has not been addressed, you can either attempt to contact the
+    development team directly over IRC (#plutocracy on FreeNode) or post a new
+    bug report.
+
+    Please read the Issue Tracker Wiki before creating a new issue:
+    http://code.google.com/p/plutocracy/wiki/IssueTracker
+
+
+  1.2  Credits and Thanks
+  -----------------------
+
+    Active team:
+
+      Michael Levin <risujin@risujin.org>
+        Feb 2008 -
+        Lead programmer, game design, UI
+
+      Andrei Thorp <garoth@gmail.com>
+        Feb 2008 -
+        Blog, models, game design, scripting
+
+      Amanieu d'Antras <amanieu@gmail.com>
+        Apr 2008 -
+        Additional programming
+
+    Retired team:
+
+      Devin Papineau
+        Feb - Mar 2008
+        OpenGL consulting, prototype globe programming
+
+    Thanks:
+
+      David Severwright
+
+
+
+2. Compiling and Installing Plutocracy
+======================================
+
+  Currently Plutocracy is known to work on the following systems:
+
+
+  2.1  POSIX systems
+  ------------------
+
+    On a Debian/Ubuntu system you will need to install the following
+    development packages in addition to your normal compiling environment:
+
+      libsdl-dev
+      libsdl-image-dev
+      libsdl-ttf-dev
+      zlib1g-dev
+      scons
+
+    Plutocracy is packaged with SCons. Compile with:
+
+      $ scons
+
+    To install run the following command:
+
+      $ scons install PREFIX=/usr
+
+    The 'PREFIX' argument determines what directory root the program will be
+    installed under (defaults to '/usr/local'). For additional build targets
+    run scons help:
+
+      $ scons -h
+
+    Note that after SCons is run for the first time (even if with the -h flag),
+    it will create 'custom.py', the configuration file, and draw its options
+    from there instead of from the environment. Specify changes over the
+    command-line after this point or remove the configuration file.
+
+
+  2.2  Windows with Visual Studio
+  -------------------------------
+
+    The windows\vc8 directory contains a solution and project file setup for
+    compiling Plutocracy with Visual Studio 2005. The windows directory
+    includes the following SDKs and the project file is already setup to
+    use them:
+
+      SDL         http://libsdl.org/
+      SDL_ttf     http://www.libsdl.org/projects/SDL_ttf/
+      zlib        http://www.zlib.net/
+      libpng      http://www.libpng.org/
+
+    To run Plutocracy after compiling, download the runtime DLLs:
+
+      http://pub.risujin.org/plutocracy/plutocracy_win32_dlls.zip
+
+
+  2.2  Windows with MinGW
+  -----------------------
+
+    Plutocracy can be compiled for MinGW using SCons. You will need to install
+    and setup the following programs:
+
+      Python      http://www.python.org/download/
+      SCons       http://www.scons.org/
+      MinGW       http://www.mingw.org/download.shtml
+
+    Note that MinGW is required, MSys is not necessary. You will need to
+    configure the PATH environment variable to contain the path of the
+    MinGW bin directory:
+
+      1.) Right click on 'My Computer'
+      2.) Select 'Properties'
+      3.) Select 'Advanced' tab
+      4.) Press 'Environment Variables'
+      5.) Select 'PATH' in the top listbox
+      6.) Press 'Edit'
+      7.) Enter the path to the Python, Python Scripts, and MinGW bin
+          directories followed by a semicolon before any paths that are
+          already there:
+
+            C:\Program Files\Python 2.5;
+            C:\Program Files\Python 2.5\Scripts;
+            C:\MSys\MinGW\bin;
+
+    You should now be able to open a command prompt, navigate to the
+    Plutocracy directory and compile using scons:
+
+      C:\plutocracy> scons mingw=1
+
+    For additional build targets run scons help:
+
+      C:\plutocracy> scons -h
+
+    Note that after SCons is run for the first time (even if with the -h flag),
+    it will create 'custom.py', the configuration file, and draw its options
+    from there instead of from the environment. Specify changes over the
+    command-line after this point or remove the configuration file.
+
+
+
+3. Playing Plutocracy
+=====================
+
+  Plutocracy is not yet playable!
+
+
+
+4. License and Copying
+======================
+
+  While the large part of Plutocracy is licensed under the GPL, there are some
+  exceptions for individual components.
+
+
+  4.1  GPL License
+  ----------------
+
+    Plutocracy (including both source code and media) is licensed under the
+    terms of the GNU General Public License (GPL) version 2 or (at your option)
+    any later version. There are some exceptions for specific files however
+    (see below).
+
+    The full text of the license may be found in the COPYING file.
+
+
+  4.2  GPL-Compatible Exceptions
+  ------------------------------
+
+    The following files are not licensed under the GPL, but can be freely
+    distributed. See the each individual file's copyright notice for specific
+    details:
+
+      vc8/glext.h (© 2007 The Khronos Group Inc)
+      gui/fonts/BLKCHCRY.TTF (public domain, Earl Allen and Doug Miles)
+      gui/fonts/SF ARchery Black.ttf (© 2001 ShyFonts Type Foundry)
+
+
+  4.3  CC License Exceptions
+  --------------------------
+
+    The following files are licensed under the CREATIVE COMMONS ATTRIBUTION-
+    SHAREALIKE 2.5 LICENSE. The full license text is contained in the file named
+    CC. Please read http://creativecommons.org/licenses/by-sa/2.5/ to learn
+    more about this license.
+
+    The following files are derived from files originally from the Tremulous
+    project, authored by Robin 'Overflow' Marshall, Mike 'Veda' McInnerney, and
+    Paul 'MoP' Greveson:
+
+      models/blender/granger.blend
+      models/test/granger.plum
+
+
+  4.4  Deja Vu Fonts
+  ------------------
+
+    The following files are excepted from the GPL license:
+
+      gui/fonts/DejaVuSans-Bold.ttf
+      gui/fonts/DejaVuSansMono-Bold.ttf
+
+    To see the full license for the DejaVu fonts, please see:
+
+      http://dejavu.sourceforge.net/wiki/index.php/License
+
+    Note that when packaged for a specific distribution, these files may already
+    be present on the system rather than come with the program.
+
+
+  4.5  SDL Notice
+  ---------------
+
+    Please include this notice with the SDL runtime environment. This library is
+    distributed under the terms of the GNU LGPL license:
+
+      http://www.gnu.org/copyleft/lesser.html
+
+    The source is available from the libraries page at the SDL website:
+
+      http://www.libsdl.org/
+
+
+  4.6  zlib Notice
+  ----------------
+
+    zlib is (C) 1995-2005 Jean-loup Gailly and Mark Adler
+
+    This software is provided 'as-is', without any express or implied
+    warranty.  In no event will the authors be held liable for any damages
+    arising from the use of this software.
+
+    Permission is granted to anyone to use this software for any purpose,
+    including commercial applications, and to alter it and redistribute it
+    freely, subject to the following restrictions:
+
+    1. The origin of this software must not be misrepresented; you must not
+       claim that you wrote the original software. If you use this software
+       in a product, an acknowledgment in the product documentation would be
+       appreciated but is not required.
+    2. Altered source versions must be plainly marked as such, and must not be
+       misrepresented as being the original software.
+    3. This notice may not be removed or altered from any source distribution.
+
+    Jean-loup Gailly        Mark Adler
+    jloup@gzip.org          madler@alumni.caltech.edu
+
+
+
+................................................................................
