@@ -711,8 +711,7 @@ const char *R_save_screenshot(void)
 
         /* Can't take two screenshots per frame */
         if (screenshot[0]) {
-                C_warning("Can't save '%s', screenshot '%s' queued",
-                          filename, screenshot);
+                C_warning("Can't save screenshot '%s' queued", screenshot);
                 return NULL;
         }
 

@@ -32,8 +32,9 @@
 #include "GL/glext.h"
 
 /* SDL */
-#include <SDL.h>
-#include <SDL_ttf.h>
+#include "SDL.h"
+#include "SDL_main.h"
+#include "SDL_ttf.h"
 
 /* libpng */
 #include <png.h>

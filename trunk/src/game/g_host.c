@@ -183,7 +183,7 @@ void G_host_game(void)
 \******************************************************************************/
 void G_update_host(void)
 {
-        if (n_client_id != N_HOST_CLIENT_ID)
+        if (n_client_id != N_HOST_CLIENT_ID || i_limbo)
                 return;
         N_poll_server();
 }

@@ -313,6 +313,8 @@ void G_process_click(int button)
 \******************************************************************************/
 void G_update_client(void)
 {
+        if (i_limbo)
+                return;
         G_update_ships();
 }
 
