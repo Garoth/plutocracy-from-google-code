@@ -21,7 +21,7 @@ float r_globe_radius;
 int r_tiles;
 
 /* Tile normal vectors */
-c_vec3_t r_tile_normals[R_TILES_MAX];
+r_tile_param_t r_tile_params[R_TILES_MAX];
 
 /* Globe tile vertices */
 r_globe_vertex_t r_globe_verts[R_TILES_MAX * 3];
@@ -372,7 +372,7 @@ static void smooth_normals(void)
                 /* Set the normal for all vertices in the ring */
                 j = r_globe_verts[i].next;
                 while (j != i) {
-                        vert_no = C_vec3_scalef(r_tile_normals[j / 3],
+                        vert_no = C_vec3_scalef(r_tile_params[j / 3].normal,
                                                 1.f - r_globe_smooth.value.f);
                         vert_no = C_vec3_add(vert_no, normal);
                         r_globe_verts[j].v.no = vert_no;
@@ -393,7 +393,7 @@ static int globe_smooth_update(c_var_t *var, c_var_value_t value)
                 smooth_normals();
         } else
                 for (i = 0; i < r_tiles * 3; i++)
-                        r_globe_verts[i].v.no = r_tile_normals[i / 3];
+                        r_globe_verts[i].v.no = r_tile_params[i / 3].normal;
         R_vbo_update(&r_globe_vbo);
         return TRUE;
 }
@@ -418,13 +418,13 @@ static int terrain_base(r_terrain_t terrain)
 /******************************************************************************\
  Selects a terrain index for a tile depending on its region.
 \******************************************************************************/
-static int get_tile_terrain(int tile, r_tile_t *tiles)
+static int get_tile_terrain(int tile)
 {
         int i, j, base, base_num, trans, terrain, vert_terrain[3], offset;
 
-        base = terrain_base(tiles[tile].terrain);
+        base = terrain_base(r_tile_params[tile].terrain);
         if (base >= R_T_BASES - 1)
-                return tiles[tile].terrain;
+                return r_tile_params[tile].terrain;
 
         /* If we are not using transition tiles, just return the base */
         if (!r_globe_transitions.value.n)
@@ -437,7 +437,7 @@ static int get_tile_terrain(int tile, r_tile_t *tiles)
                 j = r_globe_verts[3 * tile + i].next;
                 vert_terrain[i] = base;
                 while (j != 3 * tile + i) {
-                        terrain = terrain_base(tiles[j / 3].terrain);
+                        terrain = terrain_base(r_tile_params[j / 3].terrain);
                         if (terrain > vert_terrain[i])
                                 trans = vert_terrain[i] = terrain;
                         j = r_globe_verts[j].next;
@@ -446,7 +446,7 @@ static int get_tile_terrain(int tile, r_tile_t *tiles)
                         base_num++;
         }
         if (base_num > 2)
-                return tiles[tile].terrain;
+                return r_tile_params[tile].terrain;
 
         /* Swap the base and single terrain if the base only appears once */
         offset = 2 * base;
@@ -472,9 +472,10 @@ static int get_tile_terrain(int tile, r_tile_t *tiles)
 }
 
 /******************************************************************************\
- Adjusts globe verices to show the tile's height.
+ Adjusts globe vertices to show the tile's height. Updates the globe with data
+ from the [r_tile_params] array.
 \******************************************************************************/
-void R_configure_globe(r_tile_t *tiles)
+void R_configure_globe(void)
 {
         c_vec3_t ab, ac;
         c_vec2_t tile;
@@ -491,10 +492,10 @@ void R_configure_globe(r_tile_t *tiles)
                              R_TILE_SHEET_H / 2) / r_terrain_tex->surface->h;
 
         for (i = 0; i < r_tiles; i++) {
-                set_tile_height(i, tiles[i].height);
+                set_tile_height(i, r_tile_params[i].height);
 
                 /* Tile terrain texture */
-                terrain = get_tile_terrain(i, tiles);
+                terrain = get_tile_terrain(i);
                 ty = terrain / R_TILE_SHEET_W;
                 tx = terrain - ty * R_TILE_SHEET_W;
                 left = tx / 2 * tile.x + C_SIN_60 * R_TILE_BORDER;
@@ -525,10 +526,10 @@ void R_configure_globe(r_tile_t *tiles)
                                 r_globe_verts[3 * i + 1].v.co);
                 ac = C_vec3_sub(r_globe_verts[3 * i].v.co,
                                 r_globe_verts[3 * i + 2].v.co);
-                r_tile_normals[i] = C_vec3_norm(C_vec3_cross(ab, ac));
-                r_globe_verts[3 * i].v.no = r_tile_normals[i];
-                r_globe_verts[3 * i + 1].v.no = r_tile_normals[i];
-                r_globe_verts[3 * i + 2].v.no = r_tile_normals[i];
+                r_tile_params[i].normal = C_vec3_norm(C_vec3_cross(ab, ac));
+                r_globe_verts[3 * i].v.no = r_tile_params[i].normal;
+                r_globe_verts[3 * i + 1].v.no = r_tile_params[i].normal;
+                r_globe_verts[3 * i + 2].v.no = r_tile_params[i].normal;
         }
         smooth_normals();
 
@@ -541,5 +542,46 @@ void R_configure_globe(r_tile_t *tiles)
         R_vbo_init(&r_globe_vbo, &r_globe_verts[0].v,
                    3 * r_tiles, sizeof (*r_globe_verts),
                    R_VERTEX3_FORMAT, NULL, 0);
+}
+
+/******************************************************************************\
+ Returns TRUE if [terrain] is a ship-passable type.
+\******************************************************************************/
+int R_water_terrain(int terrain)
+{
+        return terrain == R_T_WATER || terrain == R_T_SHALLOW;
+}
+
+/******************************************************************************\
+ Returns TRUE if there is a land bridge between [tile_a] and [tile_b].
+\******************************************************************************/
+int R_land_bridge(int tile_a, int tile_b)
+{
+        int i, vert, dir;
+
+        /* Find which side the second tile is on */
+        for (dir = 0; ; dir++) {
+                if (dir >= 3)
+                        C_error("Tiles %d and %d are not neighbors",
+                                tile_a, tile_b);
+                if (r_globe_verts[3 * tile_a + dir].next / 3 == tile_b)
+                        break;
+        }
+
+        /* Check right vertex for land */
+        vert = 3 * tile_a + dir;
+        for (i = r_globe_verts[vert].next; i != vert;
+             i = r_globe_verts[i].next)
+                if (!R_water_terrain(r_tile_params[i / 3].terrain))
+                        goto next;
+        return FALSE;
+
+next:   /* Check left vertex for land */
+        vert = face_next(3 * tile_a + dir, 1);
+        for (i = r_globe_verts[vert].next; i != vert;
+             i = r_globe_verts[i].next)
+                if (!R_water_terrain(r_tile_params[i / 3].terrain))
+                        return TRUE;
+        return FALSE;
 }
 

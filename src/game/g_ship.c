@@ -65,8 +65,7 @@ bool G_open_tile(int tile, int ship)
 {
         return (g_tiles[tile].ship < 0 ||
                 (ship >= 0 && g_tiles[tile].ship == ship)) &&
-               (g_tiles[tile].render->terrain == R_T_SHALLOW ||
-                g_tiles[tile].render->terrain == R_T_WATER);
+               R_water_terrain(r_tile_params[tile].terrain);
 }
 
 /******************************************************************************\
@@ -209,7 +208,7 @@ static int farthest_path_tile(int ship)
                         return tile;
                 R_get_tile_neighbors(tile, neighbors);
                 next = neighbors[next - 1];
-                if (!G_open_tile(next, ship))
+                if (!G_open_tile(next, ship) || R_land_bridge(tile, next))
                         return tile;
         }
 }
@@ -265,7 +264,8 @@ void G_ship_path(int ship, int target)
                         stamp = g_tiles[neighbors[i]].search_stamp;
                         C_assert(stamp <= search_stamp);
                         if (stamp == search_stamp ||
-                            !G_open_tile(neighbors[i], ship))
+                            !G_open_tile(neighbors[i], ship) ||
+                            R_land_bridge(node.tile, neighbors[i]))
                                 continue;
                         g_tiles[neighbors[i]].search_stamp = search_stamp;
 
@@ -351,7 +351,7 @@ static void position_ship(int ship)
 
         /* If the ship is not moving, just place it on the tile */
         if (g_ships[ship].rear_tile < 0) {
-                model->normal = r_tile_normals[new_tile];
+                model->normal = r_tile_params[new_tile].normal;
                 model->origin = g_tiles[new_tile].origin;
         }
 
@@ -361,9 +361,9 @@ static void position_ship(int ship)
                 float lerp;
 
                 /* Interpolate normal */
-                model->normal = C_vec3_lerp(r_tile_normals[old_tile],
+                model->normal = C_vec3_lerp(r_tile_params[old_tile].normal,
                                             g_ships[ship].progress,
-                                            r_tile_normals[new_tile]);
+                                            r_tile_params[new_tile].normal);
                 model->normal = C_vec3_norm(model->normal);
 
                 /* Interpolate origin */
