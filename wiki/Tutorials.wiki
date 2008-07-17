@@ -1,4 +1,5 @@
 ﻿#summary Tutorials list showing some of the ideas in Plutocracy.
+#labels Featured
 
 = _Tutorials Index_ =
 
