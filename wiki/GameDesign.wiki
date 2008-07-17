@@ -1,4 +1,5 @@
 #summary High-level game-design document.
+#labels Featured
 
 = Nations =
 At the start of a game, each player chooses one *nation* (or pirate) to affilite with. There is a fixed number of nations, each one has a unique color. Nations names are configured by the game server and have no nation has special advantages over another. National affiliation can be changed at any time by any player. The player must pay the minimum fee for citizenship, scaled by the player's reputation against that nation. There is no fee for going pirate. All territory rented from and property owned on now hostile territory will be lost without compensation by the change.
