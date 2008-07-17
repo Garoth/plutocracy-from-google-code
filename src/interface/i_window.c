@@ -83,6 +83,10 @@ static int window_event(i_window_t *window, i_event_t event)
                 window->hanger.origin.y = window->widget.origin.y +
                                           window->widget.size.y;
                 break;
+        case I_EV_MOUSE_DOWN:
+                if (i_mouse == SDL_BUTTON_RIGHT && window->auto_hide)
+                        I_widget_event(&window->widget, I_EV_HIDE);
+                break;
         case I_EV_CLEANUP:
                 R_window_cleanup(&window->window);
                 R_sprite_cleanup(&window->hanger);
@@ -240,6 +244,7 @@ void I_toolbar_add_button(i_toolbar_t *toolbar, const char *icon,
         window = toolbar->windows + toolbar->children;
         init_func(window);
         window->widget.shown = FALSE;
+        window->auto_hide = TRUE;
         window->hanger_align = &button->widget;
         I_widget_add(&i_root, &window->widget);
 

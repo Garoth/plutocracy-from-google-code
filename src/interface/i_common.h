@@ -118,7 +118,7 @@ typedef struct i_window {
         r_sprite_t hanger;
         c_vec2_t natural_size;
         float hanger_x;
-        bool hanger_shown, decorated;
+        bool hanger_shown, decorated, auto_hide;
 } i_window_t;
 
 /* Button type */
