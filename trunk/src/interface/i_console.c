@@ -232,7 +232,7 @@ static void log_handler(c_log_level_t level, int margin, const char *string)
 /******************************************************************************\
  Initializes console window widgets on the given window.
 \******************************************************************************/
-void I_console_init(i_window_t *window)
+void I_init_console(i_window_t *window)
 {
         I_window_init(window);
         window->natural_size = C_vec2(480.f, 240.f);

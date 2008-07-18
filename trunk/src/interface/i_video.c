@@ -27,7 +27,7 @@ static const char *list_bool[] = {"No", "Yes", NULL},
                   *list_numeric[] = {"0.50", "0.75", "1.00", "1.25",
                                      "1.50", "1.75", "2.00", NULL},
                   *list_color_bits[] = {"16", "32", NULL},
-                  *list_multisample[] = {"No", "2", "4", NULL};
+                  *list_multisample[] = {"Off", "2x", "4x", NULL};
 
 static i_label_t label;
 static i_button_t apply_button;
@@ -151,7 +151,7 @@ static void populate_modes(void)
 /******************************************************************************\
  Initializes video window widgets on the given window.
 \******************************************************************************/
-void I_video_init(i_window_t *window)
+void I_init_video(i_window_t *window)
 {
         int opt;
 

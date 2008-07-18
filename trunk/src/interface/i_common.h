@@ -194,6 +194,14 @@ typedef struct i_toolbar {
         bool right, children;
 } i_toolbar_t;
 
+/* Box widget used for aligning other widgets */
+typedef struct i_box {
+        i_widget_t widget;
+        i_fit_t fit;
+        i_pack_t pack_children;
+        float width;
+} i_box_t;
+
 /* i_button.c */
 int I_button_event(i_button_t *, i_event_t);
 void I_button_init(i_button_t *, const char *icon, const char *text,
@@ -203,8 +211,8 @@ void I_button_configure(i_button_t *, const char *icon, const char *text,
 void I_theme_buttons(void);
 
 /* i_console.c */
+void I_init_console(i_window_t *);
 void I_theme_scrollbacks(void);
-void I_console_init(i_window_t *);
 
 /* i_entry.c */
 int I_entry_event(i_entry_t *, i_event_t);
@@ -213,7 +221,7 @@ void I_entry_configure(i_entry_t *, const char *);
 void I_theme_entries(void);
 
 /* i_game.c */
-void I_game_init(i_window_t *);
+void I_init_game(i_window_t *);
 
 /* i_globe.c */
 void I_globe_event(i_event_t);
@@ -226,10 +234,12 @@ i_label_t *I_label_new(const char *);
 /* i_layout.c */
 void I_theme_texture(r_texture_t **, const char *name);
 
+extern i_toolbar_t i_right_toolbar;
 extern i_widget_t i_root;
+extern int i_ship_button;
 
 /* i_nations.c */
-void I_nations_init(i_window_t *);
+void I_init_nations(i_window_t *);
 
 /* i_ring.c */
 void I_close_ring(void);
@@ -241,14 +251,18 @@ void I_theme_ring(void);
 void I_select_init(i_select_t *, const char *label, const char **list,
                    int initial);
 
+/* i_ship.c */
+void I_init_ship(i_window_t *);
+
 /* i_variables.c */
 extern c_var_t i_border, i_color, i_color_alt, i_debug, i_fade, i_scroll_speed,
                i_shadow, i_test_globe, i_theme, i_zoom_speed;
 
 /* i_video.c */
-void I_video_init(i_window_t *);
+void I_init_video(i_window_t *);
 
 /* i_widgets.c */
+void I_box_init(i_box_t *, i_pack_t, float width);
 const char *I_event_string(i_event_t);
 void I_widget_add(i_widget_t *parent, i_widget_t *child);
 c_vec2_t I_widget_bounds(const i_widget_t *, i_pack_t);
@@ -270,8 +284,9 @@ extern int i_key, i_key_shift, i_key_unicode, i_mouse_x, i_mouse_y, i_mouse;
 void I_init_popup(void);
 void I_update_popup(void);
 void I_theme_windows(void);
-void I_toolbar_add_button(i_toolbar_t *, const char *icon,
-                          i_callback_f init_func);
+int I_toolbar_add_button(i_toolbar_t *, const char *icon,
+                         i_callback_f init_func);
+void I_toolbar_enable(i_toolbar_t *, int button, bool enable);
 void I_toolbar_init(i_toolbar_t *, int right);
 void I_window_init(i_window_t *);
 

@@ -58,10 +58,8 @@ typedef struct g_client {
 void G_client_callback(int client, n_event_t);
 void G_select_tile(int tile);
 
-extern int g_selected_ship, g_selected_tile;
-
-/* g_host.c */
 extern g_client_t g_clients[N_CLIENTS_MAX];
+extern int g_selected_ship, g_selected_tile;
 
 /* g_globe.c */
 void G_cleanup_globe(void);

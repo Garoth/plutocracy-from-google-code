@@ -165,6 +165,14 @@ int I_toolbar_event(i_toolbar_t *toolbar, i_event_t event)
                 toolbar->widget.size = toolbar->window.widget.size;
                 toolbar_position(toolbar);
                 return FALSE;
+        case I_EV_MOUSE_DOWN:
+
+                /* Right-clicking the toolbar closes the current window */
+                if (i_mouse == SDL_BUTTON_RIGHT && toolbar->open_window)
+                        I_widget_event(&toolbar->open_window->widget,
+                                       I_EV_HIDE);
+
+                break;
         case I_EV_HIDE:
                 for (i = 0; i < toolbar->children; i++)
                         I_widget_event(&toolbar->windows[i].widget, I_EV_HIDE);
@@ -217,10 +225,10 @@ static void toolbar_button_click(i_button_t *button)
  Adds a button to a toolbar widget. The window opened by the icon button is
  initialized with [init_func]. This function should set the window's size as
  the root window does not pack child windows. The window's origin is controlled
- by the toolbar.
+ by the toolbar. Returns the new button's index.
 \******************************************************************************/
-void I_toolbar_add_button(i_toolbar_t *toolbar, const char *icon,
-                          i_callback_f init_func)
+int I_toolbar_add_button(i_toolbar_t *toolbar, const char *icon,
+                         i_callback_f init_func)
 {
         i_button_t *button;
         i_window_t *window;
@@ -248,7 +256,26 @@ void I_toolbar_add_button(i_toolbar_t *toolbar, const char *icon,
         window->hanger_align = &button->widget;
         I_widget_add(&i_root, &window->widget);
 
-        toolbar->children++;
+        return toolbar->children++;
+}
+
+/******************************************************************************\
+ Enable or disable a toolbar's button.
+\******************************************************************************/
+void I_toolbar_enable(i_toolbar_t *toolbar, int button, bool enable)
+{
+        C_assert(button >= 0 && button < toolbar->children);
+
+        /* Enable the button */
+        if (enable) {
+                if (toolbar->buttons[button].widget.state == I_WS_DISABLED)
+                        toolbar->buttons[button].widget.state = I_WS_READY;
+                return;
+        }
+
+        /* Disable the button and hide its window */
+        toolbar->buttons[button].widget.state = I_WS_DISABLED;
+        I_widget_event(&toolbar->windows[button].widget, I_EV_HIDE);
 }
 
 /******************************************************************************\
@@ -298,6 +325,10 @@ static int popup_event(i_widget_t *widget, i_event_t event)
                 break;
         case I_EV_MOUSE_OUT:
                 popup_wait = FALSE;
+                break;
+        case I_EV_MOUSE_DOWN:
+                if (i_mouse == SDL_BUTTON_RIGHT)
+                        I_widget_event(&popup_widget, I_EV_HIDE);
                 break;
         case I_EV_CLEANUP:
                 R_window_cleanup(&popup_window);

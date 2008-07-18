@@ -41,7 +41,7 @@ void I_select_nation(int nation)
 /******************************************************************************\
  Initializes nations window widgets on the given window.
 \******************************************************************************/
-void I_nations_init(i_window_t *window)
+void I_init_nations(i_window_t *window)
 {
         const char *long_name;
         int i;

@@ -16,51 +16,6 @@
 
 #include "g_common.h"
 
-/* Array of connected clients */
-g_client_t g_clients[N_CLIENTS_MAX];
-
-/* Array of game nations */
-g_nation_t g_nations[G_NATION_NAMES];
-
-/******************************************************************************\
- Initialize game structures before play.
-\******************************************************************************/
-void G_init(void)
-{
-        C_status("Initializing game elements");
-        G_init_ships();
-
-        /* Setup nations */
-        g_nations[G_NN_RED].short_name = "red";
-        g_nations[G_NN_RED].long_name = C_str("g-nation-red", "Ruby");
-        C_var_update_data(g_nation_colors + G_NN_RED, C_color_update,
-                          &g_nations[G_NN_RED].color);
-        g_nations[G_NN_GREEN].short_name = "green";
-        g_nations[G_NN_GREEN].long_name = C_str("g-nation-green", "Emerald");
-        C_var_update_data(g_nation_colors + G_NN_GREEN, C_color_update,
-                          &g_nations[G_NN_GREEN].color);
-        g_nations[G_NN_BLUE].short_name = "blue";
-        g_nations[G_NN_BLUE].long_name = C_str("g-nation-blue", "Sapphire");
-        C_var_update_data(g_nation_colors + G_NN_BLUE, C_color_update,
-                          &g_nations[G_NN_BLUE].color);
-        g_nations[G_NN_PIRATE].short_name = "pirate";
-        g_nations[G_NN_PIRATE].long_name = C_str("g-nation-pirate", "Pirate");
-        C_var_update_data(g_nation_colors + G_NN_PIRATE, C_color_update,
-                          &g_nations[G_NN_PIRATE].color);
-
-        /* Prepare initial state */
-        G_init_globe();
-}
-
-/******************************************************************************\
- Cleanup game structures.
-\******************************************************************************/
-void G_cleanup(void)
-{
-        G_cleanup_globe();
-        G_cleanup_ships();
-}
-
 /******************************************************************************\
  If a client has sent garbage data, call this to kick them out.
 \******************************************************************************/
@@ -91,9 +46,13 @@ static void server_affiliate(int client)
         /* If this client just joined a nation for the first time,
            try to give them a starter ship */
         tile = -1;
-        if (old == G_NN_NONE)
-                if ((ship = G_spawn_ship(client, -1, G_SN_SLOOP, -1)) >= 0)
-                        tile = g_ships[ship].tile;
+        if (old == G_NN_NONE &&
+            (ship = G_spawn_ship(client, -1, G_SN_SLOOP, -1)) >= 0) {
+                tile = g_ships[ship].tile;
+                g_ships[ship].cargo.amounts[G_CT_GOLD] = 1000;
+                g_ships[ship].cargo.amounts[G_CT_CREW] = 10;
+                g_ships[ship].cargo.amounts[G_CT_RATIONS] = 10;
+        }
 
         N_send(N_BROADCAST_ID, "1112", G_SM_AFFILIATE, client, nation, tile);
 }
