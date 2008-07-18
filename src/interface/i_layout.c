@@ -31,7 +31,13 @@ i_widget_t i_root;
 /* TRUE if the interface is in limbo mode */
 int i_limbo;
 
-static i_toolbar_t left_toolbar, right_toolbar;
+/* Index of the ship button on the right toolbar */
+int i_ship_button;
+
+/* Right toolbar */
+i_toolbar_t i_right_toolbar;
+
+static i_toolbar_t left_toolbar;
 static r_sprite_t limbo_logo;
 static float limbo_fade;
 static int layout_frame, cleanup_theme;
@@ -130,10 +136,10 @@ static void theme_configure(void)
         toolbar_y = r_height_2d - toolbar_height - i_border.value.n;
         left_toolbar.widget.size = C_vec2(0.f, toolbar_height);
         left_toolbar.widget.origin = C_vec2((float)i_border.value.n, toolbar_y);
-        right_toolbar.widget.size = C_vec2(0.f, toolbar_height);
-        right_toolbar.widget.origin = C_vec2((float)(r_width_2d -
-                                                     i_border.value.n),
-                                             toolbar_y);
+        i_right_toolbar.widget.size = C_vec2(0.f, toolbar_height);
+        i_right_toolbar.widget.origin = C_vec2((float)(r_width_2d -
+                                                       i_border.value.n),
+                                               toolbar_y);
 
         theme_widgets();
 }
@@ -245,7 +251,7 @@ void I_theme_texture(r_texture_t **ppt, const char *name)
 void I_leave_limbo(void)
 {
         i_limbo = FALSE;
-        I_widget_event(&right_toolbar.widget, I_EV_SHOW);
+        I_widget_event(&i_right_toolbar.widget, I_EV_SHOW);
 }
 
 /******************************************************************************\
@@ -254,7 +260,7 @@ void I_leave_limbo(void)
 void I_enter_limbo(void)
 {
         i_limbo = TRUE;
-        I_widget_event(&right_toolbar.widget, I_EV_HIDE);
+        I_widget_event(&i_right_toolbar.widget, I_EV_HIDE);
 }
 
 /******************************************************************************\
@@ -284,18 +290,22 @@ void I_init(void)
         /* Left toolbar */
         I_toolbar_init(&left_toolbar, FALSE);
         I_toolbar_add_button(&left_toolbar, "gui/icons/game.png",
-                             (i_callback_f)I_game_init);
+                             (i_callback_f)I_init_game);
         I_toolbar_add_button(&left_toolbar, "gui/icons/console.png",
-                             (i_callback_f)I_console_init);
+                             (i_callback_f)I_init_console);
         I_toolbar_add_button(&left_toolbar, "gui/icons/video.png",
-                             (i_callback_f)I_video_init);
+                             (i_callback_f)I_init_video);
         I_widget_add(&i_root, &left_toolbar.widget);
 
         /* Right toolbar */
-        I_toolbar_init(&right_toolbar, TRUE);
-        I_toolbar_add_button(&right_toolbar, "gui/icons/nations.png",
-                             (i_callback_f)I_nations_init);
-        I_widget_add(&i_root, &right_toolbar.widget);
+        I_toolbar_init(&i_right_toolbar, TRUE);
+        I_toolbar_add_button(&i_right_toolbar, "gui/icons/nations.png",
+                             (i_callback_f)I_init_nations);
+        i_ship_button = I_toolbar_add_button(&i_right_toolbar,
+                                             "gui/icons/ship.png",
+                                             (i_callback_f)I_init_ship);
+        I_widget_add(&i_root, &i_right_toolbar.widget);
+        i_right_toolbar.buttons[i_ship_button].widget.state = I_WS_DISABLED;
 
         /* Theme can now be modified dynamically */
         theme_configure();

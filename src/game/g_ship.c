@@ -49,6 +49,7 @@ void G_init_ships(void)
         pc->model_path = "models/ship/sloop.plum";
         pc->speed = 1.f;
         pc->health = 100;
+        pc->cargo = 100;
 }
 
 /******************************************************************************\
@@ -93,16 +94,18 @@ int G_spawn_ship(int client, int tile, g_ship_name_t name, int index)
 
         /* If we are to spawn the ship anywhere, pick a random tile */
         if (tile < 0) {
-                int i;
+                int start;
 
-                /* FIXME: This isn't a great way to pick a random open tile and
-                          it doesn't guarantee success */
-                tile = C_rand() % r_tiles;
-                for (i = 0; !G_open_tile(tile, -1); i++) {
-                        if (i >= 100)
-                                return -1;
-                        tile = C_rand() % r_tiles;
-                }
+                start = C_rand() % r_tiles;
+                for (tile = start + 1; tile < r_tiles; tile++)
+                        if (G_open_tile(tile, -1))
+                                goto init;
+                for (tile = 0; tile <= start; tile++)
+                        if (G_open_tile(tile, -1))
+                                goto init;
+
+                /* If this happens, the globe is completely full! */
+                return -1;
         }
 
         /* Find an available tile to start the ship on */
@@ -118,7 +121,7 @@ int G_spawn_ship(int client, int tile, g_ship_name_t name, int index)
                 tile = neighbors[i];
         }
 
-        /* Initialize ship structure */
+init:   /* Initialize ship structure */
         C_zero(g_ships + index);
         g_ships[index].in_use = TRUE;
         g_ships[index].class_name = name;
@@ -149,6 +152,8 @@ void G_render_ships(void)
         float armor, health, health_max;
         int i;
 
+        if (i_limbo)
+                return;
         for (i = 0; i < G_SHIPS_MAX; i++) {
                 ship = g_ships + i;
                 if (!ship->in_use)

@@ -120,7 +120,7 @@
 #include "c_vectors.h"
 
 /* Log files are wrapped to this many columns */
-#define C_LOG_WRAP_COLS 80
+#define C_LOG_WRAP_COLS 79
 
 /* Define a compact boolean type. This actually does not make much of an impact
    as far as memory usage is concerned but is helpful to denote usage. */

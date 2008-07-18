@@ -16,6 +16,10 @@
 
 #include "r_common.h"
 
+/* The wide range of 2D scaling can shrink fonts too small to be viewable,
+   so we need to set a minimum (in points). */
+#define FONT_SIZE_MIN 7
+
 /* Font configuration variables */
 extern c_var_t r_font_console, r_font_console_pt, r_font_gui, r_font_gui_pt,
                r_font_title, r_font_title_pt;
@@ -451,7 +455,7 @@ int R_font_line_skip(r_font_t font)
 }
 
 /******************************************************************************\
- Returns distance from start of one line to the start of the next.
+ Returns the bounding box of the rendered text.
 \******************************************************************************/
 c_vec2_t R_font_size(r_font_t font, const char *text)
 {
@@ -492,8 +496,8 @@ static void load_font(r_font_t font, c_var_t *var, int size)
         int points;
 
         points = (int)ceilf(size * r_pixel_scale.value.f);
-        if (points < R_FONT_SIZE_MIN)
-                points = R_FONT_SIZE_MIN;
+        if (points < FONT_SIZE_MIN)
+                points = FONT_SIZE_MIN;
         C_zero(fonts + font);
         fonts[font].ttf_font = TTF_OpenFont(var->value.s, points);
         if (!fonts[font].ttf_font) {

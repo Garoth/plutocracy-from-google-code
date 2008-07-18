@@ -61,7 +61,7 @@ static void quit_button_clicked(i_button_t *button)
 /******************************************************************************\
  Initializes game window widgets on the given window.
 \******************************************************************************/
-void I_game_init(i_window_t *window)
+void I_init_game(i_window_t *window)
 {
         I_window_init(window);
         window->natural_size = C_vec2(200.f, 0.f);

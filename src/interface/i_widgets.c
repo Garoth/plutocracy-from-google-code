@@ -156,18 +156,15 @@ static void expand_children(i_widget_t *widget, c_vec2_t size, int expanders)
 
         size = C_vec2_divf(size, (float)expanders);
         offset = C_vec2(0.f, 0.f);
-        child = widget->child;
-        while (child) {
-                if (!child->expand) {
+        for (child = widget->child; child; child = child->next) {
+                if (!child->expand || !child->shown) {
                         I_widget_move(child, C_vec2_add(child->origin, offset));
-                        child = child->next;
                         continue;
                 }
                 child->size = C_vec2_add(child->size, size);
                 child->origin = C_vec2_add(child->origin, offset);
                 I_widget_event(child, I_EV_CONFIGURE);
                 offset = C_vec2_add(offset, size);
-                child = child->next;
         }
 }
 
@@ -186,9 +183,16 @@ void I_widget_pack(i_widget_t *widget, i_pack_t pack, i_fit_t fit)
         origin = C_vec2_addf(widget->origin,
                              widget->padding * i_border.value.n);
         expanders = 0;
-        child = widget->child;
-        while (child) {
+        for (child = widget->child; child; child = child->next) {
                 float margin_front, margin_rear;
+
+                /* Skip invisible children */
+                if (!child->shown) {
+                        child->origin = origin;
+                        child->size = C_vec2(0.f, 0.f);
+                        I_widget_event(child, I_EV_CONFIGURE);
+                        continue;
+                }
 
                 margin_front = child->margin_front * i_border.value.n;
                 margin_rear = child->margin_rear * i_border.value.n;
@@ -197,19 +201,18 @@ void I_widget_pack(i_widget_t *widget, i_pack_t pack, i_fit_t fit)
                         child->origin = origin;
                         child->size = C_vec2(0.f, size.y);
                         I_widget_event(child, I_EV_CONFIGURE);
-                        origin.x += child->size.x + margin_front + margin_rear;
+                        origin.x += child->size.x + margin_rear;
                         size.x -= child->size.x + margin_front + margin_rear;
                 } else if (pack == I_PACK_V) {
-                        origin.y += child->margin_front * i_border.value.n;
+                        origin.y += margin_front;
                         child->origin = origin;
                         child->size = C_vec2(size.x, 0.f);
                         I_widget_event(child, I_EV_CONFIGURE);
-                        origin.y += child->size.y + margin_front + margin_rear;
+                        origin.y += child->size.y + margin_rear;
                         size.y -= child->size.y + margin_front + margin_rear;
                 }
                 if (child->expand)
                         expanders++;
-                child = child->next;
         }
 
         /* If there is left over space and we are not collapsing, assign it
@@ -681,5 +684,37 @@ void I_dispatch(const SDL_Event *ev)
         default:
                 break;
         }
+}
+
+/******************************************************************************\
+ Box widget event function.
+\******************************************************************************/
+int I_box_event(i_box_t *box, i_event_t event)
+{
+        if (event != I_EV_CONFIGURE)
+                return TRUE;
+        if (box->pack_children == I_PACK_H)
+                box->widget.size.y = box->width;
+        else if (box->pack_children == I_PACK_V)
+                box->widget.size.x = box->width;
+        I_widget_pack(&box->widget, box->pack_children, box->fit);
+        box->widget.size = I_widget_child_bounds(&box->widget);
+        return FALSE;
+}
+
+/******************************************************************************\
+ Initializes a box widget.
+\******************************************************************************/
+void I_box_init(i_box_t *box, i_pack_t pack, float width)
+{
+        if (!box)
+                return;
+        C_zero(box);
+        I_widget_init(&box->widget, "Box");
+        box->widget.event_func = (i_event_f)I_box_event;
+        box->widget.state = I_WS_READY;
+        box->pack_children = pack;
+        box->fit = I_FIT_NONE;
+        box->width = width;
 }
 

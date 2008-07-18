@@ -18,10 +18,6 @@
 #define R_PIXEL_SCALE_MIN 0.5f
 #define R_PIXEL_SCALE_MAX 2.0f
 
-/* The wide range of 2D scaling can shrink fonts too small to be viewable,
-   so we need to set a minimum (in points). */
-#define R_FONT_SIZE_MIN 10
-
 /* Ranges for zooming in and out. Maximum zoom distance is a scale value of
    the globe radius. */
 #define R_ZOOM_MIN 8.f

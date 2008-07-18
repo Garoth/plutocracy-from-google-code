@@ -16,7 +16,107 @@
    invalid selection. */
 int g_selected_tile, g_selected_ship;
 
+/* Array of connected clients */
+g_client_t g_clients[N_CLIENTS_MAX];
+
+/* Array of game nations */
+g_nation_t g_nations[G_NATION_NAMES];
+
+/* Array of cargo names */
+const char *g_cargo_names[G_CARGO_TYPES];
+
 static bool ring_valid;
+
+/******************************************************************************\
+ Initialize game structures before play.
+\******************************************************************************/
+void G_init(void)
+{
+        C_status("Initializing game elements");
+        G_init_ships();
+
+        /* Setup nations */
+        g_nations[G_NN_RED].short_name = "red";
+        g_nations[G_NN_RED].long_name = C_str("g-nation-red", "Ruby");
+        C_var_update_data(g_nation_colors + G_NN_RED, C_color_update,
+                          &g_nations[G_NN_RED].color);
+        g_nations[G_NN_GREEN].short_name = "green";
+        g_nations[G_NN_GREEN].long_name = C_str("g-nation-green", "Emerald");
+        C_var_update_data(g_nation_colors + G_NN_GREEN, C_color_update,
+                          &g_nations[G_NN_GREEN].color);
+        g_nations[G_NN_BLUE].short_name = "blue";
+        g_nations[G_NN_BLUE].long_name = C_str("g-nation-blue", "Sapphire");
+        C_var_update_data(g_nation_colors + G_NN_BLUE, C_color_update,
+                          &g_nations[G_NN_BLUE].color);
+        g_nations[G_NN_PIRATE].short_name = "pirate";
+        g_nations[G_NN_PIRATE].long_name = C_str("g-nation-pirate", "Pirate");
+        C_var_update_data(g_nation_colors + G_NN_PIRATE, C_color_update,
+                          &g_nations[G_NN_PIRATE].color);
+
+        /* Special cargo */
+        g_cargo_names[G_CT_GOLD] = C_str("g-cargo-gold", "Gold");
+        g_cargo_names[G_CT_CREW] = C_str("g-cargo-crew", "Crew");
+
+        /* Food cargo */
+        g_cargo_names[G_CT_RATIONS] = C_str("g-cargo-rations", "Rations");
+        g_cargo_names[G_CT_BREAD] = C_str("g-cargo-bread", "Bread");
+        g_cargo_names[G_CT_FISH] = C_str("g-cargo-fish", "Fish");
+        g_cargo_names[G_CT_FRUIT] = C_str("g-cargo-fruit", "Fruit");
+
+        /* Raw material cargo */
+        g_cargo_names[G_CT_GRAIN] = C_str("g-cargo-grain", "Grain");
+        g_cargo_names[G_CT_COTTON] = C_str("g-cargo-cotton", "Cotton");
+        g_cargo_names[G_CT_LUMBER] = C_str("g-cargo-lumber", "Lumber");
+        g_cargo_names[G_CT_IRON] = C_str("g-cargo-iron", "Iron");
+        g_cargo_names[G_CT_STEEL] = C_str("g-cargo-steel", "Steel");
+        g_cargo_names[G_CT_GEMSTONE] = C_str("g-cargo-gemstone", "Gemstone");
+        g_cargo_names[G_CT_SULFUR] = C_str("g-cargo-sulfur", "Sulfur");
+        g_cargo_names[G_CT_FERTILIZER] = C_str("g-cargo-fertilizer",
+                                               "Fertilizer");
+        /* Luxury cargo */
+        g_cargo_names[G_CT_JEWELRY] = C_str("g-cargo-jewelry", "Jewelry");
+        g_cargo_names[G_CT_RUM] = C_str("g-cargo-rum", "Rum");
+        g_cargo_names[G_CT_TEXTILES] = C_str("g-cargo-textiles", "Textiles");
+        g_cargo_names[G_CT_FURNITURE] = C_str("g-cargo-furniture", "Furniture");
+        g_cargo_names[G_CT_SUGAR] = C_str("g-cargo-sugar", "Sugar");
+
+        /* Equipment cargo */
+        g_cargo_names[G_CT_ARMOR] = C_str("g-cargo-armor", "Armor Plate");
+        g_cargo_names[G_CT_CANNON] = C_str("g-cargo-cannon", "Cannon");
+        g_cargo_names[G_CT_CHAINSHOT] = C_str("g-cargo-chainshot", "Chainshot");
+        g_cargo_names[G_CT_GRAPESHOT] = C_str("g-cargo-grapeshot", "Grapeshot");
+        g_cargo_names[G_CT_ROUNDSHOT] = C_str("g-cargo-roundshot", "Roundshot");
+        g_cargo_names[G_CT_SAILS] = C_str("g-cargo-sails", "Sails");
+
+        /* Prepare initial state */
+        G_init_globe();
+}
+
+/******************************************************************************\
+ Cleanup game structures.
+\******************************************************************************/
+void G_cleanup(void)
+{
+        G_cleanup_globe();
+        G_cleanup_ships();
+}
+
+/******************************************************************************\
+ Returns the amount of space the given cargo manifest contains.
+\******************************************************************************/
+int G_cargo_space(const g_cargo_t *cargo)
+{
+        int i, space;
+
+        space = 0;
+        for (i = 0; i < G_CARGO_TYPES; i++)
+                space += cargo->amounts[i];
+
+        /* Gold is special */
+        space += cargo->amounts[G_CT_GOLD] / 100 - cargo->amounts[G_CT_GOLD];
+
+        return space;
+}
 
 /******************************************************************************\
  Disconnect if the server has sent corrupted data.
@@ -250,6 +350,25 @@ static void test_ring_callback(i_ring_icon_t icon)
 }
 
 /******************************************************************************\
+ Select a ship. Pass a negative [index] to deselect.
+\******************************************************************************/
+static void select_ship(int index)
+{
+        bool own;
+
+        if (g_selected_ship == index)
+                return;
+        g_selected_ship = index;
+        own = FALSE;
+        if (index >= 0) {
+                R_select_path(g_ships[index].tile, g_ships[index].path);
+                own = g_ships[index].client == n_client_id;
+        } else
+                R_select_path(-1, NULL);
+        I_select_ship(index, own);
+}
+
+/******************************************************************************\
  Called when the interface root window receives a click.
 \******************************************************************************/
 void G_process_click(int button)
@@ -260,21 +379,16 @@ void G_process_click(int button)
 
         /* Clicking on an unusable space deselects */
         if (g_selected_tile < 0 || button != SDL_BUTTON_LEFT) {
-                g_selected_ship = -1;
-                R_select_path(-1, NULL);
+                select_ship(-1);
                 return;
         }
 
         /* Left-clicked on a ship */
         if (g_tiles[g_selected_tile].ship >= 0) {
-                if (g_selected_ship != g_tiles[g_selected_tile].ship) {
-                        g_selected_ship = g_tiles[g_selected_tile].ship;
-                        R_select_path(g_ships[g_selected_ship].tile,
-                                      g_ships[g_selected_ship].path);
-                } else {
-                        g_selected_ship = -1;
-                        R_select_path(-1, NULL);
-                }
+                if (g_selected_ship != g_tiles[g_selected_tile].ship)
+                        select_ship(g_tiles[g_selected_tile].ship);
+                else
+                        select_ship(-1);
                 return;
         }
 
@@ -291,8 +405,7 @@ void G_process_click(int button)
         }
 
         /* Left-clicked on a tile */
-        g_selected_ship = -1;
-        R_select_path(-1, NULL);
+        select_ship(-1);
         if (!ring_valid)
                 return;
 

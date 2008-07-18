@@ -45,6 +45,9 @@ void I_reset_ring(void);
 void I_add_to_ring(i_ring_icon_t, int enabled);
 void I_show_ring(i_ring_f callback);
 
+/* i_ship.c */
+void I_select_ship(int index, bool own);
+
 /* i_variables.c */
 void I_register_variables(void);
 

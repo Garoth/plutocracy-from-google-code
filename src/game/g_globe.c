@@ -10,6 +10,9 @@
  FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
 \******************************************************************************/
 
+/* Implements globe terrain generation. Note that changing any of these
+   parameters will invalidate the protocol! */
+
 #include "g_common.h"
 
 /* Maximum number of islands. Do not set this value above G_ISLAND_INVALID. */
@@ -18,14 +21,16 @@
 /* Maximum island size */
 #define ISLAND_SIZE 384
 
-/* Island size will vary up to this proportion */
-#define ISLAND_VARIANCE 0.5f
+/* Island size will vary up to this proportion. This is a good way to control
+   how "boring" the terrain generator is. With high variance there are a lot of
+   oceans and strangely sized islands. */
+#define ISLAND_VARIANCE 0.3f
 
 /* Maximum height off the globe surface of a tile */
 #define ISLAND_HEIGHT 4.f
 
 /* Minimum number of land tiles for island to succeed */
-#define ISLAND_LAND 20
+#define ISLAND_LAND 8
 
 /* Island structure */
 typedef struct g_island {
@@ -161,18 +166,15 @@ static void grow_islands(int num, int island_size)
                 island_size = ISLAND_SIZE;
         C_debug("Growing %d, %d-tile islands", num, island_size);
 
-        /* Disperse the initial seeds and set limits */
+        /* Disperse the initial seeds evenly and set limits */
         for (i = 0; i < num; i++) {
-                islands[i].root = C_rand() % r_tiles;
-                if (g_tiles[islands[i].root].island != G_ISLAND_INVALID) {
-                        num--;
-                        i--;
-                        continue;
-                }
+                islands[i].root = i * r_tiles / num;
                 sizes[i] = 1;
                 edges[i * ISLAND_SIZE] = islands[i].root;
-                limits[i] = (int)((ISLAND_VARIANCE * (C_rand_real() - 0.5f) +
-                                   1.f) * island_size);
+                limits[i] = (int)((2 * ISLAND_VARIANCE *
+                                   (C_rand_real() - 0.5f) + 1.f) * island_size);
+                if (limits[i] < ISLAND_LAND * 3)
+                        limits[i] = ISLAND_LAND * 3;
                 if (limits[i] > ISLAND_SIZE)
                         limits[i] = ISLAND_SIZE;
                 g_tiles[islands[i].root].island = i;
@@ -250,7 +252,7 @@ static int test_tiles_update(c_var_t *var, c_var_value_t value)
 
         failed = FALSE;
         for (i = 0; i < r_tiles; i++)
-                if (R_water_terrain(r_tile_params[i].terrain)) {
+                if (!R_water_terrain(r_tile_params[i].terrain)) {
                         if (failed)
                                 G_set_tile_model(i, "");
                         else
@@ -296,17 +298,17 @@ void G_generate_globe(void)
         /* Grow the islands and set terrain. Globe size affects the island
            growth parameters. */
         switch (g_globe_subdiv4.value.n) {
-        case 5: islands = 75;
-                island_size = 180;
+        case 5: islands = 125;
+                island_size = 220;
                 break;
         case 4: islands = 40;
-                island_size = 180;
+                island_size = 160;
                 break;
         case 3: islands = 10;
-                island_size = 140;
+                island_size = 160;
                 break;
         case 2: islands = 3;
-                island_size = 100;
+                island_size = 160;
                 break;
         default:
                 islands_len = 0;
