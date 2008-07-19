@@ -22,6 +22,7 @@ typedef struct cargo {
 static cargo_t cargo_widgets[G_CARGO_TYPES];
 static i_box_t cargo_box;
 static i_label_t title, cargo_label, cargo_amount;
+static i_image_t separators[G_CARGO_TYPES / 4];
 
 /******************************************************************************\
  Cargo widget event function.
@@ -173,7 +174,7 @@ void I_select_ship(int index, bool own)
 \******************************************************************************/
 void I_init_ship(i_window_t *window)
 {
-        int i;
+        int i, seps;
 
         I_window_init(window);
         window->natural_size = C_vec2(275.f, 0.f);
@@ -195,15 +196,19 @@ void I_init_ship(i_window_t *window)
         I_widget_add(&window->widget, &cargo_box.widget);
 
         /* Cargo items */
-        for (i = 0; i < G_CARGO_TYPES; i++) {
+        for (i = 0, seps = 0; i < G_CARGO_TYPES; i++) {
+                int index;
+
                 cargo_init(cargo_widgets + i, C_va("%s:", g_cargo_names[i]));
                 I_widget_add(&window->widget, &cargo_widgets[i].widget);
-        }
 
-        /* Add some spaces */
-        cargo_widgets[G_CT_FOODS].widget.margin_front = 0.5f;
-        cargo_widgets[G_CT_MATERIALS].widget.margin_front = 0.5f;
-        cargo_widgets[G_CT_LUXURIES].widget.margin_front = 0.5f;
-        cargo_widgets[G_CT_EQUIPMENT].widget.margin_front = 0.5f;
+                /* Add separator */
+                if ((i - 1) % 4 || i >= G_CARGO_TYPES - 1)
+                        continue;
+                index = (i - 1) / 4;
+                I_image_init_sep(separators + index);
+                separators[index].resize = TRUE;
+                I_widget_add(&window->widget, &separators[index].widget);
+        }
 }
 

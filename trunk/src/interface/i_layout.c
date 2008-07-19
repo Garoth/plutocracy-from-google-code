@@ -114,6 +114,7 @@ static void theme_widgets(void)
         I_theme_entries();
         I_theme_scrollbacks();
         I_theme_ring();
+        I_theme_statics();
 }
 
 /******************************************************************************\

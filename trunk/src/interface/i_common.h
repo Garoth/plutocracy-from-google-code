@@ -202,6 +202,15 @@ typedef struct i_box {
         float width;
 } i_box_t;
 
+/* Images just display a sprite */
+typedef struct i_image {
+        i_widget_t widget;
+        r_sprite_t sprite;
+        r_texture_t **theme_texture;
+        c_vec2_t original_size;
+        bool resize;
+} i_image_t;
+
 /* i_button.c */
 int I_button_event(i_button_t *, i_event_t);
 void I_button_init(i_button_t *, const char *icon, const char *text,
@@ -226,11 +235,6 @@ void I_init_game(i_window_t *);
 /* i_globe.c */
 void I_globe_event(i_event_t);
 
-/* i_label.c */
-void I_label_init(i_label_t *, const char *);
-void I_label_configure(i_label_t *, const char *);
-i_label_t *I_label_new(const char *);
-
 /* i_layout.c */
 void I_theme_texture(r_texture_t **, const char *name);
 
@@ -254,6 +258,16 @@ void I_select_init(i_select_t *, const char *label, const char **list,
 /* i_ship.c */
 void I_init_ship(i_window_t *);
 
+/* i_static.c */
+void I_box_init(i_box_t *, i_pack_t, float width);
+void I_label_init(i_label_t *, const char *);
+void I_label_configure(i_label_t *, const char *);
+i_label_t *I_label_new(const char *);
+void I_image_init(i_image_t *, const char *icon);
+#define I_image_init_sep(i) I_image_init_themed(i, NULL)
+void I_image_init_themed(i_image_t *, r_texture_t **);
+void I_theme_statics(void);
+
 /* i_variables.c */
 extern c_var_t i_border, i_color, i_color_alt, i_debug, i_fade, i_scroll_speed,
                i_shadow, i_test_globe, i_theme, i_zoom_speed;
@@ -262,7 +276,6 @@ extern c_var_t i_border, i_color, i_color_alt, i_debug, i_fade, i_scroll_speed,
 void I_init_video(i_window_t *);
 
 /* i_widgets.c */
-void I_box_init(i_box_t *, i_pack_t, float width);
 const char *I_event_string(i_event_t);
 void I_widget_add(i_widget_t *parent, i_widget_t *child);
 c_vec2_t I_widget_bounds(const i_widget_t *, i_pack_t);
