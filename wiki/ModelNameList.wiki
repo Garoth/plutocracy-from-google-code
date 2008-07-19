@@ -9,25 +9,21 @@
 
 ==Buildings==
 
-|| || field/compost.plum||
 || || field/cotton.plum||
 || || field/generic.plum||
 || || field/sugar.plum||
 || || field/wheat.plum||
 || || guildhall/bakery.plum||
 || || guildhall/furnisher.plum||
-|| || guildhall/gemcutter.plum||
 || || guildhall/generic.plum||
 || || guildhall/weaver.plum||
 || || mill/cannery.plum||
 || || mill/distillery.plum||
 || || mill/generic.plum||
 || || mill/sawmill.plum||
-|| || mill/steel.plum||
-|| || mine/gem.plum||
 || || mine/generic.plum||
 || || mine/ore.plum||
-|| || mine/sulfur.plum||
+|| || mine/gold.plum||
 || || special/housing.plum||
 || || special/townhall.plum||
 || || special/warehouse.plum||
@@ -38,8 +34,7 @@
 || || workshop/armorer.plum||
 || || workshop/arsenal.plum||
 || || workshop/generic.plum||
-|| || workshop/ropemaker.plum||
-|| || workshop/sailmaker.plum||
+|| || workshop/fishery.plum||
 
 ==Ships==
 
