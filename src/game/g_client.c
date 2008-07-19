@@ -68,25 +68,18 @@ void G_init(void)
         g_cargo_names[G_CT_COTTON] = C_str("g-cargo-cotton", "Cotton");
         g_cargo_names[G_CT_LUMBER] = C_str("g-cargo-lumber", "Lumber");
         g_cargo_names[G_CT_IRON] = C_str("g-cargo-iron", "Iron");
-        g_cargo_names[G_CT_STEEL] = C_str("g-cargo-steel", "Steel");
-        g_cargo_names[G_CT_GEMSTONE] = C_str("g-cargo-gemstone", "Gemstone");
-        g_cargo_names[G_CT_SULFUR] = C_str("g-cargo-sulfur", "Sulfur");
-        g_cargo_names[G_CT_FERTILIZER] = C_str("g-cargo-fertilizer",
-                                               "Fertilizer");
+
         /* Luxury cargo */
-        g_cargo_names[G_CT_JEWELRY] = C_str("g-cargo-jewelry", "Jewelry");
         g_cargo_names[G_CT_RUM] = C_str("g-cargo-rum", "Rum");
-        g_cargo_names[G_CT_TEXTILES] = C_str("g-cargo-textiles", "Textiles");
         g_cargo_names[G_CT_FURNITURE] = C_str("g-cargo-furniture", "Furniture");
+        g_cargo_names[G_CT_CLOTH] = C_str("g-cargo-cloth", "Cloth");
         g_cargo_names[G_CT_SUGAR] = C_str("g-cargo-sugar", "Sugar");
 
         /* Equipment cargo */
-        g_cargo_names[G_CT_ARMOR] = C_str("g-cargo-armor", "Armor Plate");
         g_cargo_names[G_CT_CANNON] = C_str("g-cargo-cannon", "Cannon");
-        g_cargo_names[G_CT_CHAINSHOT] = C_str("g-cargo-chainshot", "Chainshot");
-        g_cargo_names[G_CT_GRAPESHOT] = C_str("g-cargo-grapeshot", "Grapeshot");
         g_cargo_names[G_CT_ROUNDSHOT] = C_str("g-cargo-roundshot", "Roundshot");
-        g_cargo_names[G_CT_SAILS] = C_str("g-cargo-sails", "Sails");
+        g_cargo_names[G_CT_PLATING] = C_str("g-cargo-plating", "Plating");
+        g_cargo_names[G_CT_GILLNET] = C_str("g-cargo-gillner", "Gillnet");
 
         /* Prepare initial state */
         G_init_globe();
