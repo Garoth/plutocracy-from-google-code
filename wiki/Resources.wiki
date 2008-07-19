@@ -18,117 +18,12 @@ http://plutocracy.googlecode.com/svn/wiki/resources/Resources-Value.png
     * Cold tiles produce Conifer Trees
     * Moderate tiles produce Deciduous Trees
     * Hot tiles produce Palm Trees
-
-= Harvested Resources =
-
-== Lumber ==
   * Harvested from land you own by building Sawmills
-  * Efficiency depends on tree type:
+  * Lumber efficiency depends on tree type:
     * Conifer trees: 100%
     * Deciduous trees: 50%
     * Palm trees: 25%
-  * Used in building and ship construction
-
-== Fruit ==
-  * Harvested from land you own by building Canneries
-  * Efficiency depends on tree type:
+  * Fruit efficiency depends on tree type:
     * Conifer trees: 25%
     * Deciduous trees: 50%
     * Palm trees: 100%
-  * Consumed by ship crew and towns for sustenance
-  * Low food value
-
-== Fish ==
-  * Harvested by ships equipped with fishing nets that pass fish tiles
-  * Consumed by crew and towns for sustenance
-  * Medium food value
-
-== Sugar ==
-  * Harvested by building Sugarcane Fields on Hot tiles
-  * Luxury consumed by towns for growth
-  * Low luxury value
-
-== Cotton ==
-  * Harvested by building Cotton Fields on Hot tiles
-  * Not used directly
-
-== Grain ==
-  * Harvested by building Wheat Fields on Moderate tiles
-  * Not used directly
-
-== Iron Ore ==
-  * Harvested by building Ore Mines next to Mountain tiles
-  * Mountain tile must have iron ore
-  * Not used directly
-
-== Sulfur ==
-  * Harvested by building Sulfur Mines next to Mountain tiles
-  * Mountain tile must have sulfur
-  * Not used directly
-
-== Gemstone ==
-  * Harvested by building Gem Mines next to Mountain tiles
-  * Mountain tile must have gemstones
-
-= Intermediate Products =
-
-== Bread ==
-  * Refined from Grain
-  * Consumed by crews and towns for sustenance
-  * Medium food value
-
-== Textiles ==
-  * Refined from Cotton
-  * Luxury consumed by towns for growth
-  * Medium luxury value
-
-== Steel ==
-  * Refined from Iron Ore and Lumber
-  * Used in ship and building construction
-
-== Fertilizer ==
-  * Refined from Sulfur
-  * Consumed by Fields to boost efficiency
-
-== Rope ==
-  * Refined from Cotton
-  * Used in ship construction
-
-= Refined Commodities =
-
-== Furniture ==
-  * Refined from Lumber and Steel
-  * Luxury consumed by towns for growth
-  * Medium luxury value
-
-== Jewelry ==
-  * Refined from Gemstones and Steel
-  * Luxury consumed by towns for growth
-  * High luxury value
-
-== Rations ==
-  * Refined from Bread, Sugar, Fruit, and Fish
-  * Compressed form of sustenance for crew and towns
-  * High food value
-
-== Rum ==
-  * Refined from Grain and Sugar
-  * Luxury consumed by towns for growth
-  * Medium luxury value
-
-== Sails ==
-  * Refined from Textiles, Rope, and Lumber
-  * Equipped by ships
-
-== Cannon ==
-  * Refined from Steel at Arsenal
-  * Equipped by ships
-
-== Armor Plate ==
-  * Refined from Steel at Arsenal
-  * Equipped by ships
-
-== Cannonballs (Roundshot, Grapeshot, Chainshot) ==
-  * Refined from Iron Ore and Sulfur at Arsenal
-  * Equipped by ships
-
