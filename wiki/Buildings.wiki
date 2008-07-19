@@ -47,16 +47,13 @@ Field efficiency can be boosted by providing Fertilizer.
   * Can only be built on Hot climate tiles
   * Generates Sugar
 
-=== Cotton Field ===
+=== Plantation ===
   * Can only be built on Hot climate tiles
   * Generates Cotton
 
 === Wheat Field ===
   * Can only be built on Moderate climate tiles
   * Generates Grain
-
-=== Compost ===
-  * Generates Fertilizer
 
 == Mills ==
 
@@ -74,9 +71,6 @@ Field efficiency can be boosted by providing Fertilizer.
   * Amount of Fruit generated depends on number of mature trees on owner's land
   * Amount of Fruit generated also depends on tree type (see [Resources])
 
-=== Steel Mill ===
-  * Generates Steel
-
 === Distillery ===
   * Generates Rum
 
@@ -90,13 +84,9 @@ Field efficiency can be boosted by providing Fertilizer.
   * Generates Iron Ore
   * Depletes Iron reserves of Mountain tiles on owner's land
 
-=== Sulfur Mine ===
-  * Generates Sulfur
-  * Depletes Sulfur reserves of Mountain tiles on owner's land
-
-=== Gem Mine ===
-  * Generates Gemstone
-  * Depletes Gemstone reserves of Mountain tiles on owner's land
+=== Gold Mine ===
+  * Generates Gold
+  * Depletes Gold reserves of Mountain tiles on owner's land
 
 == Guildhalls ==
 
@@ -109,13 +99,10 @@ Field efficiency can be boosted by providing Fertilizer.
   * Will generate Rations instead of Bread if ingredients are available
 
 === Weaver ===
-  * Generates Textiles
+  * Generates Cloth
 
 === Furnisher ===
   * Generates Furniture
-
-=== Gem Cutter ===
-  * Generates Jewelry
 
 == Workshops ==
 
@@ -127,13 +114,10 @@ Field efficiency can be boosted by providing Fertilizer.
   * Quotas for each product can be set per-region
 
 === Armorer ===
-  * Generates Armor Plates
+  * Generates Plating
 
-=== Sailmaker ===
-  * Generates Sails
-
-=== Rope Maker ===
-  * Generates Rope
+=== Fishery ===
+  * Generates Gillnets
 
 = List of Shallow Water Buildings ==
 These buildings may be constructed on a rented shallow water tile up to 3 tiles away from shore. The owner of the tile may demolish the building and partially recoup construction materials.
