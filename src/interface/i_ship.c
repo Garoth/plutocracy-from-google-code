@@ -155,7 +155,11 @@ void I_select_ship(int index, bool own)
         const char *str;
         int i;
 
-        I_toolbar_enable(&i_right_toolbar, i_ship_button, index >= 0);
+        if (index < 0) {
+                I_toolbar_enable(&i_right_toolbar, i_ship_button, FALSE);
+                return;
+        }
+        I_toolbar_enable(&i_right_toolbar, i_ship_button, TRUE);
 
         /* Cargo space */
         str = C_va("%d/%d", G_cargo_space(&g_ships[index].cargo),
