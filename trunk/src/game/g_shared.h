@@ -16,6 +16,7 @@
 /* Ship class names */
 typedef enum {
         G_SN_SLOOP,
+        G_SN_SPIDER,
         G_SHIP_NAMES,
         G_SN_NONE,
 } g_ship_name_t;
