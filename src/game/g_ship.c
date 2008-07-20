@@ -50,6 +50,14 @@ void G_init_ships(void)
         pc->speed = 1.f;
         pc->health = 100;
         pc->cargo = 100;
+
+        /* Spider */
+        pc = g_ship_classes + G_SN_SPIDER;
+        pc->name = C_str("g-ship-spider", "Spider");
+        pc->model_path = "models/ship/spider.plum";
+        pc->speed = 0.75f;
+        pc->health = 100;
+        pc->cargo = 150;
 }
 
 /******************************************************************************\
