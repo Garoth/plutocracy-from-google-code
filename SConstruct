@@ -11,32 +11,12 @@
 # ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
 # FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
 ################################################################################
-#
-# While SCons supports Windows, this SConstruct file is for POSIX systems only!
 
 import glob, os, sys
 
 # Package parameters
 package = 'plutocracy'
 version = '0.0.2'
-
-# Get subversion revision and add it to the version
-def svn_revision():
-        revision = ''
-        try:
-                in_stream, out_stream = os.popen2('svn info')
-                result = out_stream.read()
-                in_stream.close()
-                out_stream.close()
-                start = result.find('Revision: ')
-                if start < 0:
-                        return ''
-                end = result.find('\n', start)
-                revision = '.' + result[start + 10:end]
-        except:
-                pass
-        return revision
-version += svn_revision()
 
 # Platform considerations
 windows = sys.platform == 'win32'
@@ -156,7 +136,7 @@ if windows:
                                       path('windows/lib/SDL_ttf.lib')]
         else:
                 plutocracy_env.Append(CPPPATH = ';windows/include/SDL')
-                plutocracy_env.Append(LIBS = ['zdll', 'libpng', 'SDL', 
+                plutocracy_env.Append(LIBS = ['zdll', 'libpng', 'SDL',
                                               'SDLmain', 'SDL_ttf'])
 else:
         plutocracy_src.remove(path('src/common/c_os_windows.c'))
@@ -200,14 +180,33 @@ if windows:
 # Generate a config.h with definitions
 else:
         def WriteConfigH(target, source, env):
+                global version
+
+                # Get subversion revision and add it to the version
+                svn_revision = ''
+                try:
+                        in_stream, out_stream = os.popen2('svn info')
+                        result = out_stream.read()
+                        in_stream.close()
+                        out_stream.close()
+                        start = result.find('Revision: ')
+                        if start >= 0:
+                                end = result.find('\n', start)
+                                svn_revision = 'r' + result[start + 10:end]
+                except:
+                        pass
+                version += svn_revision
+
+                # Write the config
                 config = open('config.h', 'w')
                 config.write('\n/* Package parameters */\n' +
                              '#define PACKAGE "' + package + '"\n' +
                              '#define PACKAGE_STRING "' + package.title() +
-                                                          ' ' + version + '"\n' +
+                             ' ' + version + '"\n' +
                              '\n/* Configured paths */\n' +
                              '#define PKGDATADIR "' + install_data + '"\n')
                 config.close()
+
         plutocracy_config = plutocracy_env.Command('config.h', '', WriteConfigH)
         plutocracy_env.Depends(plutocracy_config, 'SConstruct')
 

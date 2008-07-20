@@ -278,7 +278,7 @@ void C_print(const char *);
                                                fn, fmt, ## __VA_ARGS__)
 #define C_warning(fmt, ...) C_log(C_LOG_WARNING, __FILE__, __LINE__, \
                                   __func__, fmt, ## __VA_ARGS__)
-#define C_warning_full(f, l, fn, fmt, ...) C_log(C_LOG_TRACE, f, l, fn, \
+#define C_warning_full(f, l, fn, fmt, ...) C_log(C_LOG_WARNING, f, l, fn, \
                                                  fmt, ## __VA_ARGS__)
 char *C_wrap_log(const char *, int margin, int wrap, int *plen);
 
@@ -319,8 +319,6 @@ void C_ref_up_full(const char *file, int line, const char *function,
 void C_test_mem_check(void);
 #define C_zero(s) memset(s, 0, sizeof (*(s)))
 #define C_zero_buf(s) memset(s, 0, sizeof (s))
-
-extern c_var_t c_mem_check;
 
 /* c_os_posix, c_os_windows.c */
 int C_mkdir(const char *path);
@@ -401,6 +399,6 @@ int C_var_unlatch(c_var_t *);
 void C_var_update_data(c_var_t *, c_var_update_f, void *);
 void C_write_autogen(void);
 
-extern c_var_t c_max_fps, c_show_fps, c_test_int;
+extern c_var_t c_max_fps, c_mem_check, c_show_fps, c_test_int;
 extern int c_exit;
 
