@@ -43,6 +43,24 @@ static float limbo_fade;
 static int layout_frame, cleanup_theme;
 
 /******************************************************************************\
+ Update national colors.
+\******************************************************************************/
+void I_update_colors(void)
+{
+        /* National colors */
+        i_colors[I_COLOR_RED] = g_nations[G_NN_RED].color;
+        i_colors[I_COLOR_GREEN] = g_nations[G_NN_GREEN].color;
+        i_colors[I_COLOR_BLUE] = g_nations[G_NN_BLUE].color;
+        i_colors[I_COLOR_PIRATE] = g_nations[G_NN_PIRATE].color;
+
+        /* Nation color alpha values are not for the UI */
+        i_colors[I_COLOR_RED].a = i_colors[I_COLOR].a;
+        i_colors[I_COLOR_GREEN].a = i_colors[I_COLOR].a;
+        i_colors[I_COLOR_BLUE].a = i_colors[I_COLOR].a;
+        i_colors[I_COLOR_PIRATE].a = i_colors[I_COLOR].a;
+}
+
+/******************************************************************************\
  Root window event function.
 \******************************************************************************/
 static int root_event(i_widget_t *root, i_event_t event)
@@ -51,16 +69,25 @@ static int root_event(i_widget_t *root, i_event_t event)
         case I_EV_CONFIGURE:
                 i_colors[I_COLOR] = C_color_string(i_color.value.s);
                 i_colors[I_COLOR_ALT] = C_color_string(i_color_alt.value.s);
+                I_update_colors();
 
                 /* Size and position limbo logo */
                 limbo_logo.origin.x = r_width_2d / 2 - limbo_logo.size.x / 2;
                 limbo_logo.origin.y = r_height_2d / 2 - limbo_logo.size.y / 2;
 
                 break;
-        case I_EV_MOUSE_MOVE:
-                I_widget_propagate(root, event);
-                I_globe_event(event);
-                return FALSE;
+        case I_EV_KEY_FOCUS:
+                I_focus_chat();
+                break;
+        case I_EV_KEY_DOWN:
+
+                /* Open chat */
+                if (i_key == SDLK_RETURN) {
+                        I_show_chat();
+                        return FALSE;
+                }
+
+                break;
         case I_EV_RENDER:
 
                 /* Rotate around the globe during limbo */
@@ -142,6 +169,7 @@ static void theme_configure(void)
                                                        i_border.value.n),
                                                toolbar_y);
 
+        I_position_chat();
         theme_widgets();
 }
 
@@ -262,6 +290,7 @@ void I_enter_limbo(void)
 {
         i_limbo = TRUE;
         I_widget_event(&i_right_toolbar.widget, I_EV_HIDE);
+        I_hide_chat();
 }
 
 /******************************************************************************\
@@ -287,6 +316,11 @@ void I_init(void)
         i_root.shown = TRUE;
         i_key_focus = &i_root;
 
+        /* Initialize special child widgets */
+        I_init_ring();
+        I_init_popup();
+        I_init_chat();
+
         /* Left toolbar */
         I_toolbar_init(&left_toolbar, FALSE);
         I_toolbar_add_button(&left_toolbar, "gui/icons/game.png",
@@ -311,10 +345,6 @@ void I_init(void)
         theme_configure();
         i_theme.update = (c_var_update_f)theme_update;
         i_theme.edit = C_VE_FUNCTION;
-
-        /* Initialize special child widgets */
-        I_init_ring();
-        I_init_popup();
 
         /* Limbo resources */
         R_sprite_load(&limbo_logo, "gui/logo.png");

@@ -52,6 +52,6 @@ void G_register_variables(void)
         C_register_string(g_nation_colors + G_NN_BLUE, "g_color_blue",
                           "#80729fcf", "blue national color");
         C_register_string(g_nation_colors + G_NN_PIRATE, "g_color_pirate",
-                          "#60ffffff", "pirate color");
+                          "#80808080", "pirate color");
 }
 

@@ -98,6 +98,7 @@ typedef struct g_ship {
 /* g_client.c */
 int G_cargo_space(const g_cargo_t *);
 void G_init(void);
+void G_input_chat(const char *message);
 void G_leave_game(void);
 void G_process_click(int button);
 void G_update_client(void);
