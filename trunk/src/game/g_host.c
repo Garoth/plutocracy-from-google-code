@@ -86,6 +86,20 @@ static void server_ship_move(int client)
 }
 
 /******************************************************************************\
+ Initialize a new client.
+\******************************************************************************/
+static void server_client_connect(int client)
+{
+        C_debug("Client %d connected", client);
+        g_clients[client].nation = G_NN_NONE;
+        N_send(client, "114", G_SM_INIT, G_PROTOCOL,
+               g_globe_seed.value.n);
+
+        /* Dummy name for the client */
+        C_strncpy_buf(g_clients[client].name, C_va("Client #%d", client + 1));
+}
+
+/******************************************************************************\
  Called from within the network namespace when a network event arrives for the
  server from one of the clients (including the server's client).
 \******************************************************************************/
@@ -95,10 +109,7 @@ static void server_callback(int client, n_event_t event)
 
         /* Connect/disconnect */
         if (event == N_EV_CONNECTED) {
-                C_debug("Client %d connected", client);
-                g_clients[client].nation = G_NN_NONE;
-                N_send(client, "114", G_SM_INIT, G_PROTOCOL,
-                       g_globe_seed.value.n);
+                server_client_connect(client);
                 return;
         } else if (event == N_EV_DISCONNECTED) {
                 C_debug("Client %d disconnected", client);

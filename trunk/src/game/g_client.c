@@ -28,6 +28,16 @@ const char *g_cargo_names[G_CARGO_TYPES];
 static bool ring_valid;
 
 /******************************************************************************\
+ Update function for a national color.
+\******************************************************************************/
+static int nation_color_update(c_var_t *var, c_var_value_t value)
+{
+        C_color_update(var, value);
+        I_update_colors();
+        return TRUE;
+}
+
+/******************************************************************************\
  Initialize game structures before play.
 \******************************************************************************/
 void G_init(void)
@@ -38,19 +48,19 @@ void G_init(void)
         /* Setup nations */
         g_nations[G_NN_RED].short_name = "red";
         g_nations[G_NN_RED].long_name = C_str("g-nation-red", "Ruby");
-        C_var_update_data(g_nation_colors + G_NN_RED, C_color_update,
+        C_var_update_data(g_nation_colors + G_NN_RED, nation_color_update,
                           &g_nations[G_NN_RED].color);
         g_nations[G_NN_GREEN].short_name = "green";
         g_nations[G_NN_GREEN].long_name = C_str("g-nation-green", "Emerald");
-        C_var_update_data(g_nation_colors + G_NN_GREEN, C_color_update,
+        C_var_update_data(g_nation_colors + G_NN_GREEN, nation_color_update,
                           &g_nations[G_NN_GREEN].color);
         g_nations[G_NN_BLUE].short_name = "blue";
         g_nations[G_NN_BLUE].long_name = C_str("g-nation-blue", "Sapphire");
-        C_var_update_data(g_nation_colors + G_NN_BLUE, C_color_update,
+        C_var_update_data(g_nation_colors + G_NN_BLUE, nation_color_update,
                           &g_nations[G_NN_BLUE].color);
         g_nations[G_NN_PIRATE].short_name = "pirate";
         g_nations[G_NN_PIRATE].long_name = C_str("g-nation-pirate", "Pirate");
-        C_var_update_data(g_nation_colors + G_NN_PIRATE, C_color_update,
+        C_var_update_data(g_nation_colors + G_NN_PIRATE, nation_color_update,
                           &g_nations[G_NN_PIRATE].color);
 
         /* Special cargo */
@@ -422,5 +432,34 @@ void G_update_client(void)
         if (i_limbo)
                 return;
         G_update_ships();
+}
+
+/******************************************************************************\
+ Convert a nation to a color index.
+\******************************************************************************/
+static i_color_t nation_to_color(g_nation_name_t nation)
+{
+        if (nation == G_NN_RED)
+                return I_COLOR_RED;
+        else if (nation == G_NN_GREEN)
+                return I_COLOR_GREEN;
+        else if (nation == G_NN_BLUE)
+                return I_COLOR_BLUE;
+        else if (nation == G_NN_PIRATE)
+                return I_COLOR_PIRATE;
+        return I_COLOR_ALT;
+}
+
+/******************************************************************************\
+ The user has typed chat into the box and hit enter.
+\******************************************************************************/
+void G_input_chat(const char *message)
+{
+        i_color_t color;
+
+        if (!message || !message[0])
+                return;
+        color = nation_to_color(g_clients[n_client_id].nation);
+        I_print_chat(g_clients[n_client_id].name, color, message);
 }
 

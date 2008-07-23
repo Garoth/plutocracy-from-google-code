@@ -36,11 +36,13 @@ typedef enum {
         I_EV_HIDE,              /* Widget is being hidden */
         I_EV_KEY_DOWN,          /* A key is pressed down or repeated */
         I_EV_KEY_UP,            /* A key is released */
+        I_EV_KEY_FOCUS,         /* This widget is the new keyboard focus */
         I_EV_MOUSE_IN,          /* Mouse just entered widget area */
         I_EV_MOUSE_OUT,         /* Mouse just left widget area */
         I_EV_MOUSE_MOVE,        /* Mouse is moved over widget */
         I_EV_MOUSE_DOWN,        /* A mouse button is pressed on the widget */
         I_EV_MOUSE_UP,          /* A mouse button is released on the widget */
+        I_EV_MOUSE_FOCUS,       /* Event used to find which widget has focus */
         I_EV_MOVED,             /* Widget was moved */
         I_EV_RENDER,            /* Should render */
         I_EV_SHOW,              /* Widget is being shown */
@@ -58,6 +60,7 @@ typedef enum {
 /* Widget input states */
 typedef enum {
         I_WS_DISABLED,
+        I_WS_NO_FOCUS,
         I_WS_READY,
         I_WS_HOVER,
         I_WS_ACTIVE,
@@ -70,13 +73,6 @@ typedef enum {
         I_FIT_TOP,
         I_FIT_BOTTOM,
 } i_fit_t;
-
-/* The interface uses a limited number of colors */
-typedef enum {
-        I_COLOR,
-        I_COLOR_ALT,
-        I_COLORS
-} i_color_t;
 
 /* Function to handle mouse, keyboard, or other events. Return FALSE to
    prevent the automatic propagation of an event to the widget's children. */
@@ -118,7 +114,7 @@ typedef struct i_window {
         r_sprite_t hanger;
         c_vec2_t natural_size;
         float hanger_x;
-        bool hanger_shown, decorated, auto_hide;
+        bool auto_hide, decorated, hanger_shown, popup;
 } i_window_t;
 
 /* Button type */
@@ -219,6 +215,13 @@ void I_button_configure(i_button_t *, const char *icon, const char *text,
                         i_button_type_t);
 void I_theme_buttons(void);
 
+/* i_chat.c */
+void I_focus_chat(void);
+void I_hide_chat(void);
+void I_init_chat(void);
+void I_position_chat(void);
+void I_show_chat(void);
+
 /* i_console.c */
 void I_init_console(i_window_t *);
 void I_scrollback_init(i_scrollback_t *);
@@ -281,7 +284,7 @@ const char *I_event_string(i_event_t);
 void I_widget_add(i_widget_t *parent, i_widget_t *child);
 c_vec2_t I_widget_bounds(const i_widget_t *, i_pack_t);
 c_vec2_t I_widget_child_bounds(const i_widget_t *);
-#define I_widget_cleanup(w) I_widget_event(w, I_EV_CLEANUP)
+bool I_widget_child_of(const i_widget_t *parent, const i_widget_t *child);
 void I_widget_event(i_widget_t *, i_event_t);
 void I_widget_init(i_widget_t *, const char *class_name);
 void I_widget_move(i_widget_t *, c_vec2_t new_origin);

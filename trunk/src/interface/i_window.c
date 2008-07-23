@@ -64,7 +64,12 @@ static int window_event(i_window_t *window, i_event_t event)
                 I_widget_pack(&window->widget, window->pack_children,
                               window->fit);
                 if (window->decorated) {
-                        R_window_init(&window->window, decor_window);
+                        r_texture_t *decor;
+
+                        decor = decor_window;
+                        if (window->popup)
+                                decor = decor_popup;
+                        R_window_init(&window->window, decor);
                         window->window.sprite.origin = window->widget.origin;
                         window->window.sprite.size = window->widget.size;
                         R_sprite_cleanup(&window->hanger);
@@ -75,6 +80,8 @@ static int window_event(i_window_t *window, i_event_t event)
                 }
                 return FALSE;
         case I_EV_MOUSE_IN:
+                if (I_widget_child_of(&window->widget, i_key_focus))
+                        break;
                 i_key_focus = NULL;
                 I_widget_propagate(&window->widget, I_EV_GRAB_FOCUS);
                 break;
@@ -393,7 +400,7 @@ void I_update_popup(void)
 }
 
 /******************************************************************************\
- Queues a new message to popup
+ Queues a new message to popup.
 \******************************************************************************/
 void I_popup(c_vec3_t *goto_pos, const char *message)
 {

@@ -13,6 +13,17 @@
 /* Maximum number of icon buttons a ring can hold */
 #define I_RING_BUTTONS 6
 
+/* The interface uses a limited number of colors */
+typedef enum {
+        I_COLOR,
+        I_COLOR_ALT,
+        I_COLOR_RED,
+        I_COLOR_GREEN,
+        I_COLOR_BLUE,
+        I_COLOR_PIRATE,
+        I_COLORS
+} i_color_t;
+
 /* Ring icon names */
 typedef enum {
         I_RI_TEST_BLANK,
@@ -26,6 +37,9 @@ typedef enum {
 /* Ring callback function */
 typedef void (*i_ring_f)(i_ring_icon_t);
 
+/* i_chat.c */
+void I_print_chat(const char *name, i_color_t, const char *message);
+
 /* i_layout.c */
 void I_cleanup(void);
 void I_dispatch(const SDL_Event *);
@@ -34,6 +48,7 @@ void I_init(void);
 void I_leave_limbo(void);
 void I_parse_config(void);
 void I_render(void);
+void I_update_colors(void);
 
 extern int i_limbo;
 
