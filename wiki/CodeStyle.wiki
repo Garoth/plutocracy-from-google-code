@@ -3,12 +3,12 @@
 This style is based on the Linux kernel with some deviations:
 http://pantransit.reptiles.org/prog/CodingStyle.html
 
-= License =
+= Source Files =
 
-All files need the license header and must include their namespace common header:
+All source files need the license header and must include their namespace common header:
 {{{
 /******************************************************************************\
- Plutocracy - Copyright (C) 2008 - Michael Levin, Devin Papineau
+ Plutocracy - Copyright (C) 2008 - Michael Levin
 
  This program is free software; you can redistribute it and/or modify it under
  the terms of the GNU General Public License as published by the Free Software
@@ -22,6 +22,10 @@ All files need the license header and must include their namespace common header
 #include "r_common.h"
 }}}
 The copyright name should only include authors that actually worked on a significant portion of the file.
+
+Large files are difficult to work with. If you find yourself working with a file with more than 1000 lines of code or larger than around 32kb, you need to split some code off of it. This may mean exposing some members or functions in the common header, remember to adjust their names appropriately and make sure the focus of each file is clear and consistent. If {{{c_my_file.c}}} grows too large, do not simply move half the code to {{{c_my_file2.c}}}!
+
+Each file must have a specific purpose and be named appropriately. No namespace should have a generic "catch-all" source file (e.g. {{{g_main.c}}})! Give the file a short, preferably one-word name general enough to cover the functions and variables within but not so generic as to be ambiguous.
 
 = Spacing =
 
@@ -114,7 +118,7 @@ We have the following namespaces:
 /* Shared among all code */
 void C_common();
 
-/* Server's game mechanics */
+/* Client and server game mechanics */
 void G_game();
 
 /* Client interface */
@@ -125,6 +129,13 @@ void R_render();
 
 /* Client and server network calls */
 void N_network();
+}}}
+
+Static variables and functions are never namespaced:
+{{{
+static int my_global;
+
+static void my_func(void);
 }}}
 
 = Common and Shared Headers =
