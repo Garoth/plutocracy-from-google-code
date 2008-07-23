@@ -230,7 +230,6 @@ void I_button_init(i_button_t *button, const char *icon, const char *text,
         I_widget_init(&button->widget, "Button");
         button->widget.event_func = (i_event_f)I_button_event;
         button->widget.state = I_WS_READY;
-        button->widget.clickable = TRUE;
         button->on_click = NULL;
         button->type = type;
         R_sprite_load(&button->icon, icon);

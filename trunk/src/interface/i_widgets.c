@@ -306,6 +306,22 @@ void I_widget_propagate(i_widget_t *widget, i_event_t event)
 }
 
 /******************************************************************************\
+ Returns the top-most container of the widget. Possibly the widget itself if
+ its parent is root.
+\******************************************************************************/
+i_widget_t *I_widget_top_level(i_widget_t *widget)
+{
+        if (!widget)
+                return NULL;
+        while (widget->parent != &i_root) {
+                if (!widget->parent)
+                        C_error("Widget is not a child of root");
+                widget = widget->parent;
+        }
+        return widget;
+}
+
+/******************************************************************************\
  Returns a statically allocated string containing the name of an event token.
 \******************************************************************************/
 const char *I_event_string(i_event_t event)
@@ -363,8 +379,7 @@ static int check_mouse_focus(i_widget_t *widget)
         if (i_mouse_x >= widget->origin.x && i_mouse_y >= widget->origin.y &&
             i_mouse_x < widget->origin.x + widget->size.x &&
             i_mouse_y < widget->origin.y + widget->size.y &&
-            widget->shown && widget->clickable &&
-            widget->state != I_WS_DISABLED) {
+            widget->shown && widget->state != I_WS_DISABLED) {
                 i_mouse_focus = widget;
                 return TRUE;
         }
@@ -427,6 +442,8 @@ static void mouse_focus_parent(i_widget_t *widget)
 \******************************************************************************/
 void I_widget_event(i_widget_t *widget, i_event_t event)
 {
+        if (!widget)
+                return;
         if (!widget->name[0] || !widget->event_func) {
                 if (event == I_EV_CLEANUP)
                         return;
@@ -475,7 +492,7 @@ void I_widget_event(i_widget_t *widget, i_event_t event)
                 widget->event_func(widget, event);
                 return;
         case I_EV_MOUSE_IN:
-                if (widget->state == I_WS_READY && widget->clickable)
+                if (widget->state == I_WS_READY)
                         widget->state = I_WS_HOVER;
                 widget->event_func(widget, event);
                 return;
@@ -597,7 +614,6 @@ static void propagate_mouse_down(i_widget_t *widget)
 {
         while (widget && widget->event_func) {
                 if (widget->shown && widget->state != I_WS_DISABLED &&
-                    widget->clickable &&
                     !widget->event_func(widget, I_EV_MOUSE_DOWN))
                         return;
                 widget = widget->parent;

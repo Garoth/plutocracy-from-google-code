@@ -52,13 +52,13 @@ static void server_affiliate(int client)
                 g_ships[ship].cargo.amounts[G_CT_GOLD] = 1000;
                 g_ships[ship].cargo.amounts[G_CT_CREW] = 10;
                 g_ships[ship].cargo.amounts[G_CT_RATIONS] = 10;
-        }
 
-        /* Spawn a spider ship for testing */
-        if ((ship = G_spawn_ship(client, tile, G_SN_SPIDER, -1)) >= 0) {
-                g_ships[ship].cargo.amounts[G_CT_GOLD] = 500;
-                g_ships[ship].cargo.amounts[G_CT_CREW] = 15;
-                g_ships[ship].cargo.amounts[G_CT_RATIONS] = 20;
+                /* Spawn a second ship for testing */
+                if ((ship = G_spawn_ship(client, tile, G_SN_SPIDER, -1)) >= 0) {
+                        g_ships[ship].cargo.amounts[G_CT_GOLD] = 500;
+                        g_ships[ship].cargo.amounts[G_CT_CREW] = 15;
+                        g_ships[ship].cargo.amounts[G_CT_RATIONS] = 20;
+                }
         }
 
         N_send(N_BROADCAST_ID, "1112", G_SM_AFFILIATE, client, nation, tile);

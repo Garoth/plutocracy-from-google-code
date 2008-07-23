@@ -106,6 +106,10 @@ static void entry_modified(i_entry_t *entry)
                            i_shadow.value.f, FALSE, entry->buffer);
         entry->text.modulate = i_colors[I_COLOR];
         entry_moved(entry);
+
+        /* Active change handler */
+        if (entry->on_change)
+                entry->on_change(entry);
 }
 
 /******************************************************************************\
@@ -161,6 +165,10 @@ void I_entry_configure(i_entry_t *entry, const char *string)
         entry->pos = C_strlen(string);
         entry->scroll = 0.f;
         I_widget_event(&entry->widget, I_EV_CONFIGURE);
+
+        /* Active change handler */
+        if (entry->on_change)
+                entry->on_change(entry);
 }
 
 /******************************************************************************\

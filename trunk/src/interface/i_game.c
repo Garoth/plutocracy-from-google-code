@@ -13,7 +13,10 @@
 #include "i_common.h"
 
 static i_label_t label;
+static i_entry_t ip_entry;
+static i_scrollback_t server_list;
 static i_button_t host_button, join_button, leave_button, quit_button;
+static i_box_t outer_box, left_box, right_box;
 
 /******************************************************************************\
  Leave button event handler.
@@ -36,7 +39,7 @@ static void leave_button_clicked(i_button_t *button)
 {
         C_debug("Leave button clicked");
         G_leave_game();
-        I_widget_event(button->widget.parent, I_EV_HIDE);
+        I_widget_event(I_widget_top_level(&button->widget), I_EV_HIDE);
 }
 
 /******************************************************************************\
@@ -46,7 +49,7 @@ static void host_button_clicked(i_button_t *button)
 {
         C_debug("Host button clicked");
         G_host_game();
-        I_widget_event(button->widget.parent, I_EV_HIDE);
+        I_widget_event(I_widget_top_level(&button->widget), I_EV_HIDE);
 }
 
 /******************************************************************************\
@@ -59,12 +62,23 @@ static void quit_button_clicked(i_button_t *button)
 }
 
 /******************************************************************************\
+ Callback for when the ip value changes.
+\******************************************************************************/
+static void ip_entry_changed(void)
+{
+        if (ip_entry.buffer[0] && join_button.widget.state == I_WS_DISABLED)
+                join_button.widget.state = I_WS_READY;
+        else if (!ip_entry.buffer[0])
+                join_button.widget.state = I_WS_DISABLED;
+}
+
+/******************************************************************************\
  Initializes game window widgets on the given window.
 \******************************************************************************/
 void I_init_game(i_window_t *window)
 {
         I_window_init(window);
-        window->natural_size = C_vec2(200.f, 0.f);
+        window->natural_size = C_vec2(400.f, 200.f);
         window->fit = I_FIT_TOP;
 
         /* Label */
@@ -72,11 +86,25 @@ void I_init_game(i_window_t *window)
         label.font = R_FONT_TITLE;
         I_widget_add(&window->widget, &label.widget);
 
+        /* Initialize outer box */
+        I_box_init(&outer_box, I_PACK_H,
+                   window->natural_size.y - i_border.value.n * 2);
+        I_widget_add(&window->widget, &outer_box.widget);
+
+        /* Left-side vertical box */
+        I_box_init(&left_box, I_PACK_V, window->natural_size.x / 4.f);
+        left_box.widget.margin_rear = 1.f;
+        I_widget_add(&outer_box.widget, &left_box.widget);
+
+        /* Right-side vertical box */
+        I_box_init(&right_box, I_PACK_V, 0.f);
+        right_box.widget.expand = TRUE;
+        I_widget_add(&outer_box.widget, &right_box.widget);
+
         /* Join button */
         I_button_init(&join_button, NULL, C_str("i-join", "Join"),
                       I_BT_DECORATED);
-        join_button.widget.state = I_WS_DISABLED;
-        I_widget_add(&window->widget, &join_button.widget);
+        I_widget_add(&left_box.widget, &join_button.widget);
 
         /* Leave button */
         I_button_init(&leave_button, NULL, C_str("i-leave", "Leave"),
@@ -84,19 +112,29 @@ void I_init_game(i_window_t *window)
         leave_button.widget.event_func = (i_event_f)leave_button_event;
         leave_button.on_click = (i_callback_f)leave_button_clicked;
         leave_button.widget.state = I_WS_DISABLED;
-        I_widget_add(&window->widget, &leave_button.widget);
+        I_widget_add(&left_box.widget, &leave_button.widget);
 
         /* Host button */
         I_button_init(&host_button, NULL, C_str("i-host", "Host"),
                       I_BT_DECORATED);
         host_button.on_click = (i_callback_f)host_button_clicked;
         host_button.widget.margin_rear = 1.f;
-        I_widget_add(&window->widget, &host_button.widget);
+        I_widget_add(&left_box.widget, &host_button.widget);
 
         /* Quit button */
         I_button_init(&quit_button, NULL, C_str("i-quit", "Quit"),
                       I_BT_DECORATED);
         quit_button.on_click = (i_callback_f)quit_button_clicked;
-        I_widget_add(&window->widget, &quit_button.widget);
+        I_widget_add(&left_box.widget, &quit_button.widget);
+
+        /* IP entry */
+        I_entry_init(&ip_entry, "127.0.0.1");
+        ip_entry.widget.margin_rear = 0.5f;
+        ip_entry.on_change = (i_callback_f)ip_entry_changed;
+        I_widget_add(&right_box.widget, &ip_entry.widget);
+
+        /* Server list scrollback */
+        I_scrollback_init(&server_list);
+        I_widget_add(&right_box.widget, &server_list.widget);
 }
 

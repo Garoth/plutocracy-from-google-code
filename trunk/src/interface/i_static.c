@@ -107,10 +107,12 @@ int I_box_event(i_box_t *box, i_event_t event)
 {
         if (event != I_EV_CONFIGURE)
                 return TRUE;
-        if (box->pack_children == I_PACK_H)
-                box->widget.size.y = box->width;
-        else if (box->pack_children == I_PACK_V)
-                box->widget.size.x = box->width;
+        if (box->width > 0.f) {
+                if (box->pack_children == I_PACK_H)
+                        box->widget.size.y = box->width;
+                else if (box->pack_children == I_PACK_V)
+                        box->widget.size.x = box->width;
+        }
         I_widget_pack(&box->widget, box->pack_children, box->fit);
         box->widget.size = I_widget_child_bounds(&box->widget);
         return FALSE;

@@ -74,7 +74,6 @@ static void cargo_init(cargo_t *cargo, const char *name)
         I_widget_init(&cargo->widget, "Cargo");
         cargo->widget.event_func = (i_event_f)cargo_event;
         cargo->widget.state = I_WS_READY;
-        cargo->widget.clickable = TRUE;
 
         /* Label */
         I_label_init(&cargo->label, name);
