@@ -121,7 +121,6 @@ void I_window_init(i_window_t *window)
         I_widget_init(&window->widget, "Window");
         window->widget.event_func = (i_event_f)window_event;
         window->widget.state = I_WS_READY;
-        window->widget.clickable = TRUE;
         window->widget.padding = 1.f;
         window->pack_children = I_PACK_V;
         window->decorated = TRUE;
@@ -192,7 +191,6 @@ void I_toolbar_init(i_toolbar_t *toolbar, int right)
         I_widget_init(&toolbar->widget, "Toolbar");
         toolbar->widget.event_func = (i_event_f)I_toolbar_event;
         toolbar->widget.state = I_WS_READY;
-        toolbar->widget.clickable = TRUE;
         toolbar->right = right;
         I_window_init(&toolbar->window);
         toolbar->window.pack_children = I_PACK_H;
@@ -365,7 +363,6 @@ void I_init_popup(void)
         popup_widget.event_func = (i_event_f)popup_event;
         popup_widget.state = I_WS_READY;
         popup_widget.shown = FALSE;
-        popup_widget.clickable = TRUE;
         popup_widget.padding = 1.f;
 
         /* Label */

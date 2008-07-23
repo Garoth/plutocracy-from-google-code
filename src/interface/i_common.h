@@ -105,7 +105,7 @@ typedef struct i_widget {
         i_event_f event_func;
         i_widget_state_t state;
         float fade, margin_front, margin_rear, padding;
-        bool configured, entry, clickable, expand, shown, heap;
+        bool configured, entry, expand, shown, heap;
 } i_widget_t;
 
 /* Windows are decorated containers */
@@ -155,7 +155,7 @@ typedef struct i_entry {
         i_widget_t widget;
         r_sprite_t text, cursor;
         r_window_t window;
-        i_callback_f on_enter;
+        i_callback_f on_change, on_enter;
         i_auto_complete_f auto_complete;
         float scroll;
         int pos, history_pos, history_size;
@@ -221,6 +221,7 @@ void I_theme_buttons(void);
 
 /* i_console.c */
 void I_init_console(i_window_t *);
+void I_scrollback_init(i_scrollback_t *);
 void I_theme_scrollbacks(void);
 
 /* i_entry.c */
@@ -253,7 +254,7 @@ void I_theme_ring(void);
 
 /* i_select.c */
 void I_select_init(i_select_t *, const char *label, const char **list,
-                   int initial);
+                   int initial, bool reverse);
 
 /* i_ship.c */
 void I_init_ship(i_window_t *);
@@ -288,6 +289,7 @@ void I_widget_pack(i_widget_t *, i_pack_t, i_fit_t);
 void I_widget_propagate(i_widget_t *, i_event_t);
 void I_widget_remove(i_widget_t *, int cleanup);
 void I_widget_remove_children(i_widget_t *, int cleanup);
+i_widget_t *I_widget_top_level(i_widget_t *);
 
 extern c_color_t i_colors[I_COLORS];
 extern i_widget_t *i_child, *i_key_focus, *i_mouse_focus;

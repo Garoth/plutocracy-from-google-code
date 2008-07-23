@@ -50,7 +50,7 @@ int I_select_event(i_select_t *select, i_event_t event)
 static void select_change(i_select_t *select, int index)
 {
         i_widget_t *low, *high;
-        
+
         /* Reverse-order select options switch the button functions */
         if (select->reverse) {
                 low = &select->right.widget;
@@ -105,17 +105,17 @@ static void right_arrow_clicked(i_button_t *button)
  Initialize a selection widget.
 \******************************************************************************/
 void I_select_init(i_select_t *select, const char *label, const char **list,
-                   int initial)
+                   int initial, bool reverse)
 {
         if (!select)
                 return;
         C_zero(select);
         I_widget_init(&select->widget, "Select");
         select->widget.event_func = (i_event_f)I_select_event;
-        select->widget.clickable = TRUE;
         select->widget.state = I_WS_READY;
         select->list = list;
         select->index = initial;
+        select->reverse = reverse;
 
         /* Description label */
         I_label_init(&select->label, label);
@@ -133,8 +133,6 @@ void I_select_init(i_select_t *select, const char *label, const char **list,
         select->left.on_click = (i_callback_f)left_arrow_clicked;
         select->left.data = select;
         select->left.widget.margin_rear = 0.5f;
-        if (initial < 1)
-                select->left.widget.state = I_WS_DISABLED;
         I_widget_add(&select->widget, &select->left.widget);
 
         /* Selected item label */
@@ -151,8 +149,19 @@ void I_select_init(i_select_t *select, const char *label, const char **list,
         select->right.on_click = (i_callback_f)right_arrow_clicked;
         select->right.data = select;
         select->right.widget.margin_front = 0.5f;
-        if (initial >= select->list_len - 1)
-                select->right.widget.state = I_WS_DISABLED;
         I_widget_add(&select->widget, &select->right.widget);
+
+        /* Initially disabled buttons */
+        if (initial < 1) {
+                if (select->reverse)
+                        select->right.widget.state = I_WS_DISABLED;
+                else
+                        select->left.widget.state = I_WS_DISABLED;
+        } else if (initial >= select->list_len - 1) {
+                if (select->reverse)
+                        select->left.widget.state = I_WS_DISABLED;
+                else
+                        select->right.widget.state = I_WS_DISABLED;
+        }
 }
 

@@ -131,17 +131,15 @@ int I_scrollback_event(i_scrollback_t *sb, i_event_t event)
 /******************************************************************************\
  Scrollback widget initialization.
 \******************************************************************************/
-i_widget_t *I_scrollback_init(i_scrollback_t *sb)
+void I_scrollback_init(i_scrollback_t *sb)
 {
         C_zero(sb);
         I_widget_init(&sb->widget, "Scrollback");
         sb->widget.event_func = (i_event_f)I_scrollback_event;
         sb->widget.state = I_WS_READY;
         sb->widget.expand = TRUE;
-        sb->widget.clickable = TRUE;
         sb->limit = 100;
         sb->scroll = 0.f;
-        return (i_widget_t *)sb;
 }
 
 /******************************************************************************\

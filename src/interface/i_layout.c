@@ -285,7 +285,6 @@ void I_init(void)
         i_root.configured = 1;
         i_root.entry = TRUE;
         i_root.shown = TRUE;
-        i_root.clickable = TRUE;
         i_key_focus = &i_root;
 
         /* Left toolbar */

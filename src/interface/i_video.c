@@ -169,9 +169,8 @@ void I_init_video(i_window_t *window)
         populate_modes();
         I_select_init(options + opt,
                       C_str("i-video-mode", "Resolution:"),
-                      (const char **)list_modes, orig_indices[opt]);
+                      (const char **)list_modes, orig_indices[opt], TRUE);
         options[0].on_change = (i_callback_f)set_apply_state;
-        options[0].reverse = TRUE;
         I_widget_add(&window->widget, &options[opt].widget);
 
         /* Select color bits */
@@ -179,7 +178,7 @@ void I_init_video(i_window_t *window)
                                             list_color_bits);
         I_select_init(options + opt,
                       C_str("i-video-color", "Color bits:"),
-                      list_color_bits, orig_indices[opt]);
+                      list_color_bits, orig_indices[opt], FALSE);
         options[opt].on_change = (i_callback_f)on_change_set;
         options[opt].data = &r_color_bits;
         I_widget_add(&window->widget, &options[opt].widget);
@@ -187,7 +186,7 @@ void I_init_video(i_window_t *window)
         /* Select windowed */
         orig_indices[++opt] = r_windowed.latched.n ? 1 : 0;
         I_select_init(options + opt, C_str("i-video-windowed", "Windowed:"),
-                      list_bool, orig_indices[opt]);
+                      list_bool, orig_indices[opt], FALSE);
         options[opt].on_change = (i_callback_f)on_change_set;
         options[opt].data = &r_windowed;
         I_widget_add(&window->widget, &options[opt].widget);
@@ -197,7 +196,7 @@ void I_init_video(i_window_t *window)
                                             list_multisample);
         I_select_init(options + opt, C_str("i-video-multisample",
                                            "Multisampling:"),
-                      list_multisample, orig_indices[opt]);
+                      list_multisample, orig_indices[opt], FALSE);
         options[opt].on_change = (i_callback_f)on_change_set;
         options[opt].data = &r_multisample;
         I_widget_add(&window->widget, &options[opt].widget);
@@ -206,7 +205,7 @@ void I_init_video(i_window_t *window)
         orig_indices[++opt] = closest_index(r_gamma.latched.f, list_numeric);
         I_select_init(options + opt,
                       C_str("i-video-gamma", "Gamma correction:"),
-                      list_numeric, orig_indices[opt]);
+                      list_numeric, orig_indices[opt], FALSE);
         options[opt].on_change = (i_callback_f)on_change_set;
         options[opt].data = &r_gamma;
         I_widget_add(&window->widget, &options[opt].widget);
@@ -216,7 +215,7 @@ void I_init_video(i_window_t *window)
                                             list_numeric);
         I_select_init(&options[opt],
                       C_str("i-video-pixel-scale", "Scale 2D:"),
-                      list_numeric, orig_indices[opt]);
+                      list_numeric, orig_indices[opt], FALSE);
         options[opt].on_change = (i_callback_f)on_change_set;
         options[opt].data = &r_pixel_scale;
         I_widget_add(&window->widget, &options[opt].widget);

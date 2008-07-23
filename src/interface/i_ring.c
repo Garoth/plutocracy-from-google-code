@@ -128,7 +128,6 @@ void I_init_ring(void)
         I_widget_init(&ring_widget, "Ring");
         ring_widget.event_func = (i_event_f)ring_event;
         ring_widget.state = I_WS_READY;
-        ring_widget.clickable = TRUE;
         ring_widget.shown = FALSE;
 
         /* Initialize the button widgets */
