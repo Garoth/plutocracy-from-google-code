@@ -59,11 +59,11 @@ typedef enum {
 
 /* Widget input states */
 typedef enum {
-        I_WS_DISABLED,
-        I_WS_NO_FOCUS,
         I_WS_READY,
         I_WS_HOVER,
         I_WS_ACTIVE,
+        I_WS_DISABLED,
+        I_WS_NO_FOCUS,
         I_WIDGET_STATES
 } i_widget_state_t;
 

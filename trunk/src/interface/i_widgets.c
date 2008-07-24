@@ -397,16 +397,55 @@ static int check_mouse_focus(i_widget_t *widget)
 {
         if (!widget)
                 return FALSE;
-        if (i_mouse_x >= widget->origin.x && i_mouse_y >= widget->origin.y &&
-            i_mouse_x < widget->origin.x + widget->size.x &&
-            i_mouse_y < widget->origin.y + widget->size.y &&
-            widget->shown && widget->state != I_WS_DISABLED) {
+        if (widget->state != I_WS_NO_FOCUS && widget->state != I_WS_DISABLED &&
+            widget->shown && C_rect_contains(widget->origin, widget->size,
+                                             C_vec2(i_mouse_x, i_mouse_y))) {
                 i_mouse_focus = widget;
                 return TRUE;
         }
         if (widget->state == I_WS_HOVER || widget->state == I_WS_ACTIVE)
                 I_widget_event(widget, I_EV_MOUSE_OUT);
         return FALSE;
+}
+
+/******************************************************************************\
+ When a widget is hidden, propagates up to the widget's parent and then to its
+ parent and so on until mouse focus is claimed. Does nothing if the mouse is
+ not within widget bounds.
+\******************************************************************************/
+static void focus_parent(i_widget_t *widget)
+{
+        i_widget_t *p;
+
+        /* Propagate key focus up */
+        if (I_widget_child_of(widget, i_key_focus)) {
+                p = widget->parent;
+                while (p) {
+                        if (p->entry) {
+                                i_key_focus = p;
+                                break;
+                        }
+                        p = p->parent;
+                }
+        }
+
+        /* Propagate mouse out events */
+        if (!I_widget_child_of(widget, i_mouse_focus))
+                return;
+        p = i_mouse_focus;
+        while (p != widget) {
+                I_widget_event(p, I_EV_MOUSE_OUT);
+                p = p->parent;
+        }
+        I_widget_event(p, I_EV_MOUSE_OUT);
+
+        /* Propagate focus up */
+        while (widget->parent) {
+                widget = widget->parent;
+                if (check_mouse_focus(widget))
+                        return;
+        }
+        i_mouse_focus = &i_root;
 }
 
 /******************************************************************************\
@@ -489,10 +528,8 @@ void I_widget_event(i_widget_t *widget, i_event_t event)
                 if (!widget->shown)
                         return;
                 widget->shown = FALSE;
-                if (i_key_focus == widget)
-                        i_key_focus = NULL;
                 widget->event_func(widget, event);
-                find_focus();
+                focus_parent(widget);
                 return;
         case I_EV_MOUSE_IN:
                 if (widget->state == I_WS_READY)

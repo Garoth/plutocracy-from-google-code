@@ -16,21 +16,6 @@
 n_client_t n_clients[N_CLIENTS_MAX];
 
 /******************************************************************************\
- Initializes the network namespace.
-\******************************************************************************/
-void N_init(void)
-{
-        n_client_id = N_INVALID_ID;
-}
-
-/******************************************************************************\
- Cleans up the network namespace.
-\******************************************************************************/
-void N_cleanup(void)
-{
-}
-
-/******************************************************************************\
  Open server sockets and begin accepting connections. Returns TRUE on success.
 \******************************************************************************/
 int N_start_server(n_callback_f server_func, n_callback_f client_func)
@@ -43,6 +28,7 @@ int N_start_server(n_callback_f server_func, n_callback_f client_func)
         /* Setup the host's client */
         n_clients[N_HOST_CLIENT_ID].connected = TRUE;
         n_server_func(N_HOST_CLIENT_ID, N_EV_CONNECTED);
+        n_client_func(N_SERVER_ID, N_EV_CONNECTED);
 
         /* The local client may have disconnected in response to something the
            server tried to do, so we check here if that happened */
