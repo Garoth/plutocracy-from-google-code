@@ -106,6 +106,10 @@ void N_send(int client, const char *format, ...)
         const char *string;
         int string_len;
 
+        /* We're not connected */
+        if (n_client_id < 0)
+                return;
+
         /* Clients should never be sending messages to anyone but the server */
         C_assert(n_client_id == N_HOST_CLIENT_ID || client == N_SERVER_ID);
 

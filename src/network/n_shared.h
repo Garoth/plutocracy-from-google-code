@@ -41,15 +41,15 @@ typedef struct n_client {
 } n_client_t;
 
 /* n_client.c */
+void N_cleanup(void);
 void N_connect(const char *address, int port, n_callback_f client);
 void N_disconnect(void);
+void N_init(void);
 
 extern int n_client_id;
 
 /* n_server.c */
-void N_cleanup(void);
 void N_kick_client(int client);
-void N_init(void);
 void N_poll_server(void);
 int N_start_server(n_callback_f server, n_callback_f client);
 void N_stop_server(void);
@@ -62,5 +62,6 @@ float N_receive_float(void);
 int N_receive_int(void);
 short N_receive_short(void);
 void N_receive_string(char *buffer, int size);
+#define N_receive_string_buf(b) N_receive_string(b, sizeof (b))
 void N_send(int client, const char *format, ...);
 

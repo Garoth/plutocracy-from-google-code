@@ -21,6 +21,9 @@ c_var_t g_globe_islands, g_globe_island_size, g_globe_seed, g_globe_subdiv4;
 /* Nation colors */
 c_var_t g_nation_colors[G_NATION_NAMES];
 
+/* Player settings */
+c_var_t g_name;
+
 /******************************************************************************\
  Registers the game namespace variables.
 \******************************************************************************/
@@ -53,5 +56,8 @@ void G_register_variables(void)
                           "#80729fcf", "blue national color");
         C_register_string(g_nation_colors + G_NN_PIRATE, "g_color_pirate",
                           "#80808080", "pirate color");
+
+        /* Player settings */
+        C_register_string(&g_name, "g_name", "Newbie", "player name");
 }
 

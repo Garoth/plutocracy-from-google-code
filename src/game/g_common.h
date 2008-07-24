@@ -22,11 +22,15 @@
 /* Invalid island index */
 #define G_ISLAND_INVALID 255
 
+/* Longest allowed name */
+#define G_NAME_MAX 16
+
 /* Message tokens sent by clients */
 typedef enum {
         G_CM_NONE,
         G_CM_AFFILIATE,
         G_CM_SHIP_MOVE,
+        G_CM_NAME,
         G_CLIENT_MESSAGES,
 } g_client_msg_t;
 
@@ -36,6 +40,7 @@ typedef enum {
         G_SM_INIT,
         G_SM_POPUP,
         G_SM_AFFILIATE,
+        G_SM_NAME,
         G_SERVER_MESSAGES,
 } g_server_msg_t;
 
@@ -51,7 +56,7 @@ typedef struct g_tile {
 typedef struct g_client {
         c_count_t commands;
         int nation;
-        char name[16];
+        char name[G_NAME_MAX];
 } g_client_t;
 
 /* g_client.c */
@@ -81,6 +86,6 @@ void G_update_ships(void);
 
 /* g_variables.c */
 extern c_var_t g_globe_islands, g_globe_island_size, g_globe_seed,
-               g_globe_subdiv4, g_nation_colors[G_NATION_NAMES],
+               g_globe_subdiv4, g_name, g_nation_colors[G_NATION_NAMES],
                g_test_globe, g_test_tile;
 

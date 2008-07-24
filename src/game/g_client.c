@@ -38,6 +38,17 @@ static int nation_color_update(c_var_t *var, c_var_value_t value)
 }
 
 /******************************************************************************\
+ Send the server an update if our name changes.
+\******************************************************************************/
+static int name_update(c_var_t *var, c_var_value_t value)
+{
+        if (!value.s[0])
+                return FALSE;
+        N_send(N_SERVER_ID, "1s", G_CM_NAME, value.s);
+        return TRUE;
+}
+
+/******************************************************************************\
  Initialize game structures before play.
 \******************************************************************************/
 void G_init(void)
@@ -93,6 +104,11 @@ void G_init(void)
 
         /* Prepare initial state */
         G_init_globe();
+
+        /* Update the server when our name changes */
+        C_var_unlatch(&g_name);
+        g_name.update = (c_var_update_f)name_update;
+        g_name.edit = C_VE_FUNCTION;
 }
 
 /******************************************************************************\
@@ -229,6 +245,33 @@ static void client_init(void)
 }
 
 /******************************************************************************\
+ A client has changed their name.
+\******************************************************************************/
+static void client_name(void)
+{
+        int client;
+        char old_name[G_NAME_MAX];
+
+        client = N_receive_char();
+        if (client < 0 || client >= N_CLIENTS_MAX) {
+                corrupt_disconnect();
+                return;
+        }
+        C_strncpy_buf(old_name, g_clients[client].name);
+        N_receive_string_buf(g_clients[client].name);
+
+        /* The first name-change on connect */
+        if (!old_name[0]) {
+                I_print_chat(C_va("%s joined the game.",
+                                  g_clients[client].name), I_COLOR, NULL);
+                return;
+        }
+
+        I_print_chat(C_va("%s renamed to %s.", old_name,
+                          g_clients[client].name), I_COLOR, NULL);
+}
+
+/******************************************************************************\
  Client network event callback function.
 \******************************************************************************/
 void G_client_callback(int client, n_event_t event)
@@ -236,6 +279,12 @@ void G_client_callback(int client, n_event_t event)
         g_server_msg_t token;
 
         C_assert(client == N_SERVER_ID);
+
+        /* Connected */
+        if (event == N_EV_CONNECTED) {
+                name_update(&g_name, g_name.value);
+                return;
+        }
 
         /* Disconnected */
         if (event == N_EV_DISCONNECTED) {
@@ -256,6 +305,9 @@ void G_client_callback(int client, n_event_t event)
                 break;
         case G_SM_INIT:
                 client_init();
+                break;
+        case G_SM_NAME:
+                client_name();
                 break;
         default:
                 break;

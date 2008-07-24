@@ -16,7 +16,7 @@
 #define CHAT_DURATION 10000
 
 /* Maximum number of chat lines */
-#define CHAT_LINES 20
+#define CHAT_LINES 10
 
 /* Chat line widget */
 typedef struct chat {
@@ -62,6 +62,14 @@ static void chat_init(chat_t *chat, const char *name, i_color_t color,
         chat->widget.event_func = (i_event_f)chat_event;
         chat->time = c_time_msec;
 
+        /* No text */
+        if (!text || !text[0]) {
+                I_label_init(&chat->name, name);
+                chat->name.color = color;
+                I_widget_add(&chat->widget, &chat->name.widget);
+                return;
+        }
+
         /* Colored name */
         I_label_init(&chat->name, C_va("%s: ", name));
         chat->name.color = color;
@@ -105,6 +113,7 @@ static void input_enter(void)
 {
         G_input_chat(input.buffer);
         I_hide_chat();
+        I_entry_configure(&input, "");
 }
 
 /******************************************************************************\
@@ -114,7 +123,7 @@ void I_init_chat(void)
 {
         /* Chat box */
         I_box_init(&chat_box, I_PACK_V, 0.f);
-        chat_box.widget.state = I_WS_READY;
+        chat_box.widget.state = I_WS_NO_FOCUS;
         chat_box.fit = I_FIT_TOP;
         I_widget_add(&i_root, &chat_box.widget);
 
@@ -175,6 +184,7 @@ void I_print_chat(const char *name, i_color_t color, const char *message)
                         oldest = i;
                 if (i >= CHAT_LINES - 1) {
                         i = oldest;
+                        I_widget_remove(&chat_lines[i].widget, TRUE);
                         break;
                 }
         }

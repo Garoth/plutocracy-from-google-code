@@ -392,6 +392,14 @@ static inline int C_rect_intersect(c_vec2_t o1, c_vec2_t s1,
 }
 
 /******************************************************************************\
+ Returns TRUE if the rectangle contains the point.
+\******************************************************************************/
+static inline int C_rect_contains(c_vec2_t o, c_vec2_t s, c_vec2_t p)
+{
+        return p.x >= o.x && p.y >= o.y && p.x < o.x + s.x && p.y < o.y + s.y;
+}
+
+/******************************************************************************\
  Limit a color to valid range.
 \******************************************************************************/
 static inline c_color_t C_color_limit(c_color_t c)

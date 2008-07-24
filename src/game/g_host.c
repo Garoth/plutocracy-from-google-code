@@ -95,8 +95,37 @@ static void server_client_connect(int client)
         N_send(client, "114", G_SM_INIT, G_PROTOCOL,
                g_globe_seed.value.n);
 
-        /* Dummy name for the client */
-        C_strncpy_buf(g_clients[client].name, C_va("Client #%d", client + 1));
+        /* Start out nameless */
+        g_clients[client].name[0] = NUL;
+}
+
+/******************************************************************************\
+ Called when a client wants to change their name.
+ TODO: Check for name validity
+\******************************************************************************/
+static void server_name(int client)
+{
+        int i;
+        char new_name[G_NAME_MAX];
+
+        N_receive_string_buf(new_name);
+        if (!strcmp(new_name, g_clients[client].name))
+                return;
+
+        /* See if this name is taken */
+        for (i = 0; i < N_CLIENTS_MAX; i++) {
+                if (i == client)
+                        continue;
+                if (!strcasecmp(new_name, g_clients[client].name)) {
+                        N_send(client, "12s", G_SM_POPUP, -1,
+                               C_va("Name '%s' already taken.", new_name));
+                        return;
+                }
+        }
+
+        C_debug("Client '%s' (%d) renamed to '%s'", g_clients[client].name,
+                client, new_name);
+        N_send(N_BROADCAST_ID, "11s", G_SM_NAME, client, new_name);
 }
 
 /******************************************************************************\
@@ -126,6 +155,9 @@ static void server_callback(int client, n_event_t event)
                 break;
         case G_CM_SHIP_MOVE:
                 server_ship_move(client);
+                break;
+        case G_CM_NAME:
+                server_name(client);
                 break;
         default:
                 break;
