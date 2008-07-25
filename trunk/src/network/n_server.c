@@ -16,7 +16,7 @@
 n_client_t n_clients[N_CLIENTS_MAX];
 
 /* Server socket for listening for incoming connections */
-static int listen_socket;
+static SOCKET listen_socket;
 
 /******************************************************************************\
  Close server sockets and stop accepting connections.
@@ -29,8 +29,8 @@ void N_stop_server(void)
 
         /* Close listen server socket */
         if (listen_socket >= 0)
-                close(listen_socket);
-        listen_socket = -1;
+                closesocket(listen_socket);
+        listen_socket = INVALID_SOCKET;
 
         C_debug("Stopped listen server");
 }
@@ -72,10 +72,7 @@ int N_start_server(n_callback_f server_func, n_callback_f client_func)
                 C_warning("Failed to bind to port %d", n_port.value.n);
                 return FALSE;
         }
-
-        /* Make the listen socket non-blocking */
-        fcntl(listen_socket, F_SETFL, O_NONBLOCK);
-
+        N_socket_no_block(listen_socket);
         C_debug("Started listen server");
         return TRUE;
 }
@@ -87,23 +84,23 @@ static void accept_connections(void)
 {
         struct sockaddr_in addr;
         socklen_t socklen;
-        int i, socket;
+        SOCKET socket;
+        int i;
 
         socklen = sizeof (addr);
-        if ((socket = accept(listen_socket, &addr, &socklen)) < 0)
+        if ((socket = accept(listen_socket, (struct sockaddr *)&addr, 
+                             &socklen)) == INVALID_SOCKET)
                 return;
 
         /* Find a client id for this client */
         for (i = 0; n_clients[i].connected; i++)
                 if (i >= N_CLIENTS_MAX) {
                         C_debug("Server full, rejected new connection");
-                        close(socket);
+                        closesocket(socket);
                         return;
                 }
         C_debug("Connected '%s' as client %d", inet_ntoa(addr.sin_addr), i);
-
-        /* Make the listen socket non-blocking */
-        fcntl(socket, F_SETFL, O_NONBLOCK);
+        N_socket_no_block(socket);
 
         /* Initialize the client */
         n_clients[i].connected = TRUE;
@@ -131,7 +128,7 @@ void N_kick_client(int client)
                 return;
         }
 
-        close(n_clients[client].socket);
+        closesocket(n_clients[client].socket);
         C_debug("Kicked client %d", client);
 }
 
@@ -149,7 +146,7 @@ void N_poll_server(void)
         /* Receive from clients */
         for (i = 0; i < N_CLIENTS_MAX; i++)
                 if (n_clients[i].connected && !N_receive(i)) {
-                        close(n_clients[i].socket);
+                        closesocket(n_clients[i].socket);
                         n_clients[i].connected = FALSE;
                         n_server_func(i, N_EV_DISCONNECTED);
                 }

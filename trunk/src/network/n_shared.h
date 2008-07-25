@@ -10,6 +10,16 @@
  FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
 \******************************************************************************/
 
+/* Largest amount of data that can be sent via a message */
+#define N_SYNC_MAX 1024
+
+/* Windows compatibility */
+#ifdef WINDOWS
+typedef UINT_PTR SOCKET;
+#else
+typedef int SOCKET;
+#endif
+
 /* Special client IDs */
 typedef enum {
         N_INVALID_ID = -1,
@@ -19,9 +29,6 @@ typedef enum {
         N_UNASSIGNED_ID,
         N_BROADCAST_ID,
 } n_client_id_t;
-
-/* Largest amount of data that can be sent via a message */
-#define N_SYNC_MAX 1024
 
 /* Callback function events */
 typedef enum {
@@ -35,7 +42,7 @@ typedef void (*n_callback_f)(n_client_id_t, n_event_t);
 
 /* Structure for connected clients */
 typedef struct n_client {
-        int socket;
+        SOCKET socket;
         bool connected;
 } n_client_t;
 
@@ -51,7 +58,7 @@ void N_poll_client(void);
 extern n_client_id_t n_client_id;
 
 /* n_server.c */
-void N_kick_client(int client);
+void N_kick_client(n_client_id_t);
 void N_poll_server(void);
 int N_start_server(n_callback_f server, n_callback_f client);
 void N_stop_server(void);
