@@ -74,6 +74,7 @@ void R_init_ships(void)
 void R_cleanup_ships(void)
 {
         R_texture_free(quad_tex);
+        R_texture_free(quad_other_tex);
         R_texture_free(select_tex);
         R_texture_free(bars_tex);
 }
