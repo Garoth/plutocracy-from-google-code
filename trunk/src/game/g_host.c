@@ -61,7 +61,7 @@ static void server_affiliate(int client)
                 }
         }
 
-        N_send(N_BROADCAST_ID, "1112", G_SM_AFFILIATE, client, nation, tile);
+        N_broadcast("1112", G_SM_AFFILIATE, client, nation, tile);
 }
 
 /******************************************************************************\
@@ -80,9 +80,6 @@ static void server_ship_move(int client)
         if (!g_ships[ship].in_use || g_ships[ship].client != client)
                 return;
         G_ship_path(ship, tile);
-        R_select_path(g_ships[ship].tile, g_ships[ship].path);
-
-        /* TODO: Tell all other clients about the path change */
 }
 
 /******************************************************************************\
@@ -90,18 +87,37 @@ static void server_ship_move(int client)
 \******************************************************************************/
 static void server_client_connect(int client)
 {
-        C_debug("Client %d connected", client);
+        int i;
+
+        if (client == N_HOST_CLIENT_ID)
+                return;
+        C_debug("Initializing client %d", client);
         g_clients[client].nation = G_NN_NONE;
-        N_send(client, "114", G_SM_INIT, G_PROTOCOL,
+        N_send(client, "1114", G_SM_INIT, G_PROTOCOL, client,
                g_globe_seed.value.n);
 
         /* Start out nameless */
         g_clients[client].name[0] = NUL;
+
+        /* Tell them about everyone already here */
+        for (i = 0; i < N_CLIENTS_MAX; i++)
+                if (n_clients[i].connected && g_clients[i].name[0])
+                        N_send(client, "111s", G_SM_CLIENT, i,
+                               g_clients[i].nation, g_clients[i].name);
+
+        /* Tell everyone else about the new arrival */
+        N_broadcast_except(client, "11", G_SM_CONNECTED, client);
+
+        /* Tell them about all the ships on the globe */
+        for (i = 0; i < G_SHIPS_MAX; i++)
+                if (g_ships[i].in_use)
+                        N_send(client, "11211", G_SM_SPAWN_SHIP,
+                               g_ships[i].client, g_ships[i].tile,
+                               g_ships[i].class_name, i);
 }
 
 /******************************************************************************\
  Called when a client wants to change their name.
- TODO: Check for name validity
 \******************************************************************************/
 static void server_name(int client)
 {
@@ -109,8 +125,16 @@ static void server_name(int client)
         char new_name[G_NAME_MAX];
 
         N_receive_string_buf(new_name);
+
+        /* Didn't actually change names */
         if (!strcmp(new_name, g_clients[client].name))
                 return;
+
+        /* Is this a valid name? */
+        if (!new_name[0]) {
+                N_send(client, "12s", G_SM_POPUP, -1, "Invalid name.");
+                return;
+        }
 
         /* See if this name is taken */
         for (i = 0; i < N_CLIENTS_MAX; i++) {
@@ -125,7 +149,20 @@ static void server_name(int client)
 
         C_debug("Client '%s' (%d) renamed to '%s'", g_clients[client].name,
                 client, new_name);
-        N_send(N_BROADCAST_ID, "11s", G_SM_NAME, client, new_name);
+        N_broadcast("11s", G_SM_NAME, client, new_name);
+}
+
+/******************************************************************************\
+ Client typed something into chat.
+\******************************************************************************/
+static void server_chat(int client)
+{
+        char chat_buffer[N_SYNC_MAX];
+
+        N_receive_string_buf(chat_buffer);
+        if (!chat_buffer[0])
+                return;
+        N_broadcast_except(client, "11s", G_SM_CHAT, client, chat_buffer);
 }
 
 /******************************************************************************\
@@ -136,11 +173,13 @@ static void server_callback(int client, n_event_t event)
 {
         g_client_msg_t token;
 
-        /* Connect/disconnect */
+        /* Special client events */
         if (event == N_EV_CONNECTED) {
                 server_client_connect(client);
                 return;
         } else if (event == N_EV_DISCONNECTED) {
+                if (g_clients[client].name[0])
+                        N_broadcast("11", G_SM_DISCONNECTED, client);
                 C_debug("Client %d disconnected", client);
                 return;
         }
@@ -159,6 +198,9 @@ static void server_callback(int client, n_event_t event)
         case G_CM_NAME:
                 server_name(client);
                 break;
+        case G_CM_CHAT:
+                server_chat(client);
+                break;
         default:
                 break;
         }
@@ -169,9 +211,19 @@ static void server_callback(int client, n_event_t event)
 \******************************************************************************/
 void G_host_game(void)
 {
+        G_leave_game();
+
         /* Clear game structures */
         memset(g_ships, 0, sizeof (g_ships));
         memset(g_clients, 0, sizeof (g_clients));
+
+        /* Start the network server */
+        if (!N_start_server((n_callback_f)server_callback,
+                            (n_callback_f)G_client_callback)) {
+                I_popup(NULL, "Failed to start server.");
+                I_enter_limbo();
+                return;
+        }
 
         /* Generate a new globe */
         if (g_globe_seed.has_latched)
@@ -180,9 +232,6 @@ void G_host_game(void)
                 g_globe_seed.value.n = (int)time(NULL);
         G_generate_globe();
 
-        if (!N_start_server((n_callback_f)server_callback,
-                            (n_callback_f)G_client_callback))
-                return;
         I_leave_limbo();
         I_popup(NULL, "Hosted a new game.");
 }

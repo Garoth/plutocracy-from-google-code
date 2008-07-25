@@ -15,11 +15,37 @@
 /* Client slots array */
 n_client_t n_clients[N_CLIENTS_MAX];
 
+/* Server socket for listening for incoming connections */
+static int listen_socket;
+
+/******************************************************************************\
+ Close server sockets and stop accepting connections.
+\******************************************************************************/
+void N_stop_server(void)
+{
+        if (n_client_id != N_HOST_CLIENT_ID)
+                return;
+        n_client_id = N_INVALID_ID;
+
+        /* Close listen server socket */
+        if (listen_socket >= 0)
+                close(listen_socket);
+        listen_socket = -1;
+
+        C_debug("Stopped listen server");
+}
+
 /******************************************************************************\
  Open server sockets and begin accepting connections. Returns TRUE on success.
+ TODO: Carry over any already connected clients
 \******************************************************************************/
 int N_start_server(n_callback_f server_func, n_callback_f client_func)
 {
+        struct sockaddr_in addr;
+
+        N_disconnect();
+
+        /* Reinitialize clients table */
         n_client_id = N_HOST_CLIENT_ID;
         n_server_func = server_func;
         n_client_func = client_func;
@@ -35,26 +61,54 @@ int N_start_server(n_callback_f server_func, n_callback_f client_func)
         if (n_client_id == N_INVALID_ID)
                 return FALSE;
 
+        /* Start the listen server and accept connections */
+        C_var_unlatch(&n_port);
+        listen_socket = socket(PF_INET, SOCK_STREAM, 0);
+        C_zero(&addr);
+        addr.sin_family = AF_INET;
+        addr.sin_port = htons(n_port.value.n);
+        if (bind(listen_socket, (struct sockaddr *)&addr, sizeof (addr)) ||
+            listen(listen_socket, 16)) {
+                C_warning("Failed to bind to port %d", n_port.value.n);
+                return FALSE;
+        }
+
+        /* Make the listen socket non-blocking */
+        fcntl(listen_socket, F_SETFL, O_NONBLOCK);
+
+        C_debug("Started listen server");
         return TRUE;
 }
 
 /******************************************************************************\
- Close server sockets and stop accepting connections.
+ Accept any incoming connections.
 \******************************************************************************/
-void N_stop_server(void)
+static void accept_connections(void)
 {
-        if (n_client_id != N_HOST_CLIENT_ID)
-                return;
-        n_client_id = N_INVALID_ID;
-}
+        struct sockaddr_in addr;
+        socklen_t socklen;
+        int i, socket;
 
-/******************************************************************************\
- Poll connections and dispatch any messages that arrive.
-\******************************************************************************/
-void N_poll_server(void)
-{
-        if (n_client_id != N_HOST_CLIENT_ID)
+        socklen = sizeof (addr);
+        if ((socket = accept(listen_socket, &addr, &socklen)) < 0)
                 return;
+
+        /* Find a client id for this client */
+        for (i = 0; n_clients[i].connected; i++)
+                if (i >= N_CLIENTS_MAX) {
+                        C_debug("Server full, rejected new connection");
+                        close(socket);
+                        return;
+                }
+        C_debug("Connected '%s' as client %d", inet_ntoa(addr.sin_addr), i);
+
+        /* Make the listen socket non-blocking */
+        fcntl(socket, F_SETFL, O_NONBLOCK);
+
+        /* Initialize the client */
+        n_clients[i].connected = TRUE;
+        n_clients[i].socket = socket;
+        n_server_func(i, N_EV_CONNECTED);
 }
 
 /******************************************************************************\
@@ -62,10 +116,42 @@ void N_poll_server(void)
 \******************************************************************************/
 void N_kick_client(int client)
 {
+        C_assert(client >= 0 && client < N_CLIENTS_MAX);
+        if (!n_clients[client].connected) {
+                C_warning("Tried to kick unconnected client %d", client);
+                return;
+        }
         n_clients[client].connected = FALSE;
+
+        /* The server kicked itself */
         if (client == n_client_id) {
                 N_disconnect();
                 N_stop_server();
+                C_debug("Server kicked itself");
+                return;
         }
+
+        close(n_clients[client].socket);
+        C_debug("Kicked client %d", client);
+}
+
+/******************************************************************************\
+ Poll connections and dispatch any messages that arrive.
+\******************************************************************************/
+void N_poll_server(void)
+{
+        int i;
+
+        if (n_client_id != N_HOST_CLIENT_ID)
+                return;
+        accept_connections();
+
+        /* Receive from clients */
+        for (i = 0; i < N_CLIENTS_MAX; i++)
+                if (n_clients[i].connected && !N_receive(i)) {
+                        close(n_clients[i].socket);
+                        n_clients[i].connected = FALSE;
+                        n_server_func(i, N_EV_DISCONNECTED);
+                }
 }
 

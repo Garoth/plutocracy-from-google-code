@@ -13,15 +13,12 @@
 #include "n_common.h"
 #include "SDL_endian.h"
 
-/* Largest amount of data that can be sent via a message */
-#define BUFFER_LEN 1024
-
 /* Receive function that arriving messages are routed to */
 n_callback_f n_client_func, n_server_func;
 
 /* Little-Endian message data buffer */
 int n_sync_pos, n_sync_size;
-char n_sync_buffer[BUFFER_LEN];
+char n_sync_buffer[N_SYNC_MAX];
 
 /******************************************************************************\
  Call these functions to retrieve an argument from the current message from
@@ -87,6 +84,47 @@ void N_receive_string(char *buffer, int size)
 }
 
 /******************************************************************************\
+ Get the socket for the given client ID.
+\******************************************************************************/
+static int client_to_socket(n_client_id_t client)
+{
+        if (client == N_SERVER_ID)
+                return n_client_socket;
+        else if (client >= 0 && client < N_CLIENTS_MAX)
+                return n_clients[client].socket;
+        C_error("Invalid client ID %d", client);
+        return -1;
+}
+
+/******************************************************************************\
+ Sends the current sync buffer out to the given client.
+\******************************************************************************/
+static void send_buffer(n_client_id_t client)
+{
+        if (client >= 0 && client < N_CLIENTS_MAX &&
+            !n_clients[client].connected) {
+                C_warning("Tried to message unconnected client %d", client);
+                return;
+        }
+
+        /* Deliver server messages to itself directly */
+        if (n_client_id == N_HOST_CLIENT_ID) {
+                if (client == N_SERVER_ID) {
+                        n_sync_pos = 2;
+                        n_server_func(N_HOST_CLIENT_ID, N_EV_MESSAGE);
+                        return;
+                } else if (client == N_HOST_CLIENT_ID) {
+                        n_sync_pos = 2;
+                        n_client_func(N_SERVER_ID, N_EV_MESSAGE);
+                        return;
+                }
+        }
+
+        /* Send TCP/IP message */
+        send(client_to_socket(client), n_sync_buffer, n_sync_size, 0);
+}
+
+/******************************************************************************\
  Sends a message to [client]. If [client] is 0, sends to the server. The
  [format] string describes the variable argument list given to the function.
 
@@ -96,9 +134,9 @@ void N_receive_string(char *buffer, int size)
    f       float      4 bytes
    s       string     NULL-terminated
 
- If a negative [client] id is given, all clients except -[client] will receive
- the message. Note that you can either be receiving or sending. The moment you
- send a new message, the one you were receiving is lost!
+ If [client] is (-id - 1), all clients except id will receive the message. Note
+ that you can either be receiving or sending. The moment you send a new
+ message, the one you were receiving is lost!
 \******************************************************************************/
 void N_send(int client, const char *format, ...)
 {
@@ -110,22 +148,23 @@ void N_send(int client, const char *format, ...)
         if (n_client_id < 0)
                 return;
 
-        /* Clients should never be sending messages to anyone but the server */
-        C_assert(n_client_id == N_HOST_CLIENT_ID || client == N_SERVER_ID);
+        /* Clients don't send messages to anyone but the server */
+        if (n_client_id != N_HOST_CLIENT_ID && client != N_SERVER_ID)
+                return;
 
         /* Pack the message into the sync buffer */
         va_start(va, format);
-        for (n_sync_size = 0; *format; format++)
+        for (n_sync_size = 2; *format; format++)
                 switch (*format) {
                 case '1':
                 case 'c':
-                        if (n_sync_size > BUFFER_LEN - 1)
+                        if (n_sync_size > N_SYNC_MAX - 1)
                                 goto overflow;
                         n_sync_buffer[n_sync_size++] = (char)va_arg(va, int);
                         break;
                 case '2':
                 case 'd':
-                        if (n_sync_size > BUFFER_LEN - 2)
+                        if (n_sync_size > N_SYNC_MAX - 2)
                                 goto overflow;
                         *(Uint16 *)(n_sync_buffer + n_sync_size) =
                                 SDL_SwapLE16((Uint16)va_arg(va, int));
@@ -134,7 +173,7 @@ void N_send(int client, const char *format, ...)
                 case '4':
                 case 'l':
                 case 'f':
-                        if (n_sync_size > BUFFER_LEN - 4)
+                        if (n_sync_size > N_SYNC_MAX - 4)
                                 goto overflow;
                         *(Uint32 *)(n_sync_buffer + n_sync_size) =
                                 SDL_SwapLE32((Uint32)va_arg(va, int));
@@ -144,12 +183,12 @@ void N_send(int client, const char *format, ...)
                         string = va_arg(va, const char *);
                         string_len = C_strlen(string) + 1;
                         if (string_len <= 1) {
-                                if (n_sync_size > BUFFER_LEN - 1)
+                                if (n_sync_size > N_SYNC_MAX - 1)
                                         goto overflow;
                                 n_sync_buffer[n_sync_size++] = NUL;
                                 break;
                         }
-                        if (n_sync_size + string_len > BUFFER_LEN)
+                        if (n_sync_size + string_len > N_SYNC_MAX)
                                goto overflow;
                         memcpy(n_sync_buffer + n_sync_size, string, string_len);
                         n_sync_size += string_len;
@@ -159,25 +198,92 @@ void N_send(int client, const char *format, ...)
                 }
         va_end(va);
 
-        /* If we are the server, deliver messages to the server and to our
-           client directly */
-        if (n_client_id == N_HOST_CLIENT_ID) {
-                n_sync_pos = 0;
-                if (client == N_SERVER_ID) {
-                        n_server_func(N_HOST_CLIENT_ID, N_EV_MESSAGE);
-                        return;
-                }
-                if (client == N_HOST_CLIENT_ID || client == N_BROADCAST_ID ||
-                    (client < 0 && -client != n_client_id))
-                        n_client_func(N_SERVER_ID, N_EV_MESSAGE);
+        /* Write the size of the message as the first 2-bytes */
+        *(Uint16 *)n_sync_buffer = SDL_SwapLE16((Uint16)n_sync_size);
+
+        /* Broadcast to every client */
+        if (client == N_BROADCAST_ID || client < 0) {
+                int i;
+
+                C_assert(n_client_id == N_HOST_CLIENT_ID);
+                client = -client - 1;
+                for (i = 0; i < N_CLIENTS_MAX; i++)
+                        if (n_clients[i].connected && i != client)
+                                send_buffer(i);
+                return;
         }
 
-        /* TODO: Send messages over the network */
-
+        /* Single-client message */
+        send_buffer(client);
         return;
 
 overflow:
         va_end(va);
         C_warning("Outgoing message buffer overflow");
+}
+
+/******************************************************************************\
+ Receive data from a socket. Returns FALSE if an error occured and the
+ connection should be dropped.
+\******************************************************************************/
+bool N_receive(n_client_id_t client)
+{
+        int len, message_size, socket;
+
+        if (client == n_client_id)
+                return TRUE;
+        socket = client_to_socket(client);
+        for (;;) {
+
+                /* Receive the message size */
+                len = (int)recv(socket, n_sync_buffer, 2, MSG_PEEK);
+
+                /* Orderly shutdown */
+                if (!len)
+                        return FALSE;
+
+                /* Error, could just have no data */
+                if (len < 0) {
+                        if (errno == EAGAIN)
+                                return TRUE;
+                        C_debug("%s (recv returned %d, %s)", strerror(errno),
+                                len, N_client_to_string(client));
+                        return FALSE;
+                }
+
+                /* Did not receive even the message size */
+                if (len < 2)
+                        return TRUE;
+
+                /* Read the message length */
+                n_sync_pos = 0;
+                n_sync_size = 2;
+                message_size = N_receive_short();
+                if (message_size < 1 || message_size > N_SYNC_MAX) {
+                        C_warning("Invalid message size %d "
+                                  "(recv returned %d, %s)", message_size, len,
+                                  N_client_to_string(client));
+                        return FALSE;
+                }
+
+                /* Check if we have enough room now. For some reason (bug?)
+                   we cannot just add the MSG_TRUNC flag above or it will not
+                   actually peek the data! */
+                len = (int)recv(socket, n_sync_buffer, message_size,
+                                MSG_PEEK | MSG_TRUNC);
+                if (len < message_size)
+                        return TRUE;
+
+                /* Read the entire message */
+                recv(socket, n_sync_buffer, message_size, 0);
+
+                /* Dispatch the message */
+                n_sync_pos = 2;
+                n_sync_size = message_size;
+                if (n_client_id == N_HOST_CLIENT_ID)
+                        n_server_func(client, N_EV_MESSAGE);
+                else
+                        n_client_func(N_SERVER_ID, N_EV_MESSAGE);
+        }
 }
 

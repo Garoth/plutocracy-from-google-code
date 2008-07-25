@@ -23,12 +23,12 @@ typedef enum {
 
 /* There is a fixed number of nations */
 typedef enum {
+        G_NN_NONE,
         G_NN_RED,
         G_NN_GREEN,
         G_NN_BLUE,
         G_NN_PIRATE,
         G_NATION_NAMES,
-        G_NN_NONE,
 } g_nation_name_t;
 
 /* Cargo that a ship can carry */
@@ -99,6 +99,7 @@ typedef struct g_ship {
 int G_cargo_space(const g_cargo_t *);
 void G_init(void);
 void G_input_chat(const char *message);
+void G_join_game(const char *address);
 void G_leave_game(void);
 void G_process_click(int button);
 void G_update_client(void);

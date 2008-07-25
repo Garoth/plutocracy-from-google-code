@@ -85,6 +85,12 @@ bool G_open_tile(int tile, int ship)
 \******************************************************************************/
 int G_spawn_ship(int client, int tile, g_ship_name_t name, int index)
 {
+        if (!N_client_valid(client) || tile >= r_tiles ||
+            name < 0 || name >= G_SHIP_NAMES) {
+                C_warning("Invalid parameters (%d, %d, %d, %d)",
+                          client, tile, name, index);
+                return -1;
+        }
         if (index >= G_SHIPS_MAX) {
                 C_warning("Failed to spawn ship at tile %d, "
                           "index out of range (%d)", tile, index);
@@ -143,7 +149,10 @@ init:   /* Initialize ship structure */
         g_tiles[tile].ship = index;
         G_set_tile_model(tile, g_ship_classes[name].model_path);
 
-        /* TODO: If we are the server, tell other clients */
+        /* If we are the server, tell other clients */
+        if (n_client_id == N_HOST_CLIENT_ID)
+                N_broadcast_except(N_HOST_CLIENT_ID, "11211", G_SM_SPAWN_SHIP,
+                                   client, tile, name, index);
 
         return index;
 }
@@ -235,6 +244,11 @@ void G_ship_path(int ship, int target)
         static int search_stamp;
         search_node_t nodes[SEARCH_BREADTH];
         int i, nodes_len, closest, path_len, neighbors[3];
+
+        /* Tell other clients of the path change */
+        if (n_client_id == N_HOST_CLIENT_ID)
+                N_broadcast_except(N_HOST_CLIENT_ID, "1122", G_SM_SHIP_MOVE,
+                                   ship, g_ships[ship].tile, target);
 
         search_stamp++;
         g_ships[ship].target = g_ships[ship].tile;
@@ -335,6 +349,10 @@ rewind: /* Count length of the path */
                 i = parent;
         }
 
+        /* Update ship selection */
+        if (g_selected_ship == ship && g_ships[ship].client == n_client_id)
+                R_select_path(g_ships[ship].tile, g_ships[ship].path);
+
         g_ships[ship].target = target;
         return;
 
@@ -345,6 +363,10 @@ failed: /* If we can't reach the target, and we have a valid path, try
                 G_ship_path(ship, i);
         else
                 g_ships[ship].path[0] = 0;
+
+        /* Update ship path selection */
+        if (g_selected_ship == ship && g_ships[ship].client == n_client_id)
+                R_select_path(g_ships[ship].tile, g_ships[ship].path);
 
         N_send(g_ships[ship].client, "12s", G_SM_POPUP, g_ships[ship].tile,
                "Ship can't reach destination.");
@@ -396,6 +418,33 @@ static void position_ship(int ship)
         /* Make sure the forward vector is valid */
         model->forward = C_vec3_in_plane(model->forward, model->normal);
         model->forward = C_vec3_norm(model->forward);
+}
+
+/******************************************************************************\
+ Move a ship to a new tile.
+\******************************************************************************/
+void G_ship_move_to(int i, int new_tile)
+{
+        int old_tile;
+
+        old_tile = g_ships[i].tile;
+        if (g_ships[i].rear_tile == new_tile || new_tile == old_tile ||
+            !G_open_tile(new_tile, i))
+                return;
+
+        /* Remove this ship from the old tile */
+        if (g_ships[i].rear_tile >= 0)
+                g_tiles[g_ships[i].rear_tile].ship = -1;
+
+        /* Transfer model data with the ship */
+        R_model_cleanup(&g_tiles[new_tile].model);
+        g_tiles[new_tile].model = g_tiles[old_tile].model;
+        g_tiles[new_tile].model.selected = FALSE;
+        C_zero(&g_tiles[old_tile].model);
+
+        g_ships[i].rear_tile = old_tile;
+        g_ships[i].tile = new_tile;
+        g_tiles[new_tile].ship = i;
 }
 
 /******************************************************************************\
@@ -452,7 +501,8 @@ void G_update_ships(void)
                         /* Consume a path move */
                         memmove(g_ships[i].path, g_ships[i].path + 1,
                                 R_PATH_MAX - 1);
-                        if (g_selected_ship == i)
+                        if (g_selected_ship == i &&
+                            g_ships[i].client == n_client_id)
                                 R_select_path(new_tile, g_ships[i].path);
 
                         g_ships[i].progress = g_ships[i].progress - 1.f;

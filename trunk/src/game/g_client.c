@@ -10,11 +10,12 @@
  FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
 \******************************************************************************/
 
+/* Deals with initialization, cleanup, and messages received from the server */
+
 #include "g_common.h"
 
-/* The currently selected tile and ship index. Negative values indicate an
-   invalid selection. */
-int g_selected_tile, g_selected_ship;
+/* So we know where the corruption was detected */
+#define corrupt_disconnect() corrupt_disc_full(__FILE__, __LINE__, __func__)
 
 /* Array of connected clients */
 g_client_t g_clients[N_CLIENTS_MAX];
@@ -24,8 +25,6 @@ g_nation_t g_nations[G_NATION_NAMES];
 
 /* Array of cargo names */
 const char *g_cargo_names[G_CARGO_TYPES];
-
-static bool ring_valid;
 
 /******************************************************************************\
  Update function for a national color.
@@ -57,6 +56,8 @@ void G_init(void)
         G_init_ships();
 
         /* Setup nations */
+        g_nations[G_NN_NONE].short_name = "none";
+        g_nations[G_NN_NONE].long_name = C_str("g-nation-none", "None");
         g_nations[G_NN_RED].short_name = "red";
         g_nations[G_NN_RED].long_name = C_str("g-nation-red", "Ruby");
         C_var_update_data(g_nation_colors + G_NN_RED, nation_color_update,
@@ -140,9 +141,10 @@ int G_cargo_space(const g_cargo_t *cargo)
 /******************************************************************************\
  Disconnect if the server has sent corrupted data.
 \******************************************************************************/
-static void corrupt_disconnect(void)
+static void corrupt_disc_full(const char *file, int line, const char *func)
 {
-        I_popup(NULL, "Server sent invalid data, disconnected.");
+        C_warning_full(file, line, func, "Server sent corrupt data");
+        I_popup(NULL, "Server sent invalid data.");
         N_disconnect();
 }
 
@@ -177,8 +179,7 @@ static void client_affiliate(void)
         client = N_receive_char();
         nation = N_receive_char();
         tile = N_receive_short();
-        if (nation < 0 || nation >= G_NATION_NAMES || client < 0 ||
-            client >= N_CLIENTS_MAX || !n_clients[client].connected) {
+        if (nation < 0 || !N_client_valid(client)) {
                 corrupt_disconnect();
                 return;
         }
@@ -215,12 +216,33 @@ static void client_affiliate(void)
 }
 
 /******************************************************************************\
+ When a client connects, it gets information about current clients using this
+ message type.
+\******************************************************************************/
+static void client_client(void)
+{
+        n_client_id_t client;
+
+        client = N_receive_char();
+        if (client < 0 || client >= N_CLIENTS_MAX) {
+                corrupt_disconnect();
+                return;
+        }
+        n_clients[client].connected = TRUE;
+        g_clients[client].nation = N_receive_char();
+        N_receive_string_buf(g_clients[client].name);
+        C_debug("Client %d is '%s'", client, g_clients[client].name);
+}
+
+/******************************************************************************\
  Client just connected to the server or the server has re-hosted.
 \******************************************************************************/
 static void client_init(void)
 {
         int protocol, seed;
         const char *msg;
+
+        C_assert(n_client_id != N_HOST_CLIENT_ID);
 
         /* Check the server's protocol */
         protocol = N_receive_char();
@@ -233,6 +255,14 @@ static void client_init(void)
                 return;
         }
 
+        /* Get the client ID */
+        n_client_id = N_receive_char();
+        if (n_client_id < 0 || n_client_id >= N_CLIENTS_MAX) {
+                corrupt_disconnect();
+                return;
+        }
+        n_clients[n_client_id].connected = TRUE;
+
         /* Generate a new globe to match the server's */
         seed = N_receive_int();
         if (seed != g_globe_seed.value.n) {
@@ -242,6 +272,8 @@ static void client_init(void)
 
         /* Start off nation-less */
         I_select_nation(G_NN_NONE);
+
+        I_leave_limbo();
 }
 
 /******************************************************************************\
@@ -253,12 +285,16 @@ static void client_name(void)
         char old_name[G_NAME_MAX];
 
         client = N_receive_char();
-        if (client < 0 || client >= N_CLIENTS_MAX) {
+        if (!N_client_valid(client)) {
                 corrupt_disconnect();
                 return;
         }
         C_strncpy_buf(old_name, g_clients[client].name);
         N_receive_string_buf(g_clients[client].name);
+
+        /* Don't say that other players joined if we just joined */
+        if (n_client_id == N_UNASSIGNED_ID)
+                return;
 
         /* The first name-change on connect */
         if (!old_name[0]) {
@@ -272,11 +308,89 @@ static void client_name(void)
 }
 
 /******************************************************************************\
+ Convert a nation to a color index.
+\******************************************************************************/
+i_color_t G_nation_to_color(g_nation_name_t nation)
+{
+        if (nation == G_NN_RED)
+                return I_COLOR_RED;
+        else if (nation == G_NN_GREEN)
+                return I_COLOR_GREEN;
+        else if (nation == G_NN_BLUE)
+                return I_COLOR_BLUE;
+        else if (nation == G_NN_PIRATE)
+                return I_COLOR_PIRATE;
+        return I_COLOR_ALT;
+}
+
+/******************************************************************************\
+ Another client sent out a chat message.
+\******************************************************************************/
+static void client_chat(void)
+{
+        i_color_t color;
+        int client;
+        char buffer[N_SYNC_MAX], *name;
+
+        client = N_receive_char();
+        N_receive_string_buf(buffer);
+        if (!buffer[0])
+                return;
+
+        /* Normal chat message */
+        if (client >= 0 && client < N_CLIENTS_MAX) {
+                color = G_nation_to_color(g_clients[client].nation);
+                name = g_clients[client].name;
+                I_print_chat(name, color, buffer);
+                return;
+        }
+
+        /* No-text message */
+        I_print_chat(buffer, I_COLOR, NULL);
+}
+
+/******************************************************************************\
+ Spawn a ship.
+\******************************************************************************/
+static void client_spawn_ship(void)
+{
+        g_ship_name_t class_name;
+        n_client_id_t client;
+        int tile, index;
+
+        client = N_receive_char();
+        tile = N_receive_short();
+        class_name = N_receive_char();
+        index = N_receive_char();
+        if (G_spawn_ship(client, tile, class_name, index) < 0)
+                corrupt_disconnect();
+}
+
+/******************************************************************************\
+ Receive a ship path.
+\******************************************************************************/
+static void client_ship_move(void)
+{
+        int index, tile, target;
+
+        index = N_receive_char();
+        tile = N_receive_short();
+        target = N_receive_short();
+        if (index < 0 || index >= G_SHIPS_MAX || !g_ships[index].in_use) {
+                corrupt_disconnect();
+                return;
+        }
+        G_ship_move_to(index, tile);
+        G_ship_path(index, target);
+}
+
+/******************************************************************************\
  Client network event callback function.
 \******************************************************************************/
 void G_client_callback(int client, n_event_t event)
 {
         g_server_msg_t token;
+        int i;
 
         C_assert(client == N_SERVER_ID);
 
@@ -289,6 +403,8 @@ void G_client_callback(int client, n_event_t event)
         /* Disconnected */
         if (event == N_EV_DISCONNECTED) {
                 I_enter_limbo();
+                if (n_client_id != N_HOST_CLIENT_ID)
+                        I_popup(NULL, "Disconnected from server.");
                 return;
         }
 
@@ -309,170 +425,41 @@ void G_client_callback(int client, n_event_t event)
         case G_SM_NAME:
                 client_name();
                 break;
-        default:
+        case G_SM_CHAT:
+                client_chat();
                 break;
-        }
-}
-
-/******************************************************************************\
- Leave the current game.
-\******************************************************************************/
-void G_leave_game(void)
-{
-        N_disconnect();
-        N_stop_server();
-        I_popup(NULL, "Left the current game.");
-}
-
-/******************************************************************************\
- Change the player's nation.
-\******************************************************************************/
-void G_change_nation(int index)
-{
-        N_send(N_SERVER_ID, "11", G_CM_AFFILIATE, index);
-}
-
-/******************************************************************************\
- Returns TRUE if there are possible ring interactions with the [tile].
-\******************************************************************************/
-static int can_interact(int tile)
-{
-        if (g_test_globe.value.n)
-                return TRUE;
-        return FALSE;
-}
-
-/******************************************************************************\
- Selects a tile during mouse hover. Pass -1 to deselect.
-\******************************************************************************/
-void G_select_tile(int tile)
-{
-        C_assert(tile < r_tiles);
-
-        /* Deselect the old tile */
-        if (g_selected_tile >= 0)
-                g_tiles[g_selected_tile].model.selected = FALSE;
-        R_select_tile(g_selected_tile = -1, R_ST_NONE);
-
-        /* See if there is actually any interaction possible with this tile */
-        ring_valid = FALSE;
-        if (tile < 0)
-                return;
-        ring_valid = can_interact(tile);
-
-        /* Selecting a ship */
-        if (g_tiles[tile].ship >= 0) {
-        }
-
-        /* If we are controlling a ship, we might want to move here */
-        else if (g_selected_ship >= 0 && G_open_tile(tile, -1) &&
-                 g_ships[g_selected_ship].client == n_client_id) {
-                R_select_tile(tile, R_ST_GOTO);
-                g_selected_tile = tile;
-                return;
-        }
-
-        /* Select a tile */
-        else if (ring_valid)
-                R_select_tile(tile, R_ST_TILE);
-
-        /* Can't select this */
-        else {
-                R_select_tile(-1, R_ST_NONE);
-                g_selected_tile = -1;
-                return;
-        }
-
-        g_tiles[tile].model.selected = TRUE;
-        g_selected_tile = tile;
-}
-
-/******************************************************************************\
- Test ring callback function.
-\******************************************************************************/
-static void test_ring_callback(i_ring_icon_t icon)
-{
-        if (icon == I_RI_TEST_MILL)
-                G_set_tile_model(g_selected_tile, "models/test/mill.plum");
-        else if (icon == I_RI_TEST_TREE)
-                G_set_tile_model(g_selected_tile,
-                               "models/tree/deciduous.plum");
-        else if (icon == I_RI_TEST_SHIP)
-                G_set_tile_model(g_selected_tile,
-                               "models/ship/sloop.plum");
-        else
-                G_set_tile_model(g_selected_tile, "");
-}
-
-/******************************************************************************\
- Select a ship. Pass a negative [index] to deselect.
-\******************************************************************************/
-static void select_ship(int index)
-{
-        bool own;
-
-        if (g_selected_ship == index)
-                return;
-        g_selected_ship = index;
-        own = FALSE;
-        if (index >= 0) {
-                R_select_path(g_ships[index].tile, g_ships[index].path);
-                own = g_ships[index].client == n_client_id;
-        } else
-                R_select_path(-1, NULL);
-        I_select_ship(index, own);
-}
-
-/******************************************************************************\
- Called when the interface root window receives a click.
-\******************************************************************************/
-void G_process_click(int button)
-{
-        /* The game only handles left and middle clicks */
-        if (button != SDL_BUTTON_LEFT && button != SDL_BUTTON_MIDDLE)
-                return;
-
-        /* Clicking on an unusable space deselects */
-        if (g_selected_tile < 0 || button != SDL_BUTTON_LEFT) {
-                select_ship(-1);
-                return;
-        }
-
-        /* Left-clicked on a ship */
-        if (g_tiles[g_selected_tile].ship >= 0) {
-                if (g_selected_ship != g_tiles[g_selected_tile].ship)
-                        select_ship(g_tiles[g_selected_tile].ship);
-                else
-                        select_ship(-1);
-                return;
-        }
-
-        /* Controlling a ship */
-        if (g_selected_ship >= 0 &&
-            g_ships[g_selected_ship].client == n_client_id) {
-
-                /* Ordered an ocean move */
-                if (g_selected_tile >= 0 && G_open_tile(g_selected_tile, -1)) {
-                        N_send(N_SERVER_ID, "112", G_CM_SHIP_MOVE,
-                               g_selected_ship, g_selected_tile);
+        case G_SM_CLIENT:
+                client_client();
+                break;
+        case G_SM_SPAWN_SHIP:
+                client_spawn_ship();
+                break;
+        case G_SM_SHIP_MOVE:
+                client_ship_move();
+                break;
+        case G_SM_CONNECTED:
+                i = N_receive_char();
+                if (i < 0 || i >= N_CLIENTS_MAX) {
+                        corrupt_disconnect();
                         return;
                 }
-        }
-
-        /* Left-clicked on a tile */
-        select_ship(-1);
-        if (!ring_valid)
-                return;
-
-        /* When globe testing is on, always show the test ring */
-        if (g_test_globe.value.n) {
-                I_reset_ring();
-                I_add_to_ring(I_RI_TEST_BLANK, TRUE);
-                I_add_to_ring(I_RI_TEST_MILL, TRUE);
-                I_add_to_ring(I_RI_TEST_TREE, TRUE);
-                I_add_to_ring(I_RI_TEST_SHIP, TRUE);
-                I_add_to_ring(I_RI_TEST_DISABLED, FALSE);
-                I_show_ring(test_ring_callback);
+                n_clients[i].connected = TRUE;
+                C_zero(g_clients + i);
+                C_debug("Client %d connected", i);
+                break;
+        case G_SM_DISCONNECTED:
+                i = N_receive_char();
+                if (i < 0 || i >= N_CLIENTS_MAX) {
+                        corrupt_disconnect();
+                        return;
+                }
+                n_clients[i].connected = FALSE;
+                I_print_chat(C_va("%s left the game.", g_clients[i].name),
+                             I_COLOR, NULL);
+                C_debug("Client %d disconnected", i);
+                break;
+        default:
+                break;
         }
 }
 
@@ -481,37 +468,9 @@ void G_process_click(int button)
 \******************************************************************************/
 void G_update_client(void)
 {
+        N_poll_client();
         if (i_limbo)
                 return;
         G_update_ships();
-}
-
-/******************************************************************************\
- Convert a nation to a color index.
-\******************************************************************************/
-static i_color_t nation_to_color(g_nation_name_t nation)
-{
-        if (nation == G_NN_RED)
-                return I_COLOR_RED;
-        else if (nation == G_NN_GREEN)
-                return I_COLOR_GREEN;
-        else if (nation == G_NN_BLUE)
-                return I_COLOR_BLUE;
-        else if (nation == G_NN_PIRATE)
-                return I_COLOR_PIRATE;
-        return I_COLOR_ALT;
-}
-
-/******************************************************************************\
- The user has typed chat into the box and hit enter.
-\******************************************************************************/
-void G_input_chat(const char *message)
-{
-        i_color_t color;
-
-        if (!message || !message[0])
-                return;
-        color = nation_to_color(g_clients[n_client_id].nation);
-        I_print_chat(g_clients[n_client_id].name, color, message);
 }
 

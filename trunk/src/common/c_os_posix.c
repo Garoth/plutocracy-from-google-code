@@ -13,10 +13,14 @@
 /* This file should only be included on POSIX-compliant systems */
 
 #include "c_shared.h"
-#include <errno.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
+#include <signal.h>
+
+/* Signals we catch and die on */
+static int catch_signals[] = {SIGSEGV, SIGHUP, SIGINT, SIGTERM,
+                              SIGQUIT, SIGALRM, -1};
 
 /******************************************************************************\
  Creates directory if it does not already exist. Returns TRUE if the directory
@@ -61,5 +65,28 @@ int C_modified_time(const char *filename)
         if (stat(filename, &s))
                 return -1;
         return (int)s.st_mtime;
+}
+
+/******************************************************************************\
+ Attach a cleanup signal handler and ignore certain signals.
+\******************************************************************************/
+void C_signal_handler(c_signal_f func)
+{
+        sigset_t sigset;
+        int *ps;
+
+        /* Ignore certain signals */
+        signal(SIGPIPE, SIG_IGN);
+        signal(SIGFPE, SIG_IGN);
+
+        /* Hook handler */
+        ps = catch_signals;
+        sigemptyset(&sigset);
+        while (*ps != -1) {
+                signal(*ps, func);
+                sigaddset(&sigset, *(ps++));
+        }
+        if (sigprocmask(SIG_UNBLOCK, &sigset, NULL) == -1)
+                C_warning("Failed to set signal blocking mask");
 }
 

@@ -41,8 +41,8 @@ const char *C_user_dir(void)
 
         if (!user_dir[0]) {
                 TCHAR app_data[MAX_PATH];
-        
-                if (SHGetFolderPath(NULL, CSIDL_APPDATA, NULL, 0, app_data) != 
+
+                if (SHGetFolderPath(NULL, CSIDL_APPDATA, NULL, 0, app_data) !=
                     S_OK) {
                         C_warning("Failed to get Application Data directory");
                         return "";
@@ -54,3 +54,12 @@ const char *C_user_dir(void)
         }
         return user_dir;
 }
+
+/******************************************************************************\
+ Attach a cleanup signal handler and ignore certain signals. Does nothing on
+ Windows.
+\******************************************************************************/
+void C_signal_handler(c_signal_f func)
+{
+}
+
