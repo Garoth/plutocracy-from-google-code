@@ -35,9 +35,6 @@ gch_builder = Builder(action = '$CC $CFLAGS $CCFLAGS $_CCCOMCOM ' +
 # initialization so that SCons doesn't mess them up.
 default_env = Environment(ENV = os.environ, BUILDERS = {'GCH' : gch_builder})
 
-# If the file timestamp has not changed, don't run MD5 test
-default_env.Decider('MD5-timestamp')
-
 # Tells SCons to be smarter about caching dependencies
 default_env.SetOption('implicit_cache', 1)
 
@@ -126,7 +123,7 @@ if windows:
         plutocracy_env.Append(CPPPATH = 'windows/include')
         plutocracy_env.Append(LIBPATH = 'windows/lib')
         plutocracy_env.Append(LIBS = ['SDLmain', 'OpenGL32', 'GlU32',
-                                      'user32', 'shell32'])
+                                      'user32', 'shell32', 'Ws2_32'])
         if mingw:
                 plutocracy_env.ParseConfig('sh sdl-config --prefix=windows' +
                                                         ' --cflags --libs')

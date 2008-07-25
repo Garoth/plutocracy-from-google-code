@@ -25,8 +25,18 @@
 #include <arpa/inet.h>
 #endif
 
+/* Windows compatibility */
+#ifndef WINDOWS
+#define INVALID_SOCKET -1
+#define closesocket close
+#else
+typedef int socklen_t;
+#endif
+
 /* n_client.c */
-extern int n_client_socket;
+void N_socket_no_block(SOCKET);
+
+extern SOCKET n_client_socket;
 
 /* n_sync.c */
 bool N_receive(int client);

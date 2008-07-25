@@ -63,7 +63,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="SDL.lib SDLmain.lib SDL_ttf.lib OpenGL32.lib GlU32.lib user32.lib shell32.lib zdll.lib libpng.lib"
+				AdditionalDependencies="SDL.lib SDLmain.lib SDL_ttf.lib OpenGL32.lib GlU32.lib user32.lib shell32.lib zdll.lib libpng.lib Ws2_32.lib"
 				OutputFile="../../plutocracy.exe"
 				LinkIncremental="2"
 				AdditionalLibraryDirectories="..\lib"
@@ -404,6 +404,10 @@
 				</FileConfiguration>
 			</File>
 			<File
+				RelativePath="..\..\src\interface\i_chat.c"
+				>
+			</File>
+			<File
 				RelativePath="..\..\src\interface\i_common.h"
 				>
 			</File>
@@ -494,30 +498,6 @@
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="..\..\src\interface\i_label.c"
-				>
-				<FileConfiguration
-					Name="Debug|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						UsePrecompiledHeader="1"
-						PrecompiledHeaderThrough="i_common.h"
-						PrecompiledHeaderFile="$(IntDir)\i_common.pch"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						UsePrecompiledHeader="1"
-						PrecompiledHeaderThrough="i_common.h"
-						PrecompiledHeaderFile="$(IntDir)\i_common.pch"
-					/>
-				</FileConfiguration>
-			</File>
-			<File
 				RelativePath="..\..\src\interface\i_layout.c"
 				>
 				<FileConfiguration
@@ -595,6 +575,14 @@
 			</File>
 			<File
 				RelativePath="..\..\src\interface\i_shared.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\src\interface\i_ship.c"
+				>
+			</File>
+			<File
+				RelativePath="..\..\src\interface\i_static.c"
 				>
 			</File>
 			<File
@@ -710,6 +698,10 @@
 						PrecompiledHeaderFile="$(IntDir)\g_common.pch"
 					/>
 				</FileConfiguration>
+			</File>
+			<File
+				RelativePath="..\..\src\game\g_commands.c"
+				>
 			</File>
 			<File
 				RelativePath="..\..\src\game\g_common.h"
@@ -847,6 +839,10 @@
 			</File>
 			<File
 				RelativePath="..\..\src\network\n_sync.c"
+				>
+			</File>
+			<File
+				RelativePath="..\..\src\network\n_variables.c"
 				>
 			</File>
 		</Filter>

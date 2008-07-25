@@ -395,11 +395,14 @@ const char *I_event_string(i_event_t event)
 \******************************************************************************/
 static int check_mouse_focus(i_widget_t *widget)
 {
+        c_vec2_t mouse_pos;
+
         if (!widget)
                 return FALSE;
+        mouse_pos = C_vec2((float)i_mouse_x, (float)i_mouse_y);
         if (widget->state != I_WS_NO_FOCUS && widget->state != I_WS_DISABLED &&
-            widget->shown && C_rect_contains(widget->origin, widget->size,
-                                             C_vec2(i_mouse_x, i_mouse_y))) {
+            widget->shown && 
+            C_rect_contains(widget->origin, widget->size, mouse_pos)) {
                 i_mouse_focus = widget;
                 return TRUE;
         }

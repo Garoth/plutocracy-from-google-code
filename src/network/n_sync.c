@@ -86,14 +86,14 @@ void N_receive_string(char *buffer, int size)
 /******************************************************************************\
  Get the socket for the given client ID.
 \******************************************************************************/
-static int client_to_socket(n_client_id_t client)
+static SOCKET client_to_socket(n_client_id_t client)
 {
         if (client == N_SERVER_ID)
                 return n_client_socket;
         else if (client >= 0 && client < N_CLIENTS_MAX)
                 return n_clients[client].socket;
         C_error("Invalid client ID %d", client);
-        return -1;
+        return INVALID_SOCKET;
 }
 
 /******************************************************************************\
@@ -228,7 +228,8 @@ overflow:
 \******************************************************************************/
 bool N_receive(n_client_id_t client)
 {
-        int len, message_size, socket;
+        SOCKET socket;
+        int len, message_size;
 
         if (client == n_client_id)
                 return TRUE;
@@ -236,18 +237,28 @@ bool N_receive(n_client_id_t client)
         for (;;) {
 
                 /* Receive the message size */
-                len = (int)recv(socket, n_sync_buffer, 2, MSG_PEEK);
+                len = (int)recv(socket, n_sync_buffer, N_SYNC_MAX, MSG_PEEK);
 
                 /* Orderly shutdown */
                 if (!len)
                         return FALSE;
 
-                /* Error, could just have no data */
+                /* Error */
                 if (len < 0) {
+#ifdef WINDOWS
+                        /* No data (WinSock) */
+                        if (WSAGetLastError() == WSAEWOULDBLOCK)
+                                return TRUE;
+                        C_debug("WinSock error %d (recv returned %d, %s)", 
+                                WSAGetLastError(), len, 
+                                N_client_to_string(client));
+#else
+                        /* No data (Berkeley) */
                         if (errno == EAGAIN)
                                 return TRUE;
                         C_debug("%s (recv returned %d, %s)", strerror(errno),
                                 len, N_client_to_string(client));
+#endif
                         return FALSE;
                 }
 
@@ -266,11 +277,7 @@ bool N_receive(n_client_id_t client)
                         return FALSE;
                 }
 
-                /* Check if we have enough room now. For some reason (bug?)
-                   we cannot just add the MSG_TRUNC flag above or it will not
-                   actually peek the data! */
-                len = (int)recv(socket, n_sync_buffer, message_size,
-                                MSG_PEEK | MSG_TRUNC);
+                /* Check if we have enough room now */
                 if (len < message_size)
                         return TRUE;
 

@@ -87,12 +87,13 @@ static void chat_init(chat_t *chat, const char *name, i_color_t color,
 void I_position_chat(void)
 {
         /* Position window */
-        input_window.widget.origin = C_vec2(i_border.value.n, r_height_2d -
+        input_window.widget.origin = C_vec2((float)i_border.value.n, 
+                                            r_height_2d -
                                             i_border.value.n * 4 - 32.f);
 
         /* Position and size box */
         chat_box.widget.size = C_vec2(0.f, 0.f);
-        chat_box.widget.origin = C_vec2(i_border.value.n,
+        chat_box.widget.origin = C_vec2((float)i_border.value.n,
                                         input_window.widget.origin.y -
                                         input_window.widget.size.y -
                                         i_border.value.n);
