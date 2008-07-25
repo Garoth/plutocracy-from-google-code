@@ -200,7 +200,8 @@ void G_render_ships(void)
                 color = g_nations[g_clients[ship->client].nation].color;
                 R_render_ship_status(&tile->model, health, health_max,
                                      armor, health_max, color,
-                                     g_selected_ship == i);
+                                     g_selected_ship == i,
+                                     ship->client == n_client_id);
         }
 }
 

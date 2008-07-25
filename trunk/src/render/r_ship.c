@@ -24,7 +24,7 @@
 #define BAR_BACKGROUND 0.33f
 
 static r_vertex3_t vertices[7];
-static r_texture_t *quad_tex, *select_tex, *bars_tex;
+static r_texture_t *quad_tex, *quad_other_tex, *select_tex, *bars_tex;
 
 /******************************************************************************\
  Initialize ship resources.
@@ -36,6 +36,8 @@ void R_init_ships(void)
         /* Load textures */
         quad_tex = R_texture_load("models/ship/status_circle.png", TRUE);
         quad_tex->additive = TRUE;
+        quad_other_tex = R_texture_load("models/ship/status_other.png", TRUE);
+        quad_other_tex->additive = TRUE;
         bars_tex = R_texture_load("models/ship/status_bars.png", TRUE);
         bars_tex->additive = TRUE;
         select_tex = R_texture_load("models/ship/status_select.png", TRUE);
@@ -113,14 +115,14 @@ static void render_bars(float left, float right)
 \******************************************************************************/
 void R_render_ship_status(const r_model_t *model, float left, float left_max,
                           float right, float right_max, c_color_t modulate,
-                          int selected)
+                          bool selected, bool own)
 {
         R_push_mode(R_MODE_3D);
         R_gl_disable(GL_LIGHTING);
         glColor4f(modulate.r, modulate.g, modulate.b, modulate.a);
         glMultMatrixf(model->matrix);
         glDepthMask(GL_FALSE);
-        render_quad(quad_tex);
+        render_quad(own ? quad_tex : quad_other_tex);
         if (selected) {
                 glColor4f(r_select_color.r, r_select_color.g, r_select_color.b,
                           r_fog_color.a);
