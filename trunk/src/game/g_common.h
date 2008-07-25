@@ -104,7 +104,7 @@ void G_cleanup_ships(void);
 void G_init_ships(void);
 bool G_open_tile(int tile, int exclude_ship);
 void G_render_ships(void);
-void G_ship_move_to(int index, int new_tile);
+bool G_ship_move_to(int index, int new_tile);
 void G_ship_path(int ship, int tile);
 int G_spawn_ship(int client, int tile, g_ship_name_t, int ship);
 void G_update_ships(void);
