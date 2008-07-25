@@ -29,7 +29,7 @@ static void corrupt_kick(int client)
 /******************************************************************************\
  Handles clients changing nations.
 \******************************************************************************/
-static void server_affiliate(int client)
+static void cm_affiliate(int client)
 {
         int nation, old, tile, ship;
 
@@ -67,7 +67,7 @@ static void server_affiliate(int client)
 /******************************************************************************\
  Handles orders to move ships.
 \******************************************************************************/
-static void server_ship_move(int client)
+static void cm_ship_move(int client)
 {
         int ship, tile;
 
@@ -83,43 +83,9 @@ static void server_ship_move(int client)
 }
 
 /******************************************************************************\
- Initialize a new client.
-\******************************************************************************/
-static void server_client_connect(int client)
-{
-        int i;
-
-        if (client == N_HOST_CLIENT_ID)
-                return;
-        C_debug("Initializing client %d", client);
-        g_clients[client].nation = G_NN_NONE;
-        N_send(client, "1114f", G_SM_INIT, G_PROTOCOL, client,
-               g_globe_seed.value.n, r_solar_angle);
-
-        /* Start out nameless */
-        g_clients[client].name[0] = NUL;
-
-        /* Tell them about everyone already here */
-        for (i = 0; i < N_CLIENTS_MAX; i++)
-                if (n_clients[i].connected && g_clients[i].name[0])
-                        N_send(client, "111s", G_SM_CLIENT, i,
-                               g_clients[i].nation, g_clients[i].name);
-
-        /* Tell everyone else about the new arrival */
-        N_broadcast_except(client, "11", G_SM_CONNECTED, client);
-
-        /* Tell them about all the ships on the globe */
-        for (i = 0; i < G_SHIPS_MAX; i++)
-                if (g_ships[i].in_use)
-                        N_send(client, "11211", G_SM_SPAWN_SHIP,
-                               g_ships[i].client, g_ships[i].tile,
-                               g_ships[i].class_name, i);
-}
-
-/******************************************************************************\
  Called when a client wants to change their name.
 \******************************************************************************/
-static void server_name(int client)
+static void cm_name(int client)
 {
         int i;
         char new_name[G_NAME_MAX];
@@ -155,7 +121,7 @@ static void server_name(int client)
 /******************************************************************************\
  Client typed something into chat.
 \******************************************************************************/
-static void server_chat(int client)
+static void cm_chat(int client)
 {
         char chat_buffer[N_SYNC_MAX];
 
@@ -163,6 +129,40 @@ static void server_chat(int client)
         if (!chat_buffer[0])
                 return;
         N_broadcast_except(client, "11s", G_SM_CHAT, client, chat_buffer);
+}
+
+/******************************************************************************\
+ Initialize a new client.
+\******************************************************************************/
+static void client_connected(int client)
+{
+        int i;
+
+        if (client == N_HOST_CLIENT_ID)
+                return;
+        C_debug("Initializing client %d", client);
+        g_clients[client].nation = G_NN_NONE;
+        N_send(client, "1114f", G_SM_INIT, G_PROTOCOL, client,
+               g_globe_seed.value.n, r_solar_angle);
+
+        /* Start out nameless */
+        g_clients[client].name[0] = NUL;
+
+        /* Tell them about everyone already here */
+        for (i = 0; i < N_CLIENTS_MAX; i++)
+                if (n_clients[i].connected && g_clients[i].name[0])
+                        N_send(client, "111s", G_SM_CLIENT, i,
+                               g_clients[i].nation, g_clients[i].name);
+
+        /* Tell everyone else about the new arrival */
+        N_broadcast_except(client, "11", G_SM_CONNECTED, client);
+
+        /* Tell them about all the ships on the globe */
+        for (i = 0; i < G_SHIPS_MAX; i++)
+                if (g_ships[i].in_use)
+                        N_send(client, "11211", G_SM_SPAWN_SHIP,
+                               g_ships[i].client, g_ships[i].tile,
+                               g_ships[i].class_name, i);
 }
 
 /******************************************************************************\
@@ -175,7 +175,7 @@ static void server_callback(int client, n_event_t event)
 
         /* Special client events */
         if (event == N_EV_CONNECTED) {
-                server_client_connect(client);
+                client_connected(client);
                 return;
         } else if (event == N_EV_DISCONNECTED) {
                 if (g_clients[client].name[0])
@@ -190,16 +190,16 @@ static void server_callback(int client, n_event_t event)
         token = (g_client_msg_t)N_receive_char();
         switch (token) {
         case G_CM_AFFILIATE:
-                server_affiliate(client);
+                cm_affiliate(client);
                 break;
         case G_CM_SHIP_MOVE:
-                server_ship_move(client);
+                cm_ship_move(client);
                 break;
         case G_CM_NAME:
-                server_name(client);
+                cm_name(client);
                 break;
         case G_CM_CHAT:
-                server_chat(client);
+                cm_chat(client);
                 break;
         default:
                 break;

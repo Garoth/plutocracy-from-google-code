@@ -139,6 +139,22 @@ int G_cargo_space(const g_cargo_t *cargo)
 }
 
 /******************************************************************************\
+ Convert a nation to a color index.
+\******************************************************************************/
+i_color_t G_nation_to_color(g_nation_name_t nation)
+{
+        if (nation == G_NN_RED)
+                return I_COLOR_RED;
+        else if (nation == G_NN_GREEN)
+                return I_COLOR_GREEN;
+        else if (nation == G_NN_BLUE)
+                return I_COLOR_BLUE;
+        else if (nation == G_NN_PIRATE)
+                return I_COLOR_PIRATE;
+        return I_COLOR_ALT;
+}
+
+/******************************************************************************\
  Disconnect if the server has sent corrupted data.
 \******************************************************************************/
 static void corrupt_disc_full(const char *file, int line, const char *func)
@@ -151,7 +167,7 @@ static void corrupt_disc_full(const char *file, int line, const char *func)
 /******************************************************************************\
  Client is receving a popup message from the server.
 \******************************************************************************/
-static void client_popup(void)
+static void sm_popup(void)
 {
         c_vec3_t *goto_pos;
         int focus_tile;
@@ -170,7 +186,7 @@ static void client_popup(void)
 /******************************************************************************\
  Some client changed their national affiliation.
 \******************************************************************************/
-static void client_affiliate(void)
+static void sm_affiliate(void)
 {
         c_vec3_t *goto_pos;
         const char *fmt;
@@ -219,7 +235,7 @@ static void client_affiliate(void)
  When a client connects, it gets information about current clients using this
  message type.
 \******************************************************************************/
-static void client_client(void)
+static void sm_client(void)
 {
         n_client_id_t client;
 
@@ -237,7 +253,7 @@ static void client_client(void)
 /******************************************************************************\
  Client just connected to the server or the server has re-hosted.
 \******************************************************************************/
-static void client_init(void)
+static void sm_init(void)
 {
         int protocol, seed;
         const char *msg;
@@ -282,7 +298,7 @@ static void client_init(void)
 /******************************************************************************\
  A client has changed their name.
 \******************************************************************************/
-static void client_name(void)
+static void sm_name(void)
 {
         int client;
         char old_name[G_NAME_MAX];
@@ -311,25 +327,9 @@ static void client_name(void)
 }
 
 /******************************************************************************\
- Convert a nation to a color index.
-\******************************************************************************/
-i_color_t G_nation_to_color(g_nation_name_t nation)
-{
-        if (nation == G_NN_RED)
-                return I_COLOR_RED;
-        else if (nation == G_NN_GREEN)
-                return I_COLOR_GREEN;
-        else if (nation == G_NN_BLUE)
-                return I_COLOR_BLUE;
-        else if (nation == G_NN_PIRATE)
-                return I_COLOR_PIRATE;
-        return I_COLOR_ALT;
-}
-
-/******************************************************************************\
  Another client sent out a chat message.
 \******************************************************************************/
-static void client_chat(void)
+static void sm_chat(void)
 {
         i_color_t color;
         int client;
@@ -355,7 +355,7 @@ static void client_chat(void)
 /******************************************************************************\
  Spawn a ship.
 \******************************************************************************/
-static void client_spawn_ship(void)
+static void sm_spawn_ship(void)
 {
         g_ship_name_t class_name;
         n_client_id_t client;
@@ -372,7 +372,7 @@ static void client_spawn_ship(void)
 /******************************************************************************\
  Receive a ship path.
 \******************************************************************************/
-static void client_ship_move(void)
+static void sm_ship_move(void)
 {
         int index, tile, target;
 
@@ -383,8 +383,10 @@ static void client_ship_move(void)
                 corrupt_disconnect();
                 return;
         }
-        G_ship_move_to(index, tile);
-        G_ship_path(index, target);
+
+        /* Don't re-path unless something changed */
+        if (G_ship_move_to(index, tile) || target != g_ships[index].target)
+                G_ship_path(index, target);
 }
 
 /******************************************************************************\
@@ -417,28 +419,28 @@ void G_client_callback(int client, n_event_t event)
         token = N_receive_char();
         switch (token) {
         case G_SM_POPUP:
-                client_popup();
+                sm_popup();
                 break;
         case G_SM_AFFILIATE:
-                client_affiliate();
+                sm_affiliate();
                 break;
         case G_SM_INIT:
-                client_init();
+                sm_init();
                 break;
         case G_SM_NAME:
-                client_name();
+                sm_name();
                 break;
         case G_SM_CHAT:
-                client_chat();
+                sm_chat();
                 break;
         case G_SM_CLIENT:
-                client_client();
+                sm_client();
                 break;
         case G_SM_SPAWN_SHIP:
-                client_spawn_ship();
+                sm_spawn_ship();
                 break;
         case G_SM_SHIP_MOVE:
-                client_ship_move();
+                sm_ship_move();
                 break;
         case G_SM_CONNECTED:
                 i = N_receive_char();

@@ -364,12 +364,17 @@ failed: /* If we can't reach the target, and we have a valid path, try
         else
                 g_ships[ship].path[0] = 0;
 
-        /* Update ship path selection */
-        if (g_selected_ship == ship && g_ships[ship].client == n_client_id)
-                R_select_path(g_ships[ship].tile, g_ships[ship].path);
 
-        N_send(g_ships[ship].client, "12s", G_SM_POPUP, g_ships[ship].tile,
-               "Ship can't reach destination.");
+        if (g_ships[ship].client == n_client_id) {
+
+                /* Update ship path selection */
+                if (g_selected_ship == ship)
+                        R_select_path(g_ships[ship].tile, g_ships[ship].path);
+
+                I_popup(&g_tiles[g_ships[ship].tile].origin,
+                        C_str("i-ship-destination",
+                              "Ship can't reach destination."));
+        }
 }
 
 /******************************************************************************\
@@ -421,16 +426,16 @@ static void position_ship(int ship)
 }
 
 /******************************************************************************\
- Move a ship to a new tile.
+ Move a ship to a new tile. Returns TRUE if the ship was moved.
 \******************************************************************************/
-void G_ship_move_to(int i, int new_tile)
+bool G_ship_move_to(int i, int new_tile)
 {
         int old_tile;
 
         old_tile = g_ships[i].tile;
         if (g_ships[i].rear_tile == new_tile || new_tile == old_tile ||
             !G_open_tile(new_tile, i))
-                return;
+                return FALSE;
 
         /* Remove this ship from the old tile */
         if (g_ships[i].rear_tile >= 0)
@@ -445,6 +450,7 @@ void G_ship_move_to(int i, int new_tile)
         g_ships[i].rear_tile = old_tile;
         g_ships[i].tile = new_tile;
         g_tiles[new_tile].ship = i;
+        return TRUE;
 }
 
 /******************************************************************************\
