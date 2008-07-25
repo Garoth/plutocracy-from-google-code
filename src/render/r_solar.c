@@ -38,12 +38,13 @@ typedef struct halo_vertex {
 /* The color of the atmospheric fog effect */
 c_color_t r_fog_color;
 
+float r_solar_angle;
+
 static r_model_t sky;
 static r_billboard_t moon, sun;
 static c_color_t moon_diffuse, moon_specular, sun_diffuse, sun_specular,
                  light_ambient;
 static halo_vertex_t halo_verts[2 + HALO_SEGMENTS * 2];
-static float sky_angle;
 
 /******************************************************************************\
  Initializes light-related variables.
@@ -90,7 +91,7 @@ void R_enable_light(void)
                 return;
         glEnable(GL_LIGHTING);
         glPushMatrix();
-        glRotatef(C_rad_to_deg(sky_angle), 0.f, 1.f, 0.f);
+        glRotatef(C_rad_to_deg(r_solar_angle), 0.f, 1.f, 0.f);
         black = C_color(0.f, 0.f, 0.f, 0.f);
 
         /* Ambient light */
@@ -193,8 +194,8 @@ void R_render_solar(void)
         if (!r_solar.value.n)
                 return;
         if (r_solar.value.n != 2)
-                sky_angle -= c_frame_sec * C_PI / 60.f / R_MINUTES_PER_DAY;
-        sky.forward = C_vec3(cosf(-sky_angle), 0.f, sinf(-sky_angle));
+                r_solar_angle -= c_frame_sec * C_PI / 60.f / R_MINUTES_PER_DAY;
+        sky.forward = C_vec3(cosf(-r_solar_angle), 0.f, sinf(-r_solar_angle));
         R_model_render(&sky);
 
         /* Render the sun and moon point sprites */

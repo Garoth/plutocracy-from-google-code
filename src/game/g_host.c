@@ -93,8 +93,8 @@ static void server_client_connect(int client)
                 return;
         C_debug("Initializing client %d", client);
         g_clients[client].nation = G_NN_NONE;
-        N_send(client, "1114", G_SM_INIT, G_PROTOCOL, client,
-               g_globe_seed.value.n);
+        N_send(client, "1114f", G_SM_INIT, G_PROTOCOL, client,
+               g_globe_seed.value.n, r_solar_angle);
 
         /* Start out nameless */
         g_clients[client].name[0] = NUL;
