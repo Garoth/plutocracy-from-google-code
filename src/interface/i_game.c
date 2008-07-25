@@ -53,6 +53,16 @@ static void host_button_clicked(i_button_t *button)
 }
 
 /******************************************************************************\
+ Join a game via interface.
+\******************************************************************************/
+static void join_button_clicked(i_button_t *button)
+{
+        C_debug("Join button clicked");
+        G_join_game(ip_entry.buffer);
+        I_widget_event(I_widget_top_level(&button->widget), I_EV_HIDE);
+}
+
+/******************************************************************************\
  Quit the game via interface.
 \******************************************************************************/
 static void quit_button_clicked(i_button_t *button)
@@ -104,6 +114,7 @@ void I_init_game(i_window_t *window)
         /* Join button */
         I_button_init(&join_button, NULL, C_str("i-join", "Join"),
                       I_BT_DECORATED);
+        join_button.on_click = (i_callback_f)join_button_clicked;
         I_widget_add(&left_box.widget, &join_button.widget);
 
         /* Leave button */

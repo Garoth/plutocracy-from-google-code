@@ -10,20 +10,18 @@
  FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
 \******************************************************************************/
 
-/* Client code for the server */
-#define N_SERVER_ID -1
+/* Special client IDs */
+typedef enum {
+        N_INVALID_ID = -1,
+        N_HOST_CLIENT_ID = 0,
+        N_CLIENTS_MAX = 32,
+        N_SERVER_ID,
+        N_UNASSIGNED_ID,
+        N_BROADCAST_ID,
+} n_client_id_t;
 
-/* Client code for the hosting player */
-#define N_HOST_CLIENT_ID 0
-
-/* ID used when not connected */
-#define N_INVALID_ID -2
-
-/* Maximum number of players supported */
-#define N_CLIENTS_MAX 32
-
-/* Special client ID for broadcasting to all clients */
-#define N_BROADCAST_ID N_CLIENTS_MAX
+/* Largest amount of data that can be sent via a message */
+#define N_SYNC_MAX 1024
 
 /* Callback function events */
 typedef enum {
@@ -33,20 +31,24 @@ typedef enum {
 } n_event_t;
 
 /* Callback function prototype */
-typedef void (*n_callback_f)(int client, n_event_t);
+typedef void (*n_callback_f)(n_client_id_t, n_event_t);
 
 /* Structure for connected clients */
 typedef struct n_client {
+        int socket;
         bool connected;
 } n_client_t;
 
 /* n_client.c */
 void N_cleanup(void);
-void N_connect(const char *address, int port, n_callback_f client);
+const char *N_client_to_string(n_client_id_t);
+bool N_client_valid(n_client_id_t);
+bool N_connect(const char *address, n_callback_f client);
 void N_disconnect(void);
 void N_init(void);
+void N_poll_client(void);
 
-extern int n_client_id;
+extern n_client_id_t n_client_id;
 
 /* n_server.c */
 void N_kick_client(int client);
@@ -57,11 +59,16 @@ void N_stop_server(void);
 extern n_client_t n_clients[N_CLIENTS_MAX];
 
 /* n_sync.c */
+#define N_broadcast(f, ...) N_send(N_BROADCAST_ID, f, ## __VA_ARGS__)
+#define N_broadcast_except(c, f, ...) N_send(-(c) - 1, f, ## __VA_ARGS__)
 char N_receive_char(void);
 float N_receive_float(void);
 int N_receive_int(void);
 short N_receive_short(void);
 void N_receive_string(char *buffer, int size);
 #define N_receive_string_buf(b) N_receive_string(b, sizeof (b))
-void N_send(int client, const char *format, ...);
+void N_send(n_client_id_t, const char *format, ...);
+
+/* n_variables.c */
+void N_register_variables(void);
 

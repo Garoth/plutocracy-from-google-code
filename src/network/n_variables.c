@@ -10,29 +10,15 @@
  FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
 \******************************************************************************/
 
-#include "../common/c_shared.h"
-#include "n_shared.h"
+#include "n_common.h"
 
-/* Sockets */
-#ifdef WINDOWS
-#include <winsock.h>
-#else
-#include <unistd.h>
-#include <fcntl.h>
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
-#endif
+c_var_t n_port;
 
-/* n_client.c */
-extern int n_client_socket;
-
-/* n_sync.c */
-bool N_receive(int client);
-
-extern n_callback_f n_client_func, n_server_func;
-
-/* n_variables.c */
-extern c_var_t n_port;
+/******************************************************************************\
+ Registers the network namespace variables.
+\******************************************************************************/
+void N_register_variables(void)
+{
+        C_register_integer(&n_port, "n_port", 32768, "server port");
+}
 

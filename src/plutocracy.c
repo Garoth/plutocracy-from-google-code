@@ -178,6 +178,15 @@ static void cleanup(void)
 }
 
 /******************************************************************************\
+ Caught a signal.
+\******************************************************************************/
+static void signal_handler(int sig)
+{
+        C_warning("Caught signal %d", sig);
+        exit(1);
+}
+
+/******************************************************************************\
  Initialize SDL.
 \******************************************************************************/
 static void init_sdl(void)
@@ -207,8 +216,12 @@ int main(int argc, char *argv[])
            control the order of cleanup */
         atexit(cleanup);
 
+        /* Set signal handler */
+        C_signal_handler(signal_handler);
+
         /* Each namespace must register its configurable variables */
         C_register_variables();
+        N_register_variables();
         R_register_variables();
         I_register_variables();
         G_register_variables();

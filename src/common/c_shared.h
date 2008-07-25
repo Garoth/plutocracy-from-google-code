@@ -25,6 +25,7 @@
 #include <strings.h>
 #endif
 #include <time.h>
+#include <errno.h>
 
 /* OpenGL */
 #include <GL/gl.h>
@@ -189,6 +190,9 @@ typedef void (*c_ref_cleanup_f)(void *data);
 /* Callback for key-value file parsing */
 typedef int (*c_key_value_f)(const char *key, const char *value);
 
+/* Callback for signal catchers */
+typedef void (*c_signal_f)(int signal);
+
 /* Callback for modified variables. Return TRUE to set the value. */
 typedef struct c_var c_var_t;
 typedef int (*c_var_update_f)(c_var_t *, c_var_value_t);
@@ -324,6 +328,7 @@ void C_test_mem_check(void);
 int C_mkdir(const char *path);
 int C_modified_time(const char *filename);
 const char *C_user_dir(void);
+void C_signal_handler(c_signal_f);
 
 /* c_math.c */
 #define C_is_pow2(n) !(n & (n - 1))

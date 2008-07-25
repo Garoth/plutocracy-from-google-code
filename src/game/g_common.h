@@ -17,7 +17,7 @@
 #include "g_shared.h"
 
 /* Network protocol, increment when no longer compatible */
-#define G_PROTOCOL 0
+#define G_PROTOCOL 1
 
 /* Invalid island index */
 #define G_ISLAND_INVALID 255
@@ -28,20 +28,43 @@
 /* Message tokens sent by clients */
 typedef enum {
         G_CM_NONE,
+
+        /* Messages for changing status */
         G_CM_AFFILIATE,
-        G_CM_SHIP_MOVE,
         G_CM_NAME,
-        G_CLIENT_MESSAGES,
+
+        /* Communication */
+        G_CM_CHAT,
+
+        /* Commands */
+        G_CM_SHIP_MOVE,
+
+        G_CLIENT_MESSAGES
 } g_client_msg_t;
 
 /* Message tokens sent by the server */
 typedef enum {
         G_SM_NONE,
+
+        /* Synchronization messages */
         G_SM_INIT,
-        G_SM_POPUP,
+        G_SM_CLIENT,
+
+        /* Messages for when clients change status */
+        G_SM_CONNECTED,
+        G_SM_DISCONNECTED,
         G_SM_AFFILIATE,
         G_SM_NAME,
-        G_SERVER_MESSAGES,
+
+        /* Communication */
+        G_SM_POPUP,
+        G_SM_CHAT,
+
+        /* Entity updates */
+        G_SM_SPAWN_SHIP,
+        G_SM_SHIP_MOVE,
+
+        G_SERVER_MESSAGES
 } g_server_msg_t;
 
 /* A tile on the globe */
@@ -61,6 +84,7 @@ typedef struct g_client {
 
 /* g_client.c */
 void G_client_callback(int client, n_event_t);
+i_color_t G_nation_to_color(g_nation_name_t);
 void G_select_tile(int tile);
 
 extern g_client_t g_clients[N_CLIENTS_MAX];
@@ -80,6 +104,7 @@ void G_cleanup_ships(void);
 void G_init_ships(void);
 bool G_open_tile(int tile, int exclude_ship);
 void G_render_ships(void);
+void G_ship_move_to(int index, int new_tile);
 void G_ship_path(int ship, int tile);
 int G_spawn_ship(int client, int tile, g_ship_name_t, int ship);
 void G_update_ships(void);
