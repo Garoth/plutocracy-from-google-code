@@ -32,8 +32,8 @@
 #define R_MINUTES_PER_DAY 5
 
 /* Because of prerendering back buffer usage, we need a minimum resolution */
-#define R_WIDTH_MIN 256
-#define R_HEIGHT_MIN 256
+#define R_WIDTH_MIN 512
+#define R_HEIGHT_MIN 384
 
 /* Maximum number of globe 4-subdivision iterations */
 #define R_SUBDIV4_MAX 5
@@ -195,9 +195,9 @@ void R_model_render(r_model_t *);
 void R_adjust_light_for(c_vec3_t origin);
 
 /* r_ship.c */
-void R_render_ship_status(const r_model_t *model, float left, float left_max,
+void R_render_ship_status(const r_model_t *, float left, float left_max,
                           float right, float right_max, c_color_t modulate,
-                          int selected);
+                          bool selected, bool own);
 
 /* r_solar.c */
 extern float r_solar_angle;
