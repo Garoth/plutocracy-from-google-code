@@ -270,6 +270,9 @@ static void client_init(void)
                 G_generate_globe();
         }
 
+        /* Get solar angle */
+        r_solar_angle = N_receive_float();
+
         /* Start off nation-less */
         I_select_nation(G_NN_NONE);
 

@@ -125,6 +125,34 @@ static void send_buffer(n_client_id_t client)
 }
 
 /******************************************************************************\
+ Write bytes to the data buffer. The datum is assumed to be an integer or
+ float that needs byte-order rearranging.
+\******************************************************************************/
+static bool write_bytes(int offset, int bytes, void *data)
+{
+        void *to;
+
+        if (offset + bytes > N_SYNC_MAX)
+                return FALSE;
+        to = n_sync_buffer + offset;
+        switch (bytes) {
+        case 1:
+                *(char *)to = *(char *)data;
+                break;
+        case 2:
+                *(Uint16 *)to = SDL_SwapLE16(*(Uint16 *)data);
+                break;
+        case 4:
+        default:
+                *(Uint32 *)to = SDL_SwapLE32(*(Uint32 *)data);
+                break;
+        }
+        if (offset + bytes > n_sync_size)
+                n_sync_size = offset + bytes;
+        return TRUE;
+}
+
+/******************************************************************************\
  Sends a message to [client]. If [client] is 0, sends to the server. The
  [format] string describes the variable argument list given to the function.
 
@@ -141,6 +169,12 @@ static void send_buffer(n_client_id_t client)
 void N_send(int client, const char *format, ...)
 {
         va_list va;
+        union {
+                float f;
+                int n;
+                short s;
+                char c;
+        } value;
         const char *string;
         int string_len;
 
@@ -158,26 +192,26 @@ void N_send(int client, const char *format, ...)
                 switch (*format) {
                 case '1':
                 case 'c':
-                        if (n_sync_size > N_SYNC_MAX - 1)
+                        value.c = (char)va_arg(va, int);
+                        if (!write_bytes(n_sync_size, 1, &value.c))
                                 goto overflow;
-                        n_sync_buffer[n_sync_size++] = (char)va_arg(va, int);
                         break;
                 case '2':
                 case 'd':
-                        if (n_sync_size > N_SYNC_MAX - 2)
+                        value.s = (short)va_arg(va, int);
+                        if (!write_bytes(n_sync_size, 2, &value.s))
                                 goto overflow;
-                        *(Uint16 *)(n_sync_buffer + n_sync_size) =
-                                SDL_SwapLE16((Uint16)va_arg(va, int));
-                        n_sync_size += 2;
                         break;
                 case '4':
                 case 'l':
-                case 'f':
-                        if (n_sync_size > N_SYNC_MAX - 4)
+                        value.n = va_arg(va, int);
+                        if (!write_bytes(n_sync_size, 4, &value.n))
                                 goto overflow;
-                        *(Uint32 *)(n_sync_buffer + n_sync_size) =
-                                SDL_SwapLE32((Uint32)va_arg(va, int));
-                        n_sync_size += 4;
+                        break;
+                case 'f':
+                        value.f = (float)va_arg(va, double);
+                        if (!write_bytes(n_sync_size, 4, &value.f))
+                                goto overflow;
                         break;
                 case 's':
                         string = va_arg(va, const char *);
@@ -199,7 +233,8 @@ void N_send(int client, const char *format, ...)
         va_end(va);
 
         /* Write the size of the message as the first 2-bytes */
-        *(Uint16 *)n_sync_buffer = SDL_SwapLE16((Uint16)n_sync_size);
+        value.s = (short)n_sync_size;
+        write_bytes(0, 2, &value.s);
 
         /* Broadcast to every client */
         if (client == N_BROADCAST_ID || client < 0) {
@@ -249,8 +284,8 @@ bool N_receive(n_client_id_t client)
                         /* No data (WinSock) */
                         if (WSAGetLastError() == WSAEWOULDBLOCK)
                                 return TRUE;
-                        C_debug("WinSock error %d (recv returned %d, %s)", 
-                                WSAGetLastError(), len, 
+                        C_debug("WinSock error %d (recv returned %d, %s)",
+                                WSAGetLastError(), len,
                                 N_client_to_string(client));
 #else
                         /* No data (Berkeley) */

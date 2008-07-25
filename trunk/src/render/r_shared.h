@@ -199,6 +199,9 @@ void R_render_ship_status(const r_model_t *model, float left, float left_max,
                           float right, float right_max, c_color_t modulate,
                           int selected);
 
+/* r_solar.c */
+extern float r_solar_angle;
+
 /* r_sprite.c */
 #define R_billboard_cleanup(p) R_sprite_cleanup(&(p)->sprite)
 void R_billboard_init(r_billboard_t *, r_texture_t *);
