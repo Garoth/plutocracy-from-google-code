@@ -250,7 +250,7 @@ void N_send(int client, const char *format, ...)
                                 goto overflow;
                         break;
                 case 'f':
-                        if (!N_send_float(va_arg(va, double)))
+                        if (!N_send_float((float)va_arg(va, double)))
                                 goto overflow;
                         break;
                 case 's':

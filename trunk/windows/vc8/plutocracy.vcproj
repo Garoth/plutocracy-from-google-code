@@ -708,6 +708,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\src\game\g_elements.c"
+				>
+			</File>
+			<File
 				RelativePath="..\..\src\game\g_globe.c"
 				>
 				<FileConfiguration
@@ -744,6 +748,10 @@
 						PrecompiledHeaderFile="$(IntDir)\g_common.pch"
 					/>
 				</FileConfiguration>
+			</File>
+			<File
+				RelativePath="..\..\src\game\g_names.c"
+				>
 			</File>
 			<File
 				RelativePath="..\..\src\game\g_shared.h"

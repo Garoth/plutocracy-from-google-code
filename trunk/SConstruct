@@ -16,7 +16,7 @@ import glob, os, sys
 
 # Package parameters
 package = 'plutocracy'
-version = '0.0.2'
+version = '0.0.3'
 
 # Platform considerations
 windows = sys.platform == 'win32'
@@ -177,8 +177,7 @@ if windows:
 # Generate a config.h with definitions
 else:
         def WriteConfigH(target, source, env):
-                global version
-
+        
                 # Get subversion revision and add it to the version
                 svn_revision = ''
                 try:
@@ -192,14 +191,13 @@ else:
                                 svn_revision = 'r' + result[start + 10:end]
                 except:
                         pass
-                version += svn_revision
 
                 # Write the config
                 config = open('config.h', 'w')
                 config.write('\n/* Package parameters */\n' +
                              '#define PACKAGE "' + package + '"\n' +
                              '#define PACKAGE_STRING "' + package.title() +
-                             ' ' + version + '"\n' +
+                             ' ' + version + svn_revision + '"\n' +
                              '\n/* Configured paths */\n' +
                              '#define PKGDATADIR "' + install_data + '"\n')
                 config.close()
@@ -243,6 +241,7 @@ default_env.Install(install_data, ['AUTHORS', 'ChangeLog', 'CC', 'COPYING',
                                    'README'])
 InstallRecursive(os.path.join(install_data, 'gui'), 'gui')
 InstallRecursive(os.path.join(install_data, 'models'), 'models')
+InstallRecursive(os.path.join(install_data, 'configs'), 'configs')
 
 ################################################################################
 #
@@ -314,6 +313,7 @@ InstallRecursive(os.path.join(dist_name, 'gendoc'), 'gendoc',
                  [path('gendoc/gendoc')])
 InstallRecursive(os.path.join(dist_name, 'gui'), 'gui')
 InstallRecursive(os.path.join(dist_name, 'models'), 'models')
+InstallRecursive(os.path.join(dist_name, 'configs'), 'configs')
 InstallRecursive(os.path.join(dist_name, 'src'), 'src')
 InstallRecursive(os.path.join(dist_name, 'windows'), 'windows',
                  ['windows/vc8/Debug', 'windows/vc8/Release'])
@@ -340,6 +340,7 @@ default_env.Install(release_name, ['AUTHORS', 'ChangeLog', 'CC', 'COPYING',
                                    'README', plutocracy])
 InstallRecursive(os.path.join(release_name, 'gui'), 'gui')
 InstallRecursive(os.path.join(release_name, 'models'), 'models')
+InstallRecursive(os.path.join(release_name, 'configs'), 'configs')
 if windows:
         default_env.Install(release_name, dist_dlls)
 
