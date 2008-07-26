@@ -32,6 +32,7 @@ Khent suggested some similar games to play:
   * [http://www.libpng.org/pub/png/libpng-1.2.5-manual.html libpng manual]
   * [http://www.blender.org/documentation/242PythonDoc/index.html Blender API]
   * [http://www.scons.org/doc/0.98.5/HTML/scons-api/index.html SCons API]
+  * [http://www.beej.us/guide/bgnet/output/html/multipage/index.html Socket networking]
 
 = Tiling a Sphere =
   * Generate a sphere from any polygon: http://www.neubert.net/PLASpher.html
