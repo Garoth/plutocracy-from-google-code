@@ -110,6 +110,9 @@ void G_init(void)
         C_var_unlatch(&g_name);
         g_name.update = (c_var_update_f)name_update;
         g_name.edit = C_VE_FUNCTION;
+
+        /* Parse names config */
+        G_load_names();
 }
 
 /******************************************************************************\
@@ -202,6 +205,14 @@ static void sm_affiliate(void)
         g_clients[client].nation = nation;
         if (client == n_client_id)
                 I_select_nation(nation);
+
+        /* Reselect the ship if its client's nation changed */
+        if (g_selected_ship >= 0 && g_ships[g_selected_ship].client == client) {
+                int ship = g_selected_ship;
+
+                g_selected_ship = -1;
+                G_ship_select(ship);
+        }
 
         /* Affiliation message might have a goto tile attached */
         goto_pos = NULL;
@@ -441,6 +452,13 @@ void G_client_callback(int client, n_event_t event)
                 break;
         case G_SM_SHIP_MOVE:
                 sm_ship_move();
+                break;
+        case G_SM_NAME_SHIP:
+                i = N_receive_char();
+                if (i < 0 || i >= G_SHIPS_MAX)
+                        return;
+                N_receive_string_buf(g_ships[i].name);
+                G_count_name(G_NT_SHIP, g_ships[i].name);
                 break;
         case G_SM_CONNECTED:
                 i = N_receive_char();

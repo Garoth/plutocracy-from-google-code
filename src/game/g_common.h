@@ -22,9 +22,6 @@
 /* Invalid island index */
 #define G_ISLAND_INVALID 255
 
-/* Longest allowed name */
-#define G_NAME_MAX 16
-
 /* Message tokens sent by clients */
 typedef enum {
         G_CM_NONE,
@@ -32,6 +29,7 @@ typedef enum {
         /* Messages for changing status */
         G_CM_AFFILIATE,
         G_CM_NAME,
+        G_CM_NAME_SHIP,
 
         /* Communication */
         G_CM_CHAT,
@@ -55,6 +53,7 @@ typedef enum {
         G_SM_DISCONNECTED,
         G_SM_AFFILIATE,
         G_SM_NAME,
+        G_SM_NAME_SHIP,
 
         /* Communication */
         G_SM_POPUP,
@@ -66,6 +65,21 @@ typedef enum {
 
         G_SERVER_MESSAGES
 } g_server_msg_t;
+
+/* Ship class names */
+typedef enum {
+        G_SN_SLOOP,
+        G_SN_SPIDER,
+        G_SHIP_NAMES,
+        G_SN_NONE,
+} g_ship_name_t;
+
+/* Name classes */
+typedef enum {
+        G_NT_SHIP,
+        G_NT_ISLAND,
+        G_NAME_TYPES
+} g_name_type_t;
 
 /* A tile on the globe */
 typedef struct g_tile {
@@ -81,6 +95,23 @@ typedef struct g_client {
         int nation;
         char name[G_NAME_MAX];
 } g_client_t;
+
+/* Structure containing ship class information */
+typedef struct g_ship_class {
+        const char *model_path, *name;
+        float speed;
+        int health, cargo;
+} g_ship_class_t;
+
+/* Structure containing ship information */
+typedef struct g_ship {
+        g_ship_name_t class_name;
+        g_cargo_t cargo;
+        float progress;
+        int tile, rear_tile, target, client, health, armor;
+        char path[R_PATH_MAX], name[G_NAME_MAX];
+        bool in_use;
+} g_ship_t;
 
 /* g_client.c */
 void G_client_callback(int client, n_event_t);
@@ -99,15 +130,25 @@ int G_set_tile_model(int tile, const char *path);
 
 extern g_tile_t g_tiles[R_TILES_MAX];
 
+/* g_names.c */
+void G_count_name(g_name_type_t, const char *name);
+void G_get_name(g_name_type_t, char *buffer, int buffer_size);
+#define G_get_name_buf(t, b) G_get_name(t, b, sizeof (b))
+void G_load_names(void);
+
 /* g_ship.c */
 void G_cleanup_ships(void);
 void G_init_ships(void);
 bool G_open_tile(int tile, int exclude_ship);
 void G_render_ships(void);
 bool G_ship_move_to(int index, int new_tile);
-void G_ship_path(int ship, int tile);
+void G_ship_path(int index, int tile);
+void G_ship_select(int index);
 int G_spawn_ship(int client, int tile, g_ship_name_t, int ship);
 void G_update_ships(void);
+
+extern g_ship_class_t g_ship_classes[G_SHIP_NAMES];
+extern g_ship_t g_ships[G_SHIPS_MAX];
 
 /* g_variables.c */
 extern c_var_t g_globe_islands, g_globe_island_size, g_globe_seed,

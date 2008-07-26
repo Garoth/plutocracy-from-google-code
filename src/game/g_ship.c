@@ -144,6 +144,10 @@ init:   /* Initialize ship structure */
         g_ships[index].progress = 1.f;
         g_ships[index].client = client;
         g_ships[index].health = g_ship_classes[name].health;
+        g_ships[index].cargo.capacity = g_ship_classes[name].cargo;
+
+        /* Start out unnamed */
+        C_strncpy_buf(g_ships[index].name, C_va("Unnamed #%d", index));
 
         /* Place the ship on the tile */
         g_tiles[tile].ship = index;
@@ -153,6 +157,13 @@ init:   /* Initialize ship structure */
         if (n_client_id == N_HOST_CLIENT_ID)
                 N_broadcast_except(N_HOST_CLIENT_ID, "11211", G_SM_SPAWN_SHIP,
                                    client, tile, name, index);
+
+        /* If this is one of ours, name it */
+        if (client == n_client_id) {
+                G_get_name_buf(G_NT_SHIP, g_ships[index].name);
+                N_send(N_SERVER_ID, "11s", G_CM_NAME_SHIP, index,
+                       g_ships[index].name);
+        }
 
         return index;
 }
@@ -520,6 +531,36 @@ void G_update_ships(void)
 
                 /* Position the ship visually */
                 position_ship(i);
+        }
+}
+
+/******************************************************************************\
+ Select a ship. Pass a negative [index] to deselect.
+\******************************************************************************/
+void G_ship_select(int index)
+{
+        g_ship_name_t class_name;
+        i_color_t color;
+        n_client_id_t client;
+        bool own;
+
+        if (g_selected_ship == index)
+                return;
+        g_selected_ship = index;
+        own = FALSE;
+        if (index >= 0) {
+                own = g_ships[index].client == n_client_id;
+                if (own && g_selected_ship == index)
+                        R_select_path(g_ships[index].tile, g_ships[index].path);
+                client = g_ships[index].client;
+                color = G_nation_to_color(g_clients[client].nation);
+                class_name = g_ships[index].class_name;
+                I_select_ship(&g_ships[index].cargo, color,
+                              g_ships[index].name, g_clients[client].name,
+                              g_ship_classes[class_name].name);
+        } else {
+                R_select_path(-1, NULL);
+                I_deselect_ship();
         }
 }
 

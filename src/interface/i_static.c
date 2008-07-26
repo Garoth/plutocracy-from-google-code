@@ -44,7 +44,7 @@ int I_label_event(i_label_t *label, i_event_t event)
         case I_EV_MOVED:
                 label->text.origin = C_vec2_clamp(label->widget.origin,
                                                   r_pixel_scale.value.f);
-                if (label->text.size.x >= label->width)
+                if (label->text.size.x >= label->width || !label->center)
                         break;
                 label->text.origin.x += (label->width - label->text.size.x) / 2;
                 label->text.origin = C_vec2_clamp(label->text.origin,
@@ -84,6 +84,7 @@ void I_label_init(i_label_t *label, const char *text)
         label->widget.event_func = (i_event_f)I_label_event;
         label->widget.state = I_WS_READY;
         label->font = R_FONT_GUI;
+        label->center = TRUE;
         C_strncpy_buf(label->buffer, text);
 }
 
@@ -199,5 +200,47 @@ void I_image_init_themed(i_image_t *image, r_texture_t **pptex)
         if (!pptex)
                 pptex = &separator_tex;
         image->theme_texture = pptex;
+}
+
+/******************************************************************************\
+ Info widget event function.
+\******************************************************************************/
+int I_info_event(i_info_t *info, i_event_t event)
+{
+        if (event != I_EV_CONFIGURE)
+                return TRUE;
+        I_widget_pack(&info->widget, I_PACK_H, I_FIT_NONE);
+        info->widget.size = I_widget_child_bounds(&info->widget);
+        return FALSE;
+}
+/******************************************************************************\
+ Initializes an info widget.
+\******************************************************************************/
+void I_info_init(i_info_t *info, const char *left, const char *right)
+{
+        if (!info)
+                return;
+        C_zero(info);
+        I_widget_init(&info->widget, "Info");
+        info->widget.event_func = (i_event_f)I_info_event;
+        info->widget.state = I_WS_READY;
+
+        /* Label */
+        I_label_init(&info->left, left);
+        info->left.widget.expand = TRUE;
+        I_widget_add(&info->widget, &info->left.widget);
+
+        /* Info */
+        I_label_init(&info->right, right);
+        I_widget_add(&info->widget, &info->right.widget);
+}
+
+/******************************************************************************\
+ Configures an info widget.
+\******************************************************************************/
+void I_info_configure(i_info_t *info, const char *right)
+{
+        C_strncpy_buf(info->right.buffer, right);
+        I_widget_event(&info->widget, I_EV_CONFIGURE);
 }
 
