@@ -184,10 +184,7 @@ void G_input_chat(const char *message)
 void G_join_game(const char *address)
 {
         G_leave_game();
-
-        /* Clear game structures */
-        memset(g_ships, 0, sizeof (g_ships));
-        memset(g_clients, 0, sizeof (g_clients));
+        G_reset_elements();
 
         /* Connect to server */
         if (N_connect(address, (n_callback_f)G_client_callback)) {

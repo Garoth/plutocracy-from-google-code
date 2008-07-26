@@ -92,7 +92,7 @@ void I_init_game(i_window_t *window)
         window->fit = I_FIT_TOP;
 
         /* Label */
-        I_label_init(&label, C_str("i-menu", "Game Menu:"));
+        I_label_init(&label, C_str("i-menu", "Game Menu"));
         label.font = R_FONT_TITLE;
         I_widget_add(&window->widget, &label.widget);
 

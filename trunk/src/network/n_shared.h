@@ -25,7 +25,7 @@ typedef enum {
         N_INVALID_ID = -1,
         N_HOST_CLIENT_ID = 0,
         N_CLIENTS_MAX = 32,
-        N_SERVER_ID,
+        N_SERVER_ID = N_CLIENTS_MAX,
         N_UNASSIGNED_ID,
         N_BROADCAST_ID,
 } n_client_id_t;

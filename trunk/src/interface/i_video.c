@@ -160,7 +160,7 @@ void I_init_video(i_window_t *window)
         window->fit = I_FIT_TOP;
 
         /* Label */
-        I_label_init(&label, C_str("i-video", "Video Settings:"));
+        I_label_init(&label, C_str("i-video", "Video Settings"));
         label.font = R_FONT_TITLE;
         I_widget_add(&window->widget, &label.widget);
 

@@ -149,8 +149,9 @@ const char *N_client_to_string(n_client_id_t client)
 \******************************************************************************/
 bool N_client_valid(n_client_id_t client)
 {
-        return client >= 0 && client < N_CLIENTS_MAX &&
-               n_clients[client].connected;
+        return client == N_SERVER_ID ||
+               (client >= 0 && client < N_CLIENTS_MAX &&
+                n_clients[client].connected);
 }
 
 /******************************************************************************\

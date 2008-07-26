@@ -401,7 +401,7 @@ static int check_mouse_focus(i_widget_t *widget)
                 return FALSE;
         mouse_pos = C_vec2((float)i_mouse_x, (float)i_mouse_y);
         if (widget->state != I_WS_NO_FOCUS && widget->state != I_WS_DISABLED &&
-            widget->shown && 
+            widget->shown &&
             C_rect_contains(widget->origin, widget->size, mouse_pos)) {
                 i_mouse_focus = widget;
                 return TRUE;
@@ -493,7 +493,7 @@ void I_widget_event(i_widget_t *widget, i_event_t event)
         }
 
         /* The only event an unconfigured widget can handle is I_EV_CONFIGURE */
-        if (widget->configured < 1 && event != I_EV_CONFIGURE)
+        if (!widget->configured && event != I_EV_CONFIGURE)
                 C_error("Propagated %s to unconfigured %s",
                         I_event_string(event), widget->name);
 
@@ -625,7 +625,7 @@ void I_widget_event(i_widget_t *widget, i_event_t event)
         /* After handling and propagation to children */
         switch (event) {
         case I_EV_CONFIGURE:
-                widget->configured++;
+                widget->configured = TRUE;
                 break;
         case I_EV_CLEANUP:
                 if (widget->heap)

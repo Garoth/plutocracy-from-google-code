@@ -10,7 +10,7 @@
  FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
 \******************************************************************************/
 
-/* Deals with initialization, cleanup, and messages received from the server */
+/* Deals messages received from the server */
 
 #include "g_common.h"
 
@@ -18,23 +18,7 @@
 #define corrupt_disconnect() corrupt_disc_full(__FILE__, __LINE__, __func__)
 
 /* Array of connected clients */
-g_client_t g_clients[N_CLIENTS_MAX];
-
-/* Array of game nations */
-g_nation_t g_nations[G_NATION_NAMES];
-
-/* Array of cargo names */
-const char *g_cargo_names[G_CARGO_TYPES];
-
-/******************************************************************************\
- Update function for a national color.
-\******************************************************************************/
-static int nation_color_update(c_var_t *var, c_var_value_t value)
-{
-        C_color_update(var, value);
-        I_update_colors();
-        return TRUE;
-}
+g_client_t g_clients[N_CLIENTS_MAX + 1];
 
 /******************************************************************************\
  Send the server an update if our name changes.
@@ -45,116 +29,6 @@ static int name_update(c_var_t *var, c_var_value_t value)
                 return FALSE;
         N_send(N_SERVER_ID, "1s", G_CM_NAME, value.s);
         return TRUE;
-}
-
-/******************************************************************************\
- Initialize game structures before play.
-\******************************************************************************/
-void G_init(void)
-{
-        C_status("Initializing game elements");
-        G_init_ships();
-
-        /* Setup nations */
-        g_nations[G_NN_NONE].short_name = "none";
-        g_nations[G_NN_NONE].long_name = C_str("g-nation-none", "None");
-        g_nations[G_NN_RED].short_name = "red";
-        g_nations[G_NN_RED].long_name = C_str("g-nation-red", "Ruby");
-        C_var_update_data(g_nation_colors + G_NN_RED, nation_color_update,
-                          &g_nations[G_NN_RED].color);
-        g_nations[G_NN_GREEN].short_name = "green";
-        g_nations[G_NN_GREEN].long_name = C_str("g-nation-green", "Emerald");
-        C_var_update_data(g_nation_colors + G_NN_GREEN, nation_color_update,
-                          &g_nations[G_NN_GREEN].color);
-        g_nations[G_NN_BLUE].short_name = "blue";
-        g_nations[G_NN_BLUE].long_name = C_str("g-nation-blue", "Sapphire");
-        C_var_update_data(g_nation_colors + G_NN_BLUE, nation_color_update,
-                          &g_nations[G_NN_BLUE].color);
-        g_nations[G_NN_PIRATE].short_name = "pirate";
-        g_nations[G_NN_PIRATE].long_name = C_str("g-nation-pirate", "Pirate");
-        C_var_update_data(g_nation_colors + G_NN_PIRATE, nation_color_update,
-                          &g_nations[G_NN_PIRATE].color);
-
-        /* Special cargo */
-        g_cargo_names[G_CT_GOLD] = C_str("g-cargo-gold", "Gold");
-        g_cargo_names[G_CT_CREW] = C_str("g-cargo-crew", "Crew");
-
-        /* Food cargo */
-        g_cargo_names[G_CT_RATIONS] = C_str("g-cargo-rations", "Rations");
-        g_cargo_names[G_CT_BREAD] = C_str("g-cargo-bread", "Bread");
-        g_cargo_names[G_CT_FISH] = C_str("g-cargo-fish", "Fish");
-        g_cargo_names[G_CT_FRUIT] = C_str("g-cargo-fruit", "Fruit");
-
-        /* Raw material cargo */
-        g_cargo_names[G_CT_GRAIN] = C_str("g-cargo-grain", "Grain");
-        g_cargo_names[G_CT_COTTON] = C_str("g-cargo-cotton", "Cotton");
-        g_cargo_names[G_CT_LUMBER] = C_str("g-cargo-lumber", "Lumber");
-        g_cargo_names[G_CT_IRON] = C_str("g-cargo-iron", "Iron");
-
-        /* Luxury cargo */
-        g_cargo_names[G_CT_RUM] = C_str("g-cargo-rum", "Rum");
-        g_cargo_names[G_CT_FURNITURE] = C_str("g-cargo-furniture", "Furniture");
-        g_cargo_names[G_CT_CLOTH] = C_str("g-cargo-cloth", "Cloth");
-        g_cargo_names[G_CT_SUGAR] = C_str("g-cargo-sugar", "Sugar");
-
-        /* Equipment cargo */
-        g_cargo_names[G_CT_CANNON] = C_str("g-cargo-cannon", "Cannon");
-        g_cargo_names[G_CT_ROUNDSHOT] = C_str("g-cargo-roundshot", "Roundshot");
-        g_cargo_names[G_CT_PLATING] = C_str("g-cargo-plating", "Plating");
-        g_cargo_names[G_CT_GILLNET] = C_str("g-cargo-gillner", "Gillnet");
-
-        /* Prepare initial state */
-        G_init_globe();
-
-        /* Update the server when our name changes */
-        C_var_unlatch(&g_name);
-        g_name.update = (c_var_update_f)name_update;
-        g_name.edit = C_VE_FUNCTION;
-
-        /* Parse names config */
-        G_load_names();
-}
-
-/******************************************************************************\
- Cleanup game structures.
-\******************************************************************************/
-void G_cleanup(void)
-{
-        G_cleanup_globe();
-        G_cleanup_ships();
-}
-
-/******************************************************************************\
- Returns the amount of space the given cargo manifest contains.
-\******************************************************************************/
-int G_cargo_space(const g_cargo_t *cargo)
-{
-        int i, space;
-
-        space = 0;
-        for (i = 0; i < G_CARGO_TYPES; i++)
-                space += cargo->amounts[i];
-
-        /* Gold is special */
-        space += cargo->amounts[G_CT_GOLD] / 100 - cargo->amounts[G_CT_GOLD];
-
-        return space;
-}
-
-/******************************************************************************\
- Convert a nation to a color index.
-\******************************************************************************/
-i_color_t G_nation_to_color(g_nation_name_t nation)
-{
-        if (nation == G_NN_RED)
-                return I_COLOR_RED;
-        else if (nation == G_NN_GREEN)
-                return I_COLOR_GREEN;
-        else if (nation == G_NN_BLUE)
-                return I_COLOR_BLUE;
-        else if (nation == G_NN_PIRATE)
-                return I_COLOR_PIRATE;
-        return I_COLOR_ALT;
 }
 
 /******************************************************************************\
@@ -207,12 +81,7 @@ static void sm_affiliate(void)
                 I_select_nation(nation);
 
         /* Reselect the ship if its client's nation changed */
-        if (g_selected_ship >= 0 && g_ships[g_selected_ship].client == client) {
-                int ship = g_selected_ship;
-
-                g_selected_ship = -1;
-                G_ship_select(ship);
-        }
+        G_ship_reselect(-1, client);
 
         /* Affiliation message might have a goto tile attached */
         goto_pos = NULL;
@@ -415,6 +284,7 @@ static void sm_ship_cargo(void)
         }
         for (i = 0; i < G_CARGO_TYPES; i++)
                 g_ships[index].cargo.amounts[i] = N_receive_short();
+        G_ship_reselect(index, -1);
 }
 
 /******************************************************************************\
@@ -423,7 +293,7 @@ static void sm_ship_cargo(void)
 void G_client_callback(int client, n_event_t event)
 {
         g_server_msg_t token;
-        int i;
+        int i, j;
 
         C_assert(client == N_SERVER_ID);
 
@@ -473,12 +343,15 @@ void G_client_callback(int client, n_event_t event)
         case G_SM_SHIP_CARGO:
                 sm_ship_cargo();
                 break;
-        case G_SM_NAME_SHIP:
+        case G_SM_SHIP_OWNER:
                 i = N_receive_char();
-                if (i < 0 || i >= G_SHIPS_MAX)
+                j = N_receive_char();
+                if (i < 0 || i >= G_SHIPS_MAX || !N_client_valid(j)) {
+                        corrupt_disconnect();
                         return;
-                N_receive_string_buf(g_ships[i].name);
-                G_count_name(G_NT_SHIP, g_ships[i].name);
+                }
+                g_ships[i].client = j;
+                G_ship_reselect(i, -1);
                 break;
         case G_SM_CONNECTED:
                 i = N_receive_char();
@@ -515,5 +388,33 @@ void G_update_client(void)
         if (i_limbo)
                 return;
         G_update_ships();
+}
+
+/******************************************************************************\
+ Initialize game structures before play.
+\******************************************************************************/
+void G_init(void)
+{
+        C_status("Initializing client");
+        G_init_elements();
+        G_init_ships();
+        G_init_globe();
+
+        /* Update the server when our name changes */
+        C_var_unlatch(&g_name);
+        g_name.update = (c_var_update_f)name_update;
+        g_name.edit = C_VE_FUNCTION;
+
+        /* Parse names config */
+        G_load_names();
+}
+
+/******************************************************************************\
+ Cleanup game structures.
+\******************************************************************************/
+void G_cleanup(void)
+{
+        G_cleanup_globe();
+        G_cleanup_ships();
 }
 
