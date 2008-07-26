@@ -25,7 +25,7 @@ void N_init(void)
 {
 #ifdef WINDOWS
         WSADATA wsaData;
-        
+
         if (WSAStartup(MAKEWORD(1, 1), &wsaData) != 0)
                 C_error("Failed to initialize WinSock");
 #endif
@@ -49,36 +49,50 @@ void N_cleanup(void)
 bool N_connect(const char *address, n_callback_f client_func)
 {
         struct sockaddr_in addr;
-        int port;
+        struct hostent *host;
+        int i, last_colon, port;
+        char buffer[64], *host_ip;
 
         C_var_unlatch(&n_port);
         port = n_port.value.n;
-
-        /* TODO: Parse the port out of the address string */
-
-        /* TODO: Resolve hostnames */
-
         n_client_func = client_func;
+
+        /* Parse the port out of the address string */
+        for (last_colon = -1, i = 0; address[i]; i++)
+                if (address[i] == ':')
+                        last_colon = i;
+        if (last_colon >= 0) {
+                port = atoi(address + last_colon + 1);
+                if (!port)
+                        port = n_port.value.n;
+                memcpy(buffer, address, last_colon);
+                buffer[last_colon] = NUL;
+                address = buffer;
+        }
+
+        /* Resolve hostnames */
+        host = gethostbyname(address);
+        host_ip = inet_ntoa(*((struct in_addr *)host->h_addr));
 
         /* Connect to the server */
         n_client_socket = socket(PF_INET, SOCK_STREAM, 0);
         C_zero(&addr);
         addr.sin_family = AF_INET;
         addr.sin_port = htons(port);
-        addr.sin_addr.s_addr = inet_addr(address);
+        addr.sin_addr.s_addr = inet_addr(host_ip);
         if (connect(n_client_socket, (struct sockaddr *)&addr,
                     sizeof (addr)) < 0) {
                 closesocket(n_client_socket);
                 n_client_socket = INVALID_SOCKET;
                 n_client_id = N_INVALID_ID;
-                C_debug("Failed to connect to '%s'", address);
+                C_debug("Failed to connect to %s:%d", host_ip, port);
                 return FALSE;
         }
         N_socket_no_block(n_client_socket);
 
         n_client_id = N_UNASSIGNED_ID;
         n_client_func(N_SERVER_ID, N_EV_CONNECTED);
-        C_debug("Connected to '%s'", address);
+        C_debug("Connected to %s:%d", host_ip, port);
         return TRUE;
 }
 

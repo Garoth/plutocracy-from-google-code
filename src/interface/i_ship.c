@@ -12,6 +12,9 @@
 
 #include "i_common.h"
 
+/* Number of separators */
+#define SEPARATORS (G_CARGO_TYPES / 4 + 1)
+
 /* Cargo widget */
 typedef struct cargo {
         i_widget_t widget;
@@ -21,7 +24,7 @@ typedef struct cargo {
 
 static cargo_t cargo_widgets[G_CARGO_TYPES];
 static i_label_t title;
-static i_image_t separators[G_CARGO_TYPES / 4];
+static i_image_t separators[SEPARATORS];
 static i_info_t cargo_info, class_info, owner_info;
 
 /******************************************************************************\
@@ -208,23 +211,25 @@ void I_init_ship(i_window_t *window)
 
         /* Cargo space */
         I_info_init(&cargo_info, C_str("i-cargo", "Cargo space:"), "0/0");
-        cargo_info.widget.margin_rear = 0.5f;
         I_widget_add(&window->widget, &cargo_info.widget);
 
-        /* Cargo items */
-        for (i = 0, seps = 0; i < G_CARGO_TYPES; i++) {
-                int index;
+        /* Top separator */
+        I_image_init_sep(separators);
+        separators[0].resize = TRUE;
+        I_widget_add(&window->widget, &separators[0].widget);
 
+        /* Cargo items */
+        for (i = 0, seps = 1; i < G_CARGO_TYPES; i++) {
                 cargo_init(cargo_widgets + i, C_va("%s:", g_cargo_names[i]));
                 I_widget_add(&window->widget, &cargo_widgets[i].widget);
 
                 /* Add separator */
                 if ((i - 1) % 4 || i >= G_CARGO_TYPES - 1)
                         continue;
-                index = (i - 1) / 4;
-                I_image_init_sep(separators + index);
-                separators[index].resize = TRUE;
-                I_widget_add(&window->widget, &separators[index].widget);
+                C_assert(seps < SEPARATORS);
+                I_image_init_sep(separators + seps);
+                separators[seps].resize = TRUE;
+                I_widget_add(&window->widget, &separators[seps++].widget);
         }
 }
 

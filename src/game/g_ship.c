@@ -139,7 +139,7 @@ init:   /* Initialize ship structure */
         C_zero(g_ships + index);
         g_ships[index].in_use = TRUE;
         g_ships[index].class_name = name;
-        g_ships[index].tile = tile;
+        g_ships[index].tile = g_ships[index].target = tile;
         g_ships[index].rear_tile = -1;
         g_ships[index].progress = 1.f;
         g_ships[index].client = client;

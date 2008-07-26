@@ -75,6 +75,12 @@ short N_receive_short(void);
 void N_receive_string(char *buffer, int size);
 #define N_receive_string_buf(b) N_receive_string(b, sizeof (b))
 void N_send(n_client_id_t, const char *format, ...);
+bool N_send_char(char);;
+bool N_send_short(short);
+bool N_send_int(int);
+bool N_send_float(float);
+void N_send_start(void);
+bool N_send_string(const char *);
 
 /* n_variables.c */
 void N_register_variables(void);

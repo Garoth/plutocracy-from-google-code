@@ -62,6 +62,7 @@ typedef enum {
         /* Entity updates */
         G_SM_SPAWN_SHIP,
         G_SM_SHIP_MOVE,
+        G_SM_SHIP_CARGO,
 
         G_SERVER_MESSAGES
 } g_server_msg_t;

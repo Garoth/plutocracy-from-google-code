@@ -273,13 +273,18 @@ void I_toolbar_enable(i_toolbar_t *toolbar, int button, bool enable)
 
         /* Enable the button */
         if (enable) {
-                if (toolbar->buttons[button].widget.state == I_WS_DISABLED)
+                if (toolbar->buttons[button].widget.state == I_WS_DISABLED) {
                         toolbar->buttons[button].widget.state = I_WS_READY;
+                        if (toolbar->was_open[button])
+                                I_widget_event(&toolbar->windows[button].widget,
+                                               I_EV_SHOW);
+                }
                 return;
         }
 
         /* Disable the button and hide its window */
         toolbar->buttons[button].widget.state = I_WS_DISABLED;
+        toolbar->was_open[button] = toolbar->windows[button].widget.shown;
         I_widget_event(&toolbar->windows[button].widget, I_EV_HIDE);
 }
 

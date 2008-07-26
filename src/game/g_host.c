@@ -17,6 +17,24 @@
 #include "g_common.h"
 
 /******************************************************************************\
+ Send updated cargo information to clients.
+\******************************************************************************/
+static void send_ship_cargo(int client, int index)
+{
+        int i;
+
+        N_send_start();
+        N_send_char(G_SM_SHIP_CARGO);
+        N_send_char(index);
+        for (i = 0; i < G_CARGO_TYPES; i++)
+                N_send_short(g_ships[index].cargo.amounts[i]);
+        if (client == N_BROADCAST_ID)
+                N_broadcast_except(N_HOST_CLIENT_ID, NULL);
+        else
+                N_send(client, NULL);
+}
+
+/******************************************************************************\
  If a client has sent garbage data, call this to kick them out.
 \******************************************************************************/
 static void corrupt_kick(int client)
@@ -52,12 +70,14 @@ static void cm_affiliate(int client)
                 g_ships[ship].cargo.amounts[G_CT_GOLD] = 1000;
                 g_ships[ship].cargo.amounts[G_CT_CREW] = 10;
                 g_ships[ship].cargo.amounts[G_CT_RATIONS] = 10;
+                send_ship_cargo(N_BROADCAST_ID, ship);
 
                 /* Spawn a second ship for testing */
                 if ((ship = G_spawn_ship(client, tile, G_SN_SPIDER, -1)) >= 0) {
                         g_ships[ship].cargo.amounts[G_CT_GOLD] = 500;
                         g_ships[ship].cargo.amounts[G_CT_CREW] = 15;
                         g_ships[ship].cargo.amounts[G_CT_RATIONS] = 20;
+                        send_ship_cargo(N_BROADCAST_ID, ship);
                 }
         }
 
@@ -183,11 +203,17 @@ static void client_connected(int client)
         N_broadcast_except(client, "11", G_SM_CONNECTED, client);
 
         /* Tell them about all the ships on the globe */
-        for (i = 0; i < G_SHIPS_MAX; i++)
-                if (g_ships[i].in_use)
-                        N_send(client, "11211", G_SM_SPAWN_SHIP,
-                               g_ships[i].client, g_ships[i].tile,
-                               g_ships[i].class_name, i);
+        for (i = 0; i < G_SHIPS_MAX; i++) {
+                if (!g_ships[i].in_use)
+                        continue;
+                N_send(client, "11211", G_SM_SPAWN_SHIP, g_ships[i].client,
+                       g_ships[i].tile, g_ships[i].class_name, i);
+                N_send(client, "11s", G_SM_NAME_SHIP, i, g_ships[i].name);
+                send_ship_cargo(client, i);
+                if (g_ships[i].target != g_ships[i].tile)
+                        N_send(client, "1122", G_SM_SHIP_MOVE,
+                               i, g_ships[i].tile, g_ships[i].target);
+        }
 }
 
 /******************************************************************************\

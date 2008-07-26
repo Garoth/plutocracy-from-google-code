@@ -17,7 +17,7 @@
 n_callback_f n_client_func, n_server_func;
 
 /* Little-Endian message data buffer */
-int n_sync_pos, n_sync_size;
+short n_sync_pos, n_sync_size;
 char n_sync_buffer[N_SYNC_MAX];
 
 /******************************************************************************\
@@ -153,6 +153,56 @@ static bool write_bytes(int offset, int bytes, void *data)
 }
 
 /******************************************************************************\
+ Reset the sync buffer. Use before sending via N_send_* calls.
+\******************************************************************************/
+void N_send_start(void)
+{
+        n_sync_size = 2;
+}
+
+/******************************************************************************\
+ Add data to the send buffer. Call N_send(client, NULL) to finish sending data.
+ Returns FALSE if the buffer overflowed.
+\******************************************************************************/
+bool N_send_char(char ch)
+{
+        return write_bytes(n_sync_size, 1, &ch);
+}
+
+bool N_send_short(short n)
+{
+        return write_bytes(n_sync_size, 2, &n);
+}
+
+bool N_send_int(int n)
+{
+        return write_bytes(n_sync_size, 4, &n);
+}
+
+bool N_send_float(float f)
+{
+        return write_bytes(n_sync_size, 4, &f);
+}
+
+bool N_send_string(const char *string)
+{
+        int string_len;
+
+        string_len = C_strlen(string) + 1;
+        if (string_len <= 1) {
+                if (n_sync_size > N_SYNC_MAX - 1)
+                        return FALSE;
+                n_sync_buffer[n_sync_size++] = NUL;
+                return TRUE;
+        }
+        if (n_sync_size + string_len > N_SYNC_MAX)
+               return FALSE;
+        memcpy(n_sync_buffer + n_sync_size, string, string_len);
+        n_sync_size += string_len;
+        return TRUE;
+}
+
+/******************************************************************************\
  Sends a message to [client]. If [client] is 0, sends to the server. The
  [format] string describes the variable argument list given to the function.
 
@@ -169,14 +219,6 @@ static bool write_bytes(int offset, int bytes, void *data)
 void N_send(int client, const char *format, ...)
 {
         va_list va;
-        union {
-                float f;
-                int n;
-                short s;
-                char c;
-        } value;
-        const char *string;
-        int string_len;
 
         /* We're not connected */
         if (n_client_id < 0)
@@ -187,45 +229,33 @@ void N_send(int client, const char *format, ...)
                 return;
 
         /* Pack the message into the sync buffer */
+        if (!format || !format[0])
+                goto skip;
         va_start(va, format);
         for (n_sync_size = 2; *format; format++)
                 switch (*format) {
                 case '1':
                 case 'c':
-                        value.c = (char)va_arg(va, int);
-                        if (!write_bytes(n_sync_size, 1, &value.c))
+                        if (!N_send_char((char)va_arg(va, int)))
                                 goto overflow;
                         break;
                 case '2':
                 case 'd':
-                        value.s = (short)va_arg(va, int);
-                        if (!write_bytes(n_sync_size, 2, &value.s))
+                        if (!N_send_short((short)va_arg(va, int)))
                                 goto overflow;
                         break;
                 case '4':
                 case 'l':
-                        value.n = va_arg(va, int);
-                        if (!write_bytes(n_sync_size, 4, &value.n))
+                        if (!N_send_int(va_arg(va, int)))
                                 goto overflow;
                         break;
                 case 'f':
-                        value.f = (float)va_arg(va, double);
-                        if (!write_bytes(n_sync_size, 4, &value.f))
+                        if (!N_send_float(va_arg(va, double)))
                                 goto overflow;
                         break;
                 case 's':
-                        string = va_arg(va, const char *);
-                        string_len = C_strlen(string) + 1;
-                        if (string_len <= 1) {
-                                if (n_sync_size > N_SYNC_MAX - 1)
-                                        goto overflow;
-                                n_sync_buffer[n_sync_size++] = NUL;
-                                break;
-                        }
-                        if (n_sync_size + string_len > N_SYNC_MAX)
-                               goto overflow;
-                        memcpy(n_sync_buffer + n_sync_size, string, string_len);
-                        n_sync_size += string_len;
+                        if (!N_send_string(va_arg(va, const char *)))
+                                goto overflow;
                         break;
                 default:
                         C_error("Invalid format character '%c'", *format);
@@ -233,8 +263,7 @@ void N_send(int client, const char *format, ...)
         va_end(va);
 
         /* Write the size of the message as the first 2-bytes */
-        value.s = (short)n_sync_size;
-        write_bytes(0, 2, &value.s);
+skip:   write_bytes(0, 2, &n_sync_size);
 
         /* Broadcast to every client */
         if (client == N_BROADCAST_ID || client < 0) {
