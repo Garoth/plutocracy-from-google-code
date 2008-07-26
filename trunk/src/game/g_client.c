@@ -390,7 +390,7 @@ static void sm_ship_move(void)
         index = N_receive_char();
         tile = N_receive_short();
         target = N_receive_short();
-        if (index < 0 || index >= G_SHIPS_MAX || !g_ships[index].in_use) {
+        if (index < 0 || index >= G_SHIPS_MAX) {
                 corrupt_disconnect();
                 return;
         }
@@ -398,6 +398,23 @@ static void sm_ship_move(void)
         /* Don't re-path unless something changed */
         if (G_ship_move_to(index, tile) || target != g_ships[index].target)
                 G_ship_path(index, target);
+}
+
+/******************************************************************************\
+ A ship's cargo manifest changed.
+\******************************************************************************/
+static void sm_ship_cargo(void)
+{
+        int i, index;
+
+        C_assert(n_client_id != N_HOST_CLIENT_ID);
+        index = N_receive_char();
+        if (index < 0 || index >= G_SHIPS_MAX) {
+                corrupt_disconnect();
+                return;
+        }
+        for (i = 0; i < G_CARGO_TYPES; i++)
+                g_ships[index].cargo.amounts[i] = N_receive_short();
 }
 
 /******************************************************************************\
@@ -452,6 +469,9 @@ void G_client_callback(int client, n_event_t event)
                 break;
         case G_SM_SHIP_MOVE:
                 sm_ship_move();
+                break;
+        case G_SM_SHIP_CARGO:
+                sm_ship_cargo();
                 break;
         case G_SM_NAME_SHIP:
                 i = N_receive_char();

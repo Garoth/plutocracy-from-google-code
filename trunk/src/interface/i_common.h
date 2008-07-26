@@ -188,7 +188,7 @@ typedef struct i_toolbar {
         i_widget_t widget;
         i_window_t window, windows[I_TOOLBAR_BUTTONS], *open_window;
         i_button_t buttons[I_TOOLBAR_BUTTONS];
-        bool right, children;
+        bool right, children, was_open[I_TOOLBAR_BUTTONS];
 } i_toolbar_t;
 
 /* Box widget used for aligning other widgets */

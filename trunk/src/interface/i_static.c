@@ -232,6 +232,7 @@ void I_info_init(i_info_t *info, const char *left, const char *right)
 
         /* Info */
         I_label_init(&info->right, right);
+        info->right.color = I_COLOR_ALT;
         I_widget_add(&info->widget, &info->right.widget);
 }
 

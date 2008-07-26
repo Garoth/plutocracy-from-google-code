@@ -70,8 +70,8 @@ typedef struct g_nation {
 
 /* Cargo and trading settings structure */
 typedef struct g_cargo {
-        int capacity, amounts[G_CARGO_TYPES],
-            prices[G_CARGO_TYPES], maxs[G_CARGO_TYPES];
+        short capacity, amounts[G_CARGO_TYPES],
+              prices[G_CARGO_TYPES], maxs[G_CARGO_TYPES];
 } g_cargo_t;
 
 /* g_client.c */
