@@ -168,7 +168,7 @@ void I_select_ship(const g_cargo_t *cargo, i_color_t color, const char *name,
         I_toolbar_enable(&i_right_toolbar, i_ship_button, TRUE);
 
         /* Title */
-        I_label_configure(&title, C_va("%s:", name));
+        I_label_configure(&title, name);
 
         /* Infos */
         owner_info.right.color = color;
@@ -195,7 +195,7 @@ void I_init_ship(i_window_t *window)
         window->fit = I_FIT_TOP;
 
         /* Label */
-        I_label_init(&title, "Unnamed:");
+        I_label_init(&title, "Unnamed");
         title.width = window->natural_size.x - i_border.value.n;
         title.font = R_FONT_TITLE;
         title.center = FALSE;

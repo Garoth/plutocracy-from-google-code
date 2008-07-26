@@ -63,6 +63,7 @@ typedef enum {
         G_SM_SPAWN_SHIP,
         G_SM_SHIP_MOVE,
         G_SM_SHIP_CARGO,
+        G_SM_SHIP_OWNER,
 
         G_SERVER_MESSAGES
 } g_server_msg_t;
@@ -119,8 +120,12 @@ void G_client_callback(int client, n_event_t);
 i_color_t G_nation_to_color(g_nation_name_t);
 void G_select_tile(int tile);
 
-extern g_client_t g_clients[N_CLIENTS_MAX];
+extern g_client_t g_clients[N_CLIENTS_MAX + 1];
 extern int g_selected_ship, g_selected_tile;
+
+/* g_elements.c */
+void G_init_elements(void);
+void G_reset_elements(void);
 
 /* g_globe.c */
 void G_cleanup_globe(void);
@@ -142,9 +147,10 @@ void G_cleanup_ships(void);
 void G_init_ships(void);
 bool G_open_tile(int tile, int exclude_ship);
 void G_render_ships(void);
-bool G_ship_move_to(int index, int new_tile);
-void G_ship_path(int index, int tile);
-void G_ship_select(int index);
+bool G_ship_move_to(int ship, int new_tile);
+void G_ship_path(int ship, int tile);
+void G_ship_reselect(int ship, n_client_id_t);
+void G_ship_select(int ship);
 int G_spawn_ship(int client, int tile, g_ship_name_t, int ship);
 void G_update_ships(void);
 

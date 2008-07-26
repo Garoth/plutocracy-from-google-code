@@ -378,14 +378,16 @@ failed: /* If we can't reach the target, and we have a valid path, try
 
 
         if (g_ships[ship].client == n_client_id) {
+                const char *fmt;
 
                 /* Update ship path selection */
                 if (g_selected_ship == ship)
                         R_select_path(g_ships[ship].tile, g_ships[ship].path);
 
+                fmt = C_str("i-ship-destination",
+                            "%s can't reach destination.");
                 I_popup(&g_tiles[g_ships[ship].tile].origin,
-                        C_str("i-ship-destination",
-                              "Ship can't reach destination."));
+                        C_va(fmt, g_ships[ship].name));
         }
 }
 
@@ -562,5 +564,20 @@ void G_ship_select(int index)
                 R_select_path(-1, NULL);
                 I_deselect_ship();
         }
+}
+
+/******************************************************************************\
+ Re-selects the currently selected ship if it is [index] and if its client
+ is [client]. If either [index] or [client] is negative, they are ignored.
+\******************************************************************************/
+void G_ship_reselect(int index, n_client_id_t client)
+{
+        if (g_selected_ship < 0 ||
+            (index >= 0 && g_selected_ship != index) ||
+            (client >= 0 && g_ships[g_selected_ship].client != client))
+                return;
+        index = g_selected_ship;
+        g_selected_ship = -1;
+        G_ship_select(index);
 }
 

@@ -76,6 +76,7 @@ typedef struct g_cargo {
 
 /* g_client.c */
 int G_cargo_space(const g_cargo_t *);
+void G_cleanup(void);
 void G_init(void);
 void G_input_chat(const char *message);
 void G_join_game(const char *address);
@@ -90,7 +91,6 @@ void G_render_globe(void);
 
 /* g_host.c */
 void G_change_nation(int index);
-void G_cleanup(void);
 void G_host_game(void);
 void G_update_host(void);
 

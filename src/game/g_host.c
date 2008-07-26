@@ -217,6 +217,27 @@ static void client_connected(int client)
 }
 
 /******************************************************************************\
+ A client has left the game and we need to clean up.
+\******************************************************************************/
+static void client_disconnected(int client)
+{
+        int i;
+
+        if (g_clients[client].name[0])
+                N_broadcast("11", G_SM_DISCONNECTED, client);
+        C_debug("Client %d disconnected", client);
+
+        /* Disown their ships */
+        for (i = 0; i < G_SHIPS_MAX; i++)
+                if (g_ships[i].client == client) {
+                        g_ships[i].client = N_SERVER_ID;
+                        N_broadcast_except(N_HOST_CLIENT_ID, "11",
+                                           G_SM_SHIP_OWNER, i, N_SERVER_ID);
+                        G_ship_reselect(i, -1);
+                }
+}
+
+/******************************************************************************\
  Called from within the network namespace when a network event arrives for the
  server from one of the clients (including the server's client).
 \******************************************************************************/
@@ -229,9 +250,7 @@ static void server_callback(int client, n_event_t event)
                 client_connected(client);
                 return;
         } else if (event == N_EV_DISCONNECTED) {
-                if (g_clients[client].name[0])
-                        N_broadcast("11", G_SM_DISCONNECTED, client);
-                C_debug("Client %d disconnected", client);
+                client_disconnected(client);
                 return;
         }
 
@@ -266,10 +285,7 @@ static void server_callback(int client, n_event_t event)
 void G_host_game(void)
 {
         G_leave_game();
-
-        /* Clear game structures */
-        memset(g_ships, 0, sizeof (g_ships));
-        memset(g_clients, 0, sizeof (g_clients));
+        G_reset_elements();
 
         /* Start the network server */
         if (!N_start_server((n_callback_f)server_callback,

@@ -51,7 +51,7 @@ void I_init_nations(i_window_t *window)
         window->fit = I_FIT_TOP;
 
         /* Title label */
-        I_label_init(&title, C_str("i-nations", "Affiliation:"));
+        I_label_init(&title, C_str("i-nations", "Affiliation"));
         title.font = R_FONT_TITLE;
         I_widget_add(&window->widget, &title.widget);
 

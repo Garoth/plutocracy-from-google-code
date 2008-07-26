@@ -239,7 +239,7 @@ void I_init_console(i_window_t *window)
         c_log_func = log_handler;
 
         /* Label */
-        I_label_init(&label, C_str("i-console", "Console:"));
+        I_label_init(&label, C_str("i-console", "Console"));
         label.font = R_FONT_TITLE;
         I_widget_add(&window->widget, &label.widget);
 
