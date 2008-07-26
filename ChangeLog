@@ -1,3 +1,7 @@
+2008-07-26  Michael Levin  <risujin@risujin.org>
+
+        * Releasing 0.0.3.366 (win32) to test WinSock
+
 2008-07-02  Michael Levin  <risujin@risujin.org>
 
         * Releasing version 0.0.1.297 (win32) to test ATI compatibility
