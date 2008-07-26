@@ -144,6 +144,7 @@ typedef struct i_label {
         i_color_t color;
         float width;
         char buffer[256];
+        bool center;
 } i_label_t;
 
 /* A one-line text field */
@@ -197,6 +198,12 @@ typedef struct i_box {
         i_pack_t pack_children;
         float width;
 } i_box_t;
+
+/* A left-aligned and a right-aligned label packed into a horizontal box */
+typedef struct i_info {
+        i_widget_t widget;
+        i_label_t left, right;
+} i_info_t;
 
 /* Images just display a sprite */
 typedef struct i_image {
@@ -264,6 +271,8 @@ void I_init_ship(i_window_t *);
 
 /* i_static.c */
 void I_box_init(i_box_t *, i_pack_t, float width);
+void I_info_init(i_info_t *, const char *label, const char *info);
+void I_info_configure(i_info_t *, const char *);
 void I_label_init(i_label_t *, const char *);
 void I_label_configure(i_label_t *, const char *);
 i_label_t *I_label_new(const char *);

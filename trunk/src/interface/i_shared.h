@@ -34,8 +34,16 @@ typedef enum {
         I_RING_ICONS,
 } i_ring_icon_t;
 
+/* Structure for communicating cargo properties */
+typedef struct i_cargo {
+        int amount, price, min, max;
+} i_cargo_t;
+
 /* Ring callback function */
 typedef void (*i_ring_f)(i_ring_icon_t);
+
+/* g_shared.h */
+struct g_cargo;
 
 /* i_chat.c */
 void I_print_chat(const char *name, i_color_t, const char *message);
@@ -61,7 +69,9 @@ void I_add_to_ring(i_ring_icon_t, int enabled);
 void I_show_ring(i_ring_f callback);
 
 /* i_ship.c */
-void I_select_ship(int index, bool own);
+void I_deselect_ship(void);
+void I_select_ship(const struct g_cargo *, i_color_t, const char *name,
+                   const char *owner, const char *class_name);
 
 /* i_variables.c */
 void I_register_variables(void);

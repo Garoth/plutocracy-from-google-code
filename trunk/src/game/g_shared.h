@@ -13,13 +13,8 @@
 /* Maximum number of ships in a game */
 #define G_SHIPS_MAX 128
 
-/* Ship class names */
-typedef enum {
-        G_SN_SLOOP,
-        G_SN_SPIDER,
-        G_SHIP_NAMES,
-        G_SN_NONE,
-} g_ship_name_t;
+/* Length of a name */
+#define G_NAME_MAX 16
 
 /* There is a fixed number of nations */
 typedef enum {
@@ -73,27 +68,11 @@ typedef struct g_nation {
         const char *short_name, *long_name;
 } g_nation_t;
 
-/* Structure containing ship class information */
-typedef struct g_ship_class {
-        const char *model_path, *name;
-        float speed;
-        int health, cargo;
-} g_ship_class_t;
-
 /* Cargo and trading settings structure */
 typedef struct g_cargo {
-        int amounts[G_CARGO_TYPES], prices[G_CARGO_TYPES], maxs[G_CARGO_TYPES];
+        int capacity, amounts[G_CARGO_TYPES],
+            prices[G_CARGO_TYPES], maxs[G_CARGO_TYPES];
 } g_cargo_t;
-
-/* Structure containing ship information */
-typedef struct g_ship {
-        g_ship_name_t class_name;
-        g_cargo_t cargo;
-        float progress;
-        int tile, rear_tile, target, client, health, armor;
-        char path[R_PATH_MAX];
-        bool in_use;
-} g_ship_t;
 
 /* g_client.c */
 int G_cargo_space(const g_cargo_t *);
@@ -117,10 +96,6 @@ void G_update_host(void);
 
 extern g_nation_t g_nations[G_NATION_NAMES];
 extern const char *g_cargo_names[G_CARGO_TYPES];
-
-/* g_ship.c */
-extern g_ship_class_t g_ship_classes[G_SHIP_NAMES];
-extern g_ship_t g_ships[G_SHIPS_MAX];
 
 /* g_variables.c */
 void G_register_variables(void);

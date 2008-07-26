@@ -119,6 +119,31 @@ static void cm_name(int client)
 }
 
 /******************************************************************************\
+ Client wants to rename a ship.
+\******************************************************************************/
+static void cm_name_ship(int client)
+{
+        int index;
+        char new_name[G_NAME_MAX];
+
+        index = N_receive_char();
+        if (index < 0 || index >= G_SHIPS_MAX) {
+                corrupt_kick(client);
+                return;
+        }
+        if (g_ships[index].client != client)
+                return;
+        N_receive_string_buf(new_name);
+        if (!new_name[0])
+                return;
+        C_strncpy_buf(g_ships[index].name, new_name);
+        N_broadcast_except(client, "11s", G_SM_NAME_SHIP, index,
+                           g_ships[index].name);
+        C_debug("'%s' named ship %d '%s'", g_clients[client].name,
+                index, new_name);
+}
+
+/******************************************************************************\
  Client typed something into chat.
 \******************************************************************************/
 static void cm_chat(int client)
@@ -197,6 +222,9 @@ static void server_callback(int client, n_event_t event)
                 break;
         case G_CM_NAME:
                 cm_name(client);
+                break;
+        case G_CM_NAME_SHIP:
+                cm_name_ship(client);
                 break;
         case G_CM_CHAT:
                 cm_chat(client);

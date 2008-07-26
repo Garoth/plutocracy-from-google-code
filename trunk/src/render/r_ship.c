@@ -134,10 +134,10 @@ void R_render_ship_status(const r_model_t *model, float left, float left_max,
         glColor4f(modulate.r, modulate.g, modulate.b,
                   modulate.a * BAR_BACKGROUND);
         render_bars(left_max, right_max);
-        glDepthMask(GL_TRUE);
         glColor4f(modulate.r, modulate.g, modulate.b,
                   modulate.a * (1.f - BAR_BACKGROUND));
         render_bars(left, right);
+        glDepthMask(GL_TRUE);
 
         /* Make sure these are off after the interleaved array calls */
         glDisableClientState(GL_TEXTURE_COORD_ARRAY);

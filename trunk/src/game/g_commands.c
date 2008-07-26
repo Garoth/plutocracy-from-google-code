@@ -112,26 +112,6 @@ static void test_ring_callback(i_ring_icon_t icon)
 }
 
 /******************************************************************************\
- Select a ship. Pass a negative [index] to deselect.
-\******************************************************************************/
-static void select_ship(int index)
-{
-        bool own;
-
-        if (g_selected_ship == index)
-                return;
-        g_selected_ship = index;
-        own = FALSE;
-        if (index >= 0) {
-                own = g_ships[index].client == n_client_id;
-                if (own && g_selected_ship == index)
-                        R_select_path(g_ships[index].tile, g_ships[index].path);
-        } else
-                R_select_path(-1, NULL);
-        I_select_ship(index, own);
-}
-
-/******************************************************************************\
  Called when the interface root window receives a click.
 \******************************************************************************/
 void G_process_click(int button)
@@ -142,16 +122,16 @@ void G_process_click(int button)
 
         /* Clicking on an unusable space deselects */
         if (g_selected_tile < 0 || button != SDL_BUTTON_LEFT) {
-                select_ship(-1);
+                G_ship_select(-1);
                 return;
         }
 
         /* Left-clicked on a ship */
         if (g_tiles[g_selected_tile].ship >= 0) {
                 if (g_selected_ship != g_tiles[g_selected_tile].ship)
-                        select_ship(g_tiles[g_selected_tile].ship);
+                        G_ship_select(g_tiles[g_selected_tile].ship);
                 else
-                        select_ship(-1);
+                        G_ship_select(-1);
                 return;
         }
 
@@ -168,7 +148,7 @@ void G_process_click(int button)
         }
 
         /* Left-clicked on a tile */
-        select_ship(-1);
+        G_ship_select(-1);
         if (!ring_valid)
                 return;
 
