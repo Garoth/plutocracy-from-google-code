@@ -81,7 +81,7 @@ void G_get_name(g_name_type_t type, char *buf, int size)
         C_assert(type >= 0 && type < G_NAME_TYPES);
         if (lists[type].size < 1)
                 return;
-        start = C_rand() % lists[type].size;
+        start = rand() % lists[type].size;
 
         /* Find the least-used name */
         for (i = (low = start) + 1; i < lists[type].size; i++)

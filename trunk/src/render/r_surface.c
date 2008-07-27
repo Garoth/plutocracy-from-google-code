@@ -424,7 +424,7 @@ int R_surface_save(SDL_Surface *surface, const char *filename)
         /* Setup the comment text */
         text[0].key = "Title";
         text[0].text = PACKAGE_STRING;
-        text[0].text_length = strlen(text[0].text);
+        text[0].text_length = C_strlen(text[0].text);
         text[0].compression = PNG_TEXT_COMPRESSION_NONE;
         time(&msec);
         local = localtime(&msec);

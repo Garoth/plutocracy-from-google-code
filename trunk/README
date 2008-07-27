@@ -15,8 +15,9 @@
   2. Compiling and Installing Plutocracy
 
      2.1  POSIX systems
-     2.2  Windows with Visual Studio
-     2.3  Windows with MinGW
+     2.2  MacOS X (Darwin)
+     2.3  Windows with Visual Studio
+     2.4  Windows with MinGW
 
   3. Playing Plutocracy
 
@@ -118,6 +119,25 @@
     it will create 'custom.py', the configuration file, and draw its options
     from there instead of from the environment. Specify changes over the
     command-line after this point or remove the configuration file.
+
+
+  2.2  MacOS X (Darwin)
+  ---------------------
+
+    On Darwin you will need to install the latest version of Python and SCons
+    first:
+
+      Python      http://www.python.org/download/
+      SCons       http://www.scons.org/
+
+    Then install the development ports for the following libraries from
+    'http://www.macports.org':
+
+      SDL
+      SDL_ttf
+
+    Afterwards you should be able to follow the POSIX system instructions
+    above to compile.
 
 
   2.2  Windows with Visual Studio

@@ -13,6 +13,9 @@
 /* Largest amount of data that can be sent via a message */
 #define N_SYNC_MAX 1024
 
+/* Sentinel added to the end of N_send_full() calls */
+#define N_SENTINEL -1234567890
+
 /* Windows compatibility */
 #ifdef WINDOWS
 typedef UINT_PTR SOCKET;
@@ -66,19 +69,26 @@ void N_stop_server(void);
 extern n_client_t n_clients[N_CLIENTS_MAX];
 
 /* n_sync.c */
-#define N_broadcast(f, ...) N_send(N_BROADCAST_ID, f, ## __VA_ARGS__)
-#define N_broadcast_except(c, f, ...) N_send(-(c) - 1, f, ## __VA_ARGS__)
+#define N_broadcast(f, ...) \
+        N_send_full(__FILE__, __LINE__, __func__, N_BROADCAST_ID, f, \
+                    ## __VA_ARGS__, N_SENTINEL)
+#define N_broadcast_except(c, f, ...) \
+        N_send_full(__FILE__, __LINE__, __func__, -(c) - 1, f, \
+                    ## __VA_ARGS__, N_SENTINEL)
 char N_receive_char(void);
 float N_receive_float(void);
 int N_receive_int(void);
 short N_receive_short(void);
 void N_receive_string(char *buffer, int size);
 #define N_receive_string_buf(b) N_receive_string(b, sizeof (b))
-void N_send(n_client_id_t, const char *format, ...);
+#define N_send(n, fmt, ...) N_send_full(__FILE__, __LINE__, __func__, n, fmt, \
+                                        ## __VA_ARGS__, N_SENTINEL);
 bool N_send_char(char);;
 bool N_send_short(short);
 bool N_send_int(int);
 bool N_send_float(float);
+void N_send_full(const char *file, int line, const char *func,
+                 n_client_id_t, const char *format, ...);
 void N_send_start(void);
 bool N_send_string(const char *);
 

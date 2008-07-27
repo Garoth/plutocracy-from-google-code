@@ -57,19 +57,6 @@ static void render_status(void)
 }
 
 /******************************************************************************\
- Finds an available screenshot filename and saves a screenshot.
-\******************************************************************************/
-static void take_screenshot(void)
-{
-        const char *filename;
-
-        filename = R_save_screenshot();
-        if (!filename || !filename[0])
-                return;
-        I_popup(NULL, C_va("Saved screenshot: %s", filename));
-}
-
-/******************************************************************************\
  This is the client's graphical main loop.
 \******************************************************************************/
 static void main_loop(void)
@@ -84,19 +71,9 @@ static void main_loop(void)
         while (!c_exit) {
                 R_start_frame();
                 while (SDL_PollEvent(&ev)) {
-                        switch(ev.type) {
-                        case SDL_QUIT:
+                        if (ev.type == SDL_QUIT)
                                 return;
-                        case SDL_KEYDOWN:
-                                if (ev.key.keysym.sym == SDLK_ESCAPE) {
-                                        C_debug("Escape key pressed");
-                                        return;
-                                } else if (ev.key.keysym.sym == SDLK_F12)
-                                        take_screenshot();
-                        default:
-                                I_dispatch(&ev);
-                                break;
-                        }
+                        I_dispatch(&ev);
                 }
                 G_render_globe();
                 I_render();
@@ -236,6 +213,9 @@ int main(int argc, char *argv[])
         /* Run tests if they are enabled */
         C_endian_check();
         C_test_mem_check();
+
+        /* Seed the system random number generator */
+        srand(time(NULL));
 
         /* Initialize */
         C_status("Initializing " PACKAGE_STRING " client");

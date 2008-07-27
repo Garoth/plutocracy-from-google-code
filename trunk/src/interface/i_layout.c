@@ -294,6 +294,36 @@ void I_enter_limbo(void)
 }
 
 /******************************************************************************\
+ Handle global key presses.
+\******************************************************************************/
+void I_global_key(void)
+{
+        /* Take screenshot */
+        if (i_key == SDLK_F12) {
+                const char *filename;
+
+                filename = R_save_screenshot();
+                if (!filename || !filename[0])
+                        return;
+                I_popup(NULL, C_va("Saved screenshot: %s", filename));
+        }
+
+        /* Alt + F4 doesn't work fullscreen */
+        else if (i_key == SDLK_F4 && i_key_alt) {
+                C_debug("Caught Alt + F4");
+                exit(0);
+        }
+
+        /* Toggle fullscreen */
+        else if (i_key == SDLK_F11 || (i_key == SDLK_RETURN && i_key_alt)) {
+                C_debug("Fullscreen toggled");
+                r_windowed.latched.n = !r_windowed.value.n;
+                r_windowed.has_latched = TRUE;
+                r_restart = TRUE;
+        }
+}
+
+/******************************************************************************\
  Loads interface assets and initializes windows.
 \******************************************************************************/
 void I_init(void)

@@ -20,6 +20,15 @@
 /* Proportion of a tile that is used as a buffer against its neighbors */
 #define R_TILE_BORDER (6.f / 256)
 
+/* On Darwin, glext.h fails to define OpenGL function pointer prototypes so
+   we just define them here ourselves */
+typedef void (APIENTRYP R_PFNGLBINDBUFFERPROC)(GLenum, GLuint);
+typedef void (APIENTRYP R_PFNGLBUFFERDATAPROC)(GLenum, GLsizeiptr,
+                                               const GLvoid *, GLenum);
+typedef void (APIENTRYP R_PFNGLDELETEBUFFERSPROC)(GLsizei, const GLuint *);
+typedef void (APIENTRYP R_PFNGLGENBUFFERSPROC)(GLsizei, GLuint *);
+typedef void (APIENTRYP R_PFNGLACTIVETEXTUREPROC)(GLenum);
+
 /* Supported extensions */
 typedef enum {
         R_EXT_MULTITEXTURE,
@@ -74,11 +83,11 @@ typedef enum {
 
 /* Structure to wrap OpenGL extensions */
 typedef struct r_ext {
-        PFNGLBINDBUFFERPROC glBindBuffer;
-        PFNGLBUFFERDATAPROC glBufferData;
-        PFNGLDELETEBUFFERSPROC glDeleteBuffers;
-        PFNGLGENBUFFERSPROC glGenBuffers;
-        PFNGLACTIVETEXTUREPROC glActiveTexture;
+        R_PFNGLBINDBUFFERPROC glBindBuffer;
+        R_PFNGLBUFFERDATAPROC glBufferData;
+        R_PFNGLDELETEBUFFERSPROC glDeleteBuffers;
+        R_PFNGLGENBUFFERSPROC glGenBuffers;
+        R_PFNGLACTIVETEXTUREPROC glActiveTexture;
         GLfloat anisotropy;
         GLint multitexture;
         bool point_sprites, vertex_buffers, npot_textures;

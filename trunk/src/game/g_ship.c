@@ -262,16 +262,23 @@ void G_ship_path(int ship, int target)
                 N_broadcast_except(N_HOST_CLIENT_ID, "1122", G_SM_SHIP_MOVE,
                                    ship, g_ships[ship].tile, target);
 
-        search_stamp++;
-        g_ships[ship].target = g_ships[ship].tile;
-        if (g_ships[ship].tile == target) {
-                g_ships[ship].path[0] = 0;
+        /* Silent fail */
+        if (target < 0 || target >= r_tiles || g_ships[ship].tile == target) {
+                g_ships[ship].path[0] = NUL;
+                g_ships[ship].target = g_ships[ship].tile;
+                if (g_ships[ship].client == n_client_id &&
+                    g_selected_ship == ship)
+                        R_select_path(-1, NULL);
                 return;
         }
+
+        /* Set our target and see if its available */
+        g_ships[ship].target = g_ships[ship].tile;
         if (!G_open_tile(target, ship))
                 goto failed;
 
         /* Start with just the initial tile open */
+        search_stamp++;
         nodes[0].tile = g_ships[ship].tile;
         nodes[0].dist = tile_dist(nodes[0].tile, target);
         nodes[0].moves = 0;
