@@ -204,8 +204,8 @@ int main(int argc, char *argv[])
         G_register_variables();
 
         /* Parse configuration scripts and open the log file */
-        C_parse_config_file(C_va("%s/autogen.cfg", C_user_dir()));
-        C_parse_config_file(C_va("%s/autoexec.cfg", C_user_dir()));
+        C_parse_config_file("autogen.cfg");
+        C_parse_config_file("autoexec.cfg");
         parse_config_args(argc, argv);
         I_parse_config();
         C_open_log_file();

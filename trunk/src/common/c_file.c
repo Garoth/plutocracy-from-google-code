@@ -39,14 +39,37 @@ void C_file_cleanup(c_file_t *file)
 }
 
 /******************************************************************************\
+ Try opening the regular and gz-suffixed filename.
+\******************************************************************************/
+static void file_open(c_file_t *file, const char *path, const char *name)
+{
+        if (file->stream)
+                return;
+        if ((file->stream = gzopen(C_va("%s/%s", path, name), "rb")))
+                return;
+        file->stream = gzopen(C_va("%s/%s.gz", path, name), "rb");
+}
+
+/******************************************************************************\
  Open a file for reading. If the file is not found, the function will try again
  with a .gz extension. Returns TRUE on success.
+
+ The following search order is used:
+
+   1) User's directory (~/.plutocracy/file)
+   2) Current directory (./file)
+   3) Installation directory (/usr/local/share/plutocracy/file)
+
 \******************************************************************************/
 int C_file_init_read(c_file_t *file, const char *name)
 {
-        file->stream = gzopen(name, "rb");
-        if (!file->stream)
-                file->stream = gzopen(C_va("%s.gz", name), "rb");
+        if (!file || !name || !name[0])
+                return FALSE;
+        file->stream = NULL;
+        if (!C_absolute_path(name))
+                file_open(file, C_user_dir(), name);
+        file_open(file, ".", name);
+        file_open(file, PKGDATADIR, name);
         if (!file->stream) {
                 file->type = C_FT_NONE;
                 return FALSE;

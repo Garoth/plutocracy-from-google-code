@@ -33,7 +33,8 @@ int C_mkdir(const char *path)
 }
 
 /******************************************************************************\
- Returns the path to the user's writeable Plutocracy directory.
+ Returns the path to the user's writeable Plutocracy directory without
+ trailing slash.
 \******************************************************************************/
 const char *C_user_dir(void)
 {
@@ -61,5 +62,16 @@ const char *C_user_dir(void)
 \******************************************************************************/
 void C_signal_handler(c_signal_f func)
 {
+}
+/******************************************************************************\
+ Returns TRUE for an absolute path. A bit more complicated on Windows because
+ either slash is valid and network paths are different from drive paths.
+\******************************************************************************/
+bool C_absolute_path(const char *path)
+{
+        return (path[0] == '\\' && path[1] == '\\') ||
+               (path[0] == '/' && path[1] == '/') ||
+               (isalpha(path[0]) && path[1] == ':' &&
+                (path[2] == '\\' || path[2] == '/'));
 }
 

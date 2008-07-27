@@ -38,8 +38,8 @@ int C_mkdir(const char *path)
 }
 
 /******************************************************************************\
- Returns the path to the user's writeable Plutocracy directory. The directory
- is not returned with a trailing slash.
+ Returns the path to the user's writeable Plutocracy directory without
+ trailing slash.
 \******************************************************************************/
 const char *C_user_dir(void)
 {
@@ -88,5 +88,13 @@ void C_signal_handler(c_signal_f func)
         }
         if (sigprocmask(SIG_UNBLOCK, &sigset, NULL) == -1)
                 C_warning("Failed to set signal blocking mask");
+}
+
+/******************************************************************************\
+ Returns TRUE for an absolute path.
+\******************************************************************************/
+bool C_absolute_path(const char *path)
+{
+        return path[0] == '/';
 }
 
