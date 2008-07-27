@@ -123,10 +123,6 @@
 /* Log files are wrapped to this many columns */
 #define C_LOG_WRAP_COLS 79
 
-/* Define a compact boolean type. This actually does not make much of an impact
-   as far as memory usage is concerned but is helpful to denote usage. */
-typedef unsigned char bool;
-
 /* Debug log levels, errors are fatal and will always abort */
 typedef enum {
         C_LOG_PRINT = -1,
@@ -180,6 +176,10 @@ typedef union {
         float f;
         char s[256];
 } c_var_value_t;
+
+/* Define a compact boolean type. This actually does not make much of an impact
+   as far as memory usage is concerned but is helpful to denote usage. */
+typedef unsigned char bool;
 
 /* Callback for GUI log handler */
 typedef void (*c_log_event_f)(c_log_level_t, int margin, const char *);
@@ -325,6 +325,7 @@ void C_test_mem_check(void);
 #define C_zero_buf(s) memset(s, 0, sizeof (s))
 
 /* c_os_posix, c_os_windows.c */
+bool C_absolute_path(const char *path);
 int C_mkdir(const char *path);
 int C_modified_time(const char *filename);
 const char *C_user_dir(void);
