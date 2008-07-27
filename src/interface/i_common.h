@@ -101,7 +101,7 @@ typedef struct i_widget {
         i_event_f event_func;
         i_widget_state_t state;
         float fade, margin_front, margin_rear, padding;
-        bool configured, entry, expand, shown, heap;
+        bool configured, entry, expand, shown, heap, steal_keys;
 } i_widget_t;
 
 /* Windows are decorated containers */
@@ -247,6 +247,7 @@ void I_init_game(i_window_t *);
 void I_globe_event(i_event_t);
 
 /* i_layout.c */
+void I_global_key(void);
 void I_theme_texture(r_texture_t **, const char *name);
 
 extern i_toolbar_t i_right_toolbar;
@@ -305,7 +306,8 @@ i_widget_t *I_widget_top_level(i_widget_t *);
 
 extern c_color_t i_colors[I_COLORS];
 extern i_widget_t *i_child, *i_key_focus, *i_mouse_focus;
-extern int i_key, i_key_shift, i_key_unicode, i_mouse_x, i_mouse_y, i_mouse;
+extern int i_key, i_key_alt, i_key_shift, i_key_unicode,
+           i_mouse, i_mouse_x, i_mouse_y;
 
 /* i_window.c */
 void I_init_popup(void);

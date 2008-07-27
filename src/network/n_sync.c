@@ -216,9 +216,11 @@ bool N_send_string(const char *string)
  that you can either be receiving or sending. The moment you send a new
  message, the one you were receiving is lost!
 \******************************************************************************/
-void N_send(int client, const char *format, ...)
+void N_send_full(const char *file, int line, const char *func,
+                 int client, const char *format, ...)
 {
         va_list va;
+        int sentinel;
 
         /* We're not connected */
         if (n_client_id < 0)
@@ -258,8 +260,15 @@ void N_send(int client, const char *format, ...)
                                 goto overflow;
                         break;
                 default:
-                        C_error("Invalid format character '%c'", *format);
+                        C_error_full(file, line, func,
+                                     "Invalid format character '%c'", *format);
                 }
+
+        /* Check sentinel; if its missing then you probably forgot to add
+           an argument to the argument list or have one too many */
+        sentinel = va_arg(va, int);
+        if (sentinel != N_SENTINEL)
+                C_error_full(file, line, func, "Missing sentinel");
         va_end(va);
 
         /* Write the size of the message as the first 2-bytes */
@@ -283,7 +292,7 @@ skip:   write_bytes(0, 2, &n_sync_size);
 
 overflow:
         va_end(va);
-        C_warning("Outgoing message buffer overflow");
+        C_warning_full(file, line, func, "Outgoing message buffer overflow");
 }
 
 /******************************************************************************\

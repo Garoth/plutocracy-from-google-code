@@ -20,6 +20,7 @@ version = '0.0.3'
 
 # Platform considerations
 windows = sys.platform == 'win32'
+darwin = sys.platform == 'darwin'
 
 # Convert a POSIX path to OS-independent
 def path(p):
@@ -75,6 +76,7 @@ AddEnvOption(default_env, opts, 'PREFIX', 'Installation path prefix',
              'PREFIX', '/usr/local/')
 opts.Add(EnumOption('pch', 'Use precompiled headers if possible', 'common',
                     allowed_values = ('no', 'common', 'all')))
+opts.Add(BoolOption('libc_errors', 'Generate errors for LIBC misuse', False))
 opts.Add(BoolOption('dump_env', 'Dump SCons Environment contents', False))
 opts.Add(BoolOption('dump_path', 'Dump path enviornment variable', False))
 opts.Update(default_env)
@@ -140,6 +142,9 @@ else:
         plutocracy_env.Append(CPPPATH = '.')
         plutocracy_env.Append(LIBS = ['SDL_ttf', 'GL', 'GLU', 'z', 'png'])
         plutocracy_env.ParseConfig('sdl-config --cflags --libs')
+        if darwin:
+                plutocracy_env.Append(LIBPATH = '/System/Library/Frameworks/' +
+                                                'OpenGL.framework/Libraries')
 plutocracy_obj = plutocracy_env.Object(plutocracy_src)
 plutocracy = plutocracy_env.Program(package, plutocracy_obj +
                                              plutocracy_objlibs)
@@ -177,7 +182,7 @@ if windows:
 # Generate a config.h with definitions
 else:
         def WriteConfigH(target, source, env):
-        
+
                 # Get subversion revision and add it to the version
                 svn_revision = ''
                 try:
@@ -200,6 +205,12 @@ else:
                              ' ' + version + svn_revision + '"\n' +
                              '\n/* Configured paths */\n' +
                              '#define PKGDATADIR "' + install_data + '"\n')
+
+                # LibC function misuse errors
+                if plutocracy_env['libc_errors']:
+                        config.write('\n/* Plutocracy */\n' +
+                                     '#define PLUTOCRACY_LIBC_ERRORS\n')
+
                 config.close()
 
         plutocracy_config = plutocracy_env.Command('config.h', '', WriteConfigH)

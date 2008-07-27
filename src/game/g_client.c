@@ -14,8 +14,10 @@
 
 #include "g_common.h"
 
-/* So we know where the corruption was detected */
+/* Wrappers that provide file/line/function info */
 #define corrupt_disconnect() corrupt_disc_full(__FILE__, __LINE__, __func__)
+#define receive_client() receive_client_full(__FILE__, __LINE__, __func__)
+#define receive_ship() receive_ship_full(__FILE__, __LINE__, __func__)
 
 /* Array of connected clients */
 g_client_t g_clients[N_CLIENTS_MAX + 1];
@@ -39,6 +41,38 @@ static void corrupt_disc_full(const char *file, int line, const char *func)
         C_warning_full(file, line, func, "Server sent corrupt data");
         I_popup(NULL, "Server sent invalid data.");
         N_disconnect();
+}
+
+/******************************************************************************\
+ Convenience function to receive a client index and disconnect if it is invalid.
+ Returns a negative index if the received index was not valid.
+\******************************************************************************/
+static int receive_client_full(const char *file, int line, const char *func)
+{
+        int index;
+
+        index = N_receive_char();
+        if (!N_client_valid(index)) {
+                corrupt_disc_full(file, line, func);
+                return -1;
+        }
+        return index;
+}
+
+/******************************************************************************\
+ Convenience function to receive a ship index and disconnect if it is invalid.
+ Returns a negative index if the received index was not valid.
+\******************************************************************************/
+static int receive_ship_full(const char *file, int line, const char *func)
+{
+        int index;
+
+        index = N_receive_char();
+        if (index < 0 || index >= G_SHIPS_MAX) {
+                corrupt_disc_full(file, line, func);
+                return -1;
+        }
+        return index;
 }
 
 /******************************************************************************\
@@ -183,27 +217,18 @@ static void sm_name(void)
         int client;
         char old_name[G_NAME_MAX];
 
-        client = N_receive_char();
-        if (!N_client_valid(client)) {
-                corrupt_disconnect();
+        if ((client = receive_client()) < 0)
                 return;
-        }
         C_strncpy_buf(old_name, g_clients[client].name);
         N_receive_string_buf(g_clients[client].name);
 
-        /* Don't say that other players joined if we just joined */
-        if (n_client_id == N_UNASSIGNED_ID)
-                return;
-
         /* The first name-change on connect */
-        if (!old_name[0]) {
+        if (!old_name[0])
                 I_print_chat(C_va("%s joined the game.",
                                   g_clients[client].name), I_COLOR, NULL);
-                return;
-        }
-
-        I_print_chat(C_va("%s renamed to %s.", old_name,
-                          g_clients[client].name), I_COLOR, NULL);
+        else
+                I_print_chat(C_va("%s renamed to %s.", old_name,
+                                  g_clients[client].name), I_COLOR, NULL);
 }
 
 /******************************************************************************\
@@ -256,13 +281,10 @@ static void sm_ship_move(void)
 {
         int index, tile, target;
 
-        index = N_receive_char();
+        if ((index = receive_ship()) < 0)
+                return;
         tile = N_receive_short();
         target = N_receive_short();
-        if (index < 0 || index >= G_SHIPS_MAX) {
-                corrupt_disconnect();
-                return;
-        }
 
         /* Don't re-path unless something changed */
         if (G_ship_move_to(index, tile) || target != g_ships[index].target)
@@ -277,11 +299,8 @@ static void sm_ship_cargo(void)
         int i, index;
 
         C_assert(n_client_id != N_HOST_CLIENT_ID);
-        index = N_receive_char();
-        if (index < 0 || index >= G_SHIPS_MAX) {
-                corrupt_disconnect();
+        if ((index = receive_ship()) < 0)
                 return;
-        }
         for (i = 0; i < G_CARGO_TYPES; i++)
                 g_ships[index].cargo.amounts[i] = N_receive_short();
         G_ship_reselect(index, -1);
@@ -343,16 +362,25 @@ void G_client_callback(int client, n_event_t event)
         case G_SM_SHIP_CARGO:
                 sm_ship_cargo();
                 break;
-        case G_SM_SHIP_OWNER:
-                i = N_receive_char();
-                j = N_receive_char();
-                if (i < 0 || i >= G_SHIPS_MAX || !N_client_valid(j)) {
-                        corrupt_disconnect();
+
+        /* Ship changed names */
+        case G_SM_NAME_SHIP:
+                if ((i = receive_ship()) < 0)
                         return;
-                }
+                N_receive_string_buf(g_ships[i].name);
+                G_count_name(G_NT_SHIP, g_ships[i].name);
+                G_ship_reselect(i, -1);
+                break;
+
+        /* Ship changed owners */
+        case G_SM_SHIP_OWNER:
+                if ((i = receive_ship()) < 0 || (j = receive_client()) < 0)
+                        return;
                 g_ships[i].client = j;
                 G_ship_reselect(i, -1);
                 break;
+
+        /* Somebody connected but we don't have their name yet */
         case G_SM_CONNECTED:
                 i = N_receive_char();
                 if (i < 0 || i >= N_CLIENTS_MAX) {
@@ -363,6 +391,8 @@ void G_client_callback(int client, n_event_t event)
                 C_zero(g_clients + i);
                 C_debug("Client %d connected", i);
                 break;
+
+        /* Somebody disconnected */
         case G_SM_DISCONNECTED:
                 i = N_receive_char();
                 if (i < 0 || i >= N_CLIENTS_MAX) {
@@ -374,6 +404,7 @@ void G_client_callback(int client, n_event_t event)
                              I_COLOR, NULL);
                 C_debug("Client %d disconnected", i);
                 break;
+
         default:
                 break;
         }

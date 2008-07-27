@@ -13,7 +13,7 @@
 #include "i_common.h"
 
 /* Duration that chat stays on the screen */
-#define CHAT_DURATION 10000
+#define CHAT_DURATION 15000
 
 /* Maximum number of chat lines */
 #define CHAT_LINES 10
@@ -87,7 +87,7 @@ static void chat_init(chat_t *chat, const char *name, i_color_t color,
 void I_position_chat(void)
 {
         /* Position window */
-        input_window.widget.origin = C_vec2((float)i_border.value.n, 
+        input_window.widget.origin = C_vec2((float)i_border.value.n,
                                             r_height_2d -
                                             i_border.value.n * 4 - 32.f);
 

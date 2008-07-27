@@ -107,35 +107,50 @@ static void cm_ship_move(int client)
 \******************************************************************************/
 static void cm_name(int client)
 {
-        int i;
-        char new_name[G_NAME_MAX];
+        int i, suffixes, name_len;
+        char name_buf[G_NAME_MAX];
 
-        N_receive_string_buf(new_name);
+        N_receive_string_buf(name_buf);
 
         /* Didn't actually change names */
-        if (!strcmp(new_name, g_clients[client].name))
+        if (!strcmp(name_buf, g_clients[client].name))
                 return;
 
-        /* Is this a valid name? */
-        if (!new_name[0]) {
+        /* Is this a valid name?
+           TODO: Scan for all-space names etc */
+        if (!name_buf[0]) {
                 N_send(client, "12s", G_SM_POPUP, -1, "Invalid name.");
-                return;
+                C_strncpy_buf(name_buf, "Newbie");
         }
 
         /* See if this name is taken */
-        for (i = 0; i < N_CLIENTS_MAX; i++) {
-                if (i == client)
+        name_len = C_strlen(name_buf);
+        for (suffixes = 2, i = 0; i < N_CLIENTS_MAX; i++) {
+                const char *suffix;
+                int suffix_len;
+
+                if (i == client || strcasecmp(name_buf, g_clients[i].name))
                         continue;
-                if (!strcasecmp(new_name, g_clients[client].name)) {
-                        N_send(client, "12s", G_SM_POPUP, -1,
-                               C_va("Name '%s' already taken.", new_name));
-                        return;
-                }
+
+                /* Its taken, add a suffix and try again */
+                suffix = C_va(" %d", suffixes);
+                suffix_len = C_strlen(suffix) + 1;
+                if (name_len > G_NAME_MAX - suffix_len)
+                        name_len = G_NAME_MAX - suffix_len;
+                memcpy(name_buf + name_len, suffix, suffix_len);
+
+                /* Start over */
+                i = -1;
+                suffixes++;
         }
 
-        C_debug("Client '%s' (%d) renamed to '%s'", g_clients[client].name,
-                client, new_name);
-        N_broadcast("11s", G_SM_NAME, client, new_name);
+        /* Didn't actually change names (after suffix attachment) */
+        if (!strcmp(name_buf, g_clients[client].name))
+                return;
+
+        C_debug("Client '%s' (%d) renamed to '%s'",
+                g_clients[client].name, client, name_buf);
+        N_broadcast("11s", G_SM_NAME, client, name_buf);
 }
 
 /******************************************************************************\
@@ -206,10 +221,18 @@ static void client_connected(int client)
         for (i = 0; i < G_SHIPS_MAX; i++) {
                 if (!g_ships[i].in_use)
                         continue;
+
+                /* Owner, tile, class, index */
                 N_send(client, "11211", G_SM_SPAWN_SHIP, g_ships[i].client,
                        g_ships[i].tile, g_ships[i].class_name, i);
+
+                /* Name */
                 N_send(client, "11s", G_SM_NAME_SHIP, i, g_ships[i].name);
+
+                /* Cargo */
                 send_ship_cargo(client, i);
+
+                /* Movement */
                 if (g_ships[i].target != g_ships[i].tile)
                         N_send(client, "1122", G_SM_SHIP_MOVE,
                                i, g_ships[i].tile, g_ships[i].target);
@@ -231,7 +254,7 @@ static void client_disconnected(int client)
         for (i = 0; i < G_SHIPS_MAX; i++)
                 if (g_ships[i].client == client) {
                         g_ships[i].client = N_SERVER_ID;
-                        N_broadcast_except(N_HOST_CLIENT_ID, "11",
+                        N_broadcast_except(N_HOST_CLIENT_ID, "111",
                                            G_SM_SHIP_OWNER, i, N_SERVER_ID);
                         G_ship_reselect(i, -1);
                 }

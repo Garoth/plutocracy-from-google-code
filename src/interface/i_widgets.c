@@ -25,7 +25,7 @@ i_widget_t *i_child;
 i_widget_t *i_mouse_focus;
 
 /* Event parameters */
-int i_key, i_key_shift, i_key_unicode, i_mouse_x, i_mouse_y, i_mouse;
+int i_key, i_key_shift, i_key_alt, i_key_unicode, i_mouse_x, i_mouse_y, i_mouse;
 
 static int widgets;
 
@@ -534,6 +534,12 @@ void I_widget_event(i_widget_t *widget, i_event_t event)
                 widget->event_func(widget, event);
                 focus_parent(widget);
                 return;
+        case I_EV_KEY_DOWN:
+                if (widget->steal_keys &&
+                    widget->state != I_WS_DISABLED && widget->shown &&
+                    widget->state != I_WS_NO_FOCUS)
+                        widget->event_func(widget, event);
+                return;
         case I_EV_MOUSE_IN:
                 if (widget->state == I_WS_READY)
                         widget->state = I_WS_HOVER;
@@ -674,6 +680,7 @@ void I_dispatch(const SDL_Event *ev)
                 event = I_EV_KEY_DOWN;
                 i_key = ev->key.keysym.sym;
                 i_key_shift = ev->key.keysym.mod & KMOD_SHIFT;
+                i_key_alt = ev->key.keysym.mod & KMOD_ALT;
                 i_key_unicode = ev->key.keysym.unicode;
                 if (i_debug.value.n > 0)
                         C_trace("SDL_KEYDOWN (%s%s)",
@@ -688,6 +695,7 @@ void I_dispatch(const SDL_Event *ev)
                 event = I_EV_KEY_UP;
                 i_key = ev->key.keysym.sym;
                 i_key_shift = ev->key.keysym.mod & KMOD_SHIFT;
+                i_key_alt = ev->key.keysym.mod & KMOD_ALT;
                 i_key_unicode = ev->key.keysym.unicode;
                 if (i_debug.value.n > 0)
                         C_trace("SDL_KEYUP (%s%s)",
@@ -718,14 +726,20 @@ void I_dispatch(const SDL_Event *ev)
                 return;
         }
 
-        /* Normally dispatch up from the root window, but for key and mouse
-           down events send straight to the focused widget */
+        /* Key and mouse down events are propagated back from the focused
+           widget up the hierarchy */
         if (event == I_EV_KEY_DOWN) {
-                if (i_key_focus && i_key_focus->event_func &&
-                    i_key_focus->shown && i_key_focus->state != I_WS_DISABLED)
+                I_global_key();
+                if (i_key_focus) {
                         i_key_focus->event_func(i_key_focus, event);
+                        if (i_key_focus->parent)
+                                propagate_up(i_key_focus->parent, event);
+                } else if (i_mouse_focus)
+                        propagate_up(i_mouse_focus, event);
         } else if (event == I_EV_MOUSE_DOWN || event == I_EV_MOUSE_MOVE)
                 propagate_up(i_mouse_focus, event);
+
+        /* Normal event propagation up from the root widget */
         else
                 I_widget_event(&i_root, event);
 

@@ -15,7 +15,7 @@
 #include "i_common.h"
 
 /* Time in milliseconds that the popup widget will remain shown */
-#define POPUP_TIME 2000
+#define POPUP_TIME 2500
 
 /* Maximum number of popup messages in the queue */
 #define POPUP_MESSAGES_MAX 8
@@ -79,6 +79,10 @@ static int window_event(i_window_t *window, i_event_t event)
                         window->hanger.size.y = (float)i_border.value.n;
                 }
                 return FALSE;
+        case I_EV_KEY_DOWN:
+                if (i_key == SDLK_ESCAPE && window->auto_hide)
+                        I_widget_event(&window->widget, I_EV_HIDE);
+                break;
         case I_EV_MOUSE_IN:
                 if (I_widget_child_of(&window->widget, i_key_focus))
                         break;
@@ -129,6 +133,7 @@ void I_window_init(i_window_t *window)
         window->widget.event_func = (i_event_f)window_event;
         window->widget.state = I_WS_READY;
         window->widget.padding = 1.f;
+        window->widget.steal_keys = TRUE;
         window->pack_children = I_PACK_V;
         window->decorated = TRUE;
 }
@@ -171,13 +176,16 @@ int I_toolbar_event(i_toolbar_t *toolbar, i_event_t event)
                 toolbar->widget.size = toolbar->window.widget.size;
                 toolbar_position(toolbar);
                 return FALSE;
-        case I_EV_MOUSE_DOWN:
 
-                /* Right-clicking the toolbar closes the current window */
+        case I_EV_MOUSE_DOWN:
                 if (i_mouse == SDL_BUTTON_RIGHT && toolbar->open_window)
                         I_widget_event(&toolbar->open_window->widget,
                                        I_EV_HIDE);
-
+                break;
+        case I_EV_KEY_DOWN:
+                if (i_key == SDLK_ESCAPE && toolbar->open_window)
+                        I_widget_event(&toolbar->open_window->widget,
+                                       I_EV_HIDE);
                 break;
         case I_EV_HIDE:
                 for (i = 0; i < toolbar->children; i++)
@@ -198,6 +206,7 @@ void I_toolbar_init(i_toolbar_t *toolbar, int right)
         I_widget_init(&toolbar->widget, "Toolbar");
         toolbar->widget.event_func = (i_event_f)I_toolbar_event;
         toolbar->widget.state = I_WS_READY;
+        toolbar->widget.steal_keys = TRUE;
         toolbar->right = right;
         I_window_init(&toolbar->window);
         toolbar->window.pack_children = I_PACK_H;
@@ -332,12 +341,17 @@ static int popup_event(i_widget_t *widget, i_event_t event)
                 return FALSE;
         case I_EV_MOUSE_IN:
                 popup_wait = TRUE;
+                i_key_focus = NULL;
                 break;
         case I_EV_MOUSE_OUT:
                 popup_wait = FALSE;
                 break;
         case I_EV_MOUSE_DOWN:
                 if (i_mouse == SDL_BUTTON_RIGHT)
+                        I_widget_event(&popup_widget, I_EV_HIDE);
+                break;
+        case I_EV_KEY_DOWN:
+                if (i_key == SDLK_ESCAPE)
                         I_widget_event(&popup_widget, I_EV_HIDE);
                 break;
         case I_EV_CLEANUP:
@@ -376,6 +390,7 @@ void I_init_popup(void)
         popup_widget.state = I_WS_READY;
         popup_widget.shown = FALSE;
         popup_widget.padding = 1.f;
+        popup_widget.steal_keys = TRUE;
 
         /* Label */
         I_label_init(&popup_label, NULL);
