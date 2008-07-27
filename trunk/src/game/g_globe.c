@@ -267,21 +267,21 @@ static int test_tiles_update(c_var_t *var, c_var_value_t value)
 void G_init_globe(void)
 {
         /* Generate a starter globe */
-        G_generate_globe();
+        C_var_unlatch(&g_globe_islands);
+        C_var_unlatch(&g_globe_island_size);
+        G_generate_globe(g_globe_islands.value.n, g_globe_island_size.value.n);
 }
 
 /******************************************************************************\
  Generate a new globe.
 \******************************************************************************/
-void G_generate_globe(void)
+void G_generate_globe(int override_islands, int override_size)
 {
         int i, islands, island_size;
 
         C_status("Generating globe");
         C_var_unlatch(&g_globe_seed);
         C_var_unlatch(&g_globe_subdiv4);
-        C_var_unlatch(&g_globe_islands);
-        C_var_unlatch(&g_globe_island_size);
         G_cleanup_globe();
         R_generate_globe(g_globe_subdiv4.value.n);
         C_rand_seed(g_globe_seed.value.n);
@@ -314,17 +314,17 @@ void G_generate_globe(void)
                 islands_len = 0;
                 return;
         }
-        if (g_globe_islands.value.n > 0)
-                islands = g_globe_islands.value.n;
-        if (g_globe_island_size.value.n > 0)
-                island_size = g_globe_island_size.value.n;
+        if (override_islands > 0)
+                islands = override_islands;
+        if (override_size > 0)
+                island_size = override_size;
         grow_islands(islands, island_size);
         sanitise_terrain();
 
         /* This call actually raises the tiles to match terrain height */
         R_configure_globe();
 
-        /* Calculate tile vectors */
+        /* Calculate tile vectors and place starter buildings */
         for (i = 0; i < r_tiles; i++) {
                 c_vec3_t coords[3];
 

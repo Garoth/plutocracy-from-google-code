@@ -169,7 +169,7 @@ static void sm_client(void)
 \******************************************************************************/
 static void sm_init(void)
 {
-        int protocol, seed;
+        int protocol, seed, islands, island_size;
         const char *msg;
 
         C_assert(n_client_id != N_HOST_CLIENT_ID);
@@ -193,15 +193,19 @@ static void sm_init(void)
         }
         n_clients[n_client_id].connected = TRUE;
 
-        /* Generate a new globe to match the server's */
+        /* Set random seed */
         seed = N_receive_int();
-        if (seed != g_globe_seed.value.n) {
-                g_globe_seed.value.n = seed;
-                G_generate_globe();
-        }
 
         /* Get solar angle */
         r_solar_angle = N_receive_float();
+
+        /* Generate matching globe */
+        islands = N_receive_short();
+        island_size = N_receive_short();
+        if (seed != g_globe_seed.value.n) {
+                g_globe_seed.value.n = seed;
+                G_generate_globe(islands, island_size);
+        }
 
         /* Start off nation-less */
         I_select_nation(G_NN_NONE);
@@ -378,6 +382,17 @@ void G_client_callback(int client, n_event_t event)
                         return;
                 g_ships[i].client = j;
                 G_ship_reselect(i, -1);
+                break;
+
+        /* Building changed */
+        case G_SM_BUILDING:
+                i = N_receive_short();
+                j = N_receive_char();
+                if (i < 0 || i >= r_tiles || j < 0 || j >= G_BUILDING_NAMES) {
+                        corrupt_disconnect();
+                        return;
+                }
+                G_build(i, j, N_receive_float());
                 break;
 
         /* Somebody connected but we don't have their name yet */

@@ -133,6 +133,7 @@ void I_init_chat(void)
         input_window.natural_size = C_vec2(400.f, 0.f);
         input_window.fit = I_FIT_TOP;
         input_window.popup = TRUE;
+        input_window.auto_hide = TRUE;
         I_widget_add(&i_root, &input_window.widget);
 
         /* Input entry widget */

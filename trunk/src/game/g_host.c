@@ -202,8 +202,9 @@ static void client_connected(int client)
                 return;
         C_debug("Initializing client %d", client);
         g_clients[client].nation = G_NN_NONE;
-        N_send(client, "1114f", G_SM_INIT, G_PROTOCOL, client,
-               g_globe_seed.value.n, r_solar_angle);
+        N_send(client, "1114f22", G_SM_INIT, G_PROTOCOL, client,
+               g_globe_seed.value.n, r_solar_angle, g_globe_islands.value.n,
+               g_globe_island_size.value.n);
 
         /* Start out nameless */
         g_clients[client].name[0] = NUL;
@@ -216,6 +217,14 @@ static void client_connected(int client)
 
         /* Tell everyone else about the new arrival */
         N_broadcast_except(client, "11", G_SM_CONNECTED, client);
+
+        /* Tell them about the buildings on them globe */
+        for (i = 0; i < r_tiles; i++) {
+                if (g_tiles[i].building == G_BN_NONE)
+                        continue;
+                N_send(client, "121f", G_SM_BUILDING, i, g_tiles[i].building,
+                       g_tiles[i].progress);
+        }
 
         /* Tell them about all the ships on the globe */
         for (i = 0; i < G_SHIPS_MAX; i++) {
@@ -303,6 +312,21 @@ static void server_callback(int client, n_event_t event)
 }
 
 /******************************************************************************\
+ Place starter buildings.
+\******************************************************************************/
+static void initial_buildings(void)
+{
+        int i;
+
+        for (i = 0; i < r_tiles; i++) {
+                if (R_terrain_base(r_tile_params[i].terrain) != R_T_GROUND)
+                        continue;
+                if (C_rand_real() < g_globe_forest.value.f)
+                        G_build(i, G_BN_TREE, 1.f);
+        }
+}
+
+/******************************************************************************\
  Host a new game.
 \******************************************************************************/
 void G_host_game(void)
@@ -319,11 +343,14 @@ void G_host_game(void)
         }
 
         /* Generate a new globe */
+        C_var_unlatch(&g_globe_islands);
+        C_var_unlatch(&g_globe_island_size);
         if (g_globe_seed.has_latched)
                 C_var_unlatch(&g_globe_seed);
         else
                 g_globe_seed.value.n = (int)time(NULL);
-        G_generate_globe();
+        G_generate_globe(g_globe_islands.value.n, g_globe_island_size.value.n);
+        initial_buildings();
 
         I_leave_limbo();
         I_popup(NULL, "Hosted a new game.");
