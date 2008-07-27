@@ -401,7 +401,7 @@ static int globe_smooth_update(c_var_t *var, c_var_value_t value)
 /******************************************************************************\
  Returns the base terrain for a terrain variant.
 \******************************************************************************/
-static int terrain_base(r_terrain_t terrain)
+r_terrain_t R_terrain_base(r_terrain_t terrain)
 {
         switch (terrain) {
         case R_T_GROUND_HOT:
@@ -422,7 +422,7 @@ static int get_tile_terrain(int tile)
 {
         int i, j, base, base_num, trans, terrain, vert_terrain[3], offset;
 
-        base = terrain_base(r_tile_params[tile].terrain);
+        base = R_terrain_base(r_tile_params[tile].terrain);
         if (base >= R_T_BASES - 1)
                 return r_tile_params[tile].terrain;
 
@@ -437,7 +437,7 @@ static int get_tile_terrain(int tile)
                 j = r_globe_verts[3 * tile + i].next;
                 vert_terrain[i] = base;
                 while (j != 3 * tile + i) {
-                        terrain = terrain_base(r_tile_params[j / 3].terrain);
+                        terrain = R_terrain_base(r_tile_params[j / 3].terrain);
                         if (terrain > vert_terrain[i])
                                 trans = vert_terrain[i] = terrain;
                         j = r_globe_verts[j].next;

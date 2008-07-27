@@ -17,6 +17,9 @@
 /* Array of game nations */
 g_nation_t g_nations[G_NATION_NAMES];
 
+/* Array of building types */
+g_building_type_t g_building_types[G_BUILDING_NAMES];
+
 /* Array of cargo names */
 const char *g_cargo_names[G_CARGO_TYPES];
 
@@ -117,6 +120,12 @@ void G_init_elements(void)
         g_cargo_names[G_CT_ROUNDSHOT] = C_str("g-cargo-roundshot", "Roundshot");
         g_cargo_names[G_CT_PLATING] = C_str("g-cargo-plating", "Plating");
         g_cargo_names[G_CT_GILLNET] = C_str("g-cargo-gillner", "Gillnet");
+
+        /* Setup buildings */
+        g_building_types[G_BN_NONE].name = "None";
+        g_building_types[G_BN_NONE].model_path = "";
+        g_building_types[G_BN_TREE].name = "Trees";
+        g_building_types[G_BN_TREE].model_path = "models/tree/deciduous.plum";
 }
 
 /******************************************************************************\
@@ -129,5 +138,23 @@ void G_reset_elements(void)
 
         /* The server "client" has fixed information */
         g_clients[N_SERVER_ID].nation = G_NN_PIRATE;
+}
+
+/******************************************************************************\
+ Set a tile's building.
+\******************************************************************************/
+void G_build(int tile, g_building_name_t name, float progress)
+{
+        /* Range checks */
+        C_assert(tile >= 0 && tile < r_tiles);
+        C_assert(name >= 0 && name < G_BUILDING_NAMES);
+        if (progress < 0.f)
+                progress = 0.f;
+        if (progress > 1.f)
+                progress = 1.f;
+
+        g_tiles[tile].building = name;
+        g_tiles[tile].progress = progress;
+        G_set_tile_model(tile, g_building_types[name].model_path);
 }
 

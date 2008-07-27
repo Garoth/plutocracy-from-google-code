@@ -231,6 +231,7 @@ float R_get_tile_latitude(int tile);
 void R_get_tile_neighbors(int tile, int neighbors[3]);
 int R_get_tile_region(int tile, int neighbors[12]);
 int R_land_bridge(int tile_a, int tile_b);
+r_terrain_t R_terrain_base(r_terrain_t);
 int R_water_terrain(int terrain);
 
 extern r_tile_param_t r_tile_params[R_TILES_MAX];

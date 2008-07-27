@@ -16,7 +16,8 @@
 c_var_t g_test_globe, g_test_tile;
 
 /* Globe variables */
-c_var_t g_globe_islands, g_globe_island_size, g_globe_seed, g_globe_subdiv4;
+c_var_t g_globe_forest, g_globe_islands, g_globe_island_size, g_globe_seed,
+        g_globe_subdiv4;
 
 /* Nation colors */
 c_var_t g_nation_colors[G_NATION_NAMES];
@@ -46,6 +47,8 @@ void G_register_variables(void)
                            "number of islands, 0 for default");
         C_register_integer(&g_globe_island_size, "g_globe_island_size", 0,
                            "maximum size of islands, 0 for default");
+        C_register_float(&g_globe_forest, "g_globe_forest", 0.8,
+                           "proportion of tiles that have trees");
 
         /* Nation colors */
         C_register_string(g_nation_colors + G_NN_RED, "g_color_red",

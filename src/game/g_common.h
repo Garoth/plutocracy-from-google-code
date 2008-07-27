@@ -64,6 +64,7 @@ typedef enum {
         G_SM_SHIP_MOVE,
         G_SM_SHIP_CARGO,
         G_SM_SHIP_OWNER,
+        G_SM_BUILDING,
 
         G_SERVER_MESSAGES
 } g_server_msg_t;
@@ -76,6 +77,13 @@ typedef enum {
         G_SN_NONE,
 } g_ship_name_t;
 
+/* Building types */
+typedef enum {
+        G_BN_NONE,
+        G_BN_TREE,
+        G_BUILDING_NAMES
+} g_building_name_t;
+
 /* Name classes */
 typedef enum {
         G_NT_SHIP,
@@ -85,8 +93,10 @@ typedef enum {
 
 /* A tile on the globe */
 typedef struct g_tile {
+        g_building_name_t building;
         r_model_t model;
         c_vec3_t origin, forward;
+        float progress;
         int island, ship, search_parent, search_stamp;
         bool visible, model_visible;
 } g_tile_t;
@@ -115,6 +125,11 @@ typedef struct g_ship {
         bool in_use;
 } g_ship_t;
 
+/* Building structure */
+typedef struct g_building_type {
+        const char *name, *model_path;
+} g_building_type_t;
+
 /* g_client.c */
 void G_client_callback(int client, n_event_t);
 i_color_t G_nation_to_color(g_nation_name_t);
@@ -124,14 +139,17 @@ extern g_client_t g_clients[N_CLIENTS_MAX + 1];
 extern int g_selected_ship, g_selected_tile;
 
 /* g_elements.c */
+void G_build(int tile, g_building_name_t, float progress);
 void G_init_elements(void);
 void G_reset_elements(void);
+
+extern g_building_type_t g_building_types[G_BUILDING_NAMES];
 
 /* g_globe.c */
 void G_cleanup_globe(void);
 void G_init_globe(void);
 bool G_is_visible(c_vec3_t origin);
-void G_generate_globe(void);
+void G_generate_globe(int islands, int island_size);
 int G_set_tile_model(int tile, const char *path);
 
 extern g_tile_t g_tiles[R_TILES_MAX];
@@ -158,7 +176,7 @@ extern g_ship_class_t g_ship_classes[G_SHIP_NAMES];
 extern g_ship_t g_ships[G_SHIPS_MAX];
 
 /* g_variables.c */
-extern c_var_t g_globe_islands, g_globe_island_size, g_globe_seed,
-               g_globe_subdiv4, g_name, g_nation_colors[G_NATION_NAMES],
-               g_test_globe, g_test_tile;
+extern c_var_t g_globe_forest, g_globe_islands, g_globe_island_size,
+               g_globe_seed, g_globe_subdiv4, g_name,
+               g_nation_colors[G_NATION_NAMES], g_test_globe, g_test_tile;
 
