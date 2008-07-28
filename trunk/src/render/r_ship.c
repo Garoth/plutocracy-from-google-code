@@ -120,6 +120,7 @@ void R_render_ship_status(const r_model_t *model, float left, float left_max,
 {
         R_push_mode(R_MODE_3D);
         R_gl_disable(GL_LIGHTING);
+        modulate = C_color_scale(modulate, model->modulate);
         glColor4f(modulate.r, modulate.g, modulate.b, modulate.a);
         glMultMatrixf(model->matrix);
         glDepthMask(GL_FALSE);

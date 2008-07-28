@@ -32,6 +32,12 @@
 /* Minimum number of land tiles for island to succeed */
 #define ISLAND_LAND 8
 
+/* Rate of model fades in alpha per second */
+#define MODEL_FADE 1.f
+
+/* Distance that models fade out */
+#define MODEL_FADE_DIST 4.f
+
 /* Island structure */
 typedef struct g_island {
         int tiles, land, root;
@@ -221,13 +227,24 @@ static void grow_islands(int num, int island_size)
 \******************************************************************************/
 int G_set_tile_model(int tile, const char *filename)
 {
+        /* Fade out if clearing the tile */
+        if (!filename || !filename[0]) {
+                g_tiles[tile].model_shown = FALSE;
+                return TRUE;
+        }
+
+        /* Try to load the new model */
         R_model_cleanup(&g_tiles[tile].model);
         if (!R_model_init(&g_tiles[tile].model, filename, TRUE))
                 return FALSE;
+
+        /* Fade the new model in */
         g_tiles[tile].model.origin = g_tiles[tile].origin;
         g_tiles[tile].model.normal = r_tile_params[tile].normal;
         g_tiles[tile].model.forward = g_tiles[tile].forward;
         g_tiles[tile].model.selected = g_selected_tile == tile;
+        g_tiles[tile].model_shown = TRUE;
+        g_tiles[tile].fade = 1.f;
         return TRUE;
 }
 
@@ -343,14 +360,6 @@ void G_generate_globe(int override_islands, int override_size)
         /* We can now set test tiles */
         C_var_update(&g_test_tile, (c_var_update_f)test_tiles_update);
 
-        /* Set the invisible tile boundary.
-           TODO: Compute this properly from globe radius. */
-        visible_range = 0.f;
-        if (g_globe_subdiv4.value.n >= 4)
-                visible_range = -11.25f;
-        if (g_globe_subdiv4.value.n >= 5)
-                visible_range = -36.f;
-
         /* Deselect everything */
         g_selected_tile = -1;
         g_selected_ship = -1;
@@ -365,21 +374,59 @@ static bool is_visible(c_vec3_t origin)
 }
 
 /******************************************************************************\
+ Returns a modulating factor for fading models out of visible range.
+\******************************************************************************/
+static float model_fade_mod(c_vec3_t origin)
+{
+        float dist;
+
+        dist = C_vec3_dot(r_cam_forward, origin);
+        if (dist < visible_range - MODEL_FADE_DIST)
+                return 1.f;
+        if (dist > visible_range)
+                return 0.f;
+        return (visible_range - dist) / MODEL_FADE_DIST;
+}
+
+/******************************************************************************\
  Render the globe and updates tile visibility.
 \******************************************************************************/
 void G_render_globe(void)
 {
         int i;
 
+        /* Set the invisible tile boundary */
+        visible_range = -r_globe_radius + g_draw_distance.value.f;
+
         /* Render tile models */
         R_start_globe();
         for (i = 0; i < r_tiles; i++) {
+                float mod;
+
                 g_tiles[i].visible = is_visible(g_tiles[i].origin);
-                g_tiles[i].model_visible = is_visible(g_tiles[i].model.origin);
-                if (g_tiles[i].model_visible && g_tiles[i].model.data) {
-                        R_adjust_light_for(g_tiles[i].model.origin);
-                        R_model_render(&g_tiles[i].model);
+                mod = model_fade_mod(g_tiles[i].model.origin);
+                if (mod <= 0.f || !g_tiles[i].model.data)
+                        continue;
+
+                /* Fade the model in */
+                if (g_tiles[i].model_shown) {
+                        g_tiles[i].fade += MODEL_FADE * c_frame_sec;
+                        if (g_tiles[i].fade > 1.f)
+                                g_tiles[i].fade = 1.f;
                 }
+
+                /* Fade the model out */
+                else {
+                        g_tiles[i].fade -= MODEL_FADE * c_frame_sec;
+                        if (g_tiles[i].fade <= 0.f) {
+                                R_model_cleanup(&g_tiles[i].model);
+                                continue;
+                        }
+                }
+
+                R_adjust_light_for(g_tiles[i].model.origin);
+                g_tiles[i].model.modulate.a = g_tiles[i].fade * mod;
+                R_model_render(&g_tiles[i].model);
         }
         R_finish_globe();
 

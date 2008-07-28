@@ -19,6 +19,6 @@ c_var_t n_port;
 \******************************************************************************/
 void N_register_variables(void)
 {
-        C_register_integer(&n_port, "n_port", 32768, "server port");
+        C_register_integer(&n_port, "n_port", 32500, "server port");
 }
 

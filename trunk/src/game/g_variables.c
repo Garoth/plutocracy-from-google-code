@@ -23,7 +23,7 @@ c_var_t g_globe_forest, g_globe_islands, g_globe_island_size, g_globe_seed,
 c_var_t g_nation_colors[G_NATION_NAMES];
 
 /* Player settings */
-c_var_t g_name;
+c_var_t g_draw_distance, g_name;
 
 /* Server settings */
 c_var_t g_players;
@@ -65,6 +65,9 @@ void G_register_variables(void)
 
         /* Player settings */
         C_register_string(&g_name, "g_name", "Newbie", "player name");
+        C_register_float(&g_draw_distance, "g_draw_distance", 15.f,
+                         "model drawing distance from surface");
+        g_draw_distance.edit = C_VE_ANYTIME;
 
         /* Server settings */
         C_register_integer(&g_players, "g_players", 12,

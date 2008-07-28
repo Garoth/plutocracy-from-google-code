@@ -158,8 +158,9 @@ init:   /* Initialize ship structure */
         C_strncpy_buf(g_ships[index].name, C_va("Unnamed #%d", index));
 
         /* Place the ship on the tile */
-        g_tiles[tile].ship = index;
         G_set_tile_model(tile, g_ship_classes[name].model_path);
+        g_tiles[tile].ship = index;
+        g_tiles[tile].fade = 0.f;
 
         /* If we are the server, tell other clients */
         if (n_client_id == N_HOST_CLIENT_ID)
@@ -208,7 +209,7 @@ void G_render_ships(void)
                 }
 
                 /* Don't bother rendering if the ship isn't visible */
-                if (!tile->model_visible)
+                if (!tile->visible)
                         continue;
 
                 /* Draw the status display */
@@ -488,6 +489,7 @@ bool G_ship_move_to(int i, int new_tile)
                 return FALSE;
 
         /* Remove this ship from the old tile */
+        C_assert(g_ships[i].rear_tile != g_ships[i].tile);
         if (g_ships[i].rear_tile >= 0)
                 g_tiles[g_ships[i].rear_tile].ship = -1;
 
@@ -495,6 +497,8 @@ bool G_ship_move_to(int i, int new_tile)
         R_model_cleanup(&g_tiles[new_tile].model);
         g_tiles[new_tile].model = g_tiles[old_tile].model;
         g_tiles[new_tile].model.selected = FALSE;
+        g_tiles[new_tile].model_shown = TRUE;
+        g_tiles[new_tile].fade = 1.f;
         C_zero(&g_tiles[old_tile].model);
 
         g_ships[i].rear_tile = old_tile;
@@ -538,6 +542,7 @@ void G_update_ships(void)
                         }
 
                         /* Remove this ship from the old tile */
+                        C_assert(g_ships[i].rear_tile != g_ships[i].tile);
                         if (g_ships[i].rear_tile >= 0)
                                 g_tiles[g_ships[i].rear_tile].ship = -1;
 
@@ -563,6 +568,8 @@ void G_update_ships(void)
                         R_model_cleanup(&g_tiles[new_tile].model);
                         g_tiles[new_tile].model = g_tiles[old_tile].model;
                         g_tiles[new_tile].model.selected = FALSE;
+                        g_tiles[new_tile].model_shown = TRUE;
+                        g_tiles[new_tile].fade = 1.f;
                         C_zero(&g_tiles[old_tile].model);
 
                         /* Consume a path move */
@@ -573,7 +580,7 @@ void G_update_ships(void)
                                 R_select_path(new_tile, g_ships[i].path);
 
                         g_ships[i].progress = g_ships[i].progress - 1.f;
-                        g_ships[i].rear_tile = g_ships[i].tile;
+                        g_ships[i].rear_tile = old_tile;
                         g_ships[i].tile = new_tile;
                         g_tiles[new_tile].ship = i;
                 }
