@@ -104,3 +104,5 @@ extern int g_clients_max;
 /* g_variables.c */
 void G_register_variables(void);
 
+extern c_var_t g_draw_distance;
+

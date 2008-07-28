@@ -320,6 +320,7 @@ void I_global_key(void)
                 r_windowed.latched.n = !r_windowed.value.n;
                 r_windowed.has_latched = TRUE;
                 r_restart = TRUE;
+                I_update_video();
         }
 }
 

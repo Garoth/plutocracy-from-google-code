@@ -276,6 +276,7 @@ int I_ring_shown(void);
 void I_theme_ring(void);
 
 /* i_select.c */
+void I_select_change(i_select_t *, int index);
 void I_select_init(i_select_t *, const char *label, const char **list,
                    int initial, bool reverse);
 
@@ -300,6 +301,7 @@ extern c_var_t i_border, i_color, i_color_alt, i_debug, i_fade, i_scroll_speed,
 
 /* i_video.c */
 void I_init_video(i_window_t *);
+void I_update_video(void);
 
 /* i_widgets.c */
 const char *I_event_string(i_event_t);

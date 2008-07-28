@@ -150,7 +150,7 @@ extern g_building_type_t g_building_types[G_BUILDING_NAMES];
 void G_cleanup_globe(void);
 void G_init_globe(void);
 bool G_is_visible(c_vec3_t origin);
-void G_generate_globe(int islands, int island_size);
+void G_generate_globe(int subdiv4, int islands, int island_size);
 int G_set_tile_model(int tile, const char *path);
 
 extern g_tile_t g_tiles[R_TILES_MAX];
@@ -178,8 +178,8 @@ extern g_ship_class_t g_ship_classes[G_SHIP_NAMES];
 extern g_ship_t g_ships[G_SHIPS_MAX];
 
 /* g_variables.c */
-extern c_var_t g_draw_distance, g_globe_forest, g_globe_islands,
-               g_globe_island_size, g_globe_seed, g_globe_subdiv4, g_name,
+extern c_var_t g_globe_forest, g_globe_islands, g_globe_island_size,
+               g_globe_seed, g_globe_subdiv4, g_name,
                g_nation_colors[G_NATION_NAMES], g_players,
                g_test_globe, g_test_tile;
 

@@ -284,23 +284,28 @@ static int test_tiles_update(c_var_t *var, c_var_value_t value)
 void G_init_globe(void)
 {
         /* Generate a starter globe */
+        C_var_unlatch(&g_globe_subdiv4);
         C_var_unlatch(&g_globe_islands);
         C_var_unlatch(&g_globe_island_size);
-        G_generate_globe(g_globe_islands.value.n, g_globe_island_size.value.n);
+        if (g_globe_subdiv4.value.n < 3)
+                g_globe_subdiv4.value.n = 3;
+        if (g_globe_subdiv4.value.n > 5)
+                g_globe_subdiv4.value.n = 5;
+        G_generate_globe(g_globe_subdiv4.value.n, g_globe_islands.value.n,
+                         g_globe_island_size.value.n);
 }
 
 /******************************************************************************\
  Generate a new globe.
 \******************************************************************************/
-void G_generate_globe(int override_islands, int override_size)
+void G_generate_globe(int subdiv4, int override_islands, int override_size)
 {
         int i, islands, island_size;
 
         C_status("Generating globe");
         C_var_unlatch(&g_globe_seed);
-        C_var_unlatch(&g_globe_subdiv4);
         G_cleanup_globe();
-        R_generate_globe(g_globe_subdiv4.value.n);
+        R_generate_globe(subdiv4);
         C_rand_seed(g_globe_seed.value.n);
 
         /* Initialize tile structures */
@@ -314,7 +319,7 @@ void G_generate_globe(int override_islands, int override_size)
 
         /* Grow the islands and set terrain. Globe size affects the island
            growth parameters. */
-        switch (g_globe_subdiv4.value.n) {
+        switch (subdiv4) {
         case 5: islands = 125;
                 island_size = 220;
                 break;

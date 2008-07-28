@@ -47,7 +47,7 @@ int I_select_event(i_select_t *select, i_event_t event)
 /******************************************************************************\
  Selection changed.
 \******************************************************************************/
-static void select_change(i_select_t *select, int index)
+void I_select_change(i_select_t *select, int index)
 {
         i_widget_t *low, *high;
 
@@ -86,7 +86,7 @@ static void left_arrow_clicked(i_button_t *button)
 
         select = (i_select_t *)button->data;
         select->index += select->reverse ? 1 : -1;
-        select_change(select, select->index);
+        I_select_change(select, select->index);
 }
 
 /******************************************************************************\
@@ -98,7 +98,7 @@ static void right_arrow_clicked(i_button_t *button)
 
         select = (i_select_t *)button->data;
         select->index += select->reverse ? -1 : 1;
-        select_change(select, select->index);
+        I_select_change(select, select->index);
 }
 
 /******************************************************************************\
