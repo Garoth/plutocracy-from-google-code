@@ -70,8 +70,17 @@ static void chat_init(chat_t *chat, const char *name, i_color_t color,
                 return;
         }
 
-        /* Colored name */
-        I_label_init(&chat->name, C_va("%s: ", name));
+        /* /me action */
+        if ((text[0] == '/' || text[0] == '\\') &&
+            !strncasecmp(text + 1, "me ", 3)) {
+                I_label_init(&chat->name, C_va("*** %s", name));
+                text += 4;
+        }
+
+        /* Normal colored name */
+        else
+                I_label_init(&chat->name, C_va("%s:", name));
+
         chat->name.color = color;
         I_widget_add(&chat->widget, &chat->name.widget);
 

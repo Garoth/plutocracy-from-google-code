@@ -167,13 +167,14 @@ void G_process_click(int button)
 /******************************************************************************\
  The user has typed chat into the box and hit enter.
 \******************************************************************************/
-void G_input_chat(const char *message)
+void G_input_chat(char *message)
 {
         i_color_t color;
 
         if (!message || !message[0])
                 return;
         color = G_nation_to_color(g_clients[n_client_id].nation);
+        C_sanitize(message);
         I_print_chat(g_clients[n_client_id].name, color, message);
         N_send(N_SERVER_ID, "1s", G_CM_CHAT, message);
 }
