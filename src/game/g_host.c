@@ -41,8 +41,8 @@ static void send_ship_cargo(int client, int index)
 \******************************************************************************/
 static void corrupt_kick(int client)
 {
-        N_send(client, "12s", G_SM_POPUP, -1,
-               "Kicked for sending invalid data.");
+        N_send(client, "12ss", G_SM_POPUP, -1,
+               "g-host-invalid", "Your client sent invalid data.");
         N_drop_client(client);
 }
 
@@ -204,29 +204,30 @@ static void cm_chat(int client)
 /******************************************************************************\
  Initialize a new client.
 \******************************************************************************/
-static void client_connected(int client)
+static void init_client(int client)
 {
         int i;
 
+        /* The server already has all of the information */
         if (client == N_HOST_CLIENT_ID)
                 return;
 
         /* This client has already been counted toward the total, kick them
            if this is more players than we want */
         if (n_clients_len > g_clients_max) {
-                N_send(client, "1", G_SM_FULL);
+                N_send(client, "12ss", G_SM_POPUP,
+                       "g-host-full", "Server is full.");
                 N_drop_client(client);
                 return;
         }
 
         C_debug("Initializing client %d", client);
         g_clients[client].nation = G_NN_NONE;
+
+        /* Communicate the globe info */
         N_send(client, "1111422f", G_SM_INIT, G_PROTOCOL, client,
                g_clients_max, g_globe_seed.value.n, g_globe_islands.value.n,
                g_globe_island_size.value.n, r_solar_angle);
-
-        /* Start out nameless */
-        g_clients[client].name[0] = NUL;
 
         /* Tell them about everyone already here */
         for (i = 0; i < N_CLIENTS_MAX; i++)
@@ -234,16 +235,11 @@ static void client_connected(int client)
                         N_send(client, "111s", G_SM_CLIENT, i,
                                g_clients[i].nation, g_clients[i].name);
 
-        /* Tell everyone else about the new arrival */
-        N_broadcast_except(client, "11", G_SM_CONNECTED, client);
-
         /* Tell them about the buildings on them globe */
-        for (i = 0; i < r_tiles; i++) {
-                if (g_tiles[i].building == G_BN_NONE)
-                        continue;
-                N_send(client, "121f", G_SM_BUILDING, i, g_tiles[i].building,
-                       g_tiles[i].progress);
-        }
+        for (i = 0; i < r_tiles; i++)
+                if (g_tiles[i].building != G_BN_NONE)
+                        N_send(client, "121f", G_SM_BUILDING, i,
+                               g_tiles[i].building, g_tiles[i].progress);
 
         /* Tell them about all the ships on the globe */
         for (i = 0; i < G_SHIPS_MAX; i++) {
@@ -298,7 +294,8 @@ static void server_callback(int client, n_event_t event)
 
         /* Special client events */
         if (event == N_EV_CONNECTED) {
-                client_connected(client);
+                N_broadcast("11", G_SM_CONNECTED, client);
+                init_client(client);
                 return;
         } else if (event == N_EV_DISCONNECTED) {
                 client_disconnected(client);
@@ -350,7 +347,8 @@ static void initial_buildings(void)
 \******************************************************************************/
 void G_kick_client(int client)
 {
-        N_send(client, "12s", G_SM_POPUP, -1, "Kicked by host.");
+        N_send(client, "12ss", G_SM_POPUP, -1,
+               "g-host-kicked", "Kicked by host.");
         N_drop_client(client);
 }
 
@@ -359,8 +357,14 @@ void G_kick_client(int client)
 \******************************************************************************/
 void G_host_game(void)
 {
-        G_leave_game();
+        int i;
+
+        if (n_client_id != N_HOST_CLIENT_ID)
+                G_leave_game();
         G_reset_elements();
+
+        /* Start off nation-less */
+        I_select_nation(G_NN_NONE);
 
         /* Maximum number of clients */
         C_var_unlatch(&g_players);
@@ -387,6 +391,25 @@ void G_host_game(void)
                 g_globe_seed.value.n = (int)time(NULL);
         G_generate_globe(g_globe_islands.value.n, g_globe_island_size.value.n);
         initial_buildings();
+
+        /* Set our name */
+        C_var_unlatch(&g_name);
+        C_sanitize(g_name.value.s);
+        C_strncpy_buf(g_clients[N_HOST_CLIENT_ID].name, g_name.value.s);
+
+        /* Reinitialize any connected clients */
+        for (i = 0; i < N_CLIENTS_MAX; i++) {
+                if (!n_clients[i].connected)
+                        continue;
+                init_client(i);
+                I_configure_player(i, g_clients[i].name,
+                                   G_nation_to_color(g_clients[i].nation),
+                                   TRUE);
+        }
+
+        /* Tell remote clients that we rehosted */
+        N_broadcast_except(N_HOST_CLIENT_ID, "12ss", G_SM_POPUP, -1,
+                           "g-host-rehost", "Host started a new game.");
 
         I_leave_limbo();
         I_popup(NULL, "Hosted a new game.");

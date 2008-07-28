@@ -44,6 +44,8 @@ int N_start_server(n_callback_f server_func, n_callback_f client_func)
 {
         struct sockaddr_in addr;
 
+        if (n_client_id == N_HOST_CLIENT_ID)
+                return TRUE;
         N_disconnect();
 
         /* Reinitialize clients table */

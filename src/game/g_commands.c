@@ -185,7 +185,6 @@ void G_input_chat(char *message)
 void G_join_game(const char *address)
 {
         G_leave_game();
-        G_reset_elements();
 
         /* Connect to server */
         if (N_connect(address, (n_callback_f)G_client_callback)) {

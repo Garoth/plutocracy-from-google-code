@@ -129,18 +129,6 @@ void G_init_elements(void)
 }
 
 /******************************************************************************\
- Reset game structures.
-\******************************************************************************/
-void G_reset_elements(void)
-{
-        memset(g_ships, 0, sizeof (g_ships));
-        memset(g_clients, 0, sizeof (g_clients));
-
-        /* The server "client" has fixed information */
-        g_clients[N_SERVER_ID].nation = G_NN_PIRATE;
-}
-
-/******************************************************************************\
  Set a tile's building.
 \******************************************************************************/
 void G_build(int tile, g_building_name_t name, float progress)
@@ -156,5 +144,27 @@ void G_build(int tile, g_building_name_t name, float progress)
         g_tiles[tile].building = name;
         g_tiles[tile].progress = progress;
         G_set_tile_model(tile, g_building_types[name].model_path);
+}
+
+/******************************************************************************\
+ Reset game structures.
+\******************************************************************************/
+void G_reset_elements(void)
+{
+        int i;
+
+        /* Reset ships */
+        memset(g_ships, 0, sizeof (g_ships));
+
+        /* Reset clients, keeping names */
+        for (i = 0; i < N_CLIENTS_MAX; i++)
+                g_clients[i].nation = G_NN_NONE;
+
+        /* Reset tiles */
+        for (i = 0; i < r_tiles; i++)
+                G_build(i, G_BN_NONE, 0.f);
+
+        /* The server "client" has fixed information */
+        g_clients[N_SERVER_ID].nation = G_NN_PIRATE;
 }
 
