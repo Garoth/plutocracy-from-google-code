@@ -166,5 +166,8 @@ void G_reset_elements(void)
 
         /* The server "client" has fixed information */
         g_clients[N_SERVER_ID].nation = G_NN_PIRATE;
+
+        /* We can reuse ship names now */
+        G_reset_name_counts();
 }
 

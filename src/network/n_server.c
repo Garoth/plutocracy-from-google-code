@@ -38,11 +38,11 @@ void N_stop_server(void)
 
 /******************************************************************************\
  Open server sockets and begin accepting connections. Returns TRUE on success.
- TODO: Carry over any already connected clients
 \******************************************************************************/
 int N_start_server(n_callback_f server_func, n_callback_f client_func)
 {
         struct sockaddr_in addr;
+        int yes;
 
         if (n_client_id == N_HOST_CLIENT_ID)
                 return TRUE;
@@ -68,6 +68,12 @@ int N_start_server(n_callback_f server_func, n_callback_f client_func)
         /* Start the listen server and accept connections */
         C_var_unlatch(&n_port);
         listen_socket = socket(PF_INET, SOCK_STREAM, 0);
+
+        /* Disable "port in use" error */
+        yes = 1;
+        setsockopt(listen_socket, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof (yes));
+
+        /* Bind the listen socket to our port */
         C_zero(&addr);
         addr.sin_family = AF_INET;
         addr.sin_port = htons(n_port.value.n);

@@ -19,7 +19,7 @@
 #define ISLAND_NUM 128
 
 /* Maximum island size */
-#define ISLAND_SIZE 384
+#define ISLAND_SIZE 512
 
 /* Island size will vary up to this proportion. This is a good way to control
    how "boring" the terrain generator is. With high variance there are a lot of

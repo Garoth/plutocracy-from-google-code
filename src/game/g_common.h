@@ -160,6 +160,7 @@ void G_count_name(g_name_type_t, const char *name);
 void G_get_name(g_name_type_t, char *buffer, int buffer_size);
 #define G_get_name_buf(t, b) G_get_name(t, b, sizeof (b))
 void G_load_names(void);
+void G_reset_name_counts(void);
 
 /* g_ship.c */
 void G_cleanup_ships(void);

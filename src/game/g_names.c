@@ -93,8 +93,7 @@ void G_get_name(g_name_type_t type, char *buf, int size)
 
         /* Append a number if its been used already */
         if (lists[type].names[low].count++ > 0) {
-                snprintf(buf, size, "%s %d", lists[type].names[low].s,
-                         lists[type].names[low].count);
+                C_suffix(buf, C_va(" %d", lists[type].names[low].count), size);
                 return;
         }
 
@@ -114,5 +113,17 @@ void G_count_name(g_name_type_t type, const char *name)
                         lists[type].names[i].count++;
                         return;
                 }
+}
+
+/******************************************************************************\
+ Reset name counts.
+\******************************************************************************/
+void G_reset_name_counts(void)
+{
+        int i, j;
+
+        for (i = 0; i < G_NAME_TYPES; i++)
+                for (j = 0; j < lists[i].size; j++)
+                        lists[i].names[j].count = 0;
 }
 

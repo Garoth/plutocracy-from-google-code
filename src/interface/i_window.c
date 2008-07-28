@@ -275,25 +275,26 @@ int I_toolbar_add_button(i_toolbar_t *toolbar, const char *icon,
 /******************************************************************************\
  Enable or disable a toolbar's button.
 \******************************************************************************/
-void I_toolbar_enable(i_toolbar_t *toolbar, int button, bool enable)
+void I_toolbar_enable(i_toolbar_t *toolbar, int i, bool enable)
 {
-        C_assert(button >= 0 && button < toolbar->children);
+        C_assert(i >= 0 && i < toolbar->children);
 
-        /* Enable the button */
-        if (enable) {
-                if (toolbar->buttons[button].widget.state == I_WS_DISABLED) {
-                        toolbar->buttons[button].widget.state = I_WS_READY;
-                        if (toolbar->was_open[button])
-                                I_widget_event(&toolbar->windows[button].widget,
-                                               I_EV_SHOW);
-                }
+        /* Disable the button and hide its window */
+        if (!enable) {
+                toolbar->buttons[i].widget.state = I_WS_DISABLED;
+                toolbar->was_open[i] = toolbar->windows[i].widget.shown;
+                I_widget_event(&toolbar->windows[i].widget, I_EV_HIDE);
                 return;
         }
 
-        /* Disable the button and hide its window */
-        toolbar->buttons[button].widget.state = I_WS_DISABLED;
-        toolbar->was_open[button] = toolbar->windows[button].widget.shown;
-        I_widget_event(&toolbar->windows[button].widget, I_EV_HIDE);
+        /* Enable the button */
+        if (toolbar->buttons[i].widget.state != I_WS_DISABLED)
+                return;
+        toolbar->buttons[i].widget.state = I_WS_READY;
+        if (toolbar->was_open[i] && !toolbar->open_window) {
+                I_widget_event(&toolbar->windows[i].widget, I_EV_SHOW);
+                toolbar->open_window = toolbar->windows + i;
+        }
 }
 
 /******************************************************************************\
