@@ -601,6 +601,8 @@ void G_ship_select(int index)
                 own = g_ships[index].client == n_client_id;
                 if (own && g_selected_ship == index)
                         R_select_path(g_ships[index].tile, g_ships[index].path);
+                else
+                        R_select_path(-1, NULL);
                 client = g_ships[index].client;
                 color = G_nation_to_color(g_clients[client].nation);
                 class_name = g_ships[index].class_name;
