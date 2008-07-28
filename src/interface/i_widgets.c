@@ -158,7 +158,9 @@ static void expand_children(i_widget_t *widget, c_vec2_t size, int expanders)
         size = C_vec2_divf(size, (float)expanders);
         offset = C_vec2(0.f, 0.f);
         for (child = widget->child; child; child = child->next) {
-                if (!child->expand || !child->shown) {
+                if (!child->shown)
+                        continue;
+                if (!child->expand) {
                         I_widget_move(child, C_vec2_add(child->origin, offset));
                         continue;
                 }
@@ -189,8 +191,6 @@ void I_widget_pack(i_widget_t *widget, i_pack_t pack, i_fit_t fit)
 
                 /* Skip invisible children */
                 if (!child->shown) {
-                        child->origin = origin;
-                        child->size = C_vec2(0.f, 0.f);
                         I_widget_event(child, I_EV_CONFIGURE);
                         continue;
                 }
@@ -293,16 +293,16 @@ c_vec2_t I_widget_child_bounds(const i_widget_t *widget)
         c_vec2_t bounds, corner;
         i_widget_t *child;
 
-        child = widget->child;
         bounds = C_vec2(0.f, 0.f);
-        while (child) {
+        for (child = widget->child; child; child = child->next) {
+                if (!child->shown)
+                        continue;
                 corner = C_vec2_add(C_vec2_sub(child->origin, widget->origin),
                                     child->size);
                 if (bounds.x < corner.x)
                         bounds.x = corner.x;
                 if (bounds.y < corner.y)
                         bounds.y = corner.y;
-                child = child->next;
         }
         return bounds;
 }

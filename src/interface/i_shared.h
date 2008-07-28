@@ -63,6 +63,10 @@ extern int i_limbo;
 /* i_nations.c */
 void I_select_nation(int nation);
 
+/* i_players.c */
+void I_configure_player(int index, const char *name, i_color_t, bool host);
+void I_configure_player_num(int num);
+
 /* i_ring.c */
 void I_reset_ring(void);
 void I_add_to_ring(i_ring_icon_t, int enabled);

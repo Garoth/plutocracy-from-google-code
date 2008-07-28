@@ -118,6 +118,11 @@ static void sm_affiliate(void)
         /* Reselect the ship if its client's nation changed */
         G_ship_reselect(-1, client);
 
+        /* Update players window */
+        I_configure_player(client, g_clients[client].name,
+                           G_nation_to_color(g_clients[client].nation),
+                           n_client_id == N_HOST_CLIENT_ID);
+
         /* Affiliation message might have a goto tile attached */
         goto_pos = NULL;
         if (tile >= 0 && tile < r_tiles)
@@ -163,6 +168,11 @@ static void sm_client(void)
         g_clients[client].nation = N_receive_char();
         N_receive_string_buf(g_clients[client].name);
         C_debug("Client %d is '%s'", client, g_clients[client].name);
+
+        /* Update players window */
+        I_configure_player(client, g_clients[client].name,
+                           G_nation_to_color(g_clients[client].nation),
+                           n_client_id == N_HOST_CLIENT_ID);
 }
 
 /******************************************************************************\
@@ -194,19 +204,26 @@ static void sm_init(void)
         }
         n_clients[n_client_id].connected = TRUE;
 
-        /* Set random seed */
-        seed = N_receive_int();
-
-        /* Get solar angle */
-        r_solar_angle = N_receive_float();
+        /* Maximum number of clients */
+        g_clients_max = N_receive_char();
+        if (g_clients_max < 1 || g_clients_max > N_CLIENTS_MAX) {
+                corrupt_disconnect();
+                return;
+        }
+        I_configure_player_num(g_clients_max);
+        C_debug("Client ID %d of %d", n_client_id, g_clients_max);
 
         /* Generate matching globe */
+        seed = N_receive_int();
         islands = N_receive_short();
         island_size = N_receive_short();
         if (seed != g_globe_seed.value.n) {
                 g_globe_seed.value.n = seed;
                 G_generate_globe(islands, island_size);
         }
+
+        /* Get solar angle */
+        r_solar_angle = N_receive_float();
 
         /* Start off nation-less */
         I_select_nation(G_NN_NONE);
@@ -226,6 +243,11 @@ static void sm_name(void)
                 return;
         C_strncpy_buf(old_name, g_clients[client].name);
         N_receive_string_buf(g_clients[client].name);
+
+        /* Update players window */
+        I_configure_player(client, g_clients[client].name,
+                           G_nation_to_color(g_clients[client].nation),
+                           n_client_id == N_HOST_CLIENT_ID);
 
         /* The first name-change on connect */
         if (!old_name[0])
@@ -418,7 +440,13 @@ void G_client_callback(int client, n_event_t event)
                 n_clients[i].connected = FALSE;
                 I_print_chat(C_va("%s left the game.", g_clients[i].name),
                              I_COLOR, NULL);
+                I_configure_player(i, NULL, I_COLOR, FALSE);
                 C_debug("Client %d disconnected", i);
+                break;
+
+        /* Server is full */
+        case G_SM_FULL:
+                I_popup(NULL, "Server is full.");
                 break;
 
         default:

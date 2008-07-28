@@ -38,7 +38,7 @@ int I_label_event(i_label_t *label, i_event_t event)
                                    label->widget.size.x, i_shadow.value.f,
                                    FALSE, label->buffer);
                 label->widget.size.y = label->text.size.y;
-                if (label->width <= 0.f)
+                if (!label->width)
                         label->widget.size.x = label->text.size.x;
                 label->text.modulate = i_colors[label->color];
         case I_EV_MOVED:
@@ -108,14 +108,28 @@ int I_box_event(i_box_t *box, i_event_t event)
 {
         if (event != I_EV_CONFIGURE)
                 return TRUE;
+
+        /* If the non-packing width was specified ahead of time, set it now */
         if (box->width > 0.f) {
                 if (box->pack_children == I_PACK_H)
                         box->widget.size.y = box->width;
                 else if (box->pack_children == I_PACK_V)
                         box->widget.size.x = box->width;
         }
+
         I_widget_pack(&box->widget, box->pack_children, box->fit);
-        box->widget.size = I_widget_child_bounds(&box->widget);
+
+        /* Otherwise we can get it from looking at the size of our children */
+        if (box->width <= 0.f) {
+                c_vec2_t bounds;
+
+                bounds = I_widget_child_bounds(&box->widget);
+                if (box->pack_children == I_PACK_H)
+                        box->widget.size.y = bounds.y;
+                else if (box->pack_children == I_PACK_H)
+                        box->widget.size.x = bounds.x;
+        }
+
         return FALSE;
 }
 

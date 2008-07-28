@@ -25,6 +25,9 @@ c_var_t g_nation_colors[G_NATION_NAMES];
 /* Player settings */
 c_var_t g_name;
 
+/* Server settings */
+c_var_t g_players;
+
 /******************************************************************************\
  Registers the game namespace variables.
 \******************************************************************************/
@@ -62,5 +65,9 @@ void G_register_variables(void)
 
         /* Player settings */
         C_register_string(&g_name, "g_name", "Newbie", "player name");
+
+        /* Server settings */
+        C_register_integer(&g_players, "g_players", 12,
+                           "maximum number of players");
 }
 

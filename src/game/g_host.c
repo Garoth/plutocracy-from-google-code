@@ -16,6 +16,8 @@
 
 #include "g_common.h"
 
+int g_clients_max;
+
 /******************************************************************************\
  Send updated cargo information to clients.
 \******************************************************************************/
@@ -41,7 +43,7 @@ static void corrupt_kick(int client)
 {
         N_send(client, "12s", G_SM_POPUP, -1,
                "Kicked for sending invalid data.");
-        N_kick_client(client);
+        N_drop_client(client);
 }
 
 /******************************************************************************\
@@ -119,18 +121,15 @@ static void cm_name(int client)
         char name_buf[G_NAME_MAX];
 
         N_receive_string_buf(name_buf);
+
+        /* Must have a valid name */
         C_sanitize(name_buf);
+        if (!name_buf[0])
+                C_strncpy_buf(name_buf, "Newbie");
 
         /* Didn't actually change names */
         if (!strcmp(name_buf, g_clients[client].name))
                 return;
-
-        /* Is this a valid name?
-           TODO: Scan for all-space names etc */
-        if (!name_buf[0]) {
-                N_send(client, "12s", G_SM_POPUP, -1, "Invalid name.");
-                C_strncpy_buf(name_buf, "Newbie");
-        }
 
         /* See if this name is taken */
         name_len = C_strlen(name_buf);
@@ -211,11 +210,20 @@ static void client_connected(int client)
 
         if (client == N_HOST_CLIENT_ID)
                 return;
+
+        /* This client has already been counted toward the total, kick them
+           if this is more players than we want */
+        if (n_clients_len > g_clients_max) {
+                N_send(client, "1", G_SM_FULL);
+                N_drop_client(client);
+                return;
+        }
+
         C_debug("Initializing client %d", client);
         g_clients[client].nation = G_NN_NONE;
-        N_send(client, "1114f22", G_SM_INIT, G_PROTOCOL, client,
-               g_globe_seed.value.n, r_solar_angle, g_globe_islands.value.n,
-               g_globe_island_size.value.n);
+        N_send(client, "1111422f", G_SM_INIT, G_PROTOCOL, client,
+               g_clients_max, g_globe_seed.value.n, g_globe_islands.value.n,
+               g_globe_island_size.value.n, r_solar_angle);
 
         /* Start out nameless */
         g_clients[client].name[0] = NUL;
@@ -338,12 +346,29 @@ static void initial_buildings(void)
 }
 
 /******************************************************************************\
+ Kick a client via the interface.
+\******************************************************************************/
+void G_kick_client(int client)
+{
+        N_send(client, "12s", G_SM_POPUP, -1, "Kicked by host.");
+        N_drop_client(client);
+}
+
+/******************************************************************************\
  Host a new game.
 \******************************************************************************/
 void G_host_game(void)
 {
         G_leave_game();
         G_reset_elements();
+
+        /* Maximum number of clients */
+        C_var_unlatch(&g_players);
+        if (g_players.value.n < 1)
+                g_players.value.n = 1;
+        if (g_players.value.n > N_CLIENTS_MAX)
+                g_players.value.n = N_CLIENTS_MAX;
+        I_configure_player_num(g_clients_max = g_players.value.n);
 
         /* Start the network server */
         if (!N_start_server((n_callback_f)server_callback,

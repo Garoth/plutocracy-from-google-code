@@ -17,7 +17,7 @@
 #include "g_shared.h"
 
 /* Network protocol, increment when no longer compatible */
-#define G_PROTOCOL 1
+#define G_PROTOCOL 2
 
 /* Invalid island index */
 #define G_ISLAND_INVALID 255
@@ -47,6 +47,7 @@ typedef enum {
         /* Synchronization messages */
         G_SM_INIT,
         G_SM_CLIENT,
+        G_SM_FULL,
 
         /* Messages for when clients change status */
         G_SM_CONNECTED,
@@ -179,5 +180,6 @@ extern g_ship_t g_ships[G_SHIPS_MAX];
 /* g_variables.c */
 extern c_var_t g_globe_forest, g_globe_islands, g_globe_island_size,
                g_globe_seed, g_globe_subdiv4, g_name,
-               g_nation_colors[G_NATION_NAMES], g_test_globe, g_test_tile;
+               g_nation_colors[G_NATION_NAMES], g_players,
+               g_test_globe, g_test_tile;
 
