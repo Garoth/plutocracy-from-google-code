@@ -12,6 +12,9 @@
 
 #include "n_common.h"
 
+/* Connection timeout in seconds */
+#define CONNECT_TIMEOUT 1
+
 /* ID of this client in the game */
 n_client_id_t n_client_id;
 
@@ -50,6 +53,8 @@ bool N_connect(const char *address, n_callback_f client_func)
 {
         struct sockaddr_in addr;
         struct hostent *host;
+        struct timeval tv;
+        fd_set readfds;
         int i, last_colon, port;
         char buffer[64], *host_ip;
 
@@ -72,24 +77,38 @@ bool N_connect(const char *address, n_callback_f client_func)
 
         /* Resolve hostnames */
         host = gethostbyname(address);
+        if (!host) {
+                C_warning("Failed to resolve hostname '%s'", address);
+                return FALSE;
+        }
         host_ip = inet_ntoa(*((struct in_addr *)host->h_addr));
 
         /* Connect to the server */
         n_client_socket = socket(PF_INET, SOCK_STREAM, 0);
+        N_socket_no_block(n_client_socket);
         C_zero(&addr);
         addr.sin_family = AF_INET;
         addr.sin_port = htons(port);
         addr.sin_addr.s_addr = inet_addr(host_ip);
-        if (connect(n_client_socket, (struct sockaddr *)&addr,
-                    sizeof (addr)) < 0) {
+        connect(n_client_socket, (struct sockaddr *)&addr, sizeof (addr));
+
+        /* Connection timeout */
+        tv.tv_sec = CONNECT_TIMEOUT;
+        tv.tv_usec = 0;
+        FD_ZERO(&readfds);
+        FD_SET(n_client_socket, &readfds);
+        select(n_client_socket + 1, &readfds, NULL, NULL, &tv);
+
+        /* Connection failed */
+        if (!FD_ISSET(n_client_socket, &readfds)) {
                 closesocket(n_client_socket);
                 n_client_socket = INVALID_SOCKET;
                 n_client_id = N_INVALID_ID;
-                C_debug("Failed to connect to %s:%d", host_ip, port);
+                C_warning("Failed to connect to %s:%d", host_ip, port);
                 return FALSE;
         }
-        N_socket_no_block(n_client_socket);
 
+        /* Connected */
         n_client_id = N_UNASSIGNED_ID;
         n_client_func(N_SERVER_ID, N_EV_CONNECTED);
         C_debug("Connected to %s:%d", host_ip, port);

@@ -134,18 +134,12 @@ static void cm_name(int client)
         /* See if this name is taken */
         name_len = C_strlen(name_buf);
         for (suffixes = 2, i = 0; i < N_CLIENTS_MAX; i++) {
-                const char *suffix;
-                int suffix_len;
-
                 if (i == client || strcasecmp(name_buf, g_clients[i].name))
                         continue;
 
                 /* Its taken, add a suffix and try again */
-                suffix = C_va(" %d", suffixes);
-                suffix_len = C_strlen(suffix) + 1;
-                if (name_len > G_NAME_MAX - suffix_len)
-                        name_len = G_NAME_MAX - suffix_len;
-                memcpy(name_buf + name_len, suffix, suffix_len);
+                name_buf[name_len] = NUL;
+                name_len = C_suffix_buf(name_buf, C_va(" %d", suffixes));
 
                 /* Start over */
                 i = -1;

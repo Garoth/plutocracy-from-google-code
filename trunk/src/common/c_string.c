@@ -552,3 +552,19 @@ void C_sanitize(char *string)
         }
 }
 
+/******************************************************************************\
+ Add a suffix to a string buffer making sure that it doesn't overflow. Returns
+ the new unsuffixed length of the string.
+\******************************************************************************/
+int C_suffix(char *string, const char *suffix, int size)
+{
+        int string_len, suffix_len;
+
+        suffix_len = C_strlen(suffix) + 1;
+        string_len = C_strlen(string);
+        if (string_len > size - suffix_len)
+                string_len = size - suffix_len;
+        memcpy(string + string_len, suffix, suffix_len);
+        return string_len;
+}
+

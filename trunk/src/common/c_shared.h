@@ -356,6 +356,8 @@ char *C_strdup_full(const char *file, int line, const char *func, const char *);
 int C_strlen(const char *);
 int C_strncpy(char *dest, const char *src, int len);
 #define C_strncpy_buf(d, s) C_strncpy(d, s, sizeof (d))
+int C_suffix(char *string, const char *suffix, int size);
+#define C_suffix_buf(str, suf) C_suffix(str, suf, sizeof (str))
 int C_utf8_append(char *dest, int *dest_i, int dest_sz, const char *src);
 char *C_utf8_encode(unsigned int unicode, int *len);
 int C_utf8_index(char *str, int n);
