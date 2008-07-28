@@ -83,7 +83,7 @@ static void sm_popup(void)
 {
         c_vec3_t *goto_pos;
         int focus_tile;
-        char message[256];
+        char token[32], message[256];
 
         focus_tile = N_receive_short();
         if (focus_tile >= r_tiles) {
@@ -91,8 +91,9 @@ static void sm_popup(void)
                 return;
         }
         goto_pos = focus_tile >= 0 ? &g_tiles[focus_tile].origin : NULL;
+        N_receive_string(token, sizeof (token));
         N_receive_string(message, sizeof (message));
-        I_popup(goto_pos, message);
+        I_popup(goto_pos, C_str(token, message));
 }
 
 /******************************************************************************\
@@ -181,15 +182,19 @@ static void sm_client(void)
 static void sm_init(void)
 {
         int protocol, seed, islands, island_size;
-        const char *msg;
 
         C_assert(n_client_id != N_HOST_CLIENT_ID);
+        G_reset_elements();
+
+        /* Start off nation-less */
+        I_select_nation(G_NN_NONE);
 
         /* Check the server's protocol */
         protocol = N_receive_char();
         if (protocol != G_PROTOCOL) {
-                msg = C_va("Server protocol (%d) does not match "
-                           "client protocol (%d), disconnecting.",
+                const char *msg;
+
+                msg = C_va("Protocol mismatch (server %d, client %d).",
                            protocol, G_PROTOCOL);
                 I_popup(NULL, C_str("g-incompatible", msg));
                 N_disconnect();
@@ -224,9 +229,6 @@ static void sm_init(void)
 
         /* Get solar angle */
         r_solar_angle = N_receive_float();
-
-        /* Start off nation-less */
-        I_select_nation(G_NN_NONE);
 
         I_leave_limbo();
 }
@@ -345,6 +347,10 @@ void G_client_callback(int client, n_event_t event)
 
         /* Connected */
         if (event == N_EV_CONNECTED) {
+                if (n_client_id == N_HOST_CLIENT_ID)
+                        return;
+
+                /* Send out our name */
                 name_update(&g_name, g_name.value);
                 return;
         }
@@ -442,11 +448,6 @@ void G_client_callback(int client, n_event_t event)
                              I_COLOR, NULL);
                 I_configure_player(i, NULL, I_COLOR, FALSE);
                 C_debug("Client %d disconnected", i);
-                break;
-
-        /* Server is full */
-        case G_SM_FULL:
-                I_popup(NULL, "Server is full.");
                 break;
 
         default:

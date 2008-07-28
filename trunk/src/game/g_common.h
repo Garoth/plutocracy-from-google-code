@@ -16,7 +16,8 @@
 #include "../network/n_shared.h"
 #include "g_shared.h"
 
-/* Network protocol, increment when no longer compatible */
+/* Network protocol used by the client and server. Increment when no longer
+   compatible before releasing a new version of the game.*/
 #define G_PROTOCOL 2
 
 /* Invalid island index */
@@ -47,7 +48,6 @@ typedef enum {
         /* Synchronization messages */
         G_SM_INIT,
         G_SM_CLIENT,
-        G_SM_FULL,
 
         /* Messages for when clients change status */
         G_SM_CONNECTED,
@@ -105,7 +105,6 @@ typedef struct g_tile {
 
 /* Structure for each player */
 typedef struct g_client {
-        c_count_t commands;
         int nation;
         char name[G_NAME_MAX];
 } g_client_t;
