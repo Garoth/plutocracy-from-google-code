@@ -79,6 +79,14 @@ static void cm_affiliate(int client)
                         g_ships[ship].cargo.amounts[G_CT_RATIONS] = 20;
                         send_ship_cargo(N_BROADCAST_ID, ship);
                 }
+
+                /* And spawn a third ship for testing also */
+                if ((ship = G_spawn_ship(client, tile, G_SN_GALLEON, -1)) >= 0) {
+                        g_ships[ship].cargo.amounts[G_CT_GOLD] = 1500;
+                        g_ships[ship].cargo.amounts[G_CT_CREW] = 30;
+                        g_ships[ship].cargo.amounts[G_CT_RATIONS] = 40;
+                        send_ship_cargo(N_BROADCAST_ID, ship);
+                }
         }
 
         N_broadcast("1112", G_SM_AFFILIATE, client, nation, tile);
