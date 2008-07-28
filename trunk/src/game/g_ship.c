@@ -58,6 +58,14 @@ void G_init_ships(void)
         pc->speed = 0.75f;
         pc->health = 100;
         pc->cargo = 150;
+
+        /* Galleon */
+        pc = g_ship_classes + G_SN_GALLEON;
+        pc->name = C_str("g-ship-galleon", "Galleon");
+        pc->model_path = "models/ship/galleon.plum";
+        pc->speed = 0.5f;
+        pc->health = 200;
+        pc->cargo = 200;
 }
 
 /******************************************************************************\
