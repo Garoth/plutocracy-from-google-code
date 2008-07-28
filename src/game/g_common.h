@@ -98,9 +98,9 @@ typedef struct g_tile {
         g_building_name_t building;
         r_model_t model;
         c_vec3_t origin, forward;
-        float progress;
+        float progress, fade;
         int island, ship, search_parent, search_stamp;
-        bool visible, model_visible;
+        bool model_shown, visible;
 } g_tile_t;
 
 /* Structure for each player */
@@ -177,8 +177,8 @@ extern g_ship_class_t g_ship_classes[G_SHIP_NAMES];
 extern g_ship_t g_ships[G_SHIPS_MAX];
 
 /* g_variables.c */
-extern c_var_t g_globe_forest, g_globe_islands, g_globe_island_size,
-               g_globe_seed, g_globe_subdiv4, g_name,
+extern c_var_t g_draw_distance, g_globe_forest, g_globe_islands,
+               g_globe_island_size, g_globe_seed, g_globe_subdiv4, g_name,
                g_nation_colors[G_NATION_NAMES], g_players,
                g_test_globe, g_test_tile;
 

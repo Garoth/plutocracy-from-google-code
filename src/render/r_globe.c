@@ -19,14 +19,17 @@
 #define SELECT_AMP 0.250f
 #define SELECT_MODULATE 0.67f
 
+/* Current selection color */
+c_color_t r_select_color;
+
+/* Globe material colors after modulation */
+c_color_t r_material[3];
+
 /* Modulates the globe material colors */
 float r_globe_light;
 
 /* Maximum zoom distance from globe surface */
 float r_zoom_max;
-
-/* Current selection color */
-c_color_t r_select_color;
 
 /* Select overlays */
 static r_vertex3_t select_verts[3], path_verts[R_PATH_MAX * 3];
@@ -34,8 +37,8 @@ static r_texture_t *select_tex[R_SELECT_TYPES];
 static r_select_type_t select_type;
 static int selected_tile, path_len;
 
-/* Globe rendering */
-static c_color_t globe_colors[3];
+/* Original globe colors */
+static c_color_t material_colors[3];
 
 /******************************************************************************\
  Initialize globe data.
@@ -59,7 +62,7 @@ void R_init_globe(void)
         /* Setup globe material properties */
         for (i = 0; i < 3; i++)
                 C_var_update_data(r_globe_colors + i, C_color_update,
-                                  globe_colors + i);
+                                  material_colors + i);
 
         /* Clear path */
         path_len = 0;
@@ -78,29 +81,25 @@ void R_cleanup_globe(void)
 }
 
 /******************************************************************************\
- Returns the modulated globe color.
-\******************************************************************************/
-static GLfloat *modulate_globe_color(int i)
-{
-        static c_color_t color;
-
-        color = C_color_scalef(globe_colors[i], r_globe_light);
-        color.a = globe_colors[i].a;
-        return (GLfloat *)&color;
-}
-
-/******************************************************************************\
  Start rendering the globe.
 \******************************************************************************/
 void R_start_globe(void)
 {
+        int i;
+
         R_push_mode(R_MODE_3D);
 
         /* Set globe material properties */
         glMateriali(GL_FRONT, GL_SHININESS, r_globe_shininess.value.n);
-        glMaterialfv(GL_FRONT, GL_AMBIENT, modulate_globe_color(0));
-        glMaterialfv(GL_FRONT, GL_DIFFUSE, modulate_globe_color(1));
-        glMaterialfv(GL_FRONT, GL_SPECULAR, modulate_globe_color(2));
+        for (i = 0; i < 3; i++) {
+                r_material[i].r = material_colors[i].r * r_globe_light;
+                r_material[i].g = material_colors[i].g * r_globe_light;
+                r_material[i].b = material_colors[i].b * r_globe_light;
+                r_material[i].a = material_colors[i].a;
+        }
+        glMaterialfv(GL_FRONT, GL_AMBIENT, (GLfloat *)r_material);
+        glMaterialfv(GL_FRONT, GL_DIFFUSE, (GLfloat *)(r_material + 1));
+        glMaterialfv(GL_FRONT, GL_SPECULAR, (GLfloat *)(r_material + 2));
 
         R_start_atmosphere();
         R_enable_light();

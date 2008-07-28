@@ -84,6 +84,7 @@ typedef struct r_texture r_texture_t;
 /* Model instance type */
 typedef struct r_model {
         c_vec3_t origin, normal, forward;
+        c_color_t modulate;
         GLfloat matrix[16];
         struct r_model_data *data;
         float scale;

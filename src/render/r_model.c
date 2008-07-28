@@ -398,6 +398,7 @@ int R_model_init(r_model_t *model, const char *filename, bool cull)
         model->time_left = -1;
         model->normal = C_vec3(0.f, 1.f, 0.f);
         model->forward = C_vec3(0.f, 0.f, 1.f);
+        model->modulate = C_color(1.f, 1.f, 1.f, 1.f);
 
         /* Start playing the first animation */
         if (model->data && model->data->anims_len)
@@ -459,7 +460,7 @@ void R_model_render(r_model_t *model)
         mesh_t *meshes;
         int i;
 
-        if (!model || !model->data)
+        if (!model || !model->data || model->modulate.a <= 0.f)
                 return;
         R_push_mode(R_MODE_3D);
 
@@ -506,8 +507,23 @@ void R_model_render(r_model_t *model)
                 R_gl_enable(GL_MULTISAMPLE);
 
         /* Unlit models need to temporarily disable lighting */
-        if (model->unlit)
+        if (model->unlit) {
                 R_gl_disable(GL_LIGHTING);
+                glColor4f(model->modulate.r, model->modulate.g,
+                          model->modulate.b, model->modulate.a);
+        }
+
+        /* Lit models that are modulated need to set material colors */
+        else {
+                c_color_t color;
+
+                color = C_color_scale(r_material[0], model->modulate);
+                glMaterialfv(GL_FRONT, GL_AMBIENT, (GLfloat *)&color);
+                color = C_color_scale(r_material[1], model->modulate);
+                glMaterialfv(GL_FRONT, GL_DIFFUSE, (GLfloat *)&color);
+                color = C_color_scale(r_material[2], model->modulate);
+                glMaterialfv(GL_FRONT, GL_SPECULAR, (GLfloat *)&color);
+        }
 
         /* If this model is selected, multitexture the selected texture */
         if (model->selected && r_white_tex && r_ext.multitexture > 1) {
