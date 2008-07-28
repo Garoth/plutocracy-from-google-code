@@ -31,8 +31,8 @@ i_widget_t i_root;
 /* TRUE if the interface is in limbo mode */
 int i_limbo;
 
-/* Index of the ship button on the right toolbar */
-int i_ship_button;
+/* Indices of buttons on the right toolbar */
+int i_ship_button, i_players_button;
 
 /* Right toolbar */
 i_toolbar_t i_right_toolbar;
@@ -368,6 +368,9 @@ void I_init(void)
         i_ship_button = I_toolbar_add_button(&i_right_toolbar,
                                              "gui/icons/ship.png",
                                              (i_callback_f)I_init_ship);
+        i_players_button = I_toolbar_add_button(&i_right_toolbar,
+                                                "gui/icons/players.png",
+                                                (i_callback_f)I_init_players);
         I_widget_add(&i_root, &i_right_toolbar.widget);
         i_right_toolbar.buttons[i_ship_button].widget.state = I_WS_DISABLED;
 

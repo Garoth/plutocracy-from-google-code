@@ -61,12 +61,13 @@ void N_poll_client(void);
 extern n_client_id_t n_client_id;
 
 /* n_server.c */
-void N_kick_client(n_client_id_t);
+void N_drop_client(n_client_id_t);
 void N_poll_server(void);
 int N_start_server(n_callback_f server, n_callback_f client);
 void N_stop_server(void);
 
 extern n_client_t n_clients[N_CLIENTS_MAX];
+extern int n_clients_len;
 
 /* n_sync.c */
 #define N_broadcast(f, ...) \

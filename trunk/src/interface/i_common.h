@@ -261,10 +261,13 @@ void I_theme_texture(r_texture_t **, const char *name);
 
 extern i_toolbar_t i_right_toolbar;
 extern i_widget_t i_root;
-extern int i_ship_button;
+extern int i_ship_button, i_players_button;
 
 /* i_nations.c */
 void I_init_nations(i_window_t *);
+
+/* i_players.c */
+void I_init_players(i_window_t *);
 
 /* i_ring.c */
 void I_close_ring(void);
@@ -326,5 +329,6 @@ int I_toolbar_add_button(i_toolbar_t *, const char *icon,
                          i_callback_f init_func);
 void I_toolbar_enable(i_toolbar_t *, int button, bool enable);
 void I_toolbar_init(i_toolbar_t *, int right);
+void I_toolbar_position(i_toolbar_t *, int index);
 void I_window_init(i_window_t *);
 

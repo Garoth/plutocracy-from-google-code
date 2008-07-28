@@ -139,22 +139,19 @@ void I_window_init(i_window_t *window)
 }
 
 /******************************************************************************\
- Positions the windows this toolbar controls.
+ Positions a child window.
 \******************************************************************************/
-static void toolbar_position(i_toolbar_t *toolbar)
+void I_toolbar_position(i_toolbar_t *toolbar, int i)
 {
         i_widget_t *widget;
         c_vec2_t origin;
-        int i;
 
-        for (i = 0; i < toolbar->children; i++) {
-                widget = &toolbar->windows[i].widget;
-                origin = toolbar->widget.origin;
-                origin.y -= i_border.value.n + widget->size.y;
-                if (toolbar->right)
-                        origin.x += toolbar->widget.size.x - widget->size.x;
-                I_widget_move(widget, origin);
-        }
+        widget = &toolbar->windows[i].widget;
+        origin = toolbar->widget.origin;
+        origin.y -= i_border.value.n + widget->size.y;
+        if (toolbar->right)
+                origin.x += toolbar->widget.size.x - widget->size.x;
+        I_widget_move(widget, origin);
 }
 
 /******************************************************************************\
@@ -174,7 +171,9 @@ int I_toolbar_event(i_toolbar_t *toolbar, i_event_t event)
                 I_widget_event(&toolbar->window.widget, event);
                 toolbar->widget.origin = toolbar->window.widget.origin;
                 toolbar->widget.size = toolbar->window.widget.size;
-                toolbar_position(toolbar);
+
+                for (i = 0; i < toolbar->children; i++)
+                        I_toolbar_position(toolbar, i);
                 return FALSE;
 
         case I_EV_MOUSE_DOWN:
@@ -448,5 +447,7 @@ void I_popup(c_vec3_t *goto_pos, const char *message)
         if ((!popup_widget.shown && popup_widget.fade <= 0.f) ||
             i >= POPUP_MESSAGES_MAX - 1)
                 popup_configure();
+
+        C_debug("%s", message);
 }
 

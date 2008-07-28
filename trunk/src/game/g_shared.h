@@ -84,6 +84,10 @@ void G_leave_game(void);
 void G_process_click(int button);
 void G_update_client(void);
 
+/* g_elements.c */
+extern g_nation_t g_nations[G_NATION_NAMES];
+extern const char *g_cargo_names[G_CARGO_TYPES];
+
 /* g_globe.c */
 void G_mouse_ray(c_vec3_t origin, c_vec3_t forward);
 void G_mouse_ray_miss(void);
@@ -91,11 +95,11 @@ void G_render_globe(void);
 
 /* g_host.c */
 void G_change_nation(int index);
+void G_kick_client(int index);
 void G_host_game(void);
 void G_update_host(void);
 
-extern g_nation_t g_nations[G_NATION_NAMES];
-extern const char *g_cargo_names[G_CARGO_TYPES];
+extern int g_clients_max;
 
 /* g_variables.c */
 void G_register_variables(void);

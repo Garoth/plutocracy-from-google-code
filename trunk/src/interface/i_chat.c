@@ -207,5 +207,11 @@ void I_print_chat(const char *name, i_color_t color, const char *message)
         /* Reconfigure the chat box */
         I_position_chat();
         I_widget_event(&chat_box.widget, I_EV_CONFIGURE);
+
+        /* Debug log the chat */
+        if (!message || !message[0])
+                C_debug("%s", name);
+        else
+                C_debug("%s: %s", name, message);
 }
 

@@ -14,6 +14,7 @@
 
 /* Client slots array */
 n_client_t n_clients[N_CLIENTS_MAX];
+int n_clients_len;
 
 /* Server socket for listening for incoming connections */
 static SOCKET listen_socket;
@@ -28,7 +29,7 @@ void N_stop_server(void)
         n_client_id = N_INVALID_ID;
 
         /* Close listen server socket */
-        if (listen_socket >= 0)
+        if (listen_socket != INVALID_SOCKET)
                 closesocket(listen_socket);
         listen_socket = INVALID_SOCKET;
 
@@ -53,6 +54,7 @@ int N_start_server(n_callback_f server_func, n_callback_f client_func)
 
         /* Setup the host's client */
         n_clients[N_HOST_CLIENT_ID].connected = TRUE;
+        n_clients_len = 1;
         n_server_func(N_HOST_CLIENT_ID, N_EV_CONNECTED);
         n_client_func(N_SERVER_ID, N_EV_CONNECTED);
 
@@ -88,7 +90,7 @@ static void accept_connections(void)
         int i;
 
         socklen = sizeof (addr);
-        if ((socket = accept(listen_socket, (struct sockaddr *)&addr, 
+        if ((socket = accept(listen_socket, (struct sockaddr *)&addr,
                              &socklen)) == INVALID_SOCKET)
                 return;
 
@@ -105,31 +107,33 @@ static void accept_connections(void)
         /* Initialize the client */
         n_clients[i].connected = TRUE;
         n_clients[i].socket = socket;
+        n_clients_len++;
         n_server_func(i, N_EV_CONNECTED);
 }
 
 /******************************************************************************\
  Disconnect a client from the server.
 \******************************************************************************/
-void N_kick_client(int client)
+void N_drop_client(int client)
 {
         C_assert(client >= 0 && client < N_CLIENTS_MAX);
         if (!n_clients[client].connected) {
-                C_warning("Tried to kick unconnected client %d", client);
+                C_warning("Tried to drop unconnected client %d", client);
                 return;
         }
+        n_server_func(client, N_EV_DISCONNECTED);
         n_clients[client].connected = FALSE;
+        n_clients_len--;
 
         /* The server kicked itself */
         if (client == n_client_id) {
                 N_disconnect();
-                N_stop_server();
-                C_debug("Server kicked itself");
+                C_debug("Server dropped itself");
                 return;
         }
 
         closesocket(n_clients[client].socket);
-        C_debug("Kicked client %d", client);
+        C_debug("Dropped client %d", client);
 }
 
 /******************************************************************************\
@@ -145,10 +149,7 @@ void N_poll_server(void)
 
         /* Receive from clients */
         for (i = 0; i < N_CLIENTS_MAX; i++)
-                if (n_clients[i].connected && !N_receive(i)) {
-                        closesocket(n_clients[i].socket);
-                        n_clients[i].connected = FALSE;
-                        n_server_func(i, N_EV_DISCONNECTED);
-                }
+                if (n_clients[i].connected && !N_receive(i))
+                        N_drop_client(i);
 }
 
