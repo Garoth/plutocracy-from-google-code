@@ -25,7 +25,8 @@ i_widget_t *i_child;
 i_widget_t *i_mouse_focus;
 
 /* Event parameters */
-int i_key, i_key_shift, i_key_alt, i_key_unicode, i_mouse_x, i_mouse_y, i_mouse;
+int i_key, i_key_shift, i_key_alt, i_key_ctrl, i_key_unicode,
+    i_mouse_x, i_mouse_y, i_mouse;
 
 static int widgets;
 
@@ -681,6 +682,7 @@ void I_dispatch(const SDL_Event *ev)
                 i_key = ev->key.keysym.sym;
                 i_key_shift = ev->key.keysym.mod & KMOD_SHIFT;
                 i_key_alt = ev->key.keysym.mod & KMOD_ALT;
+                i_key_ctrl = ev->key.keysym.mod & KMOD_CTRL;
                 i_key_unicode = ev->key.keysym.unicode;
                 if (i_debug.value.n > 0)
                         C_trace("SDL_KEYDOWN (%s%s)",
@@ -696,6 +698,7 @@ void I_dispatch(const SDL_Event *ev)
                 i_key = ev->key.keysym.sym;
                 i_key_shift = ev->key.keysym.mod & KMOD_SHIFT;
                 i_key_alt = ev->key.keysym.mod & KMOD_ALT;
+                i_key_ctrl = ev->key.keysym.mod & KMOD_CTRL;
                 i_key_unicode = ev->key.keysym.unicode;
                 if (i_debug.value.n > 0)
                         C_trace("SDL_KEYUP (%s%s)",

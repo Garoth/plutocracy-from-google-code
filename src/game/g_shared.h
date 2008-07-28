@@ -78,7 +78,7 @@ typedef struct g_cargo {
 int G_cargo_space(const g_cargo_t *);
 void G_cleanup(void);
 void G_init(void);
-void G_input_chat(const char *message);
+void G_input_chat(char *message);
 void G_join_game(const char *address);
 void G_leave_game(void);
 void G_process_click(int button);
