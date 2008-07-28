@@ -349,6 +349,7 @@ void C_init_lang(void);
 int C_is_path(const char *);
 #define C_is_print(c) ((c) > 0 && (c) < 0x7f)
 #define C_is_space(c) ((c) > 0 && (c) <= ' ')
+void C_sanitize(char *);
 char *C_skip_spaces(const char *str);
 #define C_strdup(s) C_strdup_full(__FILE__, __LINE__, __func__, s)
 char *C_strdup_full(const char *file, int line, const char *func, const char *);

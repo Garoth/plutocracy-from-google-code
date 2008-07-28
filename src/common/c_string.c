@@ -523,3 +523,32 @@ int C_is_path(const char *s)
         return FALSE;
 }
 
+/******************************************************************************\
+ Sanitize a name string by replacing unprintable characters with question
+ marks in-place.
+\******************************************************************************/
+void C_sanitize(char *string)
+{
+        char *s;
+        int i, len;
+
+        if (!string)
+                return;
+        len = C_strlen(string);
+
+        /* Replace unprintable characters */
+        for (s = string; *s; s++)
+                if (*s < ' ')
+                        *s = '?';
+
+        /* Remove trailing space */
+        for (; len > 0 && string[len - 1] == ' '; len--);
+        string[len] = NUL;
+
+        /* Remove leading space */
+        if (string[0] == ' ') {
+                for (i = 0; string[i] == ' '; i++);
+                memmove(string, string + i, len - i + 1);
+        }
+}
+

@@ -111,6 +111,7 @@ static void cm_name(int client)
         char name_buf[G_NAME_MAX];
 
         N_receive_string_buf(name_buf);
+        C_sanitize(name_buf);
 
         /* Didn't actually change names */
         if (!strcmp(name_buf, g_clients[client].name))
@@ -169,6 +170,7 @@ static void cm_name_ship(int client)
         if (g_ships[index].client != client)
                 return;
         N_receive_string_buf(new_name);
+        C_sanitize(new_name);
         if (!new_name[0])
                 return;
         C_strncpy_buf(g_ships[index].name, new_name);
@@ -186,6 +188,7 @@ static void cm_chat(int client)
         char chat_buffer[N_SYNC_MAX];
 
         N_receive_string_buf(chat_buffer);
+        C_sanitize(chat_buffer);
         if (!chat_buffer[0])
                 return;
         N_broadcast_except(client, "11s", G_SM_CHAT, client, chat_buffer);
