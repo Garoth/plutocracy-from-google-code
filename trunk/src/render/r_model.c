@@ -158,7 +158,7 @@ static int add_face(const void *p, unsigned short indices[3], c_array_t *array,
 
                 /* Cull faces that are downward-facing */
                 normal = C_vec3_norm(normal);
-                if (normal.y < -0.67f)
+                if (normal.y < -0.8f / r_model_lod.value.f)
                         return 1;
         }
 

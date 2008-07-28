@@ -19,7 +19,7 @@
 #define SEARCH_BREADTH (R_PATH_MAX * 3)
 
 /* Proportion of rotation a ship does per second */
-#define ROTATION_RATE 8.f
+#define ROTATION_RATE 4.f
 
 /* Structure for searched tile nodes */
 typedef struct search_node {
@@ -48,7 +48,7 @@ void G_init_ships(void)
         pc->name = C_str("g-ship-sloop", "Sloop");
         pc->model_path = "models/ship/sloop.plum";
         pc->speed = 1.f;
-        pc->health = 100;
+        pc->health = 40;
         pc->cargo = 100;
 
         /* Spider */
@@ -56,7 +56,7 @@ void G_init_ships(void)
         pc->name = C_str("g-ship-spider", "Spider");
         pc->model_path = "models/ship/spider.plum";
         pc->speed = 0.75f;
-        pc->health = 100;
+        pc->health = 80;
         pc->cargo = 150;
 
         /* Galleon */
@@ -65,7 +65,7 @@ void G_init_ships(void)
         pc->model_path = "models/ship/galleon.plum";
         pc->speed = 0.5f;
         pc->health = 200;
-        pc->cargo = 200;
+        pc->cargo = 100;
 }
 
 /******************************************************************************\
@@ -256,6 +256,22 @@ static int farthest_path_tile(int ship)
 }
 
 /******************************************************************************\
+ Returns TRUE if the ship in a given tile is leaving it.
+\******************************************************************************/
+static bool ship_leaving_tile(int tile)
+{
+        int ship;
+
+        C_assert(tile >= 0 && tile < r_tiles);
+        ship = g_tiles[tile].ship;
+        if (ship >= 0 && ship < G_SHIPS_MAX &&
+            g_ships[ship].tile != g_ships[ship].rear_tile &&
+            tile == g_ships[ship].rear_tile)
+                return TRUE;
+        return FALSE;
+}
+
+/******************************************************************************\
  Find a path from where the [ship] is to the target [tile] and sets that as
  the ship's new path.
 \******************************************************************************/
@@ -313,12 +329,16 @@ void G_ship_path(int ship, int target)
                 R_get_tile_neighbors(node.tile, neighbors);
                 for (i = 0; i < 3; i++) {
                         int stamp;
+                        bool open;
+
+                        /* Tile blocked? */
+                        open = G_open_tile(neighbors[i], ship) ||
+                               ship_leaving_tile(neighbors[i]);
 
                         /* Already opened? */
                         stamp = g_tiles[neighbors[i]].search_stamp;
                         C_assert(stamp <= search_stamp);
-                        if (stamp == search_stamp ||
-                            !G_open_tile(neighbors[i], ship) ||
+                        if (stamp == search_stamp || !open ||
                             R_land_bridge(node.tile, neighbors[i]))
                                 continue;
                         g_tiles[neighbors[i]].search_stamp = search_stamp;
@@ -443,7 +463,8 @@ static void position_ship(int ship)
                 /* Gradually rotate */
                 forward = C_vec3_norm(C_vec3_sub(g_tiles[new_tile].origin,
                                                  g_tiles[old_tile].origin));
-                lerp = ROTATION_RATE * c_frame_sec;
+                lerp = ROTATION_RATE * c_frame_sec *
+                       g_ship_classes[g_ships[ship].class_name].speed;
                 if (lerp > 1.f)
                         lerp = 1.f;
                 model->forward = C_vec3_lerp(model->forward, lerp, forward);
@@ -501,7 +522,9 @@ void G_update_ships(void)
                 /* Started moving to a new tile */
                 if (g_ships[i].progress >= 1.f || g_ships[i].rear_tile < 0) {
                         int old_tile, new_tile, neighbors[3];
-                        bool arrived;
+                        bool arrived, open;
+
+                        g_ships[i].progress = 1.f;
 
                         /* Update the path */
                         G_ship_path(i, g_ships[i].target);
@@ -518,9 +541,18 @@ void G_update_ships(void)
                         if (g_ships[i].rear_tile >= 0)
                                 g_tiles[g_ships[i].rear_tile].ship = -1;
 
+                        /* See if we hit an obstacle */
+                        if (!arrived) {
+                                open = G_open_tile(new_tile, i);
+
+                                /* If there is a ship leaving the next tile,
+                                   wait for it to move out instead of pathing */
+                                if (!open && ship_leaving_tile(new_tile))
+                                        continue;
+                        }
+
                         /* If we arrived or hit an obstacle, stop */
-                        if (arrived || !G_open_tile(new_tile, i)) {
-                                g_ships[i].progress = 1.f;
+                        if (arrived || !open) {
                                 g_ships[i].path[0] = 0;
                                 g_ships[i].rear_tile = -1;
                                 position_ship(i);
