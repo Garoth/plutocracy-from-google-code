@@ -90,14 +90,11 @@ void G_get_name(g_name_type_t type, char *buf, int size)
         for (i = 0; i < start; i++)
                 if (lists[type].names[i].count < lists[type].names[low].count)
                         low = i;
+        C_strncpy(buf, lists[type].names[low].s, size);
 
         /* Append a number if its been used already */
-        if (lists[type].names[low].count++ > 0) {
+        if (lists[type].names[low].count++ > 0)
                 C_suffix(buf, C_va(" %d", lists[type].names[low].count), size);
-                return;
-        }
-
-        C_strncpy(buf, lists[type].names[low].s, size);
 }
 
 /******************************************************************************\
