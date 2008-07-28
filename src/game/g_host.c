@@ -219,9 +219,10 @@ static void init_client(int client)
         g_clients[client].nation = G_NN_NONE;
 
         /* Communicate the globe info */
-        N_send(client, "1111422f", G_SM_INIT, G_PROTOCOL, client,
-               g_clients_max, g_globe_seed.value.n, g_globe_islands.value.n,
-               g_globe_island_size.value.n, r_solar_angle);
+        N_send(client, "11111422f", G_SM_INIT, G_PROTOCOL, client,
+               g_clients_max, g_globe_subdiv4.value.n, g_globe_seed.value.n,
+               g_globe_islands.value.n, g_globe_island_size.value.n,
+               r_solar_angle);
 
         /* Tell them about everyone already here */
         for (i = 0; i < N_CLIENTS_MAX; i++)
@@ -377,13 +378,18 @@ void G_host_game(void)
         }
 
         /* Generate a new globe */
+        C_var_unlatch(&g_globe_subdiv4);
         C_var_unlatch(&g_globe_islands);
         C_var_unlatch(&g_globe_island_size);
-        if (g_globe_seed.has_latched)
-                C_var_unlatch(&g_globe_seed);
-        else
+        C_var_unlatch(&g_name);
+        if (g_globe_subdiv4.value.n < 3)
+                g_globe_subdiv4.value.n = 3;
+        if (g_globe_subdiv4.value.n > 5)
+                g_globe_subdiv4.value.n = 5;
+        if (!C_var_unlatch(&g_globe_seed))
                 g_globe_seed.value.n = (int)time(NULL);
-        G_generate_globe(g_globe_islands.value.n, g_globe_island_size.value.n);
+        G_generate_globe(g_globe_subdiv4.value.n, g_globe_islands.value.n,
+                         g_globe_island_size.value.n);
         initial_buildings();
 
         /* Set our name */

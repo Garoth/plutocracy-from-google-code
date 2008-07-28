@@ -403,7 +403,7 @@ c_var_t *C_resolve_var(const char *name);
 void C_translate_vars(void);
 #define C_var_reset(v) ((v)->value = (v)->stock)
 void C_var_set(c_var_t *, const char *value);
-int C_var_unlatch(c_var_t *);
+bool C_var_unlatch(c_var_t *);
 #define C_var_update(v, u) C_var_update_data(v, u, NULL)
 void C_var_update_data(c_var_t *, c_var_update_f, void *);
 void C_write_autogen(void);

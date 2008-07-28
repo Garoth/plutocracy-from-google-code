@@ -265,7 +265,7 @@ void C_var_set(c_var_t *var, const char *string)
 /******************************************************************************\
  If the variable has a latched value, propagate it to the actual value.
 \******************************************************************************/
-int C_var_unlatch(c_var_t *var)
+bool C_var_unlatch(c_var_t *var)
 {
         if (var->type == C_VT_UNREGISTERED)
                 C_error("Tried to unlatch an unregistered variable");
