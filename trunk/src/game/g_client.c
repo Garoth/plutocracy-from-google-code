@@ -29,6 +29,7 @@ static int name_update(c_var_t *var, c_var_value_t value)
 {
         if (!value.s[0])
                 return FALSE;
+        C_sanitize(value.s);
         N_send(N_SERVER_ID, "1s", G_CM_NAME, value.s);
         return TRUE;
 }
