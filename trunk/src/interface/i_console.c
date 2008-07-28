@@ -13,13 +13,13 @@
 #include "i_common.h"
 
 static i_label_t label;
-static i_entry_t entry;
+static i_history_entry_t history_entry;
 static i_scrollback_t scrollback;
 static r_texture_t *work_area;
 static int cols_max;
 
 /******************************************************************************\
- Initialize entry widget themeable assets.
+ Initialize scrollback widget themeable assets.
 \******************************************************************************/
 void I_theme_scrollbacks(void)
 {
@@ -191,7 +191,7 @@ static int scrollback_event(i_scrollback_t *sb, i_event_t event)
  Catches the entry widget's events to enable PgUp/PgDn scrolling the
  scrollback.
 \******************************************************************************/
-static int entry_event(i_entry_t *entry, i_event_t event)
+static int history_entry_event(i_history_entry_t *entry, i_event_t event)
 {
         if (scrollback.widget.configured && event == I_EV_KEY_DOWN) {
                 if (i_key == SDLK_PAGEUP)
@@ -199,7 +199,7 @@ static int entry_event(i_entry_t *entry, i_event_t event)
                 else if (i_key == SDLK_PAGEDOWN)
                         I_scrollback_scroll(&scrollback, FALSE);
         }
-        return I_entry_event(entry, event);
+        return I_history_entry_event(entry, event);
 }
 
 /******************************************************************************\
@@ -249,11 +249,11 @@ void I_init_console(i_window_t *window)
         scrollback.widget.margin_rear = 0.5f;
         I_widget_add(&window->widget, &scrollback.widget);
 
-        /* Entry */
-        I_entry_init(&entry, "");
-        entry.widget.event_func = (i_event_f)entry_event;
-        entry.on_enter = (i_callback_f)on_enter;
-        entry.auto_complete = C_auto_complete_vars;
-        I_widget_add(&window->widget, &entry.widget);
+        /* History entry */
+        I_history_entry_init(&history_entry, "");
+        history_entry.entry.widget.event_func = (i_event_f)history_entry_event;
+        history_entry.entry.on_enter = (i_callback_f)on_enter;
+        history_entry.entry.auto_complete = C_auto_complete_vars;
+        I_widget_add(&window->widget, &history_entry.entry.widget);
 }
 

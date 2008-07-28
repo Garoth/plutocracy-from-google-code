@@ -172,42 +172,6 @@ void I_entry_configure(i_entry_t *entry, const char *string)
 }
 
 /******************************************************************************\
- Cycle through the entry widget's input history.
-\******************************************************************************/
-static void entry_history_go(i_entry_t *entry, int change)
-{
-        int new_pos;
-
-        new_pos = entry->history_pos + change;
-        if (new_pos < 0)
-                new_pos = 0;
-        if (new_pos >= entry->history_size)
-                new_pos = entry->history_size;
-        if (entry->history_pos == new_pos)
-                return;
-        if (entry->history_pos == 0)
-                C_strncpy_buf(entry->history[0], entry->buffer);
-        entry->history_pos = new_pos;
-        I_entry_configure(entry, entry->history[new_pos]);
-}
-
-/******************************************************************************\
- Save current input in a new history entry.
-\******************************************************************************/
-static void entry_history_save(i_entry_t *entry)
-{
-        if (entry->history_size) {
-                if (entry->history_size > I_ENTRY_HISTORY - 2)
-                        entry->history_size = I_ENTRY_HISTORY - 2;
-                memmove(entry->history + 2, entry->history + 1,
-                        sizeof (entry->history[0]) * entry->history_size);
-        }
-        C_strncpy_buf(entry->history[1], entry->buffer);
-        entry->history_size++;
-        entry->history_pos = 0;
-}
-
-/******************************************************************************\
  Entry widget autocomplete.
 \******************************************************************************/
 static void entry_auto_complete(i_entry_t *entry)
@@ -265,7 +229,6 @@ static void entry_auto_complete(i_entry_t *entry)
 
 /******************************************************************************\
  Entry widget event function.
- TODO: Horizontal packing
 \******************************************************************************/
 int I_entry_event(i_entry_t *entry, i_event_t event)
 {
@@ -294,11 +257,7 @@ int I_entry_event(i_entry_t *entry, i_event_t event)
                 R_window_cleanup(&entry->window);
                 break;
         case I_EV_KEY_DOWN:
-                if (i_key == SDLK_UP)
-                        entry_history_go(entry, 1);
-                else if (i_key == SDLK_DOWN)
-                        entry_history_go(entry, -1);
-                else if (i_key == SDLK_LEFT)
+                if (i_key == SDLK_LEFT)
                         entry_set_pos(entry, entry->pos - 1);
                 else if (i_key == SDLK_RIGHT)
                         entry_set_pos(entry, entry->pos + 1);
@@ -310,10 +269,9 @@ int I_entry_event(i_entry_t *entry, i_event_t event)
                         entry_delete(entry, entry->pos - 1);
                 else if (i_key == SDLK_DELETE)
                         entry_delete(entry, entry->pos);
-                else if (i_key == SDLK_RETURN && entry->on_enter) {
-                        entry_history_save(entry);
+                else if (i_key == SDLK_RETURN && entry->on_enter)
                         entry->on_enter(entry);
-                } else if (i_key == SDLK_TAB) {
+                else if (i_key == SDLK_TAB) {
                         entry_auto_complete(entry);
                         break;
                 } else if (!i_key_ctrl && i_key >= ' ' && i_key_unicode)
@@ -368,5 +326,66 @@ void I_entry_init(i_entry_t *entry, const char *text)
         entry->widget.state = I_WS_READY;
         entry->widget.entry = TRUE;
         C_strncpy_buf(entry->buffer, text);
+}
+
+/******************************************************************************\
+ Cycle through the entry widget's input history.
+\******************************************************************************/
+static void history_entry_go(i_history_entry_t *he, int change)
+{
+        int new_pos;
+
+        new_pos = he->pos + change;
+        if (new_pos < 0)
+                new_pos = 0;
+        if (new_pos >= he->size)
+                new_pos = he->size;
+        if (he->pos == new_pos)
+                return;
+        if (he->pos == 0)
+                C_strncpy_buf(he->history[0], he->entry.buffer);
+        he->pos = new_pos;
+        I_entry_configure(&he->entry, he->history[new_pos]);
+}
+
+/******************************************************************************\
+ Save current input in a new history entry.
+\******************************************************************************/
+static void history_entry_save(i_history_entry_t *he)
+{
+        if (he->size) {
+                if (he->size > I_ENTRY_HISTORY - 2)
+                        he->size = I_ENTRY_HISTORY - 2;
+                memmove(he->history + 2, he->history + 1,
+                        sizeof (he->history[0]) * he->size);
+        }
+        C_strncpy_buf(he->history[1], he->entry.buffer);
+        he->size++;
+        he->pos = 0;
+}
+
+/******************************************************************************\
+ History entry widget event function.
+\******************************************************************************/
+int I_history_entry_event(i_history_entry_t *he, i_event_t event)
+{
+        if (event == I_EV_KEY_DOWN) {
+                if (i_key == SDLK_UP)
+                        history_entry_go(he, 1);
+                else if (i_key == SDLK_DOWN)
+                        history_entry_go(he, -1);
+                else if (i_key == SDLK_RETURN && he->entry.on_enter)
+                        history_entry_save(he);
+        }
+        return I_entry_event(&he->entry, event);
+}
+
+/******************************************************************************\
+ Initializes a history entry widget.
+\******************************************************************************/
+void I_history_entry_init(i_history_entry_t *he, const char *text)
+{
+        I_entry_init(&he->entry, text);
+        he->size = he->pos = 0;
 }
 

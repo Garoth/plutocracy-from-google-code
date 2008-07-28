@@ -155,10 +155,17 @@ typedef struct i_entry {
         i_callback_f on_change, on_enter;
         i_auto_complete_f auto_complete;
         float scroll;
-        int pos, history_pos, history_size;
-        char buffer[256], history[I_ENTRY_HISTORY][256];
+        int pos;
+        char buffer[256];
         bool just_tabbed;
 } i_entry_t;
+
+/* An entry with a history */
+typedef struct i_history_entry {
+        i_entry_t entry;
+        int pos, size;
+        char history[I_ENTRY_HISTORY][256];
+} i_history_entry_t;
 
 /* A fixed-size, work-area widget that can dynamically add new components
    vertically and scroll up and down. Widgets will begin to be removed after
@@ -238,6 +245,8 @@ void I_theme_scrollbacks(void);
 int I_entry_event(i_entry_t *, i_event_t);
 void I_entry_init(i_entry_t *, const char *);
 void I_entry_configure(i_entry_t *, const char *);
+int I_history_entry_event(i_history_entry_t *, i_event_t);
+void I_history_entry_init(i_history_entry_t *, const char *);
 void I_theme_entries(void);
 
 /* i_game.c */
