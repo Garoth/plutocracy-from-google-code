@@ -63,7 +63,7 @@ static void scrollback_moved(i_scrollback_t *sb)
 /******************************************************************************\
  Scroll scrollback widget.
 \******************************************************************************/
-void I_scrollback_scroll(i_scrollback_t *sb, int up)
+void I_scrollback_scroll(i_scrollback_t *sb, bool up)
 {
         sb->scroll += up ? I_WHEEL_SCROLL : -I_WHEEL_SCROLL;
         scrollback_moved(sb);
@@ -80,9 +80,11 @@ int I_scrollback_event(i_scrollback_t *sb, i_event_t event)
                         I_widget_remove(sb->widget.child, TRUE);
                 else
                         sb->children++;
-                i_child->size = sb->widget.size;
-                I_widget_event(i_child, I_EV_CONFIGURE);
-                scrollback_moved(sb);
+                if (sb->widget.configured) {
+                        i_child->size = sb->widget.size;
+                        I_widget_event(i_child, I_EV_CONFIGURE);
+                        scrollback_moved(sb);
+                }
                 return FALSE;
         case I_EV_CONFIGURE:
 
@@ -233,7 +235,7 @@ static void log_handler(c_log_level_t level, int margin, const char *string)
 void I_init_console(i_window_t *window)
 {
         I_window_init(window);
-        window->natural_size = C_vec2(480.f, 240.f);
+        window->widget.size = C_vec2(480.f, 240.f);
 
         /* Set log handler */
         c_log_func = log_handler;

@@ -13,6 +13,9 @@
 #include "n_common.h"
 #include "SDL_endian.h"
 
+/* Seconds to wait for a send */
+#define SEND_TIMEOUT 1
+
 /* Receive function that arriving messages are routed to */
 n_callback_f n_client_func, n_server_func;
 
@@ -101,6 +104,10 @@ static SOCKET client_to_socket(n_client_id_t client)
 \******************************************************************************/
 static void send_buffer(n_client_id_t client)
 {
+        struct timeval tv;
+        fd_set readfds;
+        SOCKET socket;
+
         if (client >= 0 && client < N_CLIENTS_MAX &&
             !n_clients[client].connected) {
                 C_warning("Tried to message unconnected client %d", client);
@@ -120,8 +127,23 @@ static void send_buffer(n_client_id_t client)
                 }
         }
 
+        /* Send timeout */
+        socket = client_to_socket(client);
+        tv.tv_sec = SEND_TIMEOUT;
+        tv.tv_usec = 0;
+        FD_ZERO(&writefds);
+        FD_SET(socket, &writefds);
+        select(socket + 1, NULL, &writefds, NULL, &tv);
+
         /* Send TCP/IP message */
-        send(client_to_socket(client), n_sync_buffer, n_sync_size, 0);
+        send(socket, n_sync_buffer, n_sync_size, 0);
+
+        /* Send failed */
+        if (!FD_ISSET(socket, &writefds)) {
+                C_warning("Timed out sending to %s",
+                          N_client_to_string(client));
+                N_drop_client(client);
+        }
 }
 
 /******************************************************************************\

@@ -354,7 +354,9 @@ char *C_skip_spaces(const char *str);
 #define C_strdup(s) C_strdup_full(__FILE__, __LINE__, __func__, s)
 char *C_strdup_full(const char *file, int line, const char *func, const char *);
 int C_strlen(const char *);
-int C_strncpy(char *dest, const char *src, int len);
+#define C_strncpy(d, s, n) C_strncpy_full(__FILE__, __LINE__, __func__, d, s, n)
+int C_strncpy_full(const char *file, int line, const char *func,
+                   char *dest, const char *src, int len);
 #define C_strncpy_buf(d, s) C_strncpy(d, s, sizeof (d))
 int C_suffix(char *string, const char *suffix, int size);
 #define C_suffix_buf(str, suf) C_suffix(str, suf, sizeof (str))

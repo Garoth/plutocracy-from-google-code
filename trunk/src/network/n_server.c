@@ -124,6 +124,13 @@ static void accept_connections(void)
 \******************************************************************************/
 void N_drop_client(int client)
 {
+        /* If we're not the server just disconnect */
+        if (n_client_id != N_HOST_CLIENT_ID) {
+                C_assert(client == N_SERVER_ID);
+                N_disconnect();
+                return;
+        }
+
         C_assert(client >= 0 && client < N_CLIENTS_MAX);
         if (!n_clients[client].connected) {
                 C_warning("Tried to drop unconnected client %d", client);

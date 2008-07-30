@@ -100,7 +100,7 @@ char *C_wrap_log(const char *src, int margin, int wrap, int *plen)
                         if (last_break == last_line)
                                 last_break = i;
                         j -= i - last_break;
-                        i = last_break;
+                        last_line = i = last_break;
                         if (j >= (int)sizeof (dest) - margin - 3)
                                 break;
                         dest[j++] = '\n';

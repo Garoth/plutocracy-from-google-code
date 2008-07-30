@@ -112,7 +112,6 @@ typedef struct i_window {
         i_widget_t *key_focus, *hanger_align;
         r_window_t window;
         r_sprite_t hanger;
-        c_vec2_t natural_size;
         float hanger_x;
         bool auto_hide, decorated, hanger_shown, popup;
 } i_window_t;
@@ -156,7 +155,7 @@ typedef struct i_entry {
         i_auto_complete_f auto_complete;
         float scroll;
         int pos;
-        char buffer[256];
+        char buffer[128];
         bool just_tabbed;
 } i_entry_t;
 
@@ -236,9 +235,18 @@ void I_init_chat(void);
 void I_position_chat(void);
 void I_show_chat(void);
 
+/* i_container.c */
+void I_widget_add(i_widget_t *parent, i_widget_t *child);
+void I_widget_add_pack(i_widget_t *parent, i_widget_t *child,
+                       i_pack_t, i_fit_t fit);
+c_vec2_t I_widget_child_bounds(const i_widget_t *);
+void I_widget_pack(i_widget_t *, i_pack_t, i_fit_t);
+void I_widget_remove_children(i_widget_t *, int cleanup);
+
 /* i_console.c */
 void I_init_console(i_window_t *);
 void I_scrollback_init(i_scrollback_t *);
+void I_scrollback_scroll(i_scrollback_t *, bool up);
 void I_theme_scrollbacks(void);
 
 /* i_entry.c */
@@ -261,7 +269,7 @@ void I_theme_texture(r_texture_t **, const char *name);
 
 extern i_toolbar_t i_right_toolbar;
 extern i_widget_t i_root;
-extern int i_ship_button, i_players_button;
+extern int i_players_button, i_ship_button, i_trade_button;
 
 /* i_nations.c */
 void I_init_nations(i_window_t *);
@@ -295,6 +303,9 @@ void I_image_init(i_image_t *, const char *icon);
 void I_image_init_themed(i_image_t *, r_texture_t **);
 void I_theme_statics(void);
 
+/* i_trade.c */
+void I_init_trade(i_window_t *);
+
 /* i_variables.c */
 extern c_var_t i_border, i_color, i_color_alt, i_debug, i_fade, i_scroll_speed,
                i_shadow, i_test_globe, i_theme, i_zoom_speed;
@@ -305,17 +316,13 @@ void I_update_video(void);
 
 /* i_widgets.c */
 const char *I_event_string(i_event_t);
-void I_widget_add(i_widget_t *parent, i_widget_t *child);
 c_vec2_t I_widget_bounds(const i_widget_t *, i_pack_t);
-c_vec2_t I_widget_child_bounds(const i_widget_t *);
 bool I_widget_child_of(const i_widget_t *parent, const i_widget_t *child);
 void I_widget_event(i_widget_t *, i_event_t);
 void I_widget_init(i_widget_t *, const char *class_name);
 void I_widget_move(i_widget_t *, c_vec2_t new_origin);
-void I_widget_pack(i_widget_t *, i_pack_t, i_fit_t);
 void I_widget_propagate(i_widget_t *, i_event_t);
 void I_widget_remove(i_widget_t *, int cleanup);
-void I_widget_remove_children(i_widget_t *, int cleanup);
 i_widget_t *I_widget_top_level(i_widget_t *);
 
 extern c_color_t i_colors[I_COLORS];
@@ -332,5 +339,6 @@ int I_toolbar_add_button(i_toolbar_t *, const char *icon,
 void I_toolbar_enable(i_toolbar_t *, int button, bool enable);
 void I_toolbar_init(i_toolbar_t *, int right);
 void I_toolbar_position(i_toolbar_t *, int index);
+int I_window_event(i_window_t *, i_event_t);
 void I_window_init(i_window_t *);
 

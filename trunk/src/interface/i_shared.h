@@ -74,8 +74,11 @@ void I_show_ring(i_ring_f callback);
 
 /* i_ship.c */
 void I_deselect_ship(void);
-void I_select_ship(const struct g_cargo *, i_color_t, const char *name,
+void I_select_ship(i_color_t, const char *name,
                    const char *owner, const char *class_name);
+
+/* i_trade.c */
+void I_select_trade(const struct g_cargo *);
 
 /* i_variables.c */
 void I_register_variables(void);

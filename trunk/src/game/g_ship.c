@@ -613,12 +613,14 @@ void G_ship_select(int index)
                 client = g_ships[index].client;
                 color = G_nation_to_color(g_clients[client].nation);
                 class_name = g_ships[index].class_name;
-                I_select_ship(&g_ships[index].cargo, color,
-                              g_ships[index].name, g_clients[client].name,
+                I_select_ship(color, g_ships[index].name,
+                              g_clients[client].name,
                               g_ship_classes[class_name].name);
+                I_select_trade(&g_ships[index].cargo);
         } else {
                 R_select_path(-1, NULL);
                 I_deselect_ship();
+                I_select_trade(NULL);
         }
 }
 
