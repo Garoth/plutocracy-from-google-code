@@ -30,7 +30,8 @@ static i_label_t title;
 \******************************************************************************/
 static void kick_clicked(i_button_t *button)
 {
-        G_kick_client((int)button->data);
+        /* This weirdness avoids GCC's 64-bit bitching */
+        G_kick_client((int)(size_t)button->data);
 }
 
 /******************************************************************************\
@@ -128,7 +129,7 @@ void I_init_players(i_window_t *window)
                               I_BT_ROUND);
                 players[i].kick.widget.state = I_WS_DISABLED;
                 players[i].kick.on_click = (i_callback_f)kick_clicked;
-                players[i].kick.data = (void *)i;
+                players[i].kick.data = (void *)(size_t)i;
                 I_widget_add(&players[i].box.widget, &players[i].kick.widget);
         }
 }
