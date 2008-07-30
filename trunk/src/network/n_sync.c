@@ -105,7 +105,7 @@ static SOCKET client_to_socket(n_client_id_t client)
 static void send_buffer(n_client_id_t client)
 {
         struct timeval tv;
-        fd_set readfds;
+        fd_set writefds;
         SOCKET socket;
 
         if (client >= 0 && client < N_CLIENTS_MAX &&
