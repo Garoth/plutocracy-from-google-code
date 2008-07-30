@@ -13,68 +13,139 @@
 #include "i_common.h"
 
 /******************************************************************************\
+ Find the length of the longest select option. Returns the width of the
+ widest option.
+\******************************************************************************/
+static float select_widest(i_select_t *select)
+{
+        i_select_option_t *option;
+        c_vec2_t size;
+        float width;
+
+        /* Numeric widget maximum is assumed to be widest */
+        if (!select->options) {
+                const char *fmt;
+
+                fmt = C_va("%%.0%df", select->decimals);
+                size = R_font_size(select->item.font, C_va(fmt, select->max));
+                return size.x / r_pixel_scale.value.f;
+        }
+
+        /* Cycle through each option */
+        width = 0.f;
+        select->list_len = 0;
+        for (option = select->options; option; option = option->next) {
+                size = R_font_size(select->item.font, option->string);
+                size.x /= r_pixel_scale.value.f;
+                if (size.x > width)
+                        width = size.x;
+                select->list_len++;
+        }
+        return width;
+}
+
+/******************************************************************************\
  Selection widget event function.
 \******************************************************************************/
 int I_select_event(i_select_t *select, i_event_t event)
 {
         if (event == I_EV_CONFIGURE) {
-                float width;
-                int i;
-
-                /* Find the length of the longest option */
-                if (select->list) {
-                        for (i = 0, width = 0.f; select->list[i]; i++) {
-                                c_vec2_t size;
-
-                                size = R_font_size(R_FONT_GUI, select->list[i]);
-                                size = C_vec2_divf(size, r_pixel_scale.value.f);
-                                if (size.x > width)
-                                        width = size.x;
-                        }
-                        select->item.width = width;
-                        select->list_len = i;
-                }
-
+                select->item.width = select_widest(select);
                 select->widget.size.y = R_font_height(R_FONT_GUI) /
                                         r_pixel_scale.value.f;
                 I_widget_pack(&select->widget, I_PACK_H, I_FIT_NONE);
                 select->widget.size = I_widget_child_bounds(&select->widget);
                 return FALSE;
         }
+        if (event == I_EV_CLEANUP) {
+                i_select_option_t *option, *next;
+
+                option = select->options;
+                while (option) {
+                        next = option->next;
+                        C_free(option);
+                        option = next;
+                }
+                select->options = NULL;
+        }
         return TRUE;
 }
 
 /******************************************************************************\
- Selection changed.
+ Change the selection widget's item by index.
 \******************************************************************************/
 void I_select_change(i_select_t *select, int index)
 {
-        i_widget_t *low, *high;
+        i_select_option_t numeric, *option;
+        int i, max;
 
-        /* Reverse-order select options switch the button functions */
-        if (select->reverse) {
-                low = &select->right.widget;
-                high = &select->left.widget;
-        } else {
-                low = &select->left.widget;
-                high = &select->right.widget;
-        }
+        /* Numeric widget */
+        if (select->list_len <= 0)
+                max = (select->max - select->min) / select->increment;
+        else
+                max = select->list_len - 1;
 
+        /* Range checks */
         if (index <= 0) {
                 index = 0;
-                low->state = I_WS_DISABLED;
-        } else if (low->state == I_WS_DISABLED) {
-                low->state = I_WS_READY;
+                select->left.widget.state = I_WS_DISABLED;
+        } else if (select->left.widget.state == I_WS_DISABLED) {
+                select->left.widget.state = I_WS_READY;
         }
-        if (index >= select->list_len - 1) {
-                index = select->list_len - 1;
-                high->state = I_WS_DISABLED;
-        } else if (high->state == I_WS_DISABLED)
-                high->state = I_WS_READY;
-        I_label_configure(&select->item, select->list[index]);
+        if (index >= max) {
+                index = max;
+                select->right.widget.state = I_WS_DISABLED;
+        } else if (select->right.widget.state == I_WS_DISABLED)
+                select->right.widget.state = I_WS_READY;
+
+        /* Already set? */
+        if (select->index == index)
+                return;
         select->index = index;
+
+        /* Get the option */
+        if (select->list_len > 0) {
+                option = select->options;
+                for (i = 0; option && i < index; i++)
+                        option = option->next;
+        }
+
+        /* For numeric options, fake one */
+        else {
+                float value;
+                const char *fmt;
+
+                option = &numeric;
+                value = select->min + select->increment * select->index;
+                fmt = C_va("%%.0%df%%s", select->decimals);
+                snprintf(option->string, sizeof (option->string), fmt, value,
+                         select->suffix ? select->suffix : "");
+                if (select->variable) {
+                        if (select->variable->type == C_VT_FLOAT)
+                                option->value.f = value;
+                        else if (select->variable->type == C_VT_INTEGER)
+                                option->value.n = (int)(value + 0.5f);
+                }
+        }
+
+        if (select->widget.configured)
+                I_label_configure(&select->item, option->string);
+        else
+                C_strncpy_buf(select->item.buffer, option->string);
         if (select->on_change)
                 select->on_change(select);
+
+        /* If a auto-set variable is configured, set it now */
+        if (select->variable && option) {
+                if (select->variable->type == C_VT_FLOAT)
+                        C_var_set(select->variable,
+                                  C_va("%g", option->value.f));
+                else if (select->variable->type == C_VT_INTEGER)
+                        C_var_set(select->variable,
+                                  C_va("%d", option->value.n));
+                else
+                        C_var_set(select->variable, option->string);
+        }
 }
 
 /******************************************************************************\
@@ -85,8 +156,7 @@ static void left_arrow_clicked(i_button_t *button)
         i_select_t *select;
 
         select = (i_select_t *)button->data;
-        select->index += select->reverse ? 1 : -1;
-        I_select_change(select, select->index);
+        I_select_change(select, select->index - 1);
 }
 
 /******************************************************************************\
@@ -97,15 +167,134 @@ static void right_arrow_clicked(i_button_t *button)
         i_select_t *select;
 
         select = (i_select_t *)button->data;
-        select->index += select->reverse ? -1 : 1;
-        I_select_change(select, select->index);
+        I_select_change(select, select->index + 1);
+}
+
+/******************************************************************************\
+ Add a value to the start of the options list.
+\******************************************************************************/
+static i_select_option_t *select_add(i_select_t *select, const char *string)
+{
+        i_select_option_t *option;
+
+        option = C_malloc(sizeof (*option));
+        C_strncpy_buf(option->string, string);
+        option->next = select->options;
+        select->options = option;
+        select->list_len++;
+        return option;
+}
+
+void I_select_add_string(i_select_t *select, const char *string)
+{
+        select_add(select, string);
+}
+
+void I_select_add_float(i_select_t *select, float f, const char *override)
+{
+        i_select_option_t *option;
+        const char *fmt;
+
+        if (override)
+                option = select_add(select, override);
+        else if (select->suffix && select->suffix[0]) {
+                fmt = C_va("%%.0%df%%s", select->decimals);
+                option = select_add(select, C_va(fmt, f, select->suffix));
+        } else {
+                fmt = C_va("%%.0%df", select->decimals);
+                option = select_add(select, C_va(fmt, f, select->suffix));
+        }
+        option->value.f = f;
+}
+
+void I_select_add_int(i_select_t *select, int n, const char *override)
+{
+        i_select_option_t *option;
+
+        if (override)
+                option = select_add(select, override);
+        else if (select->suffix && select->suffix[0])
+                option = select_add(select, C_va("%d%s", n, select->suffix));
+        else
+                option = select_add(select, C_va("%d", n, select->suffix));
+        option->value.n = n;
+}
+
+/******************************************************************************\
+ Update the selection widget with the nearest value to the variable we are
+ trying to set.
+\******************************************************************************/
+void I_select_update(i_select_t *select)
+{
+        i_select_option_t *option;
+        int i, best;
+
+        if (!select->variable)
+                return;
+
+        /* Numeric widgets don't need to cycle */
+        if (select->list_len <= 0) {
+                float value;
+
+                if (select->variable->type == C_VT_FLOAT)
+                        value = select->variable->value.f;
+                else if (select->variable->type == C_VT_INTEGER)
+                        value = (int)(select->variable->value.n + 0.5f);
+                else
+                        C_error("Invalid variable type %d",
+                                select->variable->type);
+                if (value < select->min)
+                        value = select->min;
+                if (value > select->max)
+                        value = select->max;
+                best = (int)((value - select->min) / select->increment + 0.5f);
+                I_select_change(select, best);
+                return;
+        }
+
+        /* Go through the options list and find the closest value */
+        best = 0;
+        if (select->variable->type == C_VT_FLOAT) {
+                float diff, best_diff;
+
+                best_diff = C_FLOAT_MAX;
+                for (option = select->options, i = 0; option;
+                     option = option->next, i++) {
+                        diff = select->variable->value.f - option->value.f;
+                        if (diff < 0.f)
+                                diff = -diff;
+                        if (diff < best_diff) {
+                                best = i;
+                                if (!diff)
+                                        break;
+                                best_diff = diff;
+                        }
+                }
+        } else if (select->variable->type == C_VT_INTEGER) {
+                int diff, best_diff;
+
+                best_diff = C_INT_MAX;
+                for (option = select->options, i = 0; option;
+                     option = option->next, i++) {
+                        diff = select->variable->value.n - option->value.n;
+                        if (diff < 0)
+                                diff = -diff;
+                        if (diff < best_diff) {
+                                best = i;
+                                if (!diff)
+                                        break;
+                                best_diff = diff;
+                        }
+                }
+        } else
+                C_error("Invalid variable type %d", select->variable->type);
+        I_select_change(select, best);
 }
 
 /******************************************************************************\
  Initialize a selection widget.
 \******************************************************************************/
-void I_select_init(i_select_t *select, const char *label, const char **list,
-                   int initial, bool reverse)
+void I_select_init(i_select_t *select, const char *label, const char *suffix)
 {
         if (!select)
                 return;
@@ -113,9 +302,9 @@ void I_select_init(i_select_t *select, const char *label, const char **list,
         I_widget_init(&select->widget, "Select");
         select->widget.event_func = (i_event_f)I_select_event;
         select->widget.state = I_WS_READY;
-        select->list = list;
-        select->index = initial;
-        select->reverse = reverse;
+        select->suffix = suffix;
+        select->decimals = 2;
+        select->index = -1;
 
         /* Description label */
         I_label_init(&select->label, label);
@@ -123,45 +312,27 @@ void I_select_init(i_select_t *select, const char *label, const char **list,
         select->label.widget.margin_rear = 0.5f;
         I_widget_add(&select->widget, &select->label.widget);
 
-        /* Don't add buttons or item list if there is no list */
-        if (!list || !list[0])
-                return;
-
         /* Left button */
         I_button_init(&select->left, "gui/icons/arrow-left.png", NULL,
                       I_BT_ROUND);
+        select->left.widget.state = I_WS_DISABLED;
+        select->left.widget.margin_rear = 0.5f;
         select->left.on_click = (i_callback_f)left_arrow_clicked;
         select->left.data = select;
-        select->left.widget.margin_rear = 0.5f;
         I_widget_add(&select->widget, &select->left.widget);
 
         /* Selected item label */
-        I_label_init(&select->item, list[initial]);
+        I_label_init(&select->item, NULL);
         select->item.color = I_COLOR_ALT;
         I_widget_add(&select->widget, &select->item.widget);
-
-        /* Find the length of the options list */
-        for (select->list_len = 0; list[select->list_len]; select->list_len++);
 
         /* Right button */
         I_button_init(&select->right, "gui/icons/arrow-right.png", NULL,
                       I_BT_ROUND);
+        select->right.widget.state = I_WS_DISABLED;
+        select->right.widget.margin_front = 0.5f;
         select->right.on_click = (i_callback_f)right_arrow_clicked;
         select->right.data = select;
-        select->right.widget.margin_front = 0.5f;
         I_widget_add(&select->widget, &select->right.widget);
-
-        /* Initially disabled buttons */
-        if (initial < 1) {
-                if (select->reverse)
-                        select->right.widget.state = I_WS_DISABLED;
-                else
-                        select->left.widget.state = I_WS_DISABLED;
-        } else if (initial >= select->list_len - 1) {
-                if (select->reverse)
-                        select->left.widget.state = I_WS_DISABLED;
-                else
-                        select->right.widget.state = I_WS_DISABLED;
-        }
 }
 

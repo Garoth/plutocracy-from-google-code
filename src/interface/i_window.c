@@ -277,6 +277,8 @@ void I_toolbar_enable(i_toolbar_t *toolbar, int i, bool enable)
                 toolbar->buttons[i].widget.state = I_WS_DISABLED;
                 toolbar->was_open[i] = toolbar->windows[i].widget.shown;
                 I_widget_event(&toolbar->windows[i].widget, I_EV_HIDE);
+                if (toolbar->open_window == toolbar->windows + i)
+                        toolbar->open_window = NULL;
                 return;
         }
 

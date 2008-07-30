@@ -169,11 +169,8 @@ int I_button_event(i_button_t *button, i_event_t event)
                         if (button->on_click)
                                 button->on_click(button);
                         if (button->widget.state == I_WS_READY ||
-                            button->widget.state == I_WS_ACTIVE) {
+                            button->widget.state == I_WS_ACTIVE)
                                 button->widget.state = I_WS_READY;
-                                if (i_mouse_focus == &button->widget)
-                                        button->widget.state = I_WS_HOVER;
-                        }
                 }
                 button->hover_activate = FALSE;
                 break;

@@ -55,20 +55,6 @@ static int cargo_event(cargo_t *cargo, i_event_t event)
 }
 
 /******************************************************************************\
- Left arrow clicked on a cargo widget.
-\******************************************************************************/
-static void cargo_left_clicked(void)
-{
-}
-
-/******************************************************************************\
- Right arrow clicked on a cargo widget.
-\******************************************************************************/
-static void cargo_right_clicked(void)
-{
-}
-
-/******************************************************************************\
  Initialize a cargo widget.
 \******************************************************************************/
 static void cargo_init(cargo_t *cargo, const char *name)
@@ -92,7 +78,6 @@ static void cargo_init(cargo_t *cargo, const char *name)
         /* Left button */
         I_button_init(&cargo->left, "gui/icons/arrow-left.png", NULL,
                       I_BT_ROUND);
-        cargo->left.on_click = (i_callback_f)cargo_left_clicked;
         cargo->left.data = cargo;
         cargo->left.widget.margin_front = 0.5f;
         cargo->left.widget.margin_rear = 0.5f;
@@ -107,7 +92,6 @@ static void cargo_init(cargo_t *cargo, const char *name)
         /* Right button */
         I_button_init(&cargo->right, "gui/icons/arrow-right.png", NULL,
                       I_BT_ROUND);
-        cargo->right.on_click = (i_callback_f)cargo_right_clicked;
         cargo->right.data = cargo;
         cargo->right.widget.margin_front = 0.5f;
         cargo->right.widget.margin_rear = 0.5f;
@@ -188,6 +172,8 @@ void I_init_trade(i_window_t *window)
         I_label_init(&title, "Trade");
         title.font = R_FONT_TITLE;
         I_widget_add(&window->widget, &title.widget);
+
+        /* Trade mode */
 
         /* Cargo space */
         I_info_init(&cargo_info, C_str("i-cargo", "Cargo space:"), "0/0");

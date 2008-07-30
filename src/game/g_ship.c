@@ -32,50 +32,6 @@ g_ship_t g_ships[G_SHIPS_MAX];
 g_ship_class_t g_ship_classes[G_SHIP_NAMES];
 
 /******************************************************************************\
- Initialize ship assets.
-\******************************************************************************/
-void G_init_ships(void)
-{
-        g_ship_class_t *pc;
-        int i;
-
-        /* Setup ships array */
-        for (i = 0; i < G_SHIPS_MAX; i++)
-                g_ships[i].class_name = G_SN_NONE;
-
-        /* Sloop */
-        pc = g_ship_classes + G_SN_SLOOP;
-        pc->name = C_str("g-ship-sloop", "Sloop");
-        pc->model_path = "models/ship/sloop.plum";
-        pc->speed = 1.f;
-        pc->health = 40;
-        pc->cargo = 100;
-
-        /* Spider */
-        pc = g_ship_classes + G_SN_SPIDER;
-        pc->name = C_str("g-ship-spider", "Spider");
-        pc->model_path = "models/ship/spider.plum";
-        pc->speed = 0.75f;
-        pc->health = 80;
-        pc->cargo = 150;
-
-        /* Galleon */
-        pc = g_ship_classes + G_SN_GALLEON;
-        pc->name = C_str("g-ship-galleon", "Galleon");
-        pc->model_path = "models/ship/galleon.plum";
-        pc->speed = 0.5f;
-        pc->health = 200;
-        pc->cargo = 100;
-}
-
-/******************************************************************************\
- Clean up ship assets.
-\******************************************************************************/
-void G_cleanup_ships(void)
-{
-}
-
-/******************************************************************************\
  Returns TRUE if a ship can sail into the given tile.
 \******************************************************************************/
 bool G_open_tile(int tile, int ship)
