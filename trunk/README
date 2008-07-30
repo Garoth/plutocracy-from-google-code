@@ -10,7 +10,6 @@
   1. Release Information
 
      1.1  Reporting Bugs and Known Issues
-     1.2  Credits and Thanks
 
   2. Compiling and Installing Plutocracy
 
@@ -52,42 +51,6 @@
 
     Please read the Issue Tracker Wiki before creating a new issue:
     http://code.google.com/p/plutocracy/wiki/IssueTracker
-
-
-  1.2  Credits and Thanks
-  -----------------------
-
-    Active team:
-
-      Michael Levin <risujin@risujin.org>
-        Feb 2008 -
-        Lead programmer, game design, UI
-
-      Andrei Thorp <garoth@gmail.com>
-        Feb 2008 -
-        Blog, models, game design, scripting
-
-      Amanieu d'Antras <amanieu@gmail.com>
-        Apr 2008 -
-        Additional programming
-
-      Raoni Gillet <raoni.gillet@gmail.com>
-        July 2008 -
-        Modelling (Galleon)
-
-      Billy "Aaron5367" Rhoades <aaron5367@gmail.com>
-        July 2008 -
-        Textures (Galleon)
-
-    Retired team:
-
-      Devin Papineau
-        Feb - Mar 2008
-        OpenGL consulting, prototype globe programming
-
-    Thanks:
-
-      David Severwright
 
 
 
