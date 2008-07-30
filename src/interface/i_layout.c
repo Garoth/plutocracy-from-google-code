@@ -32,7 +32,7 @@ i_widget_t i_root;
 int i_limbo;
 
 /* Indices of buttons on the right toolbar */
-int i_ship_button, i_players_button;
+int i_players_button, i_ship_button, i_trade_button;
 
 /* Right toolbar */
 i_toolbar_t i_right_toolbar;
@@ -75,7 +75,16 @@ static int root_event(i_widget_t *root, i_event_t event)
                 limbo_logo.origin.x = r_width_2d / 2 - limbo_logo.size.x / 2;
                 limbo_logo.origin.y = r_height_2d / 2 - limbo_logo.size.y / 2;
 
-                break;
+                /* Make sure the globe is configured */
+                I_globe_event(event);
+
+                /* Do the propagation ourselves */
+                I_widget_propagate(root, event);
+
+                /* Move chat into proper position after configuration */
+                I_position_chat();
+
+                return FALSE;
         case I_EV_KEY_FOCUS:
                 I_focus_chat();
                 break;
@@ -169,7 +178,6 @@ static void theme_configure(void)
                                                        i_border.value.n),
                                                toolbar_y);
 
-        I_position_chat();
         theme_widgets();
 }
 
@@ -369,11 +377,15 @@ void I_init(void)
         i_ship_button = I_toolbar_add_button(&i_right_toolbar,
                                              "gui/icons/ship.png",
                                              (i_callback_f)I_init_ship);
+        i_trade_button = I_toolbar_add_button(&i_right_toolbar,
+                                              "gui/icons/trade.png",
+                                              (i_callback_f)I_init_trade);
         i_players_button = I_toolbar_add_button(&i_right_toolbar,
                                                 "gui/icons/players.png",
                                                 (i_callback_f)I_init_players);
         I_widget_add(&i_root, &i_right_toolbar.widget);
         i_right_toolbar.buttons[i_ship_button].widget.state = I_WS_DISABLED;
+        i_right_toolbar.buttons[i_trade_button].widget.state = I_WS_DISABLED;
 
         /* Theme can now be modified dynamically */
         theme_configure();

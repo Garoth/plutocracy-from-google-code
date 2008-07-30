@@ -88,7 +88,7 @@ static void ip_entry_changed(void)
 void I_init_game(i_window_t *window)
 {
         I_window_init(window);
-        window->natural_size = C_vec2(400.f, 200.f);
+        window->widget.size = C_vec2(400.f, 200.f);
         window->fit = I_FIT_TOP;
 
         /* Label */
@@ -98,11 +98,11 @@ void I_init_game(i_window_t *window)
 
         /* Initialize outer box */
         I_box_init(&outer_box, I_PACK_H,
-                   window->natural_size.y - i_border.value.n * 2);
+                   window->widget.size.y - i_border.value.n * 2);
         I_widget_add(&window->widget, &outer_box.widget);
 
         /* Left-side vertical box */
-        I_box_init(&left_box, I_PACK_V, window->natural_size.x / 4.f);
+        I_box_init(&left_box, I_PACK_V, window->widget.size.x / 4.f);
         left_box.widget.margin_rear = 1.f;
         I_widget_add(&outer_box.widget, &left_box.widget);
 

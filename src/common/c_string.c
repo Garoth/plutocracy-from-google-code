@@ -95,7 +95,8 @@ char *C_skip_spaces(const char *str)
  a NUL terminator. Sometimes known as "strncpyz". Can copy overlapped strings.
  Returns the length of the source string.
 \******************************************************************************/
-int C_strncpy(char *dest, const char *src, int len)
+int C_strncpy_full(const char *file, int line, const char *func,
+                   char *dest, const char *src, int len)
 {
         int src_len;
 
@@ -108,8 +109,9 @@ int C_strncpy(char *dest, const char *src, int len)
         }
         src_len = (int)strlen(src);
         if (src_len > --len) {
-                C_debug("dest (%d bytes) too short to hold src (%d bytes)",
-                        len, src_len, src);
+                C_debug_full(file, line, func,
+                             "dest (%d bytes) too short to hold src (%d bytes)",
+                             len, src_len, src);
                 src_len = len;
         }
         memmove(dest, src, src_len);

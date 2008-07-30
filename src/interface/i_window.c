@@ -49,17 +49,10 @@ void I_theme_windows(void)
 /******************************************************************************\
  Window widget event function.
 \******************************************************************************/
-static int window_event(i_window_t *window, i_event_t event)
+int I_window_event(i_window_t *window, i_event_t event)
 {
         switch (event) {
         case I_EV_CONFIGURE:
-
-                /* Windows are optionally excepted from the normal packing
-                   order. Since they are never in another container, they can
-                   set their own size. */
-                if (window->natural_size.x || window->natural_size.y)
-                        window->widget.size = window->natural_size;
-
                 R_window_cleanup(&window->window);
                 I_widget_pack(&window->widget, window->pack_children,
                               window->fit);
@@ -130,7 +123,7 @@ void I_window_init(i_window_t *window)
                 return;
         C_zero(window);
         I_widget_init(&window->widget, "Window");
-        window->widget.event_func = (i_event_f)window_event;
+        window->widget.event_func = (i_event_f)I_window_event;
         window->widget.state = I_WS_READY;
         window->widget.padding = 1.f;
         window->widget.steal_keys = TRUE;

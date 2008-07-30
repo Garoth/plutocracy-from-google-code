@@ -10,6 +10,8 @@
  FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
 \******************************************************************************/
 
+/* Basic widget mechanics and event handling */
+
 #include "i_common.h"
 
 /* Colors in this array are kept up to date when the theme changes */
@@ -43,58 +45,6 @@ void I_widget_init(i_widget_t *widget, const char *class_name)
         if (c_mem_check.value.n && i_debug.value.n)
                 C_trace("Initialized %s", widget->name);
         widget->shown = TRUE;
-}
-
-/******************************************************************************\
- Attaches a child widget to another widget to the end of the parent's children
- linked list. Sends the I_EV_ADD_CHILD event.
-\******************************************************************************/
-void I_widget_add(i_widget_t *parent, i_widget_t *child)
-{
-        i_widget_t *sibling;
-
-        if (!child)
-                return;
-        if (!parent->name[0])
-                C_error("Parent widget uninitialized");
-        if (!child->name[0])
-                C_error("Child widget uninitialized");
-        if (!parent)
-                C_error("Tried to add %s to a null pointer", child->name);
-        if (child->parent)
-                C_error("Cannot add %s to %s, already has a parent",
-                        child->name, parent->name);
-        sibling = parent->child;
-        if (sibling) {
-                while (sibling->next)
-                        sibling = sibling->next;
-                sibling->next = child;
-        } else
-                parent->child = child;
-        child->next = NULL;
-        child->parent = parent;
-        i_child = child;
-        if (parent->event_func)
-                parent->event_func(parent, I_EV_ADD_CHILD);
-}
-
-/******************************************************************************\
- Remove all of the widget's children.
-\******************************************************************************/
-void I_widget_remove_children(i_widget_t *widget, int cleanup)
-{
-        i_widget_t *child, *child_next;
-
-        if (!widget)
-                return;
-        for (child = widget->child; child; child = child_next) {
-                child_next = child->next;
-                child->parent = NULL;
-                child->next = NULL;
-                if (cleanup)
-                        I_widget_event(child, I_EV_CLEANUP);
-        }
-        widget->child = NULL;
 }
 
 /******************************************************************************\
@@ -148,106 +98,6 @@ void I_widget_move(i_widget_t *widget, c_vec2_t origin)
 }
 
 /******************************************************************************\
- Gives extra space to expanding child widgets.
-\******************************************************************************/
-static void expand_children(i_widget_t *widget, c_vec2_t size, int expanders)
-{
-        c_vec2_t offset;
-        i_widget_t *child;
-
-        size = C_vec2_divf(size, (float)expanders);
-        offset = C_vec2(0.f, 0.f);
-        for (child = widget->child; child; child = child->next) {
-                if (!child->shown)
-                        continue;
-                if (!child->expand) {
-                        I_widget_move(child, C_vec2_add(child->origin, offset));
-                        continue;
-                }
-                child->size = C_vec2_add(child->size, size);
-                child->origin = C_vec2_add(child->origin, offset);
-                I_widget_event(child, I_EV_CONFIGURE);
-                offset = C_vec2_add(offset, size);
-        }
-}
-
-/******************************************************************************\
- Packs a widget's children.
-\******************************************************************************/
-void I_widget_pack(i_widget_t *widget, i_pack_t pack, i_fit_t fit)
-{
-        i_widget_t *child;
-        c_vec2_t origin, size;
-        int expanders;
-
-        /* First, let every widget claim the minimum space it requires */
-        size = C_vec2_subf(widget->size,
-                           widget->padding * i_border.value.n * 2.f);
-        origin = C_vec2_addf(widget->origin,
-                             widget->padding * i_border.value.n);
-        expanders = 0;
-        for (child = widget->child; child; child = child->next) {
-                float margin_front, margin_rear;
-
-                /* Skip invisible children */
-                if (!child->shown) {
-                        I_widget_event(child, I_EV_CONFIGURE);
-                        continue;
-                }
-
-                margin_front = child->margin_front * i_border.value.n;
-                margin_rear = child->margin_rear * i_border.value.n;
-                if (pack == I_PACK_H) {
-                        origin.x += margin_front;
-                        child->origin = origin;
-                        child->size = C_vec2(0.f, size.y);
-                        I_widget_event(child, I_EV_CONFIGURE);
-                        origin.x += child->size.x + margin_rear;
-                        size.x -= child->size.x + margin_front + margin_rear;
-                } else if (pack == I_PACK_V) {
-                        origin.y += margin_front;
-                        child->origin = origin;
-                        child->size = C_vec2(size.x, 0.f);
-                        I_widget_event(child, I_EV_CONFIGURE);
-                        origin.y += child->size.y + margin_rear;
-                        size.y -= child->size.y + margin_front + margin_rear;
-                }
-                if (child->expand)
-                        expanders++;
-        }
-
-        /* If there is left over space and we are not collapsing, assign it
-           to any expandable widgets */
-        if (fit == I_FIT_NONE) {
-                if (pack == I_PACK_H && expanders) {
-                        size.y = 0.f;
-                        expand_children(widget, size, expanders);
-                } else if (pack == I_PACK_V && expanders) {
-                        size.x = 0.f;
-                        expand_children(widget, size, expanders);
-                }
-                return;
-        }
-
-        /* This is a fitting widget so fit the widget to its contents */
-        if (pack == I_PACK_H && size.x < 0.f) {
-                widget->size.x -= size.x;
-                if (fit == I_FIT_TOP) {
-                        origin = widget->origin;
-                        origin.x += size.x;
-                        I_widget_move(widget, origin);
-                }
-        } else if (pack == I_PACK_V && size.y < 0.f) {
-                widget->size.y -= size.y;
-                if (fit == I_FIT_TOP) {
-                        origin = widget->origin;
-                        origin.y += size.y;
-                        I_widget_move(widget, origin);
-                }
-        }
-}
-
-/******************************************************************************\
  Returns the width and height of a rectangle that would encompass the widget
  including margins.
 \******************************************************************************/
@@ -282,29 +132,6 @@ bool I_widget_child_of(const i_widget_t *parent, const i_widget_t *child)
                 child = child->parent;
         }
         return TRUE;
-}
-
-/******************************************************************************\
- Returns the width and height of a rectangle from the widget's origin that
- would encompass it's child widgets.
-\******************************************************************************/
-c_vec2_t I_widget_child_bounds(const i_widget_t *widget)
-{
-        c_vec2_t bounds, corner;
-        i_widget_t *child;
-
-        bounds = C_vec2(0.f, 0.f);
-        for (child = widget->child; child; child = child->next) {
-                if (!child->shown)
-                        continue;
-                corner = C_vec2_add(C_vec2_sub(child->origin, widget->origin),
-                                    child->size);
-                if (bounds.x < corner.x)
-                        bounds.x = corner.x;
-                if (bounds.y < corner.y)
-                        bounds.y = corner.y;
-        }
-        return bounds;
 }
 
 /******************************************************************************\
@@ -648,7 +475,6 @@ void I_widget_event(i_widget_t *widget, i_event_t event)
 /******************************************************************************\
  Returns the string representation of a keycode. The string it stored in a
  C_va() buffer and should be considered temporary.
- TODO: Some common keycodes should get names.
 \******************************************************************************/
 const char *I_key_string(int sym)
 {

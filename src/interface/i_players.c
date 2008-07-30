@@ -93,7 +93,7 @@ void I_init_players(i_window_t *window)
         int i;
 
         I_window_init(window);
-        window->natural_size = C_vec2(200.f, 0.f);
+        window->widget.size = C_vec2(200.f, 0.f);
         window->fit = I_FIT_TOP;
 
         /* Label */
