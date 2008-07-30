@@ -229,6 +229,7 @@ void I_button_configure(i_button_t *, const char *icon, const char *text,
 void I_theme_buttons(void);
 
 /* i_chat.c */
+void I_chat_event(i_event_t);
 void I_focus_chat(void);
 void I_hide_chat(void);
 void I_init_chat(void);
@@ -245,6 +246,7 @@ void I_widget_remove_children(i_widget_t *, int cleanup);
 
 /* i_console.c */
 void I_init_console(i_window_t *);
+int I_scrollback_event(i_scrollback_t *, i_event_t);
 void I_scrollback_init(i_scrollback_t *);
 void I_scrollback_scroll(i_scrollback_t *, bool up);
 void I_theme_scrollbacks(void);
@@ -319,6 +321,7 @@ const char *I_event_string(i_event_t);
 c_vec2_t I_widget_bounds(const i_widget_t *, i_pack_t);
 bool I_widget_child_of(const i_widget_t *parent, const i_widget_t *child);
 void I_widget_event(i_widget_t *, i_event_t);
+void I_widget_focus(i_widget_t *, bool key, bool mouse);
 void I_widget_init(i_widget_t *, const char *class_name);
 void I_widget_move(i_widget_t *, c_vec2_t new_origin);
 void I_widget_propagate(i_widget_t *, i_event_t);

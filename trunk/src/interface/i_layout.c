@@ -88,15 +88,6 @@ static int root_event(i_widget_t *root, i_event_t event)
         case I_EV_KEY_FOCUS:
                 I_focus_chat();
                 break;
-        case I_EV_KEY_DOWN:
-
-                /* Open chat */
-                if (i_key == SDLK_RETURN) {
-                        I_show_chat();
-                        return FALSE;
-                }
-
-                break;
         case I_EV_RENDER:
 
                 /* Rotate around the globe during limbo */
@@ -132,7 +123,8 @@ static int root_event(i_widget_t *root, i_event_t event)
                 break;
         }
 
-        /* Propagate to the globe interface processing function */
+        /* Propagate events to special handlers */
+        I_chat_event(event);
         I_globe_event(event);
 
         return TRUE;
@@ -353,6 +345,7 @@ void I_init(void)
         i_root.configured = 1;
         i_root.entry = TRUE;
         i_root.shown = TRUE;
+        i_root.steal_keys = TRUE;
         i_key_focus = &i_root;
 
         /* Initialize special child widgets */

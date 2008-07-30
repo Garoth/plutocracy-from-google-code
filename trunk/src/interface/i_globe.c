@@ -207,6 +207,8 @@ void I_globe_event(i_event_t event)
 
         switch (event) {
         case I_EV_KEY_DOWN:
+                if (i_key_focus != &i_root)
+                        return;
                 I_close_ring();
                 if (i_key == SDLK_RIGHT && globe_motion.x > -1.f)
                         globe_motion.x = -i_scroll_speed.value.f;

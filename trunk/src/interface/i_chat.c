@@ -146,7 +146,6 @@ void I_position_chat(void)
 void I_hide_chat(void)
 {
         I_widget_event(&input_window.widget, I_EV_HIDE);
-        I_widget_event(&chat_box.widget, I_EV_SHOW);
 }
 
 /******************************************************************************\
@@ -160,46 +159,66 @@ static void input_enter(void)
 }
 
 /******************************************************************************\
+ Show or hide the chat scrollback.
+\******************************************************************************/
+static void show_scrollback(bool show)
+{
+        I_widget_event(&scrollback.widget, show ? I_EV_SHOW : I_EV_HIDE);
+        I_widget_event(&chat_box.widget, show ? I_EV_HIDE : I_EV_SHOW);
+}
+
+/******************************************************************************\
  Scrollback button was clicked.
 \******************************************************************************/
 static void scrollback_button_click(void)
 {
-        I_widget_event(&scrollback.widget,
-                       scrollback.widget.shown ? I_EV_HIDE : I_EV_SHOW);
-        I_widget_event(&chat_box.widget,
-                       scrollback.widget.shown ? I_EV_HIDE : I_EV_SHOW);
+        show_scrollback(!scrollback.widget.shown);
+}
+
+
+/******************************************************************************\
+ A key event was delivered to the root window that may be relevant to chat.
+\******************************************************************************/
+void I_chat_event(i_event_t event)
+{
+        if (event != I_EV_KEY_DOWN || i_key_focus != &i_root)
+                return;
+        if (i_key == SDLK_ESCAPE)
+                show_scrollback(FALSE);
+        else if (i_key == SDLK_PAGEUP) {
+                show_scrollback(TRUE);
+                I_scrollback_scroll(&scrollback, TRUE);
+        } else if (i_key == SDLK_PAGEDOWN) {
+                show_scrollback(TRUE);
+                I_scrollback_scroll(&scrollback, FALSE);
+        } else if (i_key == SDLK_RETURN)
+                I_show_chat();
 }
 
 /******************************************************************************\
- Catches the entry widget's events to enable PgUp/PgDn scrolling the
- scrollback.
+ Catch events to the entry widget.
 \******************************************************************************/
 static int entry_event(i_entry_t *entry, i_event_t event)
 {
-        if (scrollback.widget.configured && event == I_EV_KEY_DOWN) {
-                if (i_key == SDLK_PAGEUP) {
-                        I_widget_event(&scrollback.widget, I_EV_SHOW);
-                        I_widget_event(&chat_box.widget, I_EV_HIDE);
-                        I_scrollback_scroll(&scrollback, TRUE);
-                } else if (i_key == SDLK_PAGEDOWN) {
-                        I_widget_event(&scrollback.widget, I_EV_SHOW);
-                        I_widget_event(&chat_box.widget, I_EV_HIDE);
-                        I_scrollback_scroll(&scrollback, FALSE);
-                }
+        if (i_key == SDLK_PAGEUP) {
+                show_scrollback(TRUE);
+                I_scrollback_scroll(&scrollback, TRUE);
+        } else if (i_key == SDLK_PAGEDOWN) {
+                show_scrollback(TRUE);
+                I_scrollback_scroll(&scrollback, FALSE);
         }
         return I_entry_event(entry, event);
 }
 
 /******************************************************************************\
- Catches the input window's events to hide the scrollback.
+ Catch scrollback event to close it when the user wants it gone.
 \******************************************************************************/
-static int input_window_event(i_window_t *window, i_event_t event)
+static int scrollback_event(i_scrollback_t *scrollback, i_event_t event)
 {
-        if (event == I_EV_HIDE) {
-                I_widget_event(&scrollback.widget, event);
-                I_widget_event(&chat_box.widget, I_EV_SHOW);
-        }
-        return I_window_event(window, event);
+        if ((event == I_EV_MOUSE_DOWN && i_mouse == SDL_BUTTON_RIGHT) ||
+            (event == I_EV_KEY_DOWN && i_key == SDLK_ESCAPE))
+                show_scrollback(TRUE);
+        return I_scrollback_event(scrollback, event);
 }
 
 /******************************************************************************\
@@ -217,14 +236,16 @@ void I_init_chat(void)
 
         /* Chat scrollback */
         I_scrollback_init(&scrollback);
+        scrollback.widget.event_func = (i_event_f)scrollback_event;
+        scrollback.widget.steal_keys = TRUE;
         scrollback.widget.size = C_vec2(512.f, 256.f);
+        scrollback.widget.shown = FALSE;
         I_widget_add(&i_root, &scrollback.widget);
 
         /* Input window */
         I_window_init(&input_window);
-        input_window.widget.event_func = (i_event_f)input_window_event;
         input_window.widget.size = C_vec2(512.f, 0.f);
-        input_window.fit = I_FIT_TOP;
+        input_window.fit = I_FIT_BOTTOM;
         input_window.popup = TRUE;
         input_window.auto_hide = TRUE;
         I_widget_add(&i_root, &input_window.widget);
@@ -254,7 +275,7 @@ void I_init_chat(void)
 void I_focus_chat(void)
 {
         if (input_window.widget.shown)
-                i_key_focus = &input.widget;
+                I_widget_focus(&input.widget, TRUE, FALSE);
 }
 
 /******************************************************************************\
@@ -297,8 +318,9 @@ void I_print_chat(const char *name, i_color_t color, const char *message)
 
         /* Initialize and add it back */
         chat_init(chat_lines + i, name, color, message);
-        I_widget_add_pack(&chat_box.widget, &chat_lines[i].widget,
-                          I_PACK_V, I_FIT_TOP);
+        I_widget_add(&chat_box.widget, &chat_lines[i].widget);
+        I_widget_event(&chat_box.widget, I_EV_CONFIGURE);
+        I_position_chat();
 
         /* Add a copy to the scrollback */
         chat = chat_alloc(name, color, message);
