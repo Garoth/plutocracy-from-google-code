@@ -163,8 +163,6 @@ void G_load_names(void);
 void G_reset_name_counts(void);
 
 /* g_ship.c */
-void G_cleanup_ships(void);
-void G_init_ships(void);
 bool G_open_tile(int tile, int exclude_ship);
 void G_render_ships(void);
 bool G_ship_move_to(int ship, int new_tile);

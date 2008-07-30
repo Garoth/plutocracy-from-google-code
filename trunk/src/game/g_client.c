@@ -434,6 +434,7 @@ void G_client_callback(int client, n_event_t event)
                 }
                 n_clients[i].connected = TRUE;
                 C_zero(g_clients + i);
+                g_clients[i].nation = G_NN_NONE;
                 C_debug("Client %d connected", i);
                 break;
 
@@ -474,7 +475,6 @@ void G_init(void)
 {
         C_status("Initializing client");
         G_init_elements();
-        G_init_ships();
         G_init_globe();
 
         /* Update the server when our name changes */
@@ -492,6 +492,5 @@ void G_init(void)
 void G_cleanup(void)
 {
         G_cleanup_globe();
-        G_cleanup_ships();
 }
 

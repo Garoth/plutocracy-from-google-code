@@ -71,23 +71,29 @@ i_color_t G_nation_to_color(g_nation_name_t nation)
 \******************************************************************************/
 void G_init_elements(void)
 {
+        g_ship_class_t *pc;
+
         C_status("Initializing game elements");
 
-        /* Setup nations */
-        g_nations[G_NN_NONE].short_name = "none";
-        g_nations[G_NN_NONE].long_name = C_str("g-nation-none", "None");
+        /* Ruby nation */
         g_nations[G_NN_RED].short_name = "red";
         g_nations[G_NN_RED].long_name = C_str("g-nation-red", "Ruby");
         C_var_update_data(g_nation_colors + G_NN_RED, nation_color_update,
                           &g_nations[G_NN_RED].color);
+
+        /* Emerald nation */
         g_nations[G_NN_GREEN].short_name = "green";
         g_nations[G_NN_GREEN].long_name = C_str("g-nation-green", "Emerald");
         C_var_update_data(g_nation_colors + G_NN_GREEN, nation_color_update,
                           &g_nations[G_NN_GREEN].color);
+
+        /* Sapphire nation */
         g_nations[G_NN_BLUE].short_name = "blue";
         g_nations[G_NN_BLUE].long_name = C_str("g-nation-blue", "Sapphire");
         C_var_update_data(g_nation_colors + G_NN_BLUE, nation_color_update,
                           &g_nations[G_NN_BLUE].color);
+
+        /* Pirate */
         g_nations[G_NN_PIRATE].short_name = "pirate";
         g_nations[G_NN_PIRATE].long_name = C_str("g-nation-pirate", "Pirate");
         C_var_update_data(g_nation_colors + G_NN_PIRATE, nation_color_update,
@@ -126,6 +132,30 @@ void G_init_elements(void)
         g_building_types[G_BN_NONE].model_path = "";
         g_building_types[G_BN_TREE].name = "Trees";
         g_building_types[G_BN_TREE].model_path = "models/tree/deciduous.plum";
+
+        /* Sloop */
+        pc = g_ship_classes + G_SN_SLOOP;
+        pc->name = C_str("g-ship-sloop", "Sloop");
+        pc->model_path = "models/ship/sloop.plum";
+        pc->speed = 1.f;
+        pc->health = 40;
+        pc->cargo = 100;
+
+        /* Spider */
+        pc = g_ship_classes + G_SN_SPIDER;
+        pc->name = C_str("g-ship-spider", "Spider");
+        pc->model_path = "models/ship/spider.plum";
+        pc->speed = 0.75f;
+        pc->health = 80;
+        pc->cargo = 150;
+
+        /* Galleon */
+        pc = g_ship_classes + G_SN_GALLEON;
+        pc->name = C_str("g-ship-galleon", "Galleon");
+        pc->model_path = "models/ship/galleon.plum";
+        pc->speed = 0.5f;
+        pc->health = 100;
+        pc->cargo = 200;
 }
 
 /******************************************************************************\
@@ -167,7 +197,7 @@ void G_reset_elements(void)
         /* The server "client" has fixed information */
         g_clients[N_SERVER_ID].nation = G_NN_PIRATE;
 
-        /* We can reuse ship names now */
+        /* We can reuse names now */
         G_reset_name_counts();
 }
 

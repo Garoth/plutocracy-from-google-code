@@ -229,8 +229,8 @@ static int check_mouse_focus(i_widget_t *widget)
         if (!widget)
                 return FALSE;
         mouse_pos = C_vec2((float)i_mouse_x, (float)i_mouse_y);
-        if (widget->state != I_WS_NO_FOCUS && widget->state != I_WS_DISABLED &&
-            widget->shown &&
+        if (widget->state != I_WS_NO_FOCUS &&
+            widget->state != I_WS_DISABLED && widget->shown &&
             C_rect_contains(widget->origin, widget->size, mouse_pos)) {
                 mouse_focus = widget;
                 return TRUE;
@@ -281,7 +281,7 @@ static void focus_parent(i_widget_t *widget)
 }
 
 /******************************************************************************\
- Discover the new mouse and key ocus widgets.
+ Discover the new mouse and key focus widgets.
 \******************************************************************************/
 static void find_focus(void)
 {
@@ -468,6 +468,11 @@ void I_widget_event(i_widget_t *widget, i_event_t event)
                         C_free(widget);
                 else
                         C_zero(widget);
+                break;
+        case I_EV_MOUSE_DOWN:
+        case I_EV_MOUSE_UP:
+                if (mouse_focus == widget && widget->state == I_WS_READY)
+                        widget->state = I_WS_HOVER;
                 break;
         default:
                 break;

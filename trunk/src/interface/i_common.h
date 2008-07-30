@@ -176,6 +176,17 @@ typedef struct i_scrollback {
         int children, limit;
 } i_scrollback_t;
 
+/* Data type for a select widget option */
+typedef struct i_select_option {
+        char string[32];
+        union {
+                float f;
+                int n;
+                void *p;
+        } value;
+        struct i_select_option *next;
+} i_select_option_t;
+
 /* Displays a label and a selection widget which can select text items from
    a list to the right of it */
 typedef struct i_select {
@@ -183,10 +194,12 @@ typedef struct i_select {
         i_label_t label, item;
         i_button_t left, right;
         i_callback_f on_change;
+        i_select_option_t *options;
+        c_var_t *variable;
         void *data;
-        const char **list;
-        int list_len, index;
-        bool reverse;
+        float min, max, increment;
+        int decimals, index, list_len;
+        const char *suffix;
 } i_select_t;
 
 /* Toolbar widget used for the left and right toolbars on the screen */
@@ -286,9 +299,12 @@ int I_ring_shown(void);
 void I_theme_ring(void);
 
 /* i_select.c */
+void I_select_add_float(i_select_t *, float, const char *override);
+void I_select_add_int(i_select_t *, int, const char *override);
+void I_select_add_string(i_select_t *, const char *);
 void I_select_change(i_select_t *, int index);
-void I_select_init(i_select_t *, const char *label, const char **list,
-                   int initial, bool reverse);
+void I_select_init(i_select_t *, const char *label, const char *suffix);
+void I_select_update(i_select_t *);
 
 /* i_ship.c */
 void I_init_ship(i_window_t *);

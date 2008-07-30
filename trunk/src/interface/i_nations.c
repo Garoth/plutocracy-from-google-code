@@ -33,7 +33,7 @@ void I_select_nation(int nation)
 {
         if (nation_buttons[selected].widget.state == I_WS_DISABLED)
                 nation_buttons[selected].widget.state = I_WS_READY;
-        if (nation < 1 || nation >= G_NATION_NAMES)
+        if (nation < 0 || nation >= G_NATION_NAMES)
                 return;
         nation_buttons[selected = nation].widget.state = I_WS_DISABLED;
 }
@@ -56,7 +56,7 @@ void I_init_nations(i_window_t *window)
         I_widget_add(&window->widget, &title.widget);
 
         /* Setup nation buttons */
-        for (i = 1; i < G_NATION_NAMES; i++) {
+        for (i = 0; i < G_NATION_NAMES; i++) {
                 long_name = C_str(C_va("c-team-%s", g_nations[i].short_name),
                                   g_nations[i].long_name);
                 I_button_init(nation_buttons + i,

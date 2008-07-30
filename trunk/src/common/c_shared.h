@@ -60,6 +60,18 @@
 #define INFINITY 2147483647
 #endif
 
+/* Value ranges */
+#define C_SHORT_MIN -32768
+#define C_SHORT_MAX 32767
+#define C_USHORT_MAX 65535
+#define C_INT_MIN -2147483648
+#define C_INT_MAX 2147483647
+#define C_UINT_MAX 4294967295
+#define C_FLOAT_MIN 3.4E-38
+#define C_FLOAT_MAX 3.4E+38
+#define C_DOUBLE_MIN 1.7E-308
+#define C_DOUBLE_MAX 1.7E+308
+
 /* Floating-point PI */
 #define C_PI 3.14159265358979323846f
 
