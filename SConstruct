@@ -119,7 +119,7 @@ Help(opts.GenerateHelpText(default_env))
 ################################################################################
 plutocracy_src = ([path('src/plutocracy.c')] + glob.glob(path('src/*/*.c')))
 plutocracy_env = default_env.Clone()
-plutocracy_objlibs = ''
+plutocracy_objlibs = []
 if windows:
         plutocracy_src.remove(path('src/common/c_os_posix.c'))
         plutocracy_env.Append(CPPPATH = 'windows/include')

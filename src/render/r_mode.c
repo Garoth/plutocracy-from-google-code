@@ -195,8 +195,7 @@ static int set_video_mode(void)
                 SDL_GL_SetAttribute(SDL_GL_BLUE_SIZE, 8);
                 SDL_GL_SetAttribute(SDL_GL_ALPHA_SIZE, 0);
         }
-        flags = SDL_OPENGL | SDL_DOUBLEBUF | SDL_HWPALETTE |
-                SDL_HWSURFACE | SDL_ANYFORMAT;
+        flags = SDL_OPENGL | SDL_DOUBLEBUF | SDL_ANYFORMAT;
         if (!r_windowed.value.n)
                 flags |= SDL_FULLSCREEN;
         if (!SDL_SetVideoMode(r_width.value.n, r_height.value.n,
