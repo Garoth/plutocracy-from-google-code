@@ -26,8 +26,12 @@ static float select_widest(i_select_t *select)
         if (!select->options) {
                 const char *fmt;
 
-                fmt = C_va("%%.0%df", select->decimals);
-                size = R_font_size(select->item.font, C_va(fmt, select->max));
+                if (select->suffix)
+                        fmt = C_va("%%.0%df%%s", select->decimals);
+                else
+                        fmt = C_va("%%.0%df", select->decimals);
+                size = R_font_size(select->item.font,
+                                   C_va(fmt, select->max, select->suffix));
                 return size.x / r_pixel_scale.value.f;
         }
 
@@ -50,6 +54,8 @@ static float select_widest(i_select_t *select)
 int I_select_event(i_select_t *select, i_event_t event)
 {
         if (event == I_EV_CONFIGURE) {
+                if (select->index < 0)
+                        I_select_change(select, 0);
                 select->item.width = select_widest(select);
                 select->widget.size.y = R_font_height(R_FONT_GUI) /
                                         r_pixel_scale.value.f;
@@ -135,7 +141,7 @@ void I_select_change(i_select_t *select, int index)
         if (select->on_change)
                 select->on_change(select);
 
-        /* If a auto-set variable is configured, set it now */
+        /* If an auto-set variable is configured, set it now */
         if (select->variable && option) {
                 if (select->variable->type == C_VT_FLOAT)
                         C_var_set(select->variable,
@@ -149,6 +155,21 @@ void I_select_change(i_select_t *select, int index)
 }
 
 /******************************************************************************\
+ Get the amount to change by and affect it by the keys held.
+\******************************************************************************/
+static int change_amount(void)
+{
+        int amount;
+
+        amount = 1;
+        if (i_key_ctrl)
+                amount *= 5;
+        if (i_key_shift)
+                amount *= 10;
+        return amount;
+}
+
+/******************************************************************************\
  Left select button clicked.
 \******************************************************************************/
 static void left_arrow_clicked(i_button_t *button)
@@ -156,7 +177,7 @@ static void left_arrow_clicked(i_button_t *button)
         i_select_t *select;
 
         select = (i_select_t *)button->data;
-        I_select_change(select, select->index - 1);
+        I_select_change(select, select->index - change_amount());
 }
 
 /******************************************************************************\
@@ -167,7 +188,7 @@ static void right_arrow_clicked(i_button_t *button)
         i_select_t *select;
 
         select = (i_select_t *)button->data;
-        I_select_change(select, select->index + 1);
+        I_select_change(select, select->index + change_amount());
 }
 
 /******************************************************************************\
@@ -305,6 +326,7 @@ void I_select_init(i_select_t *select, const char *label, const char *suffix)
         select->suffix = suffix;
         select->decimals = 2;
         select->index = -1;
+        select->increment = 1.f;
 
         /* Description label */
         I_label_init(&select->label, label);
@@ -324,6 +346,7 @@ void I_select_init(i_select_t *select, const char *label, const char *suffix)
         /* Selected item label */
         I_label_init(&select->item, NULL);
         select->item.color = I_COLOR_ALT;
+        select->item.justify = I_JUSTIFY_CENTER;
         I_widget_add(&select->widget, &select->item.widget);
 
         /* Right button */

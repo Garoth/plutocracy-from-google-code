@@ -53,7 +53,6 @@ void I_init_ship(i_window_t *window)
         I_label_init(&title, "Unnamed");
         title.width = -1.f;
         title.font = R_FONT_TITLE;
-        title.center = FALSE;
         I_widget_add(&window->widget, &title.widget);
 
         /* Owner */

@@ -12,125 +12,48 @@
 
 #include "i_common.h"
 
-/* Number of separators */
-#define SEPARATORS (G_CARGO_TYPES / 4 + 1)
-
 /* Cargo widget */
 typedef struct cargo {
-        i_widget_t widget;
-        i_button_t left, right;
-        i_label_t label, left_amount, price, right_amount;
+        i_selectable_t sel;
+        i_label_t left, label, price, right;
 } cargo_t;
 
 static cargo_t cargo_widgets[G_CARGO_TYPES];
-static i_image_t separators[SEPARATORS];
 static i_label_t title;
 static i_info_t cargo_info;
-
-/******************************************************************************\
- Cargo widget event function.
-\******************************************************************************/
-static int cargo_event(cargo_t *cargo, i_event_t event)
-{
-        float width;
-
-        switch (event) {
-        case I_EV_CONFIGURE:
-
-                /* See how wide we need the labels to be to space properly */
-                cargo->price.width = R_font_size(R_FONT_GUI, "000g").x /
-                                     r_pixel_scale.value.f;
-                width = R_font_size(R_FONT_GUI, "00000").x /
-                        r_pixel_scale.value.f;
-                cargo->left_amount.width = width;
-                cargo->right_amount.width = width;
-
-                I_widget_pack(&cargo->widget, I_PACK_H, I_FIT_NONE);
-                cargo->widget.size = I_widget_child_bounds(&cargo->widget);
-                return FALSE;
-        default:
-                break;
-        }
-        return TRUE;
-}
+static i_select_t mode, quantity, price, active;
+static i_selectable_t *cargo_group;
+static i_box_t button_box;
+static i_button_t transfer_button, ten_button, fifty_button;
 
 /******************************************************************************\
  Initialize a cargo widget.
 \******************************************************************************/
 static void cargo_init(cargo_t *cargo, const char *name)
 {
-        C_zero(cargo);
-        I_widget_init(&cargo->widget, "Cargo");
-        cargo->widget.event_func = (i_event_f)cargo_event;
-        cargo->widget.state = I_WS_READY;
+        I_selectable_init(&cargo->sel, &cargo_group, 0.f);
+
+        /* Left amount */
+        I_label_init(&cargo->left, "99999");
+        cargo->left.widget.expand = TRUE;
+        cargo->left.color = I_COLOR_ALT;
+        I_widget_add(&cargo->sel.widget, &cargo->left.widget);
 
         /* Label */
         I_label_init(&cargo->label, name);
-        cargo->label.widget.expand = TRUE;
-        I_widget_add(&cargo->widget, &cargo->label.widget);
-
-        /* Left amount */
-        I_label_init(&cargo->left_amount, "0");
-        cargo->left_amount.width = 40.f;
-        cargo->left_amount.color = I_COLOR_ALT;
-        I_widget_add(&cargo->widget, &cargo->left_amount.widget);
-
-        /* Left button */
-        I_button_init(&cargo->left, "gui/icons/arrow-left.png", NULL,
-                      I_BT_ROUND);
-        cargo->left.data = cargo;
-        cargo->left.widget.margin_front = 0.5f;
-        cargo->left.widget.margin_rear = 0.5f;
-        I_widget_add(&cargo->widget, &cargo->left.widget);
+        I_widget_add(&cargo->sel.widget, &cargo->label.widget);
 
         /* Price */
-        I_label_init(&cargo->price, "0g");
-        cargo->price.width = 48.f;
+        I_label_init(&cargo->price, "999g");
         cargo->price.color = I_COLOR_ALT;
-        I_widget_add(&cargo->widget, &cargo->price.widget);
-
-        /* Right button */
-        I_button_init(&cargo->right, "gui/icons/arrow-right.png", NULL,
-                      I_BT_ROUND);
-        cargo->right.data = cargo;
-        cargo->right.widget.margin_front = 0.5f;
-        cargo->right.widget.margin_rear = 0.5f;
-        I_widget_add(&cargo->widget, &cargo->right.widget);
+        I_widget_add(&cargo->sel.widget, &cargo->price.widget);
 
         /* Right amount */
-        I_label_init(&cargo->right_amount, "0");
-        cargo->right_amount.width = 40.f;
-        cargo->right_amount.color = I_COLOR_ALT;
-        I_widget_add(&cargo->widget, &cargo->right_amount.widget);
-}
-
-/******************************************************************************\
- Configures a cargo widget for trading.
-\******************************************************************************/
-static void cargo_trading(cargo_t *cargo, int left, int price, int right,
-                          bool trading)
-{
-        i_widget_state_t state;
-
-        state = trading ? I_WS_READY : I_WS_DISABLED;
-        cargo->left.widget.state = state;
-        cargo->right.widget.state = state;
-        cargo->right_amount.widget.state = state;
-        cargo->price.widget.state = state;
-
-        /* Set labels */
-        I_label_configure(&cargo->left_amount, C_va("%d", left));
-        I_label_configure(&cargo->right_amount, C_va("%d", right));
-        I_label_configure(&cargo->price, C_va("%dg", price));
-
-        /* Disable the labels if not carrying and can't buy that good */
-        if (left < 1 && (right < 1 || !trading)) {
-                cargo->left_amount.widget.state = I_WS_DISABLED;
-                cargo->label.widget.state = I_WS_DISABLED;
-        } else {
-                cargo->left_amount.widget.state = I_WS_READY;
-                cargo->label.widget.state = I_WS_READY;
-        }
+        I_label_init(&cargo->right, "99999");
+        cargo->right.widget.expand = TRUE;
+        cargo->right.color = I_COLOR_ALT;
+        cargo->right.justify = I_JUSTIFY_RIGHT;
+        I_widget_add(&cargo->sel.widget, &cargo->right.widget);
 }
 
 /******************************************************************************\
@@ -139,8 +62,6 @@ static void cargo_trading(cargo_t *cargo, int left, int price, int right,
 \******************************************************************************/
 void I_select_trade(const g_cargo_t *cargo)
 {
-        int i;
-
         /* Deselect cargo */
         if (!cargo) {
                 I_toolbar_enable(&i_right_toolbar, i_trade_button, FALSE);
@@ -150,11 +71,6 @@ void I_select_trade(const g_cargo_t *cargo)
         I_toolbar_enable(&i_right_toolbar, i_trade_button, TRUE);
         I_info_configure(&cargo_info,
                          C_va("%d/%d", G_cargo_space(cargo), cargo->capacity));
-
-        /* Not trading */
-        for (i = 0; i < G_CARGO_TYPES; i++)
-                cargo_trading(cargo_widgets + i, cargo->amounts[i],
-                              0, 0, FALSE);
 }
 
 /******************************************************************************\
@@ -165,7 +81,7 @@ void I_init_trade(i_window_t *window)
         int i, seps;
 
         I_window_init(window);
-        window->widget.size = C_vec2(275.f, 0.f);
+        window->widget.size = C_vec2(240.f, 0.f);
         window->fit = I_FIT_TOP;
 
         /* Label */
@@ -174,28 +90,62 @@ void I_init_trade(i_window_t *window)
         I_widget_add(&window->widget, &title.widget);
 
         /* Trade mode */
+        I_select_init(&mode, C_str("i-cargo-mode", "Window mode:"), NULL);
+        I_select_add_string(&mode, C_str("i-sell", "Sell"));
+        I_select_add_string(&mode, C_str("i-buy", "Buy"));
+        I_widget_add(&window->widget, &mode.widget);
 
         /* Cargo space */
         I_info_init(&cargo_info, C_str("i-cargo", "Cargo space:"), "0/0");
+        cargo_info.widget.margin_rear = 0.5f;
         I_widget_add(&window->widget, &cargo_info.widget);
-
-        /* Top separator */
-        I_image_init_sep(separators);
-        separators[0].resize = TRUE;
-        I_widget_add(&window->widget, &separators[0].widget);
 
         /* Cargo items */
         for (i = 0, seps = 1; i < G_CARGO_TYPES; i++) {
-                cargo_init(cargo_widgets + i, C_va("%s:", g_cargo_names[i]));
-                I_widget_add(&window->widget, &cargo_widgets[i].widget);
-
-                /* Add separator */
-                if ((i - 1) % 4 || i >= G_CARGO_TYPES - 1)
-                        continue;
-                C_assert(seps < SEPARATORS);
-                I_image_init_sep(separators + seps);
-                separators[seps].resize = TRUE;
-                I_widget_add(&window->widget, &separators[seps++].widget);
+                cargo_init(cargo_widgets + i, g_cargo_names[i]);
+                I_widget_add(&window->widget, &cargo_widgets[i].sel.widget);
+                if (!((i - 2) % 4))
+                        cargo_widgets[i].sel.widget.margin_front = 0.5f;
         }
+
+        /* Selling, buying, both, or neither */
+        I_select_init(&active, C_str("i-cargo-auto-buy", "Auto-buy:"), NULL);
+        I_select_add_string(&active, C_str("i-yes", "Yes"));
+        I_select_add_string(&active, C_str("i-no", "No"));
+        active.widget.margin_front = 0.5f;
+        active.decimals = 0;
+        I_widget_add(&window->widget, &active.widget);
+
+        /* Quantity */
+        I_select_init(&quantity, C_str("i-cargo-maximum", "Maximum:"), NULL);
+        quantity.min = 0;
+        quantity.max = 100;
+        quantity.decimals = 0;
+        I_widget_add(&window->widget, &quantity.widget);
+
+        /* Selling, buying, both, or neither */
+        I_select_init(&price, C_str("i-cargo-price", "Price:"), NULL);
+        price.min = 0;
+        price.max = 999;
+        price.suffix = "g";
+        price.decimals = 0;
+        I_widget_add(&window->widget, &price.widget);
+
+        /* Button box */
+        I_box_init(&button_box, I_PACK_H, 0.f);
+        I_widget_add(&window->widget, &button_box.widget);
+
+        /* Buy, sell, and transfer buttons */
+        I_button_init(&transfer_button, NULL, C_str("i-cargo-buy", "Buy"),
+                      I_BT_DECORATED);
+        transfer_button.widget.expand = 4;
+        I_widget_add(&button_box.widget, &transfer_button.widget);
+        button_box.widget.margin_front = 0.5f;
+        I_button_init(&ten_button, NULL, "10", I_BT_DECORATED);
+        ten_button.widget.expand = TRUE;
+        I_widget_add(&button_box.widget, &ten_button.widget);
+        I_button_init(&fifty_button, NULL, "50", I_BT_DECORATED);
+        fifty_button.widget.expand = TRUE;
+        I_widget_add(&button_box.widget, &fifty_button.widget);
 }
 

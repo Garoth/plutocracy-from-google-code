@@ -71,7 +71,7 @@ void I_widget_remove_children(i_widget_t *widget, int cleanup)
 \******************************************************************************/
 static void expand_children(i_widget_t *widget, c_vec2_t size, int expanders)
 {
-        c_vec2_t offset;
+        c_vec2_t offset, share;
         i_widget_t *child;
 
         size = C_vec2_divf(size, (float)expanders);
@@ -79,14 +79,15 @@ static void expand_children(i_widget_t *widget, c_vec2_t size, int expanders)
         for (child = widget->child; child; child = child->next) {
                 if (!child->shown)
                         continue;
-                if (!child->expand) {
+                if (child->expand <= 0) {
                         I_widget_move(child, C_vec2_add(child->origin, offset));
                         continue;
                 }
-                child->size = C_vec2_add(child->size, size);
+                share = C_vec2_scalef(size, child->expand);
+                child->size = C_vec2_add(child->size, share);
                 child->origin = C_vec2_add(child->origin, offset);
                 I_widget_event(child, I_EV_CONFIGURE);
-                offset = C_vec2_add(offset, size);
+                offset = C_vec2_add(offset, share);
         }
 }
 
@@ -131,8 +132,8 @@ void I_widget_pack(i_widget_t *widget, i_pack_t pack, i_fit_t fit)
                         origin.y += child->size.y + margin_rear;
                         size.y -= child->size.y + margin_front + margin_rear;
                 }
-                if (child->expand)
-                        expanders++;
+                if (child->expand > 0)
+                        expanders += child->expand;
         }
 
         /* If there is left over space and we are not collapsing, assign it
@@ -248,8 +249,8 @@ void I_widget_add_pack(i_widget_t *parent, i_widget_t *widget,
                 /* Count expanders */
                 expanders = 0;
                 for (widget = parent->child; widget; widget = widget->next)
-                        if (widget->expand)
-                                expanders++;
+                        if (widget->expand > 0)
+                                expanders += widget->expand;
 
                 if (pack == I_PACK_H && expanders) {
                         space = C_vec2(space.x - bounds.x, 0.f);

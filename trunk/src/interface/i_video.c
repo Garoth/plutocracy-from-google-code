@@ -173,8 +173,8 @@ void I_init_video(i_window_t *window)
         I_select_init(select, C_str("i-video-windowed", "Windowed:"), NULL);
         select->on_change = (i_callback_f)set_apply_state;
         select->variable = &r_windowed;
-        I_select_add_int(select, TRUE, "Yes");
-        I_select_add_int(select, FALSE, "No");
+        I_select_add_int(select, TRUE, C_str("i-yes", "Yes"));
+        I_select_add_int(select, FALSE, C_str("i-no", "No"));
         I_widget_add(&window->widget, &select->widget);
 
         /* Select multisampling */
@@ -186,7 +186,7 @@ void I_init_video(i_window_t *window)
         I_select_add_int(select, 4, "4x");
         I_select_add_int(select, 2, "2x");
         I_select_add_int(select, 1, "1x");
-        I_select_add_int(select, 0, "Off");
+        I_select_add_int(select, 0, C_str("i-off", "Off"));
         I_widget_add(&window->widget, &select->widget);
 
         /* Select gamma */
@@ -213,9 +213,9 @@ void I_init_video(i_window_t *window)
         I_select_init(select, C_str("i-video-draw-distance", "Draw Distance:"),
                       NULL);
         select->variable = &g_draw_distance;
-        I_select_add_float(select, 30.f, "Far");
-        I_select_add_float(select, 15.f, "Medium");
-        I_select_add_float(select, 5.f, "Near");
+        I_select_add_float(select, 30.f, C_str("i-video-far", "Far"));
+        I_select_add_float(select, 15.f, C_str("i-video-medium", "Medium"));
+        I_select_add_float(select, 5.f, C_str("i-video-near", "Near"));
         I_widget_add(&window->widget, &select->widget);
 
         /* Apply button */
