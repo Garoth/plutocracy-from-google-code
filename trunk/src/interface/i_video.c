@@ -22,7 +22,7 @@ enum {
         OPT_PIXEL_SCALE,
         OPT_DRAW_DISTANCE,
         OPTIONS,
-        OPTIONS_APPLY = OPT_MULTISAMPLE
+        OPTIONS_APPLY = OPT_MULTISAMPLE + 1
 };
 
 /* Length of video modes list */
@@ -32,7 +32,7 @@ static i_label_t label;
 static i_button_t apply_button;
 static i_select_t options[OPTIONS];
 static SDL_Rect **sdl_modes;
-static int orig_indices[OPTIONS], mode_indices[VIDEO_MODES];
+static int orig_indices[OPTIONS], mode_indices[VIDEO_MODES], sdl_modes_len;
 
 /******************************************************************************\
  Set the apply button's state depending on if options have changed or not.
@@ -61,11 +61,26 @@ static void apply_button_clicked(i_button_t *button)
         r_restart = TRUE;
 
         /* Didn't get an SDL resolution list? */
-        if (!sdl_modes)
+        if (!sdl_modes) {
+                C_warning("Can't apply resolution, SDL did not return a "
+                          "mode list");
                 return;
+        }
+
+        /* Bad indices? */
+        i = options[OPT_RESOLUTION].index;
+        if (i < 0 || i >= options[OPT_RESOLUTION].list_len) {
+                C_warning("Can't apply resolution, index %d invalid", i);
+                return;
+        }
 
         /* Resolutions list is reversed */
-        i = mode_indices[options[OPT_RESOLUTION].index];
+        i = mode_indices[i];
+        if (i < 0 || i >= sdl_modes_len) {
+                C_warning("Can't apply resolution, mode %d invalid", i);
+                return;
+        }
+
         C_var_set(&r_width, C_va("%d", sdl_modes[i]->w));
         C_var_set(&r_height, C_va("%d", sdl_modes[i]->h));
         set_apply_state();
@@ -81,6 +96,7 @@ static void populate_modes(void)
         sdl_modes = SDL_ListModes(NULL, SDL_OPENGL | SDL_GL_DOUBLEBUFFER |
                                         SDL_HWPALETTE | SDL_HWSURFACE |
                                         SDL_FULLSCREEN);
+        for (sdl_modes_len = 0; sdl_modes[sdl_modes_len]; sdl_modes_len++);
 
         /* SDL_ListModes() won't always return a list */
         if (!sdl_modes || sdl_modes == (void *)-1) {
@@ -165,7 +181,9 @@ void I_init_video(i_window_t *window)
         select->on_change = (i_callback_f)set_apply_state;
         select->variable = &r_color_bits;
         I_select_add_int(select, 32, NULL);
+        I_select_add_int(select, 24, NULL);
         I_select_add_int(select, 16, NULL);
+        I_select_add_int(select, 0, "Auto");
         I_widget_add(&window->widget, &select->widget);
 
         /* Select windowed */

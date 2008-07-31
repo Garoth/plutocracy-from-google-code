@@ -49,7 +49,7 @@ void R_register_variables(void)
         C_register_integer(&r_height, "r_height", 480,
                            "window height in pixels");
         r_height.unsafe = TRUE;
-        C_register_integer(&r_color_bits, "r_color_bits", 32,
+        C_register_integer(&r_color_bits, "r_color_bits", 0,
                            "texture color depth: 16 or 32 bits");
         r_color_bits.unsafe = TRUE;
         C_register_integer(&r_depth_bits, "r_depth_bits", 16,
