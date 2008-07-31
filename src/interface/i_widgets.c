@@ -122,15 +122,16 @@ c_vec2_t I_widget_bounds(const i_widget_t *widget, i_pack_t pack)
 \******************************************************************************/
 bool I_widget_child_of(const i_widget_t *parent, const i_widget_t *child)
 {
+        const i_widget_t *widget;
+
         if (!parent || !child)
                 return FALSE;
-        while (child != parent) {
-                if (!child)
+        for (widget = child; widget != parent; widget = widget->parent) {
+                if (widget == &i_root)
+                        return FALSE;
+                if (!widget)
                         C_error("Widget '%s' is not a child of root",
                                 child->name);
-                if (child == &i_root)
-                        return FALSE;
-                child = child->parent;
         }
         return TRUE;
 }
@@ -218,25 +219,37 @@ const char *I_event_string(i_event_t event)
 }
 
 /******************************************************************************\
+ Returns TRUE if [widget] meets criteria for mouse focus.
+\******************************************************************************/
+static bool can_mouse_focus(i_widget_t *widget)
+{
+        c_vec2_t mouse_pos;
+
+        mouse_pos = C_vec2((float)i_mouse_x, (float)i_mouse_y);
+        return widget->state != I_WS_NO_FOCUS &&
+               widget->state != I_WS_DISABLED && widget->shown &&
+               C_rect_contains(widget->origin, widget->size, mouse_pos);
+}
+
+/******************************************************************************\
  Call on a widget in hover or active state to check if the widget has mouse
  focus this frame. Will generate I_EV_MOUSE_OUT when applicable. Returns
  TRUE if the widget has mouse focus.
 \******************************************************************************/
-static int check_mouse_focus(i_widget_t *widget)
+static bool check_mouse_focus(i_widget_t *widget)
 {
-        c_vec2_t mouse_pos;
-
         if (!widget)
                 return FALSE;
-        mouse_pos = C_vec2((float)i_mouse_x, (float)i_mouse_y);
-        if (widget->state != I_WS_NO_FOCUS &&
-            widget->state != I_WS_DISABLED && widget->shown &&
-            C_rect_contains(widget->origin, widget->size, mouse_pos)) {
+        if (can_mouse_focus(widget)) {
                 mouse_focus = widget;
                 return TRUE;
         }
-        if (widget->state == I_WS_HOVER || widget->state == I_WS_ACTIVE)
+        while (widget->state == I_WS_HOVER || widget->state == I_WS_ACTIVE) {
                 I_widget_event(widget, I_EV_MOUSE_OUT);
+                if (!widget->parent || can_mouse_focus(widget->parent))
+                        break;
+                widget = widget->parent;
+        }
         return FALSE;
 }
 
@@ -272,12 +285,10 @@ static void focus_parent(i_widget_t *widget)
         I_widget_event(p, I_EV_MOUSE_OUT);
 
         /* Propagate focus up */
-        while (widget->parent) {
-                widget = widget->parent;
-                if (check_mouse_focus(widget))
+        for (p = widget->parent; p; p = p->parent)
+                if (check_mouse_focus(p))
                         return;
-        }
-        mouse_focus = &i_root;
+        mouse_focus = NULL;
 }
 
 /******************************************************************************\
@@ -464,6 +475,10 @@ void I_widget_event(i_widget_t *widget, i_event_t event)
                 break;
         case I_EV_CLEANUP:
                 focus_parent(widget);
+                if (i_mouse_focus == widget)
+                        i_mouse_focus = NULL;
+                if (i_key_focus == widget)
+                        i_key_focus = NULL;
                 if (widget->heap)
                         C_free(widget);
                 else
@@ -518,16 +533,20 @@ void I_widget_focus(i_widget_t *widget, bool key, bool mouse)
 \******************************************************************************/
 void I_dispatch(const SDL_Event *ev)
 {
+        SDLMod mod;
         i_event_t event;
+
+        /* Update modifiers */
+        mod = SDL_GetModState();
+        i_key_shift = mod & KMOD_SHIFT;
+        i_key_alt = mod & KMOD_ALT;
+        i_key_ctrl = mod & KMOD_CTRL;
 
         /* Before dispatch */
         switch (ev->type) {
         case SDL_KEYDOWN:
                 event = I_EV_KEY_DOWN;
                 i_key = ev->key.keysym.sym;
-                i_key_shift = ev->key.keysym.mod & KMOD_SHIFT;
-                i_key_alt = ev->key.keysym.mod & KMOD_ALT;
-                i_key_ctrl = ev->key.keysym.mod & KMOD_CTRL;
                 i_key_unicode = ev->key.keysym.unicode;
                 if (i_debug.value.n > 0)
                         C_trace("SDL_KEYDOWN (%s%s)",
@@ -541,20 +560,16 @@ void I_dispatch(const SDL_Event *ev)
         case SDL_KEYUP:
                 event = I_EV_KEY_UP;
                 i_key = ev->key.keysym.sym;
-                i_key_shift = ev->key.keysym.mod & KMOD_SHIFT;
-                i_key_alt = ev->key.keysym.mod & KMOD_ALT;
-                i_key_ctrl = ev->key.keysym.mod & KMOD_CTRL;
-                i_key_unicode = ev->key.keysym.unicode;
                 if (i_debug.value.n > 0)
                         C_trace("SDL_KEYUP (%s%s)",
                                 (i_key_shift ? "shift + " : ""),
                                 I_key_string(i_key_unicode));
                 break;
         case SDL_MOUSEMOTION:
+                event = I_EV_MOUSE_MOVE;
                 i_mouse_x = (int)(ev->motion.x / r_pixel_scale.value.f + 0.5f);
                 i_mouse_y = (int)(ev->motion.y / r_pixel_scale.value.f + 0.5f);
                 find_focus();
-                event = I_EV_MOUSE_MOVE;
                 break;
         case SDL_MOUSEBUTTONDOWN:
                 event = I_EV_MOUSE_DOWN;

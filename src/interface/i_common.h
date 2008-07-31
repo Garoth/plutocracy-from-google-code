@@ -74,6 +74,13 @@ typedef enum {
         I_FIT_BOTTOM,
 } i_fit_t;
 
+/* Text justification */
+typedef enum {
+        I_JUSTIFY_LEFT,
+        I_JUSTIFY_CENTER,
+        I_JUSTIFY_RIGHT,
+} i_justify_t;
+
 /* Function to handle mouse, keyboard, or other events. Return FALSE to
    prevent the automatic propagation of an event to the widget's children. */
 typedef int (*i_event_f)(void *widget, i_event_t);
@@ -101,7 +108,8 @@ typedef struct i_widget {
         i_event_f event_func;
         i_widget_state_t state;
         float fade, margin_front, margin_rear, padding;
-        bool configured, entry, expand, shown, heap, steal_keys;
+        int expand;
+        bool configured, entry, shown, heap, steal_keys;
 } i_widget_t;
 
 /* Windows are decorated containers */
@@ -141,9 +149,9 @@ typedef struct i_label {
         r_sprite_t text;
         r_font_t font;
         i_color_t color;
+        i_justify_t justify;
         float width;
         char buffer[256];
-        bool center;
 } i_label_t;
 
 /* A one-line text field */
@@ -217,6 +225,14 @@ typedef struct i_box {
         i_pack_t pack_children;
         float width;
 } i_box_t;
+
+/* A selectable line */
+typedef struct i_selectable {
+        i_widget_t widget;
+        r_window_t on, off, hover;
+        struct i_selectable **group;
+        float height;
+} i_selectable_t;
 
 /* A left-aligned and a right-aligned label packed into a horizontal box */
 typedef struct i_info {
@@ -319,6 +335,10 @@ i_label_t *I_label_new(const char *);
 void I_image_init(i_image_t *, const char *icon);
 #define I_image_init_sep(i) I_image_init_themed(i, NULL)
 void I_image_init_themed(i_image_t *, r_texture_t **);
+int I_selectable_event(i_selectable_t *, i_event_t);
+void I_selectable_init(i_selectable_t *, i_selectable_t **group, float height);
+void I_selectable_off(i_selectable_t *);
+void I_selectable_on(i_selectable_t *);
 void I_theme_statics(void);
 
 /* i_trade.c */

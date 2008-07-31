@@ -14,7 +14,7 @@
 
 #include "i_common.h"
 
-static r_texture_t *separator_tex;
+static r_texture_t *separator_tex, *select_tex[3];
 
 /******************************************************************************\
  Theme images for static widgets.
@@ -22,6 +22,9 @@ static r_texture_t *separator_tex;
 void I_theme_statics(void)
 {
         I_theme_texture(&separator_tex, "separator");
+        I_theme_texture(select_tex, "select_on");
+        I_theme_texture(select_tex + 1, "select_off");
+        I_theme_texture(select_tex + 2, "select_hover");
 }
 
 /******************************************************************************\
@@ -38,15 +41,24 @@ int I_label_event(i_label_t *label, i_event_t event)
                                    label->widget.size.x, i_shadow.value.f,
                                    FALSE, label->buffer);
                 label->widget.size.y = label->text.size.y;
-                if (!label->width)
+                if (!label->widget.size.x)
                         label->widget.size.x = label->text.size.x;
                 label->text.modulate = i_colors[label->color];
         case I_EV_MOVED:
-                label->text.origin = C_vec2_clamp(label->widget.origin,
-                                                  r_pixel_scale.value.f);
-                if (label->text.size.x >= label->width || !label->center)
-                        break;
-                label->text.origin.x += (label->width - label->text.size.x) / 2;
+                label->text.origin = label->widget.origin;
+
+                /* Justify widget text */
+                if (label->text.size.x < label->widget.size.x &&
+                    label->justify != I_JUSTIFY_LEFT) {
+                        float space;
+
+                        space = label->widget.size.x - label->text.size.x;
+                        if (label->justify == I_JUSTIFY_RIGHT)
+                                label->text.origin.x += space;
+                        else if (label->justify == I_JUSTIFY_CENTER)
+                                label->text.origin.x += space / 2.f;
+                }
+
                 label->text.origin = C_vec2_clamp(label->text.origin,
                                                   r_pixel_scale.value.f);
                 break;
@@ -84,7 +96,6 @@ void I_label_init(i_label_t *label, const char *text)
         label->widget.event_func = (i_event_f)I_label_event;
         label->widget.state = I_WS_READY;
         label->font = R_FONT_GUI;
-        label->center = TRUE;
         C_strncpy_buf(label->buffer, text);
 }
 
@@ -257,5 +268,99 @@ void I_info_configure(i_info_t *info, const char *right)
 {
         C_strncpy_buf(info->right.buffer, right);
         I_widget_event(&info->widget, I_EV_CONFIGURE);
+}
+
+/******************************************************************************\
+ Deactivate a selectable widget.
+\******************************************************************************/
+void I_selectable_off(i_selectable_t *sel)
+{
+        if (!sel || !sel->group || *sel->group != sel)
+                return;
+        *sel->group = NULL;
+}
+
+/******************************************************************************\
+ Activate a selectable widget. This will deactivate the currently selected
+ member of the group, if it is not already this widget.
+\******************************************************************************/
+void I_selectable_on(i_selectable_t *sel)
+{
+        if (!sel || !sel->group || *sel->group == sel)
+                return;
+        *sel->group = sel;
+}
+
+/******************************************************************************\
+ Selectable widget event handler.
+\******************************************************************************/
+int I_selectable_event(i_selectable_t *sel, i_event_t event)
+{
+        switch (event) {
+        case I_EV_CONFIGURE:
+                if (sel->height > 0.f)
+                        sel->widget.size.y = sel->height;
+                R_window_cleanup(&sel->on);
+                R_window_cleanup(&sel->off);
+                R_window_cleanup(&sel->hover);
+                R_window_init(&sel->on, select_tex[0]);
+                R_window_init(&sel->off, select_tex[1]);
+                R_window_init(&sel->hover, select_tex[2]);
+                I_widget_pack(&sel->widget, I_PACK_H, I_FIT_NONE);
+                if (!sel->height) {
+                        c_vec2_t bounds;
+
+                        bounds = I_widget_child_bounds(&sel->widget);
+                        sel->widget.size.y = bounds.y;
+                }
+        case I_EV_MOVED:
+                sel->on.sprite.origin = sel->widget.origin;
+                sel->on.sprite.size = sel->widget.size;
+                sel->on.sprite.size.y -= 1;
+                sel->off.sprite.origin = sel->on.sprite.origin;
+                sel->off.sprite.size = sel->on.sprite.size;
+                sel->hover.sprite.origin = sel->on.sprite.origin;
+                sel->hover.sprite.size = sel->on.sprite.size;
+                return FALSE;
+        case I_EV_CLEANUP:
+                R_window_cleanup(&sel->on);
+                R_window_cleanup(&sel->off);
+                R_window_cleanup(&sel->hover);
+                break;
+        case I_EV_MOUSE_DOWN:
+                I_selectable_on(sel);
+                break;
+        case I_EV_RENDER:
+                if (sel->group && *sel->group == sel) {
+                        sel->on.sprite.modulate.a = sel->widget.fade;
+                        R_window_render(&sel->on);
+                } else if (sel->widget.state == I_WS_HOVER) {
+                        sel->hover.sprite.modulate.a = sel->widget.fade;
+                        R_window_render(&sel->hover);
+                } else {
+                        sel->off.sprite.modulate.a = sel->widget.fade;
+                        R_window_render(&sel->off);
+                }
+                break;
+        default:
+                break;
+        }
+        return TRUE;
+}
+
+/******************************************************************************\
+ Initializes a selectable widget.
+\******************************************************************************/
+void I_selectable_init(i_selectable_t *sel, i_selectable_t **group,
+                       float height)
+{
+        if (!sel)
+                return;
+        C_zero(sel);
+        I_widget_init(&sel->widget, "Selectable");
+        sel->widget.event_func = (i_event_f)I_selectable_event;
+        sel->widget.state = I_WS_READY;
+        sel->group = group;
+        sel->height = height;
 }
 
