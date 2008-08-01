@@ -37,6 +37,7 @@ typedef int socklen_t;
 
 /* n_client.c */
 void N_socket_no_block(SOCKET);
+bool N_socket_select(SOCKET, bool write);
 
 extern SOCKET n_client_socket;
 

@@ -61,14 +61,14 @@
 #endif
 
 /* Value ranges */
-#define C_SHORT_MIN -32768
-#define C_SHORT_MAX 32767
-#define C_USHORT_MAX 65535
+#define C_SHORT_MIN ((short)-32768)
+#define C_SHORT_MAX ((short)32767)
+#define C_USHORT_MAX ((unsigned short)65535)
 #define C_INT_MIN -2147483648
 #define C_INT_MAX 2147483647
 #define C_UINT_MAX 4294967295
-#define C_FLOAT_MIN 3.4E-38
-#define C_FLOAT_MAX 3.4E+38
+#define C_FLOAT_MIN 3.4E-38f
+#define C_FLOAT_MAX 3.4E+38f
 #define C_DOUBLE_MIN 1.7E-308
 #define C_DOUBLE_MAX 1.7E+308
 
@@ -338,6 +338,7 @@ void C_test_mem_check(void);
 
 /* c_os_posix, c_os_windows.c */
 bool C_absolute_path(const char *path);
+const char *C_app_dir(void);
 int C_mkdir(const char *path);
 int C_modified_time(const char *filename);
 const char *C_user_dir(void);

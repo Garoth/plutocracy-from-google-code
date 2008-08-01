@@ -69,7 +69,7 @@ int C_file_init_read(c_file_t *file, const char *name)
         if (!C_absolute_path(name))
                 file_open(file, C_user_dir(), name);
         file_open(file, ".", name);
-        file_open(file, PKGDATADIR, name);
+        file_open(file, C_app_dir(), name);
         if (!file->stream) {
                 file->type = C_FT_NONE;
                 return FALSE;

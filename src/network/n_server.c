@@ -42,7 +42,11 @@ void N_stop_server(void)
 int N_start_server(n_callback_f server_func, n_callback_f client_func)
 {
         struct sockaddr_in addr;
+#if defined(WINDOWS) || defined(SOLARIS)
+        char yes;
+#else
         int yes;
+#endif        
 
         if (n_client_id == N_HOST_CLIENT_ID)
                 return TRUE;

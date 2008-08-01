@@ -104,9 +104,8 @@ static SOCKET client_to_socket(n_client_id_t client)
 \******************************************************************************/
 static void send_buffer(n_client_id_t client)
 {
-        struct timeval tv;
-        fd_set writefds;
         SOCKET socket;
+        int i, bytes_sent;
 
         if (client >= 0 && client < N_CLIENTS_MAX &&
             !n_clients[client].connected) {
@@ -127,23 +126,23 @@ static void send_buffer(n_client_id_t client)
                 }
         }
 
-        /* Send timeout */
-        socket = client_to_socket(client);
-        tv.tv_sec = SEND_TIMEOUT;
-        tv.tv_usec = 0;
-        FD_ZERO(&writefds);
-        FD_SET(socket, &writefds);
-        select(socket + 1, NULL, &writefds, NULL, &tv);
-
         /* Send TCP/IP message */
-        send(socket, n_sync_buffer, n_sync_size, 0);
+        socket = client_to_socket(client);
+        for (bytes_sent = i = 0; bytes_sent < n_sync_size && i < 5; i++) {
+                int ret;
+                
+                if (!N_socket_select(socket, TRUE) ||
+                    (ret = send(socket, n_sync_buffer, n_sync_size, 0)) < 0)
+                        break;
+                bytes_sent += ret;
+                if (bytes_sent >= n_sync_size)
+                        return;
+                SDL_Delay(10);
+        }
 
         /* Send failed */
-        if (!FD_ISSET(socket, &writefds)) {
-                C_warning("Timed out sending to %s",
-                          N_client_to_string(client));
-                N_drop_client(client);
-        }
+        C_warning("Send to %s failed", N_client_to_string(client));
+        N_drop_client(client);
 }
 
 /******************************************************************************\
