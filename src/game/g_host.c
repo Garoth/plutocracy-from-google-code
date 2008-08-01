@@ -219,10 +219,10 @@ static void init_client(int client)
         g_clients[client].nation = G_NN_NONE;
 
         /* Communicate the globe info */
-        N_send(client, "11111422f", G_SM_INIT, G_PROTOCOL, client,
+        N_send(client, "11111422ff", G_SM_INIT, G_PROTOCOL, client,
                g_clients_max, g_globe_subdiv4.value.n, g_globe_seed.value.n,
-               g_globe_islands.value.n, g_globe_island_size.value.n,
-               r_solar_angle);
+               g_islands.value.n, g_island_size.value.n,
+               g_island_variance.value.f, r_solar_angle);
 
         /* Tell them about everyone already here */
         for (i = 0; i < N_CLIENTS_MAX; i++)
@@ -332,7 +332,7 @@ static void initial_buildings(void)
         for (i = 0; i < r_tiles; i++) {
                 if (R_terrain_base(r_tile_params[i].terrain) != R_T_GROUND)
                         continue;
-                if (C_rand_real() < g_globe_forest.value.f)
+                if (C_rand_real() < g_forest.value.f)
                         G_build(i, G_BN_TREE, 1.f);
         }
 }
@@ -379,17 +379,20 @@ void G_host_game(void)
 
         /* Generate a new globe */
         C_var_unlatch(&g_globe_subdiv4);
-        C_var_unlatch(&g_globe_islands);
-        C_var_unlatch(&g_globe_island_size);
+        C_var_unlatch(&g_islands);
+        C_var_unlatch(&g_island_size);
+        C_var_unlatch(&g_island_variance);
         C_var_unlatch(&g_name);
         if (g_globe_subdiv4.value.n < 3)
                 g_globe_subdiv4.value.n = 3;
         if (g_globe_subdiv4.value.n > 5)
                 g_globe_subdiv4.value.n = 5;
+        if (g_island_variance.value.f > 1.f)
+                g_island_variance.value.f = 1.f;
         if (!C_var_unlatch(&g_globe_seed))
                 g_globe_seed.value.n = (int)time(NULL);
-        G_generate_globe(g_globe_subdiv4.value.n, g_globe_islands.value.n,
-                         g_globe_island_size.value.n);
+        G_generate_globe(g_globe_subdiv4.value.n, g_islands.value.n,
+                         g_island_size.value.n, g_island_variance.value.f);
         initial_buildings();
 
         /* Set our name */

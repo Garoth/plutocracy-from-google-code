@@ -16,8 +16,8 @@
 c_var_t g_test_globe, g_test_tile;
 
 /* Globe variables */
-c_var_t g_globe_forest, g_globe_islands, g_globe_island_size, g_globe_seed,
-        g_globe_subdiv4;
+c_var_t g_forest, g_globe_seed, g_globe_subdiv4, g_islands, g_island_size,
+        g_island_variance;
 
 /* Nation colors */
 c_var_t g_nation_colors[G_NATION_NAMES];
@@ -46,11 +46,13 @@ void G_register_variables(void)
         g_globe_seed.archive = FALSE;
         C_register_integer(&g_globe_subdiv4, "g_globe_subdiv4", 4,
                            "globe subdivision iterations, 0-5");
-        C_register_integer(&g_globe_islands, "g_globe_islands", 0,
+        C_register_integer(&g_islands, "g_islands", 0,
                            "number of islands, 0 for default");
-        C_register_integer(&g_globe_island_size, "g_globe_island_size", 0,
+        C_register_integer(&g_island_size, "g_island_size", 0,
                            "maximum size of islands, 0 for default");
-        C_register_float(&g_globe_forest, "g_globe_forest", 0.8,
+        C_register_float(&g_island_variance, "g_island_variance", 0.2f,
+                           "proportion of island size to randomize");
+        C_register_float(&g_forest, "g_forest", 0.8,
                            "proportion of tiles that have trees");
 
         /* Nation colors */

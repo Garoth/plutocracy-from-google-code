@@ -181,7 +181,8 @@ static void sm_client(void)
 \******************************************************************************/
 static void sm_init(void)
 {
-        int protocol, subdiv4, seed, islands, island_size;
+        float variance;
+        int protocol, subdiv4, islands, island_size;
 
         C_assert(n_client_id != N_HOST_CLIENT_ID);
         G_reset_elements();
@@ -220,13 +221,11 @@ static void sm_init(void)
 
         /* Generate matching globe */
         subdiv4 = N_receive_char();
-        seed = N_receive_int();
+        g_globe_seed.value.n = N_receive_int();
         islands = N_receive_short();
         island_size = N_receive_short();
-        if (seed != g_globe_seed.value.n) {
-                g_globe_seed.value.n = seed;
-                G_generate_globe(subdiv4, islands, island_size);
-        }
+        variance = N_receive_float();
+        G_generate_globe(subdiv4, islands, island_size, variance);
 
         /* Get solar angle */
         r_solar_angle = N_receive_float();
