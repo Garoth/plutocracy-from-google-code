@@ -19,12 +19,7 @@
 #define ISLAND_NUM 128
 
 /* Maximum island size */
-#define ISLAND_SIZE 512
-
-/* Island size will vary up to this proportion. This is a good way to control
-   how "boring" the terrain generator is. With high variance there are a lot of
-   oceans and strangely sized islands. */
-#define ISLAND_VARIANCE 0.3f
+#define ISLAND_SIZE 256
 
 /* Maximum height off the globe surface of a tile */
 #define ISLAND_HEIGHT 4.f
@@ -158,10 +153,23 @@ skip_sand:      ;
 }
 
 /******************************************************************************\
+ Returns TRUE if [value] is in [array].
+\******************************************************************************/
+static bool in_array(int value, int *array, int size)
+{
+        int i;
+
+        for (i = 0; i < size; i++)
+                if (array[i] == value)
+                        return TRUE;
+        return FALSE;
+}
+
+/******************************************************************************\
  Seeds the globe with at most [num] island seeds and interatively grows their
  edges until all space is consumed or all islands reach [island_size].
 \******************************************************************************/
-static void grow_islands(int num, int island_size)
+static void grow_islands(int num, int island_size, float variance)
 {
         int i, j, expanded, sizes[ISLAND_NUM], limits[ISLAND_NUM],
             edges[ISLAND_NUM * ISLAND_SIZE];
@@ -177,14 +185,14 @@ static void grow_islands(int num, int island_size)
                 islands[i].root = i * r_tiles / num;
                 sizes[i] = 1;
                 edges[i * ISLAND_SIZE] = islands[i].root;
-                limits[i] = (int)((2 * ISLAND_VARIANCE *
-                                   (C_rand_real() - 0.5f) + 1.f) * island_size);
+                limits[i] = (int)((1.f - variance * C_rand_real()) *
+                                  island_size);
                 if (limits[i] < ISLAND_LAND * 3)
                         limits[i] = ISLAND_LAND * 3;
                 if (limits[i] > ISLAND_SIZE)
                         limits[i] = ISLAND_SIZE;
                 g_tiles[islands[i].root].island = i;
-                islands[i].tiles = 1;
+                islands[i].tiles = 0;
                 islands[i].land = 0;
         }
         islands_len = num;
@@ -202,21 +210,22 @@ static void grow_islands(int num, int island_size)
                         R_get_tile_neighbors(edges[index], neighbors);
                         for (j = 0; j < 3; j++) {
                                 next = neighbors[j];
-                                if (g_tiles[next].island != G_ISLAND_INVALID)
+
+                                /* Valid edge tile? */
+                                if (g_tiles[next].island != G_ISLAND_INVALID ||
+                                    in_array(next, edges, sizes[i]))
                                         continue;
+
                                 edges[i * ISLAND_SIZE + sizes[i]++] = next;
                                 g_tiles[next].island = i;
-                                break;
-                        }
-                        if (j < 3) {
-                                islands[g_tiles[next].island].tiles++;
-                                continue;
                         }
                         r_tile_params[edges[index]].terrain = R_T_SHALLOW;
+                        islands[g_tiles[next].island].tiles++;
+
+                        /* Consume edge */
                         memmove(edges + index, edges + index + 1,
-                                ((i + 1) * ISLAND_SIZE - index - 1) *
+                                (i * ISLAND_SIZE + (--sizes[i]) - index) *
                                 sizeof (*edges));
-                        sizes[i]--;
                 }
         }
 }
@@ -285,21 +294,24 @@ void G_init_globe(void)
 {
         /* Generate a starter globe */
         C_var_unlatch(&g_globe_subdiv4);
-        C_var_unlatch(&g_globe_islands);
-        C_var_unlatch(&g_globe_island_size);
+        C_var_unlatch(&g_islands);
+        C_var_unlatch(&g_island_size);
+        C_var_unlatch(&g_island_variance);
         if (g_globe_subdiv4.value.n < 3)
                 g_globe_subdiv4.value.n = 3;
         if (g_globe_subdiv4.value.n > 5)
                 g_globe_subdiv4.value.n = 5;
-        G_generate_globe(g_globe_subdiv4.value.n, g_globe_islands.value.n,
-                         g_globe_island_size.value.n);
+        G_generate_globe(g_globe_subdiv4.value.n, g_islands.value.n,
+                         g_island_size.value.n, g_island_variance.value.f);
 }
 
 /******************************************************************************\
  Generate a new globe.
 \******************************************************************************/
-void G_generate_globe(int subdiv4, int override_islands, int override_size)
+void G_generate_globe(int subdiv4, int override_islands, int override_size,
+                      float override_variance)
 {
+        float variance;
         int i, islands, island_size;
 
         C_status("Generating globe");
@@ -336,11 +348,14 @@ void G_generate_globe(int subdiv4, int override_islands, int override_size)
                 islands_len = 0;
                 return;
         }
+        variance = 0.2f;
         if (override_islands > 0)
                 islands = override_islands;
         if (override_size > 0)
                 island_size = override_size;
-        grow_islands(islands, island_size);
+        if (override_variance >= 0.f)
+                variance = override_variance;
+        grow_islands(islands, island_size, variance);
         sanitise_terrain();
 
         /* This call actually raises the tiles to match terrain height */
