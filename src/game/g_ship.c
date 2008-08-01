@@ -433,6 +433,20 @@ static void position_ship(int ship)
 }
 
 /******************************************************************************\
+ Transfer the model of a ship from one tile to another.
+\******************************************************************************/
+static void transfer_model(int from, int to)
+{
+        if (from == to)
+                return;
+        R_model_cleanup(&g_tiles[to].model);
+        g_tiles[to].model = g_tiles[from].model;
+        g_tiles[to].model_shown = TRUE;
+        g_tiles[to].fade = 1.f;
+        C_zero(&g_tiles[from].model);
+}
+
+/******************************************************************************\
  Move a ship to a new tile. Returns TRUE if the ship was moved.
 \******************************************************************************/
 bool G_ship_move_to(int i, int new_tile)
@@ -449,14 +463,7 @@ bool G_ship_move_to(int i, int new_tile)
         if (g_ships[i].rear_tile >= 0)
                 g_tiles[g_ships[i].rear_tile].ship = -1;
 
-        /* Transfer model data with the ship */
-        R_model_cleanup(&g_tiles[new_tile].model);
-        g_tiles[new_tile].model = g_tiles[old_tile].model;
-        g_tiles[new_tile].model.selected = FALSE;
-        g_tiles[new_tile].model_shown = TRUE;
-        g_tiles[new_tile].fade = 1.f;
-        C_zero(&g_tiles[old_tile].model);
-
+        transfer_model(old_tile, new_tile);
         g_ships[i].rear_tile = old_tile;
         g_ships[i].tile = new_tile;
         g_tiles[new_tile].ship = i;
@@ -520,14 +527,6 @@ void G_update_ships(void)
                                 continue;
                         }
 
-                        /* Transfer model data with the ship */
-                        R_model_cleanup(&g_tiles[new_tile].model);
-                        g_tiles[new_tile].model = g_tiles[old_tile].model;
-                        g_tiles[new_tile].model.selected = FALSE;
-                        g_tiles[new_tile].model_shown = TRUE;
-                        g_tiles[new_tile].fade = 1.f;
-                        C_zero(&g_tiles[old_tile].model);
-
                         /* Consume a path move */
                         memmove(g_ships[i].path, g_ships[i].path + 1,
                                 R_PATH_MAX - 1);
@@ -535,6 +534,7 @@ void G_update_ships(void)
                             g_ships[i].client == n_client_id)
                                 R_select_path(new_tile, g_ships[i].path);
 
+                        transfer_model(old_tile, new_tile);
                         g_ships[i].progress = g_ships[i].progress - 1.f;
                         g_ships[i].rear_tile = old_tile;
                         g_ships[i].tile = new_tile;

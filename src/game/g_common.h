@@ -133,11 +133,11 @@ typedef struct g_building_type {
 
 /* g_client.c */
 void G_client_callback(int client, n_event_t);
+void G_hover_tile(int tile);
 i_color_t G_nation_to_color(g_nation_name_t);
-void G_select_tile(int tile);
 
 extern g_client_t g_clients[N_CLIENTS_MAX + 1];
-extern int g_selected_ship, g_selected_tile;
+extern int g_hover_tile, g_hover_ship, g_selected_ship;
 
 /* g_elements.c */
 void G_build(int tile, g_building_name_t, float progress);

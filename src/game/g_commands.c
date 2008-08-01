@@ -16,7 +16,7 @@
 
 /* The currently selected tile and ship index. Negative values indicate an
    invalid selection. */
-int g_selected_tile, g_selected_ship;
+int g_hover_tile, g_hover_ship, g_selected_ship;
 
 static bool ring_valid;
 
@@ -50,16 +50,33 @@ static int can_interact(int tile)
 }
 
 /******************************************************************************\
- Selects a tile during mouse hover. Pass -1 to deselect.
+ Update which ship the mouse is hovering over. Pass -1 to deselect.
 \******************************************************************************/
-void G_select_tile(int tile)
+static void hover_ship(int ship)
+{
+        int tile;
+
+        if (g_hover_ship >= 0) {
+                tile = g_ships[g_hover_ship].tile;
+                g_tiles[tile].model.selected = FALSE;
+        }
+        if ((g_hover_ship = ship) < 0)
+                return;
+        tile = g_ships[ship].tile;
+        g_tiles[tile].model.selected = TRUE;
+}
+
+/******************************************************************************\
+ Updates which tile the mouse is hovering over. Pass -1 to deselect.
+\******************************************************************************/
+void G_hover_tile(int tile)
 {
         C_assert(tile < r_tiles);
 
         /* Deselect the old tile */
-        if (g_selected_tile >= 0)
-                g_tiles[g_selected_tile].model.selected = FALSE;
-        R_select_tile(g_selected_tile = -1, R_ST_NONE);
+        if (g_hover_tile >= 0)
+                hover_ship(-1);
+        R_select_tile(g_hover_tile = -1, R_ST_NONE);
 
         /* See if there is actually any interaction possible with this tile */
         ring_valid = FALSE;
@@ -75,7 +92,7 @@ void G_select_tile(int tile)
         else if (g_selected_ship >= 0 && G_open_tile(tile, -1) &&
                  g_ships[g_selected_ship].client == n_client_id) {
                 R_select_tile(tile, R_ST_GOTO);
-                g_selected_tile = tile;
+                g_hover_tile = tile;
                 return;
         }
 
@@ -86,12 +103,13 @@ void G_select_tile(int tile)
         /* Can't select this */
         else {
                 R_select_tile(-1, R_ST_NONE);
-                g_selected_tile = -1;
+                g_hover_tile = -1;
                 return;
         }
 
-        g_tiles[tile].model.selected = TRUE;
-        g_selected_tile = tile;
+        /* Select whatever's in this tile */
+        g_hover_tile = tile;
+        hover_ship(g_tiles[tile].ship);
 }
 
 /******************************************************************************\
@@ -100,15 +118,15 @@ void G_select_tile(int tile)
 static void test_ring_callback(i_ring_icon_t icon)
 {
         if (icon == I_RI_TEST_MILL)
-                G_set_tile_model(g_selected_tile, "models/test/mill.plum");
+                G_set_tile_model(g_hover_tile, "models/test/mill.plum");
         else if (icon == I_RI_TEST_TREE)
-                G_set_tile_model(g_selected_tile,
+                G_set_tile_model(g_hover_tile,
                                "models/tree/deciduous.plum");
         else if (icon == I_RI_TEST_SHIP)
-                G_set_tile_model(g_selected_tile,
+                G_set_tile_model(g_hover_tile,
                                "models/ship/sloop.plum");
         else
-                G_set_tile_model(g_selected_tile, "");
+                G_set_tile_model(g_hover_tile, "");
 }
 
 /******************************************************************************\
@@ -121,15 +139,15 @@ void G_process_click(int button)
                 return;
 
         /* Clicking on an unusable space deselects */
-        if (g_selected_tile < 0 || button != SDL_BUTTON_LEFT) {
+        if (g_hover_tile < 0 || button != SDL_BUTTON_LEFT) {
                 G_ship_select(-1);
                 return;
         }
 
         /* Left-clicked on a ship */
-        if (g_tiles[g_selected_tile].ship >= 0) {
-                if (g_selected_ship != g_tiles[g_selected_tile].ship)
-                        G_ship_select(g_tiles[g_selected_tile].ship);
+        if (g_tiles[g_hover_tile].ship >= 0) {
+                if (g_selected_ship != g_tiles[g_hover_tile].ship)
+                        G_ship_select(g_tiles[g_hover_tile].ship);
                 else
                         G_ship_select(-1);
                 return;
@@ -140,9 +158,9 @@ void G_process_click(int button)
             g_ships[g_selected_ship].client == n_client_id) {
 
                 /* Ordered an ocean move */
-                if (g_selected_tile >= 0 && G_open_tile(g_selected_tile, -1)) {
+                if (g_hover_tile >= 0 && G_open_tile(g_hover_tile, -1)) {
                         N_send(N_SERVER_ID, "112", G_CM_SHIP_MOVE,
-                               g_selected_ship, g_selected_tile);
+                               g_selected_ship, g_hover_tile);
                         return;
                 }
         }

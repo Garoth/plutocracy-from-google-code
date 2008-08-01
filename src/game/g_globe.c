@@ -257,7 +257,6 @@ int G_set_tile_model(int tile, const char *filename)
         g_tiles[tile].model.origin = g_tiles[tile].origin;
         g_tiles[tile].model.normal = r_tile_params[tile].normal;
         g_tiles[tile].model.forward = g_tiles[tile].forward;
-        g_tiles[tile].model.selected = g_selected_tile == tile;
         g_tiles[tile].model_shown = TRUE;
         g_tiles[tile].fade = 1.f;
         return TRUE;
@@ -387,7 +386,7 @@ void G_generate_globe(int subdiv4, int override_islands, int override_size,
         C_var_update(&g_test_tile, (c_var_update_f)test_tiles_update);
 
         /* Deselect everything */
-        g_selected_tile = -1;
+        g_hover_tile = -1;
         g_selected_ship = -1;
 }
 
@@ -457,12 +456,12 @@ void G_render_globe(void)
         R_finish_globe();
 
         /* Render a test line from the selected tile */
-        if (g_test_globe.value.n && g_selected_tile >= 0) {
+        if (g_test_globe.value.n && g_hover_tile >= 0) {
                 c_vec3_t b;
 
-                b = C_vec3_add(g_tiles[g_selected_tile].origin,
-                               r_tile_params[g_selected_tile].normal);
-                R_render_test_line(g_tiles[g_selected_tile].origin, b,
+                b = C_vec3_add(g_tiles[g_hover_tile].origin,
+                               r_tile_params[g_hover_tile].normal);
+                R_render_test_line(g_tiles[g_hover_tile].origin, b,
                                    C_color(0.f, 1.f, 0.f, 1.f));
         }
 
@@ -524,10 +523,10 @@ static int ray_intersects_tile(c_vec3_t o, c_vec3_t d, int tile)
 \******************************************************************************/
 void G_mouse_ray_miss(void)
 {
-        if (g_selected_tile < 0)
+        if (g_hover_tile < 0)
                 return;
-        g_tiles[g_selected_tile].model.selected = FALSE;
-        R_select_tile(g_selected_tile = -1, R_ST_NONE);
+        g_tiles[g_hover_tile].model.selected = FALSE;
+        R_select_tile(g_hover_tile = -1, R_ST_NONE);
 }
 
 /******************************************************************************\
@@ -541,15 +540,15 @@ void G_mouse_ray(c_vec3_t origin, c_vec3_t forward)
         int i, tile;
 
         /* We can quit early if the selected tile is still being hovered over */
-        if (g_selected_tile >= 0 && g_tiles[g_selected_tile].visible &&
-            ray_intersects_tile(origin, forward, g_selected_tile)) {
-                G_select_tile(g_selected_tile);
+        if (g_hover_tile >= 0 && g_tiles[g_hover_tile].visible &&
+            ray_intersects_tile(origin, forward, g_hover_tile)) {
+                G_hover_tile(g_hover_tile);
                 return;
         }
 
         /* Disable selected tile effect for old model */
-        if (g_selected_tile >= 0)
-                g_tiles[g_selected_tile].model.selected = FALSE;
+        if (g_hover_tile >= 0)
+                g_tiles[g_hover_tile].model.selected = FALSE;
 
         /* Iterate over all visible tiles to find the selected tile */
         for (i = 0, tile = -1, tile_z = 0.f; i < r_tiles; i++) {
@@ -565,6 +564,6 @@ void G_mouse_ray(c_vec3_t origin, c_vec3_t forward)
                 }
         }
 
-        G_select_tile(tile);
+        G_hover_tile(tile);
 }
 
