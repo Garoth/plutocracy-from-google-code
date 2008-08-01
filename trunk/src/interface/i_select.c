@@ -87,7 +87,8 @@ void I_select_change(i_select_t *select, int index)
 
         /* Numeric widget */
         if (select->list_len <= 0)
-                max = (select->max - select->min) / select->increment;
+                max = (int)((select->max - select->min) /
+                            select->increment + 0.5f);
         else
                 max = select->list_len - 1;
 
@@ -260,7 +261,7 @@ void I_select_update(i_select_t *select)
                 if (select->variable->type == C_VT_FLOAT)
                         value = select->variable->value.f;
                 else if (select->variable->type == C_VT_INTEGER)
-                        value = (int)(select->variable->value.n + 0.5f);
+                        value = (float)select->variable->value.n;
                 else
                         C_error("Invalid variable type %d",
                                 select->variable->type);

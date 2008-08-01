@@ -12,9 +12,6 @@
 
 #include "n_common.h"
 
-/* Connection timeout in seconds */
-#define CONNECT_TIMEOUT 1
-
 /* ID of this client in the game */
 n_client_id_t n_client_id;
 
@@ -47,14 +44,39 @@ void N_cleanup(void)
 }
 
 /******************************************************************************\
+ Waits for a socket to become readable. Returns TRUE on success.
+\******************************************************************************/
+bool N_socket_select(SOCKET socket, bool write)
+{
+        struct timeval tv;
+        fd_set fds;
+        int nfds;
+        
+        /* Timeout of one second */
+        tv.tv_sec = 1;
+        tv.tv_usec = 0;
+        
+        FD_ZERO(&fds);
+        FD_SET(socket, &fds);        
+#ifdef WINDOWS
+        nfds = 0;
+#else
+        nfds = socket + 1;
+#endif
+        if (write)
+                select(nfds, NULL, &fds, NULL, &tv);
+        else
+                select(nfds, &fds, NULL, NULL, &tv);
+        return FD_ISSET(socket, &fds);
+}
+
+/******************************************************************************\
  Connect the client to the given [address] (ip or hostname) and [port].
 \******************************************************************************/
 bool N_connect(const char *address, n_callback_f client_func)
 {
         struct sockaddr_in addr;
         struct hostent *host;
-        struct timeval tv;
-        fd_set readfds;
         int i, last_colon, port;
         char buffer[64], *host_ip;
 
@@ -92,15 +114,8 @@ bool N_connect(const char *address, n_callback_f client_func)
         addr.sin_addr.s_addr = inet_addr(host_ip);
         connect(n_client_socket, (struct sockaddr *)&addr, sizeof (addr));
 
-        /* Connection timeout */
-        tv.tv_sec = CONNECT_TIMEOUT;
-        tv.tv_usec = 0;
-        FD_ZERO(&readfds);
-        FD_SET(n_client_socket, &readfds);
-        select(n_client_socket + 1, &readfds, NULL, NULL, &tv);
-
         /* Connection failed */
-        if (!FD_ISSET(n_client_socket, &readfds)) {
+        if (N_socket_select(n_client_socket, FALSE)) {
                 closesocket(n_client_socket);
                 n_client_socket = INVALID_SOCKET;
                 n_client_id = N_INVALID_ID;

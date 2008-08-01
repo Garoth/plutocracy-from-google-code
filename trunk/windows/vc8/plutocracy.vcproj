@@ -436,6 +436,10 @@
 				</FileConfiguration>
 			</File>
 			<File
+				RelativePath="..\..\src\interface\i_container.c"
+				>
+			</File>
+			<File
 				RelativePath="..\..\src\interface\i_entry.c"
 				>
 				<FileConfiguration
@@ -536,6 +540,10 @@
 				</FileConfiguration>
 			</File>
 			<File
+				RelativePath="..\..\src\interface\i_players.c"
+				>
+			</File>
+			<File
 				RelativePath="..\..\src\interface\i_ring.c"
 				>
 				<FileConfiguration
@@ -583,6 +591,10 @@
 			</File>
 			<File
 				RelativePath="..\..\src\interface\i_static.c"
+				>
+			</File>
+			<File
+				RelativePath="..\..\src\interface\i_trade.c"
 				>
 			</File>
 			<File

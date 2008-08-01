@@ -39,21 +39,30 @@ int C_mkdir(const char *path)
 const char *C_user_dir(void)
 {
         static char user_dir[256];
+        TCHAR app_data[MAX_PATH];
 
-        if (!user_dir[0]) {
-                TCHAR app_data[MAX_PATH];
-
-                if (SHGetFolderPath(NULL, CSIDL_APPDATA, NULL, 0, app_data) !=
-                    S_OK) {
-                        C_warning("Failed to get Application Data directory");
-                        return "";
-                }
-                snprintf(user_dir, sizeof (user_dir),
-                         "%s/" PACKAGE, app_data);
-                C_debug("Home directory is '%s'", user_dir);
-                C_mkdir(user_dir);
+        if (user_dir[0])
+                return user_dir;
+        if (SHGetFolderPath(NULL, CSIDL_APPDATA, NULL, 0, app_data) != S_OK) {
+                C_warning("Failed to get Application Data directory");
+                return "";
         }
+        snprintf(user_dir, sizeof (user_dir), "%s/" PACKAGE, app_data);
+        C_debug("Home directory is '%s'", user_dir);
+        C_mkdir(user_dir);
         return user_dir;
+}
+
+/******************************************************************************\
+ Returns the path to the program installation.
+\******************************************************************************/
+const char *C_app_dir(void)
+{
+        static char app_dir[256];
+
+        if (!app_dir[0])
+                GetModuleFileName(NULL, app_dir, sizeof (app_dir));
+        return app_dir;
 }
 
 /******************************************************************************\
@@ -63,7 +72,8 @@ const char *C_user_dir(void)
 void C_signal_handler(c_signal_f func)
 {
 }
-/******************************************************************************\
+
+/******************************************************************************\
  Returns TRUE for an absolute path. A bit more complicated on Windows because
  either slash is valid and network paths are different from drive paths.
 \******************************************************************************/

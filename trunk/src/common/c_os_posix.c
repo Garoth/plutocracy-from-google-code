@@ -45,13 +45,20 @@ const char *C_user_dir(void)
 {
         static char user_dir[256];
 
-        if (!user_dir[0]) {
-                snprintf(user_dir, sizeof (user_dir),
-                         "%s/." PACKAGE, getenv("HOME"));
-                C_debug("Home directory is '%s'", user_dir);
-                C_mkdir(user_dir);
-        }
+        if (user_dir[0])
+                return user_dir;
+        snprintf(user_dir, sizeof (user_dir), "%s/." PACKAGE, getenv("HOME"));
+        C_debug("Home directory is '%s'", user_dir);
+        C_mkdir(user_dir);
         return user_dir;
+}
+
+/******************************************************************************\
+ Returns the path to the program installation.
+\******************************************************************************/
+const char *C_app_path(void)
+{
+        return PKGDATADIR;
 }
 
 /******************************************************************************\
