@@ -16,7 +16,7 @@
 #include "g_common.h"
 
 /* Maximum number of islands. Do not set this value above G_ISLAND_INVALID. */
-#define ISLAND_NUM 128
+#define ISLAND_NUM 254
 
 /* Maximum island size */
 #define ISLAND_SIZE 256
@@ -72,7 +72,7 @@ static r_terrain_t choose_terrain(int tile)
 \******************************************************************************/
 static void sanitise_terrain(void)
 {
-        int i, j, region_len, region[12], hot, cold, temp, sand, land;
+        int i, j, region_len, region[12], hot, cold, temp, sand, land, failed;
 
         /* During the first pass we convert shallow tiles to sand tiles */
         land = 0;
@@ -117,6 +117,13 @@ skip_shallow:   ;
 skip_sand:      ;
         }
 
+        /* Count failed islands */
+        for (failed = 0, i = 0; i < islands_len; i++)
+                if (islands[i].land < ISLAND_LAND)
+                        failed++;
+        C_debug("%d of %d islands succeeded",
+                islands_len - failed, islands_len);
+
         /* During the third pass, smooth terrain height and remove failed
            islands*/
         for (i = 0; i < r_tiles; i++) {
@@ -153,16 +160,56 @@ skip_sand:      ;
 }
 
 /******************************************************************************\
- Returns TRUE if [value] is in [array].
+ Grows an island iteratively. Returns TRUE if an island was successfully
+ created.
 \******************************************************************************/
-static bool in_array(int value, int *array, int size)
+static bool grow_island(int i, int limit)
 {
-        int i;
+        int j, start, size, edges[ISLAND_SIZE];
 
-        for (i = 0; i < size; i++)
-                if (array[i] == value)
-                        return TRUE;
+        if (limit < ISLAND_LAND * 3)
+                limit = ISLAND_LAND * 3;
+        if (limit > ISLAND_SIZE)
+                limit = ISLAND_SIZE;
+        islands[i].tiles = 0;
+        islands[i].land = 0;
+
+        /* Find an unused root tile */
+        for (j = start = C_rand() % r_tiles; j < r_tiles; j++)
+                if (g_tiles[j].island == G_ISLAND_INVALID)
+                        goto grow;
+        for (j = 0; j < start; j++)
+                if (g_tiles[j].island == G_ISLAND_INVALID)
+                        goto grow;
         return FALSE;
+
+grow:   edges[0] = islands[i].root = j;
+        for (size = 1; size && islands[i].tiles < limit; islands[i].tiles++) {
+                int k, index, neighbors[3];
+
+                index = C_rand() % size;
+                R_get_tile_neighbors(edges[index], neighbors);
+                for (j = 0; j < 3; j++) {
+
+                        /* Valid edge tile? */
+                        if (g_tiles[neighbors[j]].island != G_ISLAND_INVALID)
+                                continue;
+
+                        /* Add to the edges array if it isn't there already */
+                        for (k = 0; edges[k] != neighbors[j]; k++)
+                                if (k >= size) {
+                                        edges[size++] = neighbors[j];
+                                        break;
+                                }
+                }
+                r_tile_params[edges[index]].terrain = R_T_SHALLOW;
+                g_tiles[edges[index]].island = i;
+
+                /* Consume edge */
+                memmove(edges + index, edges + index + 1,
+                        (--size - index) * sizeof (*edges));
+        }
+        return TRUE;
 }
 
 /******************************************************************************\
@@ -171,61 +218,20 @@ static bool in_array(int value, int *array, int size)
 \******************************************************************************/
 static void grow_islands(int num, int island_size, float variance)
 {
-        int i, j, expanded, sizes[ISLAND_NUM], limits[ISLAND_NUM],
-            edges[ISLAND_NUM * ISLAND_SIZE];
+        int limit;
 
+        if (num < 1 || island_size < 1)
+                return;
         if (num > ISLAND_NUM)
                 num = ISLAND_NUM;
         if (island_size > ISLAND_SIZE)
                 island_size = ISLAND_SIZE;
         C_debug("Growing %d, %d-tile islands", num, island_size);
-
-        /* Disperse the initial seeds evenly and set limits */
-        for (i = 0; i < num; i++) {
-                islands[i].root = i * r_tiles / num;
-                sizes[i] = 1;
-                edges[i * ISLAND_SIZE] = islands[i].root;
-                limits[i] = (int)((1.f - variance * C_rand_real()) *
-                                  island_size);
-                if (limits[i] < ISLAND_LAND * 3)
-                        limits[i] = ISLAND_LAND * 3;
-                if (limits[i] > ISLAND_SIZE)
-                        limits[i] = ISLAND_SIZE;
-                g_tiles[islands[i].root].island = i;
-                islands[i].tiles = 0;
-                islands[i].land = 0;
-        }
-        islands_len = num;
-
-        /* Iteratively grow each island */
-        for (expanded = TRUE; expanded; ) {
-                expanded = FALSE;
-                for (i = 0; i < num; i++) {
-                        int index, next, neighbors[3];
-
-                        if (!sizes[i] || islands[i].tiles >= limits[i])
-                                continue;
-                        expanded = TRUE;
-                        index = i * ISLAND_SIZE + (C_rand() % sizes[i]);
-                        R_get_tile_neighbors(edges[index], neighbors);
-                        for (j = 0; j < 3; j++) {
-                                next = neighbors[j];
-
-                                /* Valid edge tile? */
-                                if (g_tiles[next].island != G_ISLAND_INVALID ||
-                                    in_array(next, edges, sizes[i]))
-                                        continue;
-
-                                edges[i * ISLAND_SIZE + sizes[i]++] = next;
-                                g_tiles[next].island = i;
-                        }
-                        r_tile_params[edges[index]].terrain = R_T_SHALLOW;
-                        islands[g_tiles[next].island].tiles++;
-
-                        /* Consume edge */
-                        memmove(edges + index, edges + index + 1,
-                                (i * ISLAND_SIZE + (--sizes[i]) - index) *
-                                sizeof (*edges));
+        for (islands_len = 0; islands_len < num; islands_len++) {
+                limit = (int)((1.f - variance * C_rand_real()) * island_size);
+                if (!grow_island(islands_len, limit)) {
+                        C_debug("Could only fit %d islands", islands_len);
+                        break;
                 }
         }
 }
@@ -332,23 +338,23 @@ void G_generate_globe(int subdiv4, int override_islands, int override_size,
         /* Grow the islands and set terrain. Globe size affects the island
            growth parameters. */
         switch (subdiv4) {
-        case 5: islands = 125;
+        case 5: islands = 80;
+                island_size = 256;
+                variance = 0.3f;
+                break;
+        case 4: islands = 60;
                 island_size = 220;
+                variance = 0.2f;
                 break;
-        case 4: islands = 40;
-                island_size = 160;
-                break;
-        case 3: islands = 10;
-                island_size = 160;
-                break;
-        case 2: islands = 3;
-                island_size = 160;
+        case 3: islands = 40;
+                island_size = 140;
+                variance = 0.f;
                 break;
         default:
+                C_warning("Invalid subdivision %d", subdiv4);
                 islands_len = 0;
                 return;
         }
-        variance = 0.2f;
         if (override_islands > 0)
                 islands = override_islands;
         if (override_size > 0)
