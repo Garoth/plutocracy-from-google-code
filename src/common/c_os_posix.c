@@ -56,7 +56,7 @@ const char *C_user_dir(void)
 /******************************************************************************\
  Returns the path to the program installation.
 \******************************************************************************/
-const char *C_app_path(void)
+const char *C_app_dir(void)
 {
         return PKGDATADIR;
 }
