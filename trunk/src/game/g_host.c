@@ -23,17 +23,6 @@ int g_clients_max;
 \******************************************************************************/
 static void send_ship_cargo(int client, int index)
 {
-        int i;
-
-        N_send_start();
-        N_send_char(G_SM_SHIP_CARGO);
-        N_send_char(index);
-        for (i = 0; i < G_CARGO_TYPES; i++)
-                N_send_short(g_ships[index].cargo.amounts[i]);
-        if (client == N_BROADCAST_ID)
-                N_broadcast_except(N_HOST_CLIENT_ID, NULL);
-        else
-                N_send(client, NULL);
 }
 
 /******************************************************************************\
@@ -69,26 +58,15 @@ static void cm_affiliate(int client)
         if (old == G_NN_NONE &&
             (ship = G_spawn_ship(client, -1, G_SN_SLOOP, -1)) >= 0) {
                 tile = g_ships[ship].tile;
-                g_ships[ship].cargo.amounts[G_CT_GOLD] = 1000;
-                g_ships[ship].cargo.amounts[G_CT_CREW] = 10;
-                g_ships[ship].cargo.amounts[G_CT_RATIONS] = 10;
                 send_ship_cargo(N_BROADCAST_ID, ship);
 
                 /* Spawn a second ship for testing */
-                if ((ship = G_spawn_ship(client, tile, G_SN_SPIDER, -1)) >= 0) {
-                        g_ships[ship].cargo.amounts[G_CT_GOLD] = 500;
-                        g_ships[ship].cargo.amounts[G_CT_CREW] = 15;
-                        g_ships[ship].cargo.amounts[G_CT_RATIONS] = 20;
+                if ((ship = G_spawn_ship(client, tile, G_SN_SPIDER, -1)) >= 0)
                         send_ship_cargo(N_BROADCAST_ID, ship);
-                }
 
                 /* And spawn a third ship for testing also */
-                if ((ship = G_spawn_ship(client, tile, G_SN_GALLEON, -1)) >= 0) {
-                        g_ships[ship].cargo.amounts[G_CT_GOLD] = 1500;
-                        g_ships[ship].cargo.amounts[G_CT_CREW] = 30;
-                        g_ships[ship].cargo.amounts[G_CT_RATIONS] = 40;
+                if ((ship = G_spawn_ship(client, tile, G_SN_GALLEON, -1)) >= 0)
                         send_ship_cargo(N_BROADCAST_ID, ship);
-                }
         }
 
         N_broadcast("1112", G_SM_AFFILIATE, client, nation, tile);

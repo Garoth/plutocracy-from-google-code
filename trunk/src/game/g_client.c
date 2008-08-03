@@ -325,14 +325,6 @@ static void sm_ship_move(void)
 \******************************************************************************/
 static void sm_ship_cargo(void)
 {
-        int i, index;
-
-        C_assert(n_client_id != N_HOST_CLIENT_ID);
-        if ((index = receive_ship()) < 0)
-                return;
-        for (i = 0; i < G_CARGO_TYPES; i++)
-                g_ships[index].cargo.amounts[i] = N_receive_short();
-        G_ship_reselect(index, -1);
 }
 
 /******************************************************************************\

@@ -127,12 +127,7 @@ void I_select_change(i_select_t *select, int index)
                 fmt = C_va("%%.0%df%%s", select->decimals);
                 snprintf(option->string, sizeof (option->string), fmt, value,
                          select->suffix ? select->suffix : "");
-                if (select->variable) {
-                        if (select->variable->type == C_VT_FLOAT)
-                                option->value.f = value;
-                        else if (select->variable->type == C_VT_INTEGER)
-                                option->value.n = (int)(value + 0.5f);
-                }
+                option->value = value;
         }
 
         if (select->widget.configured)
@@ -146,10 +141,10 @@ void I_select_change(i_select_t *select, int index)
         if (select->variable && option) {
                 if (select->variable->type == C_VT_FLOAT)
                         C_var_set(select->variable,
-                                  C_va("%g", option->value.f));
+                                  C_va("%g", option->value));
                 else if (select->variable->type == C_VT_INTEGER)
                         C_var_set(select->variable,
-                                  C_va("%d", option->value.n));
+                                  C_va("%d", (int)(option->value + 0.5f)));
                 else
                         C_var_set(select->variable, option->string);
         }
@@ -202,6 +197,7 @@ static i_select_option_t *select_add(i_select_t *select, const char *string)
         option = C_malloc(sizeof (*option));
         C_strncpy_buf(option->string, string);
         option->next = select->options;
+        option->value = C_FLOAT_MAX;
         select->options = option;
         select->list_len++;
         return option;
@@ -226,7 +222,7 @@ void I_select_add_float(i_select_t *select, float f, const char *override)
                 fmt = C_va("%%.0%df", select->decimals);
                 option = select_add(select, C_va(fmt, f, select->suffix));
         }
-        option->value.f = f;
+        option->value = f;
 }
 
 void I_select_add_int(i_select_t *select, int n, const char *override)
@@ -239,7 +235,47 @@ void I_select_add_int(i_select_t *select, int n, const char *override)
                 option = select_add(select, C_va("%d%s", n, select->suffix));
         else
                 option = select_add(select, C_va("%d", n, select->suffix));
-        option->value.n = n;
+        option->value = (float)n;
+}
+
+/******************************************************************************\
+ Change to the index of the closest numerical value.
+\******************************************************************************/
+void I_select_nearest(i_select_t *select, float value)
+{
+        float diff, best_diff;
+        int best;
+
+        /* Numeric widgets don't need to cycle */
+        if (select->list_len <= 0) {
+                if (value < select->min)
+                        value = select->min;
+                if (value > select->max)
+                        value = select->max;
+                best = (int)((value - select->min) / select->increment + 0.5f);
+        }
+
+        /* Cycle through options to find the closest one */
+        else {
+                i_select_option_t *option;
+                int i;
+
+                best_diff = C_FLOAT_MAX;
+                option = select->options;
+                for (i = 0; option; option = option->next, i++) {
+                        diff = value - option->value;
+                        if (diff < 0.f)
+                                diff = -diff;
+                        if (diff < best_diff) {
+                                best = i;
+                                if (!diff)
+                                        break;
+                                best_diff = diff;
+                        }
+                }
+        }
+
+        I_select_change(select, best);
 }
 
 /******************************************************************************\
@@ -248,13 +284,10 @@ void I_select_add_int(i_select_t *select, int n, const char *override)
 \******************************************************************************/
 void I_select_update(i_select_t *select)
 {
-        i_select_option_t *option;
-        int i, best;
-
         if (!select->variable)
                 return;
 
-        /* Numeric widgets don't need to cycle */
+        /* For numerics just compute the nearest value */
         if (select->list_len <= 0) {
                 float value;
 
@@ -265,52 +298,17 @@ void I_select_update(i_select_t *select)
                 else
                         C_error("Invalid variable type %d",
                                 select->variable->type);
-                if (value < select->min)
-                        value = select->min;
-                if (value > select->max)
-                        value = select->max;
-                best = (int)((value - select->min) / select->increment + 0.5f);
-                I_select_change(select, best);
+                I_select_nearest(select, value);
                 return;
         }
 
         /* Go through the options list and find the closest value */
-        best = 0;
-        if (select->variable->type == C_VT_FLOAT) {
-                float diff, best_diff;
-
-                best_diff = C_FLOAT_MAX;
-                for (option = select->options, i = 0; option;
-                     option = option->next, i++) {
-                        diff = select->variable->value.f - option->value.f;
-                        if (diff < 0.f)
-                                diff = -diff;
-                        if (diff < best_diff) {
-                                best = i;
-                                if (!diff)
-                                        break;
-                                best_diff = diff;
-                        }
-                }
-        } else if (select->variable->type == C_VT_INTEGER) {
-                int diff, best_diff;
-
-                best_diff = C_INT_MAX;
-                for (option = select->options, i = 0; option;
-                     option = option->next, i++) {
-                        diff = select->variable->value.n - option->value.n;
-                        if (diff < 0)
-                                diff = -diff;
-                        if (diff < best_diff) {
-                                best = i;
-                                if (!diff)
-                                        break;
-                                best_diff = diff;
-                        }
-                }
-        } else
+        if (select->variable->type == C_VT_FLOAT)
+                I_select_nearest(select, select->variable->value.f);
+        else if (select->variable->type == C_VT_INTEGER)
+                I_select_nearest(select, select->variable->value.n);
+        else
                 C_error("Invalid variable type %d", select->variable->type);
-        I_select_change(select, best);
 }
 
 /******************************************************************************\

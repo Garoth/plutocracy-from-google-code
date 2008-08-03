@@ -36,16 +36,17 @@ static int nation_color_update(c_var_t *var, c_var_value_t value)
 /******************************************************************************\
  Returns the amount of space the given cargo manifest contains.
 \******************************************************************************/
-int G_cargo_space(const g_cargo_t *cargo)
+int G_store_space(const g_store_t *store)
 {
         int i, space;
 
         space = 0;
         for (i = 0; i < G_CARGO_TYPES; i++)
-                space += cargo->amounts[i];
+                space += store->cargo[i].amount;
 
         /* Gold is special */
-        space += cargo->amounts[G_CT_GOLD] / 100 - cargo->amounts[G_CT_GOLD];
+        space += store->cargo[G_CT_GOLD].amount / 100 -
+                 store->cargo[G_CT_GOLD].amount;
 
         return space;
 }
@@ -72,32 +73,24 @@ i_color_t G_nation_to_color(g_nation_name_t nation)
 void G_init_elements(void)
 {
         g_ship_class_t *pc;
+        int i;
 
         C_status("Initializing game elements");
 
-        /* Ruby nation */
+        /* Nation constants */
         g_nations[G_NN_RED].short_name = "red";
         g_nations[G_NN_RED].long_name = C_str("g-nation-red", "Ruby");
-        C_var_update_data(g_nation_colors + G_NN_RED, nation_color_update,
-                          &g_nations[G_NN_RED].color);
-
-        /* Emerald nation */
         g_nations[G_NN_GREEN].short_name = "green";
         g_nations[G_NN_GREEN].long_name = C_str("g-nation-green", "Emerald");
-        C_var_update_data(g_nation_colors + G_NN_GREEN, nation_color_update,
-                          &g_nations[G_NN_GREEN].color);
-
-        /* Sapphire nation */
         g_nations[G_NN_BLUE].short_name = "blue";
         g_nations[G_NN_BLUE].long_name = C_str("g-nation-blue", "Sapphire");
-        C_var_update_data(g_nation_colors + G_NN_BLUE, nation_color_update,
-                          &g_nations[G_NN_BLUE].color);
-
-        /* Pirate */
         g_nations[G_NN_PIRATE].short_name = "pirate";
         g_nations[G_NN_PIRATE].long_name = C_str("g-nation-pirate", "Pirate");
-        C_var_update_data(g_nation_colors + G_NN_PIRATE, nation_color_update,
-                          &g_nations[G_NN_PIRATE].color);
+
+        /* Initialize nation window and color variables */
+        for (i = 0; i < G_NATION_NAMES; i++)
+                C_var_update_data(g_nation_colors + i, nation_color_update,
+                                  &g_nations[i].color);
 
         /* Special cargo */
         g_cargo_names[G_CT_GOLD] = C_str("g-cargo-gold", "Gold");

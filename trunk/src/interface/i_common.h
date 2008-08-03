@@ -187,11 +187,7 @@ typedef struct i_scrollback {
 /* Data type for a select widget option */
 typedef struct i_select_option {
         char string[32];
-        union {
-                float f;
-                int n;
-                void *p;
-        } value;
+        float value;
         struct i_select_option *next;
 } i_select_option_t;
 
@@ -320,6 +316,7 @@ void I_select_add_int(i_select_t *, int, const char *override);
 void I_select_add_string(i_select_t *, const char *);
 void I_select_change(i_select_t *, int index);
 void I_select_init(i_select_t *, const char *label, const char *suffix);
+void I_select_nearest(i_select_t *, float value);
 void I_select_update(i_select_t *);
 
 /* i_ship.c */

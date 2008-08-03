@@ -68,14 +68,7 @@ typedef struct g_nation {
         const char *short_name, *long_name;
 } g_nation_t;
 
-/* Cargo and trading settings structure */
-typedef struct g_cargo {
-        short capacity, amounts[G_CARGO_TYPES],
-              prices[G_CARGO_TYPES], maxs[G_CARGO_TYPES];
-} g_cargo_t;
-
 /* g_client.c */
-int G_cargo_space(const g_cargo_t *);
 void G_cleanup(void);
 void G_init(void);
 void G_input_chat(char *message);
@@ -85,8 +78,8 @@ void G_process_click(int button);
 void G_update_client(void);
 
 /* g_elements.c */
-extern g_nation_t g_nations[G_NATION_NAMES];
 extern const char *g_cargo_names[G_CARGO_TYPES];
+extern g_nation_t g_nations[G_NATION_NAMES];
 
 /* g_globe.c */
 void G_mouse_ray(c_vec3_t origin, c_vec3_t forward);
