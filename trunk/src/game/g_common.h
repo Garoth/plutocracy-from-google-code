@@ -126,7 +126,7 @@ typedef struct g_cargo {
 typedef struct g_store {
         g_cargo_t cargo[G_CARGO_TYPES];
         short capacity;
-        bool client_owned;
+        bool visible[N_CLIENTS_MAX];
 } g_store_t;
 
 /* Structure containing ship information */

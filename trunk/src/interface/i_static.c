@@ -289,6 +289,8 @@ void I_selectable_on(i_selectable_t *sel)
         if (!sel || !sel->group || *sel->group == sel)
                 return;
         *sel->group = sel;
+        if (sel->on_select)
+                sel->on_select(sel);
 }
 
 /******************************************************************************\

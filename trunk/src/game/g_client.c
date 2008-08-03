@@ -325,6 +325,35 @@ static void sm_ship_move(void)
 \******************************************************************************/
 static void sm_ship_cargo(void)
 {
+        g_cargo_t *cargo;
+        int i, index;
+
+        /* If we are hosting we already know all the information */
+        if (n_client_id == N_HOST_CLIENT_ID)
+                return;
+
+        if ((index = receive_ship()) < 0)
+                return;
+
+        /* If this is ours all we are getting is the amount */
+        if (g_ships[index].client == n_client_id)
+                for (i = 0; i < G_CARGO_TYPES; i++) {
+                        cargo = g_ships[index].store.cargo + i;
+                        cargo->amount = N_receive_short();
+                }
+
+        /* Otherwise we get buy/sell info */
+        else
+                for (i = 0; i < G_CARGO_TYPES; i++) {
+                        cargo = g_ships[index].store.cargo + i;
+                        cargo->amount = -1;
+                        cargo->minimum = N_receive_short();
+                        cargo->maximum = N_receive_short();
+                        cargo->buy_price = N_receive_short();
+                        cargo->sell_price = N_receive_short();
+                }
+
+        G_ship_reselect(-1, index);
 }
 
 /******************************************************************************\

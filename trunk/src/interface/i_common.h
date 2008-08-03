@@ -225,8 +225,10 @@ typedef struct i_box {
 /* A selectable line */
 typedef struct i_selectable {
         i_widget_t widget;
+        i_callback_f on_select;
         r_window_t on, off, hover;
         struct i_selectable **group;
+        void *data;
         float height;
 } i_selectable_t;
 
@@ -318,6 +320,7 @@ void I_select_change(i_select_t *, int index);
 void I_select_init(i_select_t *, const char *label, const char *suffix);
 void I_select_nearest(i_select_t *, float value);
 void I_select_update(i_select_t *);
+float I_select_value(const i_select_t *);
 
 /* i_ship.c */
 void I_init_ship(i_window_t *);

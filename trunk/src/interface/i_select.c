@@ -312,6 +312,26 @@ void I_select_update(i_select_t *select)
 }
 
 /******************************************************************************\
+ Returns the floating-point value of the current selection.
+\******************************************************************************/
+float I_select_value(const i_select_t *select)
+{
+        const i_select_option_t *option;
+        int i;
+
+        /* Numerics don't have options */
+        if (select->list_len <= 0)
+                return select->min + select->index * select->increment;
+
+        /* Cycle through to find our option */
+        for (i = 0; option; i++, option = option->next)
+                if (i == select->index)
+                        return option->value;
+
+        return 0.f;
+}
+
+/******************************************************************************\
  Initialize a selection widget.
 \******************************************************************************/
 void I_select_init(i_select_t *select, const char *label, const char *suffix)
