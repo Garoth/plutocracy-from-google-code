@@ -546,6 +546,35 @@ void G_update_ships(void)
 }
 
 /******************************************************************************\
+ Configure the interface to reflect the ship's cargo and trade status.
+\******************************************************************************/
+static void ship_configure_trade(int index)
+{
+        int i;
+
+        I_enable_trade(TRUE, g_ships[index].client == n_client_id);
+        I_set_cargo_space(G_store_space(&g_ships[index].store),
+                          g_ship_classes[g_ships[index].class_name].cargo);
+        for (i = 0; i < G_CARGO_TYPES; i++) {
+                i_cargo_data_t left;
+                g_cargo_t *cargo;
+
+                cargo = g_ships[index].store.cargo + i;
+
+                /* Our cargo */
+                left.amount = cargo->amount;
+                left.minimum = cargo->minimum;
+                left.maximum = cargo->maximum;
+                left.sell_price = cargo->sell_price;
+                left.buy_price = cargo->buy_price;
+                left.auto_buy = cargo->auto_buy;
+                left.auto_sell = cargo->auto_sell;
+
+                I_configure_cargo(i, &left, NULL);
+        }
+}
+
+/******************************************************************************\
  Select a ship. Pass a negative [index] to deselect.
 \******************************************************************************/
 void G_ship_select(int index)
@@ -571,9 +600,11 @@ void G_ship_select(int index)
                 I_select_ship(color, g_ships[index].name,
                               g_clients[client].name,
                               g_ship_classes[class_name].name);
+                ship_configure_trade(index);
         } else {
                 R_select_path(-1, NULL);
                 I_deselect_ship();
+                I_enable_trade(FALSE, FALSE);
         }
 }
 

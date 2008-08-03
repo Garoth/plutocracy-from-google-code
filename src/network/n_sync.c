@@ -105,7 +105,7 @@ static SOCKET client_to_socket(n_client_id_t client)
 static void send_buffer(n_client_id_t client)
 {
         SOCKET socket;
-        int i, bytes_sent;
+        int i, ret, bytes_sent;
 
         if (client >= 0 && client < N_CLIENTS_MAX &&
             !n_clients[client].connected) {
@@ -129,11 +129,14 @@ static void send_buffer(n_client_id_t client)
         /* Send TCP/IP message */
         socket = client_to_socket(client);
         for (bytes_sent = i = 0; bytes_sent < n_sync_size && i < 5; i++) {
-                int ret;
-                
-                if (!N_socket_select(socket, TRUE) ||
-                    (ret = send(socket, n_sync_buffer, n_sync_size, 0)) < 0)
+                if (!N_socket_select(socket, TRUE))
                         break;
+                ret = send(socket, n_sync_buffer, n_sync_size, 0);
+                if (ret < 0 && errno != EAGAIN && errno != EWOULDBLOCK) {
+                        C_warning("Error sending to %s: %s",
+                                  N_client_to_string(client), strerror(errno));
+                        break;
+                }
                 bytes_sent += ret;
                 if (bytes_sent >= n_sync_size)
                         return;
@@ -141,7 +144,9 @@ static void send_buffer(n_client_id_t client)
         }
 
         /* Send failed */
-        C_warning("Send to %s failed", N_client_to_string(client));
+        C_warning("Send to %s failed, returned %d; %d tries, %d/%d bytes",
+                  N_client_to_string(client), ret, i, bytes_sent,
+                  n_sync_size);
         N_drop_client(client);
 }
 
@@ -296,13 +301,14 @@ void N_send_full(const char *file, int line, const char *func,
 skip:   write_bytes(0, 2, &n_sync_size);
 
         /* Broadcast to every client */
-        if (client == N_BROADCAST_ID || client < 0) {
-                int i;
+        if (client == N_BROADCAST_ID || client == N_SELECTED_ID || client < 0) {
+                int i, except;
 
                 C_assert(n_client_id == N_HOST_CLIENT_ID);
-                client = -client - 1;
+                except = -client - 1;
                 for (i = 0; i < N_CLIENTS_MAX; i++)
-                        if (n_clients[i].connected && i != client)
+                        if (n_clients[i].connected && i != except &&
+                            (n_clients[i].selected || client != N_SELECTED_ID))
                                 send_buffer(i);
                 return;
         }

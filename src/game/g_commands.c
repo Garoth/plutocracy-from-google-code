@@ -212,3 +212,23 @@ void G_join_game(const char *address)
         I_popup(NULL, C_va("Failed to connect to '%s'.", address));
 }
 
+/******************************************************************************\
+ Host a new game.
+\******************************************************************************/
+void G_trade_params(int index, int buy_price, int sell_price,
+                    int minimum, int maximum)
+{
+        g_cargo_t *cargo;
+
+        if (g_selected_ship < 0)
+                return;
+        C_assert(g_ships[g_selected_ship].client == n_client_id);
+        cargo = g_ships[g_selected_ship].store.cargo + index;
+        if ((cargo->auto_buy = buy_price >= 0))
+                cargo->buy_price = buy_price;
+        if ((cargo->auto_sell = sell_price >= 0))
+                cargo->sell_price = sell_price;
+        cargo->minimum = minimum;
+        cargo->maximum = maximum;
+}
+

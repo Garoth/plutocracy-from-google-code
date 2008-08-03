@@ -31,6 +31,7 @@ typedef enum {
         N_SERVER_ID = N_CLIENTS_MAX,
         N_UNASSIGNED_ID,
         N_BROADCAST_ID,
+        N_SELECTED_ID,
 } n_client_id_t;
 
 /* Callback function events */
@@ -46,7 +47,7 @@ typedef void (*n_callback_f)(n_client_id_t, n_event_t);
 /* Structure for connected clients */
 typedef struct n_client {
         SOCKET socket;
-        bool connected;
+        bool connected, selected;
 } n_client_t;
 
 /* n_client.c */
@@ -84,6 +85,10 @@ void N_receive_string(char *buffer, int size);
 #define N_receive_string_buf(b) N_receive_string(b, sizeof (b))
 #define N_send(n, fmt, ...) N_send_full(__FILE__, __LINE__, __func__, n, fmt, \
                                         ## __VA_ARGS__, N_SENTINEL);
+#define N_send_selected(fmt, ...) N_send_full(__FILE__, __LINE__, __func__, \
+                                              N_SELECTED_ID, fmt \
+                                              ## __VA_ARGS__, N_SENTINEL)
+
 bool N_send_char(char);;
 bool N_send_short(short);
 bool N_send_int(int);

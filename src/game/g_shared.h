@@ -71,11 +71,15 @@ typedef struct g_nation {
 /* g_client.c */
 void G_cleanup(void);
 void G_init(void);
+void G_update_client(void);
+
+/* g_commands.c */
 void G_input_chat(char *message);
 void G_join_game(const char *address);
 void G_leave_game(void);
 void G_process_click(int button);
-void G_update_client(void);
+void G_trade_params(int cargo, int buy_price, int sell_price,
+                    int minimum, int maximum);
 
 /* g_elements.c */
 extern const char *g_cargo_names[G_CARGO_TYPES];
