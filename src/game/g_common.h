@@ -11,9 +11,9 @@
 \******************************************************************************/
 
 #include "../common/c_shared.h"
+#include "../network/n_shared.h"
 #include "../render/r_shared.h"
 #include "../interface/i_shared.h"
-#include "../network/n_shared.h"
 #include "g_shared.h"
 
 /* Network protocol used by the client and server. Increment when no longer
@@ -116,10 +116,23 @@ typedef struct g_ship_class {
         int health, cargo;
 } g_ship_class_t;
 
+/* Cargo item structure */
+typedef struct g_cargo {
+        short amount, buy_price, minimum, maximum, sell_price;
+        bool auto_buy, auto_sell;
+} g_cargo_t;
+
+/* Trading store structure */
+typedef struct g_store {
+        g_cargo_t cargo[G_CARGO_TYPES];
+        short capacity;
+        bool client_owned;
+} g_store_t;
+
 /* Structure containing ship information */
 typedef struct g_ship {
         g_ship_name_t class_name;
-        g_cargo_t cargo;
+        g_store_t store;
         float progress;
         int tile, rear_tile, target, client, health, armor;
         char path[R_PATH_MAX], name[G_NAME_MAX];
@@ -143,6 +156,7 @@ extern int g_hover_tile, g_hover_ship, g_selected_ship;
 void G_build(int tile, g_building_name_t, float progress);
 void G_init_elements(void);
 void G_reset_elements(void);
+int G_store_space(const g_store_t *);
 
 extern g_building_type_t g_building_types[G_BUILDING_NAMES];
 

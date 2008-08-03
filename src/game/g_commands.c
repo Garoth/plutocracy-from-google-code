@@ -124,7 +124,7 @@ static void test_ring_callback(i_ring_icon_t icon)
                                "models/tree/deciduous.plum");
         else if (icon == I_RI_TEST_SHIP)
                 G_set_tile_model(g_hover_tile,
-                               "models/ship/sloop.plum");
+                               "models/water/dock.plum");
         else
                 G_set_tile_model(g_hover_tile, "");
 }

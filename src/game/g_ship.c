@@ -108,7 +108,6 @@ init:   /* Initialize ship structure */
         g_ships[index].progress = 1.f;
         g_ships[index].client = client;
         g_ships[index].health = g_ship_classes[name].health;
-        g_ships[index].cargo.capacity = g_ship_classes[name].cargo;
 
         /* Start out unnamed */
         C_strncpy_buf(g_ships[index].name, C_va("Unnamed #%d", index));
@@ -572,11 +571,9 @@ void G_ship_select(int index)
                 I_select_ship(color, g_ships[index].name,
                               g_clients[client].name,
                               g_ship_classes[class_name].name);
-                I_select_trade(&g_ships[index].cargo);
         } else {
                 R_select_path(-1, NULL);
                 I_deselect_ship();
-                I_select_trade(NULL);
         }
 }
 

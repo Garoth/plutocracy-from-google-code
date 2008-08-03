@@ -108,7 +108,7 @@ void R_register_variables(void)
         C_register_integer(&r_solar, "r_solar", TRUE,
                           "0 = no sky, 1 = rotating, 2 = static");
         r_solar.edit = C_VE_ANYTIME;
-        C_register_integer(&r_globe_shininess, "r_globe_shininess", 32,
+        C_register_integer(&r_globe_shininess, "r_globe_shininess", 64,
                           "globe specular shininess: 0-128");
         r_globe_shininess.edit = C_VE_ANYTIME;
         C_register_float(&r_moon_height, "r_moon_height", 32.f,
@@ -121,7 +121,7 @@ void R_register_variables(void)
                           "globe ambient light color");
         C_register_string(r_globe_colors + 1, "r_globe_diffuse", "#c0c0c0",
                           "globe diffuse light color");
-        C_register_string(r_globe_colors + 2, "r_globe_specular", "white",
+        C_register_string(r_globe_colors + 2, "r_globe_specular", "#404040",
                           "globe specular light color");
         C_register_string(&r_light_ambient, "r_light_ambient", "#804020",
                           "universal ambient light color");

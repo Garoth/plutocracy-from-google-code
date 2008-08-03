@@ -12,24 +12,30 @@
 
 #include "i_common.h"
 
+/* Modes */
+#define MODE_BUY 0
+#define MODE_SELL 1
+
 /* Cargo widget */
-typedef struct cargo {
+typedef struct cargo_line {
         i_selectable_t sel;
         i_label_t left, label, price, right;
-} cargo_t;
+        i_cargo_data_t left_data, right_data;
+} cargo_line_t;
 
-static cargo_t cargo_widgets[G_CARGO_TYPES];
+static cargo_line_t cargo_lines[G_CARGO_TYPES];
 static i_label_t title;
 static i_info_t cargo_info;
 static i_select_t mode, quantity, price, active;
 static i_selectable_t *cargo_group;
 static i_box_t button_box;
 static i_button_t transfer_button, ten_button, fifty_button;
+static bool left_own;
 
 /******************************************************************************\
  Initialize a cargo widget.
 \******************************************************************************/
-static void cargo_init(cargo_t *cargo, const char *name)
+static void cargo_init(cargo_line_t *cargo, const char *name)
 {
         I_selectable_init(&cargo->sel, &cargo_group, 0.f);
 
@@ -57,20 +63,99 @@ static void cargo_init(cargo_t *cargo, const char *name)
 }
 
 /******************************************************************************\
- Selected something that trades cargo. If [cargo] is NULL, disables the
- trade window.
+ Configures the control widgets.
 \******************************************************************************/
-void I_select_trade(const g_cargo_t *cargo)
+static void configure_control(cargo_line_t *cargo)
 {
-        /* Deselect cargo */
-        if (!cargo) {
-                I_toolbar_enable(&i_right_toolbar, i_trade_button, FALSE);
-                return;
-        }
+        i_widget_state_t state;
+        bool enable;
 
-        I_toolbar_enable(&i_right_toolbar, i_trade_button, TRUE);
-        I_info_configure(&cargo_info,
-                         C_va("%d/%d", G_cargo_space(cargo), cargo->capacity));
+        /* Whether to enable the control widgets */
+        enable = cargo && left_own;
+
+        /* Enable/disable control widgets */
+        state = enable ? I_WS_READY : I_WS_DISABLED;
+        transfer_button.widget.state = state;
+        ten_button.widget.state = state;
+        fifty_button.widget.state = state;
+        price.widget.state = state;
+        quantity.widget.state = state;
+        active.widget.state = state;
+
+        /* Show/hide price/quantity indicators */
+        quantity.item.widget.shown = enable;
+        price.item.widget.shown = enable;
+        active.item.widget.shown = enable;
+
+        /* Set the amounts */
+        if (!enable)
+                return;
+        if (mode.index == MODE_BUY) {
+                I_select_change(&active, cargo->left_data.auto_buy);
+                I_select_nearest(&quantity, cargo->left_data.minimum);
+                I_select_nearest(&price, cargo->left_data.buy_price);
+        } else if (mode.index == MODE_SELL) {
+                I_select_change(&active, cargo->left_data.auto_sell);
+                I_select_nearest(&quantity, cargo->left_data.maximum);
+                I_select_nearest(&price, cargo->left_data.sell_price);
+        }
+}
+
+/******************************************************************************\
+ Enable or disable the trade window.
+\******************************************************************************/
+void I_enable_trade(bool enable, bool own)
+{
+        I_toolbar_enable(&i_right_toolbar, i_trade_button, enable);
+        left_own = own;
+}
+
+/******************************************************************************\
+ Configures store cargo space.
+\******************************************************************************/
+void I_set_cargo_space(int used, int capacity)
+{
+        I_info_configure(&cargo_info, C_va("%d/%d", used, capacity));
+}
+
+/******************************************************************************\
+ Configures a cargo line for the current window mode.
+\******************************************************************************/
+static void cargo_configure(cargo_line_t *cargo)
+{
+        int gold;
+
+        /* Left amount */
+        if ((cargo->left.widget.shown = cargo->left_data.amount >= 0))
+                I_label_configure(&cargo->left,
+                                  C_va("%d", cargo->left_data.amount));
+
+        /* Right amount */
+        if ((cargo->right.widget.shown = cargo->right_data.amount >= 0))
+                I_label_configure(&cargo->right,
+                                  C_va("%d", cargo->right_data.amount));
+
+        /* Price */
+        gold = mode.index == MODE_BUY ? cargo->right_data.sell_price :
+                                        cargo->right_data.buy_price;
+        if ((price.widget.shown = gold > 0))
+                I_label_configure(&cargo->price, C_va("%dg", gold));
+
+        /* Control widgets */
+        if (cargo_group == &cargo->sel)
+                configure_control(cargo);
+}
+
+/******************************************************************************\
+ Configures a cargo line on the trade window.
+\******************************************************************************/
+void I_configure_cargo(int i, const i_cargo_data_t *left,
+                       const i_cargo_data_t *right)
+{
+        C_assert(i >= 0 && i < G_CARGO_TYPES);
+        cargo_lines[i].left_data = *left;
+        cargo_lines[i].right_data = *right;
+        cargo_configure(cargo_lines + i);
 }
 
 /******************************************************************************\
@@ -101,11 +186,12 @@ void I_init_trade(i_window_t *window)
         I_widget_add(&window->widget, &cargo_info.widget);
 
         /* Cargo items */
+        cargo_group = &cargo_lines[0].sel;
         for (i = 0, seps = 1; i < G_CARGO_TYPES; i++) {
-                cargo_init(cargo_widgets + i, g_cargo_names[i]);
-                I_widget_add(&window->widget, &cargo_widgets[i].sel.widget);
+                cargo_init(cargo_lines + i, g_cargo_names[i]);
+                I_widget_add(&window->widget, &cargo_lines[i].sel.widget);
                 if (!((i - 2) % 4))
-                        cargo_widgets[i].sel.widget.margin_front = 0.5f;
+                        cargo_lines[i].sel.widget.margin_front = 0.5f;
         }
 
         /* Selling, buying, both, or neither */

@@ -34,16 +34,14 @@ typedef enum {
         I_RING_ICONS,
 } i_ring_icon_t;
 
-/* Structure for communicating cargo properties */
-typedef struct i_cargo {
-        int amount, price, min, max;
-} i_cargo_t;
-
 /* Ring callback function */
 typedef void (*i_ring_f)(i_ring_icon_t);
 
-/* g_shared.h */
-struct g_cargo;
+/* Structure for passing information to trade window */
+typedef struct i_cargo_data {
+        int amount, buy_price, maximum, minimum, sell_price;
+        bool auto_buy, auto_sell, own;
+} i_cargo_data_t;
 
 /* i_chat.c */
 void I_print_chat(const char *name, i_color_t, const char *message);
@@ -61,6 +59,9 @@ void I_update_colors(void);
 extern int i_limbo;
 
 /* i_nations.c */
+void I_configure_nation(int nation, const char *short_name,
+                        const char *long_name);
+void I_init_nation(int i, const char *short_name, const char *long_name);
 void I_select_nation(int nation);
 
 /* i_players.c */
@@ -78,7 +79,8 @@ void I_select_ship(i_color_t, const char *name,
                    const char *owner, const char *class_name);
 
 /* i_trade.c */
-void I_select_trade(const struct g_cargo *);
+void I_configure_cargo(int index, const i_cargo_data_t *left,
+                       const i_cargo_data_t *right);
 
 /* i_variables.c */
 void I_register_variables(void);
