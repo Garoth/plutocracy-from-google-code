@@ -13,9 +13,6 @@
 #include "n_common.h"
 #include "SDL_endian.h"
 
-/* Seconds to wait for a send */
-#define SEND_TIMEOUT 1
-
 /* Receive function that arriving messages are routed to */
 n_callback_f n_client_func, n_server_func;
 
@@ -87,19 +84,6 @@ void N_receive_string(char *buffer, int size)
 }
 
 /******************************************************************************\
- Get the socket for the given client ID.
-\******************************************************************************/
-static SOCKET client_to_socket(n_client_id_t client)
-{
-        if (client == N_SERVER_ID)
-                return n_client_socket;
-        else if (client >= 0 && client < N_CLIENTS_MAX)
-                return n_clients[client].socket;
-        C_error("Invalid client ID %d", client);
-        return INVALID_SOCKET;
-}
-
-/******************************************************************************\
  Sends the current sync buffer out to the given client.
 \******************************************************************************/
 static void send_buffer(n_client_id_t client)
@@ -127,14 +111,17 @@ static void send_buffer(n_client_id_t client)
         }
 
         /* Send TCP/IP message */
-        socket = client_to_socket(client);
+        socket = N_client_to_socket(client);
         for (bytes_sent = i = 0; bytes_sent < n_sync_size && i < 5; i++) {
+                const char *error;
+                int ret;
+
                 if (!N_socket_select(socket, TRUE))
                         break;
                 ret = send(socket, n_sync_buffer, n_sync_size, 0);
-                if (ret < 0 && errno != EAGAIN && errno != EWOULDBLOCK) {
+                if ((error = N_socket_error(ret))) {
                         C_warning("Error sending to %s: %s",
-                                  N_client_to_string(client), strerror(errno));
+                                  N_client_to_string(client), error);
                         break;
                 }
                 bytes_sent += ret;
@@ -333,8 +320,8 @@ bool N_receive(n_client_id_t client)
 
         if (client == n_client_id)
                 return TRUE;
-        socket = client_to_socket(client);
-        for (;;) {
+        for (socket = N_client_to_socket(client); ; ) {
+                const char *error;
 
                 /* Receive the message size */
                 len = (int)recv(socket, n_sync_buffer, N_SYNC_MAX, MSG_PEEK);
@@ -344,25 +331,13 @@ bool N_receive(n_client_id_t client)
                         return FALSE;
 
                 /* Error */
-                if (len < 0) {
-#ifdef WINDOWS
-                        /* No data (WinSock) */
-                        if (WSAGetLastError() == WSAEWOULDBLOCK)
-                                return TRUE;
-                        C_debug("WinSock error %d (recv returned %d, %s)",
-                                WSAGetLastError(), len,
-                                N_client_to_string(client));
-#else
-                        /* No data (Berkeley) */
-                        if (errno == EAGAIN)
-                                return TRUE;
-                        C_debug("%s (recv returned %d, %s)", strerror(errno),
-                                len, N_client_to_string(client));
-#endif
+                if ((error = N_socket_error(len))) {
+                        C_debug("Error receiving from %s: %s",
+                                N_client_to_string(client), error);
                         return FALSE;
                 }
 
-                /* Did not receive even the message size */
+                /* Did not receive the message size */
                 if (len < 2)
                         return TRUE;
 
