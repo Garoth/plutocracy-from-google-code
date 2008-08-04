@@ -151,6 +151,7 @@ typedef struct i_label {
         i_color_t color;
         i_justify_t justify;
         float width;
+        const char *width_sample;
         char buffer[256];
 } i_label_t;
 

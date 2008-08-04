@@ -34,6 +34,13 @@ int I_label_event(i_label_t *label, i_event_t event)
 {
         switch (event) {
         case I_EV_CONFIGURE:
+
+                /* Get fixed width from the sample text (unwrapped) */
+                if (label->width_sample)
+                        label->width = R_font_size(label->font,
+                                                   label->width_sample).x /
+                                       r_pixel_scale.value.f;
+
                 if (label->width > 0.f)
                         label->widget.size.x = label->width;
                 R_sprite_cleanup(&label->text);

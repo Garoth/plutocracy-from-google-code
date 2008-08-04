@@ -552,7 +552,7 @@ static void ship_configure_trade(int index)
 {
         int i;
 
-        I_enable_trade(TRUE, g_ships[index].client == n_client_id);
+        I_enable_trade(TRUE, g_ships[index].client == n_client_id, FALSE);
         I_set_cargo_space(G_store_space(&g_ships[index].store),
                           g_ship_classes[g_ships[index].class_name].cargo);
         for (i = 0; i < G_CARGO_TYPES; i++) {
@@ -604,7 +604,7 @@ void G_ship_select(int index)
         } else {
                 R_select_path(-1, NULL);
                 I_deselect_ship();
-                I_enable_trade(FALSE, FALSE);
+                I_enable_trade(FALSE, FALSE, FALSE);
         }
 }
 
