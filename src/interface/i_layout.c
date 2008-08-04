@@ -322,6 +322,12 @@ void I_global_key(void)
                 r_restart = TRUE;
                 I_update_video();
         }
+
+        /* Toggle a toolbar window */
+        else if (i_key >= SDLK_F1 && i_key <= SDLK_F4)
+                I_toolbar_toggle(&left_toolbar, i_key - SDLK_F1);
+        else if (i_key >= SDLK_F5 && i_key <= SDLK_F8)
+                I_toolbar_toggle(&i_right_toolbar, i_key - SDLK_F5);
 }
 
 /******************************************************************************\

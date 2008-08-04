@@ -266,11 +266,34 @@ int I_toolbar_add_button(i_toolbar_t *toolbar, const char *icon,
 }
 
 /******************************************************************************\
+ Toggle one of the toolbar's windows.
+\******************************************************************************/
+void I_toolbar_toggle(i_toolbar_t *toolbar, int i)
+{
+        i_window_t *window;
+
+        if (!toolbar || i < 0 || i >= toolbar->children ||
+            toolbar->buttons[i].widget.state == I_WS_DISABLED)
+                return;
+        window = toolbar->windows + i;
+        if (toolbar->open_window == window) {
+                I_widget_event(&window->widget, I_EV_HIDE);
+                toolbar->open_window = NULL;
+                return;
+        }
+        if (toolbar->open_window)
+                I_widget_event(&toolbar->open_window->widget, I_EV_HIDE);
+        I_widget_event(&window->widget, I_EV_SHOW);
+        toolbar->open_window = window;
+}
+
+/******************************************************************************\
  Enable or disable a toolbar's button.
 \******************************************************************************/
 void I_toolbar_enable(i_toolbar_t *toolbar, int i, bool enable)
 {
-        C_assert(i >= 0 && i < toolbar->children);
+        if (!toolbar || i < 0 || i >= toolbar->children)
+                return;
 
         /* Disable the button and hide its window */
         if (!enable) {
