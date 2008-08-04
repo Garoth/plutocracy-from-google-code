@@ -52,7 +52,7 @@ static bool can_transfer(cargo_line_t *cargo, int amount)
 /******************************************************************************\
  Configures the control widgets.
 \******************************************************************************/
-static void configure_control(cargo_line_t *cargo)
+static void configure_controls(cargo_line_t *cargo)
 {
         i_widget_state_t state;
         bool enable;
@@ -108,7 +108,7 @@ static void configure_selected(void)
 
         for (i = 0; i < G_CARGO_TYPES; i++)
                 if (cargo_group == &cargo_lines[i].sel) {
-                        configure_control(cargo_lines + i);
+                        configure_controls(cargo_lines + i);
                         break;
                 }
 }
@@ -134,7 +134,7 @@ void I_set_cargo_space(int used, int capacity)
 /******************************************************************************\
  Configures a cargo line for the current window mode.
 \******************************************************************************/
-static void cargo_configure(cargo_line_t *cargo)
+static void cargo_line_configure(cargo_line_t *cargo)
 {
         int value;
 
@@ -161,7 +161,7 @@ static void cargo_configure(cargo_line_t *cargo)
 
         /* Control widgets */
         if (cargo_group == &cargo->sel)
-                configure_control(cargo);
+                configure_controls(cargo);
 }
 
 /******************************************************************************\
@@ -184,13 +184,13 @@ void I_configure_cargo(int i, const i_cargo_data_t *left,
                 cargo_lines[i].right_data.buy_price = -1;
                 cargo_lines[i].right_data.sell_price = -1;
         }
-        cargo_configure(cargo_lines + i);
+        cargo_line_configure(cargo_lines + i);
 }
 
 /******************************************************************************\
  Updates trade control parameters.
 \******************************************************************************/
-static void update_trade_params(void)
+static void controls_changed(void)
 {
         cargo_line_t *cargo;
         int buy_price, sell_price;
@@ -245,7 +245,7 @@ static void mode_changed(void)
 /******************************************************************************\
  Initialize a cargo widget.
 \******************************************************************************/
-static void cargo_init(cargo_line_t *cargo, const char *name)
+static void cargo_line_init(cargo_line_t *cargo, const char *name)
 {
         I_selectable_init(&cargo->sel, &cargo_group, 0.f);
         cargo->sel.on_select = (i_callback_f)configure_selected;
@@ -305,7 +305,7 @@ void I_init_trade(i_window_t *window)
         /* Cargo items */
         cargo_group = &cargo_lines[0].sel;
         for (i = 0, seps = 1; i < G_CARGO_TYPES; i++) {
-                cargo_init(cargo_lines + i, g_cargo_names[i]);
+                cargo_line_init(cargo_lines + i, g_cargo_names[i]);
                 I_widget_add(&window->widget, &cargo_lines[i].sel.widget);
                 if (!((i - 2) % 4))
                         cargo_lines[i].sel.widget.margin_front = 0.5f;
@@ -317,7 +317,7 @@ void I_init_trade(i_window_t *window)
         I_select_add_string(&active, C_str("i-no", "No"));
         active.widget.margin_front = 0.5f;
         active.decimals = 0;
-        active.on_change = (i_callback_f)update_trade_params;
+        active.on_change = (i_callback_f)controls_changed;
         I_widget_add(&window->widget, &active.widget);
 
         /* Quantity */
@@ -325,7 +325,7 @@ void I_init_trade(i_window_t *window)
         quantity.min = 0;
         quantity.max = 100;
         quantity.decimals = 0;
-        quantity.on_change = (i_callback_f)update_trade_params;
+        quantity.on_change = (i_callback_f)controls_changed;
         I_widget_add(&window->widget, &quantity.widget);
 
         /* Selling, buying, both, or neither */
@@ -334,7 +334,7 @@ void I_init_trade(i_window_t *window)
         price.max = 999;
         price.suffix = "g";
         price.decimals = 0;
-        price.on_change = (i_callback_f)update_trade_params;
+        price.on_change = (i_callback_f)controls_changed;
         I_widget_add(&window->widget, &price.widget);
 
         /* Button box */

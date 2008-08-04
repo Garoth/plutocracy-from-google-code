@@ -14,13 +14,15 @@
 
 #include "c_shared.h"
 
+/* Size of the print buffer */
+#define BUFFER_SIZE 640
+
 extern c_var_t c_log_level, c_log_file, c_log_throttle;
 
 c_log_event_f c_log_func;
 c_log_mode_t c_log_mode;
 
 static c_file_t log_file;
-static int log_time, log_count;
 
 /******************************************************************************\
  Close the log file to conserve file handles.
@@ -118,6 +120,40 @@ char *C_wrap_log(const char *src, int margin, int wrap, int *plen)
 }
 
 /******************************************************************************\
+ Outputs a log entry.
+\******************************************************************************/
+static void log_output(c_log_level_t level, int margin, const char *buffer)
+{
+        const char *wrapped;
+        int len;
+
+        /* Wrap the text and print it to console or log file */
+        wrapped = C_wrap_log(buffer, margin, C_LOG_WRAP_COLS, &len);
+        if (log_file.type)
+                C_file_write(&log_file, wrapped, len);
+        else
+                fputs(wrapped, stdout);
+
+        /* Errors */
+        if (level == C_LOG_ERROR) {
+#ifdef WIN32
+                /* Display a message box in Windows */
+                MessageBox(NULL, buffer, PACKAGE_STRING, MB_OK | MB_ICONERROR);
+#endif
+                abort();
+        }
+
+        /* Send this to the GUI handler */
+        if (c_log_mode == C_LM_NORMAL)
+                return;
+        c_log_mode = C_LM_NO_FUNC;
+        if (c_log_func)
+                c_log_func(level, margin, buffer);
+        if (c_log_mode == C_LM_NO_FUNC)
+                c_log_mode = C_LM_NORMAL;
+}
+
+/******************************************************************************\
  Prints a string to the log file or to standard output. The output detail
  can be controlled using [c_log_level]. Debug calls without any text are
  considered traces.
@@ -125,9 +161,10 @@ char *C_wrap_log(const char *src, int margin, int wrap, int *plen)
 void C_log(c_log_level_t level, const char *file, int line,
            const char *function, const char *fmt, ...)
 {
-        const char *wrapped;
-        int margin, len;
-        char fmt2[128], buffer[640];
+        static int log_time, log_count, repeat_count;
+        static char last_log[BUFFER_SIZE];
+        int margin;
+        char fmt2[128], buffer[BUFFER_SIZE];
         va_list va;
 
         if (level >= C_LOG_DEBUG && (!fmt || !fmt[0]))
@@ -193,27 +230,18 @@ void C_log(c_log_level_t level, const char *file, int line,
         }
         vsnprintf(buffer, sizeof (buffer), fmt2, va);
         va_end(va);
-        wrapped = C_wrap_log(buffer, margin, C_LOG_WRAP_COLS, &len);
-        if (log_file.type)
-                C_file_write(&log_file, wrapped, len);
-        else
-                fputs(wrapped, stdout);
 
-#ifdef WIN32
-        /* Display a messagebox in Windows */
-        if (level == C_LOG_ERROR)
-                MessageBox(NULL, buffer, PACKAGE_STRING, MB_OK | MB_ICONERROR);
-#endif
-
-        if (level == C_LOG_ERROR)
-                abort();
-        if (c_log_mode != C_LM_NORMAL)
+        /* If this is just repeat text, don't bother reprinting it */
+        if (!strcmp(buffer, last_log)) {
+                repeat_count++;
                 return;
-        c_log_mode = C_LM_NO_FUNC;
-        if (c_log_func)
-                c_log_func(level, margin, buffer);
-        if (c_log_mode == C_LM_NO_FUNC)
-                c_log_mode = C_LM_NORMAL;
+        } else if (repeat_count)
+                log_output(C_LOG_DEBUG, margin,
+                           C_va("(repeated %dx)", repeat_count));
+        C_strncpy_buf(last_log, buffer);
+        repeat_count = 0;
+
+        log_output(level, margin, buffer);
 }
 
 /******************************************************************************\
