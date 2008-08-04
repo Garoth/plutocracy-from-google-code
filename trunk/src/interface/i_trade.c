@@ -21,6 +21,7 @@ typedef struct cargo_line {
         i_selectable_t sel;
         i_label_t left, label, price, right;
         i_cargo_data_t left_data, right_data;
+        i_image_t selling_icon, buying_icon;
 } cargo_line_t;
 
 static cargo_line_t cargo_lines[G_CARGO_TYPES];
@@ -31,7 +32,7 @@ static i_selectable_t *cargo_group;
 static i_box_t button_box;
 static i_button_t transfer_button, ten_button, fifty_button;
 static int cargo_space;
-static bool left_own, configuring;
+static bool left_own, right_own, configuring;
 
 /******************************************************************************\
  Returns TRUE if a transfer is possible.
@@ -59,6 +60,10 @@ static void configure_controls(cargo_line_t *cargo)
 
         /* Whether to enable the control widgets */
         enable = cargo && left_own;
+
+        /* Gold cannot be bought or sold */
+        if ((int)(cargo - cargo_lines) == G_CT_GOLD && !right_own)
+                enable = FALSE;
 
         /* Enable/disable control widgets */
         state = enable ? I_WS_READY : I_WS_DISABLED;
@@ -116,10 +121,11 @@ static void configure_selected(void)
 /******************************************************************************\
  Enable or disable the trade window.
 \******************************************************************************/
-void I_enable_trade(bool enable, bool own)
+void I_enable_trade(bool enable, bool left, bool right)
 {
         I_toolbar_enable(&i_right_toolbar, i_trade_button, enable);
-        left_own = own;
+        left_own = left;
+        right_own = right;
 }
 
 /******************************************************************************\
@@ -152,6 +158,14 @@ static void cargo_line_configure(cargo_line_t *cargo)
                 I_label_configure(&cargo->right, C_va("%d", value));
         else
                 cargo->right.widget.shown = FALSE;
+
+        /* Icons */
+        cargo->buying_icon.widget.state = I_WS_DISABLED;
+        cargo->selling_icon.widget.state = I_WS_DISABLED;
+        if (left_own && cargo->left_data.auto_buy)
+                cargo->buying_icon.widget.state = I_WS_READY;
+        if (left_own && cargo->left_data.auto_sell)
+                cargo->selling_icon.widget.state = I_WS_READY;
 
         /* In-line price */
         value = mode.index == MODE_BUY ? cargo->right_data.sell_price :
@@ -212,6 +226,7 @@ static void controls_changed(void)
                 cargo->left_data.sell_price = I_select_value(&price);
                 cargo->left_data.minimum = I_select_value(&quantity);
         }
+        cargo_line_configure(cargo);
 
         /* Pass update back to the game namespace */
         sell_price = buy_price = -1;
@@ -243,7 +258,7 @@ static void mode_changed(void)
 }
 
 /******************************************************************************\
- Initialize a cargo widget.
+ Initialize a cargo line widget.
 \******************************************************************************/
 static void cargo_line_init(cargo_line_t *cargo, const char *name)
 {
@@ -251,25 +266,39 @@ static void cargo_line_init(cargo_line_t *cargo, const char *name)
         cargo->sel.on_select = (i_callback_f)configure_selected;
 
         /* Left amount */
-        I_label_init(&cargo->left, "99999 ");
+        I_label_init(&cargo->left, NULL);
+        cargo->left.width_sample = "99999";
         cargo->left.color = I_COLOR_ALT;
+        cargo->left.justify = I_JUSTIFY_RIGHT;
         I_widget_add(&cargo->sel.widget, &cargo->left.widget);
+
+        /* Buying icon */
+        I_image_init(&cargo->buying_icon, "gui/icons/buying.png");
+        cargo->buying_icon.widget.margin_front = 0.5f;
+        cargo->buying_icon.widget.margin_rear = 0.5f;
+        I_widget_add(&cargo->sel.widget, &cargo->buying_icon.widget);
 
         /* Label */
         I_label_init(&cargo->label, name);
-        cargo->label.widget.expand = TRUE;
         I_widget_add(&cargo->sel.widget, &cargo->label.widget);
 
         /* Price */
-        I_label_init(&cargo->price, " 999g");
+        I_label_init(&cargo->price, NULL);
+        cargo->price.width_sample = "999g";
         cargo->price.widget.expand = TRUE;
         cargo->price.color = I_COLOR_ALT;
         I_widget_add(&cargo->sel.widget, &cargo->price.widget);
 
+        /* Selling icon */
+        I_image_init(&cargo->selling_icon, "gui/icons/selling.png");
+        cargo->selling_icon.widget.margin_front = 0.5f;
+        cargo->selling_icon.widget.margin_rear = 0.5f;
+        I_widget_add(&cargo->sel.widget, &cargo->selling_icon.widget);
+
         /* Right amount */
-        I_label_init(&cargo->right, " 99999");
+        I_label_init(&cargo->right, NULL);
+        cargo->right.width_sample = cargo->left.width_sample;
         cargo->right.color = I_COLOR_ALT;
-        cargo->right.justify = I_JUSTIFY_RIGHT;
         I_widget_add(&cargo->sel.widget, &cargo->right.widget);
 }
 

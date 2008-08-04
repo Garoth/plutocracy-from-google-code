@@ -116,7 +116,7 @@ void G_init_elements(void)
 
         /* Equipment cargo */
         g_cargo_names[G_CT_CANNON] = C_str("g-cargo-cannon", "Cannon");
-        g_cargo_names[G_CT_ROUNDSHOT] = C_str("g-cargo-roundshot", "Roundshot");
+        g_cargo_names[G_CT_ROUNDSHOT] = C_str("g-cargo-roundshot", "Ammo");
         g_cargo_names[G_CT_PLATING] = C_str("g-cargo-plating", "Plating");
         g_cargo_names[G_CT_GILLNET] = C_str("g-cargo-gillner", "Gillnet");
 
@@ -192,5 +192,8 @@ void G_reset_elements(void)
 
         /* We can reuse names now */
         G_reset_name_counts();
+
+        /* Start out without a selected ship */
+        G_ship_select(-1);
 }
 
