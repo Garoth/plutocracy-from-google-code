@@ -379,6 +379,7 @@ int I_toolbar_add_button(i_toolbar_t *, const char *icon,
 void I_toolbar_enable(i_toolbar_t *, int button, bool enable);
 void I_toolbar_init(i_toolbar_t *, int right);
 void I_toolbar_position(i_toolbar_t *, int index);
+void I_toolbar_toggle(i_toolbar_t *, int index);
 int I_window_event(i_window_t *, i_event_t);
 void I_window_init(i_window_t *);
 
