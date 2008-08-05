@@ -350,6 +350,8 @@ int C_next_pow2(int);
 int C_rand(void);
 #define C_rand_real() ((float)(C_rand() & 0xffff) / 0xffff)
 void C_rand_seed(unsigned int);
+c_vec3_t C_vec3_rotate_to(c_vec3_t from, c_vec3_t normal,
+                          float proportion, c_vec3_t to);
 
 /* c_string.c */
 #define C_bool_string(b) ((b) ? "TRUE" : "FALSE")
