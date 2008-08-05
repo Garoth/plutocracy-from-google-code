@@ -109,7 +109,7 @@ typedef struct i_widget {
         i_widget_state_t state;
         float fade, margin_front, margin_rear, padding;
         int expand;
-        bool configured, entry, shown, heap, steal_keys;
+        bool configured, entry, shown, heap, steal_keys, pack_skip;
 } i_widget_t;
 
 /* Windows are decorated containers */

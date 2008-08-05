@@ -171,6 +171,15 @@ int G_set_tile_model(int tile, const char *path);
 
 extern g_tile_t g_tiles[R_TILES_MAX];
 
+/* g_host.c */
+void G_ship_send_cargo(int index, n_client_id_t);
+
+/* g_movement.c */
+bool G_open_tile(int tile, int exclude_ship);
+bool G_ship_move_to(int ship, int new_tile);
+void G_ship_path(int ship, int tile);
+void G_ship_update_move(int i);
+
 /* g_names.c */
 void G_count_name(g_name_type_t, const char *name);
 void G_get_name(g_name_type_t, char *buffer, int buffer_size);
@@ -179,13 +188,10 @@ void G_load_names(void);
 void G_reset_name_counts(void);
 
 /* g_ship.c */
-bool G_open_tile(int tile, int exclude_ship);
 void G_render_ships(void);
-bool G_ship_move_to(int ship, int new_tile);
-void G_ship_path(int ship, int tile);
 void G_ship_reselect(int ship, n_client_id_t);
 void G_ship_select(int ship);
-int G_spawn_ship(int client, int tile, g_ship_name_t, int ship);
+int G_spawn_ship(n_client_id_t, int tile, g_ship_name_t, int ship);
 void G_update_ships(void);
 
 extern g_ship_class_t g_ship_classes[G_SHIP_NAMES];

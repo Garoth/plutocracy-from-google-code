@@ -334,25 +334,19 @@ static void sm_ship_cargo(void)
 
         if ((index = receive_ship()) < 0)
                 return;
+        for (i = 0; i < G_CARGO_TYPES; i++) {
+                cargo = g_ships[index].store.cargo + i;
+                cargo->amount = N_receive_short();
 
-        /* If this is ours all we are getting is the amount */
-        if (g_ships[index].client == n_client_id)
-                for (i = 0; i < G_CARGO_TYPES; i++) {
-                        cargo = g_ships[index].store.cargo + i;
-                        cargo->amount = N_receive_short();
-                }
-
-        /* Otherwise we get buy/sell info */
-        else
-                for (i = 0; i < G_CARGO_TYPES; i++) {
-                        cargo = g_ships[index].store.cargo + i;
-                        cargo->amount = -1;
-                        cargo->minimum = N_receive_short();
-                        cargo->maximum = N_receive_short();
+                /* Clients determine the prices for their own ships */
+                if (g_ships[index].client == n_client_id) {
+                        N_receive_short();
+                        N_receive_short();
+                } else {
                         cargo->buy_price = N_receive_short();
                         cargo->sell_price = N_receive_short();
                 }
-
+        }
         G_ship_reselect(-1, index);
 }
 
