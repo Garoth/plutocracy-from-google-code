@@ -22,32 +22,15 @@ int g_clients_max;
  Send updated cargo information to clients. If [client] is negative, all
  clients that can see the ship's cargo are updated.
 \******************************************************************************/
-static void send_ship_cargo(int client, int index)
+void G_ship_send_cargo(int index, n_client_id_t client)
 {
         int i;
 
         /* Host already knows everything */
-        if (client == N_HOST_CLIENT_ID)
+        if (client == N_HOST_CLIENT_ID || n_client_id != N_HOST_CLIENT_ID)
                 return;
 
-        /* First send accurate cargo information to the owner */
-        if (client == g_ships[index].client || client < 0) {
-                N_send_start();
-                N_send_char(G_SM_SHIP_CARGO);
-                N_send_char(index);
-                for (i = 0; i < G_CARGO_TYPES; i++)
-                        N_send_short(g_ships[index].store.cargo[i].amount);
-                N_send(g_ships[index].client, NULL);
-                if (client == g_ships[index].client)
-                        return;
-        }
-
-        /* Select all clients that can see this ship */
-        for (i = 0; i < N_CLIENTS_MAX; i++)
-                n_clients[i].selected = g_ships[index].store.visible[i];
-        n_clients[g_ships[index].client].selected = FALSE;
-
-        /* Send out information about someone else's store */
+        /* Pack all the cargo information */
         N_send_start();
         N_send_char(G_SM_SHIP_CARGO);
         N_send_char(index);
@@ -55,23 +38,27 @@ static void send_ship_cargo(int client, int index)
                 g_cargo_t *cargo;
 
                 cargo = g_ships[index].store.cargo + i;
-
-                /* Buying amount */
-                N_send_short(cargo->maximum - cargo->amount);
-
-                /* Selling amount */
-                N_send_short(cargo->amount - cargo->minimum);
-
-                /* Buy price */
+                N_send_short(cargo->amount);
                 N_send_short(cargo->auto_buy ? cargo->buy_price : -1);
-
-                /* Sell price */
                 N_send_short(cargo->auto_sell ? cargo->sell_price : -1);
         }
-        if (client < 0)
+
+        /* Already selected the target clients */
+        if (client == N_SELECTED_ID) {
                 N_send_selected(NULL);
-        else
-                N_send(client, NULL);
+                return;
+        }
+
+        /* Send to selected clients */
+        if (client < 0 || client == N_BROADCAST_ID) {
+                for (i = 0; i < N_CLIENTS_MAX; i++)
+                        n_clients[i].selected = g_ships[index].store.visible[i];
+                N_send_selected(NULL);
+                return;
+        }
+
+        /* Send to a single client */
+        N_send(client, NULL);
 }
 
 /******************************************************************************\
@@ -110,26 +97,21 @@ static void cm_affiliate(int client)
                 g_ships[ship].store.cargo[G_CT_GOLD].amount = 500;
                 g_ships[ship].store.cargo[G_CT_CREW].amount = 20;
                 g_ships[ship].store.cargo[G_CT_RATIONS].amount = 50;
-                send_ship_cargo(-1, ship);
 
                 /* Spawn a second ship for testing */
                 ship = G_spawn_ship(client, tile, G_SN_SPIDER, -1);
                 if (ship >= 0) {
-                        send_ship_cargo(N_BROADCAST_ID, ship);
                         g_ships[ship].store.cargo[G_CT_GOLD].amount = 1000;
                         g_ships[ship].store.cargo[G_CT_CREW].amount = 30;
                         g_ships[ship].store.cargo[G_CT_RATIONS].amount = 70;
-                        send_ship_cargo(-1, ship);
                 }
 
                 /* And spawn a third ship for testing also */
                 ship = G_spawn_ship(client, tile, G_SN_GALLEON, -1);
                 if (ship >= 0) {
-                        send_ship_cargo(N_BROADCAST_ID, ship);
                         g_ships[ship].store.cargo[G_CT_GOLD].amount = 2000;
                         g_ships[ship].store.cargo[G_CT_CREW].amount = 50;
                         g_ships[ship].store.cargo[G_CT_RATIONS].amount = 100;
-                        send_ship_cargo(-1, ship);
                 }
         }
 
@@ -291,7 +273,7 @@ static void init_client(int client)
                 N_send(client, "11s", G_SM_NAME_SHIP, i, g_ships[i].name);
 
                 /* Cargo */
-                send_ship_cargo(client, i);
+                G_ship_send_cargo(i, client);
 
                 /* Movement */
                 if (g_ships[i].target != g_ships[i].tile)

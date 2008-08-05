@@ -43,15 +43,13 @@ static void configure_player(int i, const char *name, i_color_t color,
         /* No player in this slot */
         if (!name || !name[0]) {
                 players[i].index.widget.state = I_WS_DISABLED;
-                players[i].index.widget.expand = TRUE;
-                players[i].name.widget.shown = FALSE;
                 players[i].kick.widget.state = I_WS_DISABLED;
+                players[i].name.widget.shown = FALSE;
                 return;
         }
 
         /* Set player */
         players[i].index.widget.state = I_WS_READY;
-        players[i].index.widget.expand = FALSE;
         C_strncpy_buf(players[i].name.buffer, name);
         players[i].name.color = color;
         players[i].name.widget.shown = TRUE;
@@ -77,10 +75,13 @@ void I_configure_player_num(int num)
 
         for (i = 0; i < num; i++) {
                 players[i].box.widget.shown = TRUE;
+                players[i].box.widget.pack_skip = FALSE;
                 configure_player(i, NULL, I_COLOR, FALSE);
         }
-        for (; i < PLAYERS; i++)
+        for (; i < PLAYERS; i++) {
                 players[i].box.widget.shown = FALSE;
+                players[i].box.widget.pack_skip = TRUE;
+        }
         I_widget_event(&i_right_toolbar.windows[i_players_button].widget,
                        I_EV_CONFIGURE);
         I_toolbar_position(&i_right_toolbar, i_players_button);
@@ -108,6 +109,7 @@ void I_init_players(i_window_t *window)
                 /* Horizontal box */
                 I_box_init(&players[i].box, I_PACK_H, I_FIT_NONE);
                 players[i].box.widget.shown = FALSE;
+                players[i].box.widget.pack_skip = TRUE;
                 I_widget_add(&window->widget, &players[i].box.widget);
 
                 /* Index label */

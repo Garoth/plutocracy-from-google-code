@@ -150,11 +150,7 @@ static void cargo_line_configure(cargo_line_t *cargo)
                                   C_va("%d", cargo->left_data.amount));
 
         /* Right amount */
-        value = cargo->right_data.amount;
-        if (value < 0)
-                value = mode.index == MODE_BUY ? cargo->right_data.minimum :
-                                                 cargo->right_data.maximum;
-        if (value > 0)
+        if ((value = cargo->right_data.amount) > 0)
                 I_label_configure(&cargo->right, C_va("%d", value));
         else
                 cargo->right.widget.shown = FALSE;
@@ -339,6 +335,10 @@ void I_init_trade(i_window_t *window)
                 if (!((i - 2) % 4))
                         cargo_lines[i].sel.widget.margin_front = 0.5f;
         }
+
+        /* Gold can't be auto-bought/sold */
+        cargo_lines[G_CT_GOLD].buying_icon.widget.shown = FALSE;
+        cargo_lines[G_CT_GOLD].selling_icon.widget.shown = FALSE;
 
         /* Selling, buying, both, or neither */
         I_select_init(&active, C_str("i-cargo-auto-buy", "Auto-buy:"), NULL);
