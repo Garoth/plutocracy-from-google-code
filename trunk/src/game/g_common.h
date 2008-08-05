@@ -133,6 +133,7 @@ typedef struct g_store {
 typedef struct g_ship {
         g_ship_name_t class_name;
         g_store_t store;
+        c_vec3_t forward;
         float progress;
         int tile, rear_tile, target, client, health, armor;
         char path[R_PATH_MAX], name[G_NAME_MAX];

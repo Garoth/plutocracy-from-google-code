@@ -95,3 +95,32 @@ int C_next_pow2(int n)
         return p;
 }
 
+/******************************************************************************\
+ Rotate a vector [prop] proportion around normal [n] toward another vector. If
+ [a] is not in-plane with the normal vector, it will be made so.
+\******************************************************************************/
+c_vec3_t C_vec3_rotate_to(c_vec3_t a, c_vec3_t n, float prop, c_vec3_t b)
+{
+        c_vec3_t x, y;
+        float angle, a_mag, bx, by;
+
+        /* Save the input vector's length for later */
+        a_mag = C_vec3_len(a);
+
+        /* Create basis vectors */
+        x = C_vec3_norm(C_vec3_in_plane(a, n));
+        y = C_vec3_norm(C_vec3_cross(n, x));
+
+        /* Compute the rotaton angle */
+        b = C_vec3_norm(b);
+        bx = C_vec3_dot(b, x);
+        by = C_vec3_dot(b, y);
+        if (!bx && !by)
+                return a;
+        angle = atan2f(by, bx) * prop;
+
+        /* Apply rotation on basis vectors */
+        return C_vec3_add(C_vec3_scalef(x, cosf(angle) * a_mag),
+                          C_vec3_scalef(y, sinf(angle) * a_mag));
+}
+
