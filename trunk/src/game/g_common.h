@@ -135,7 +135,8 @@ typedef struct g_ship {
         g_store_t store;
         c_vec3_t forward;
         float progress;
-        int tile, rear_tile, target, client, health, armor;
+        int armor, client, health, rear_tile, target, tile,
+            trade_ship, trade_tile;
         char path[R_PATH_MAX], name[G_NAME_MAX];
         bool in_use;
 } g_ship_t;
@@ -160,6 +161,8 @@ void G_reset_elements(void);
 int G_store_space(const g_store_t *);
 
 extern g_building_type_t g_building_types[G_BUILDING_NAMES];
+extern g_ship_class_t g_ship_classes[G_SHIP_NAMES];
+extern g_ship_t g_ships[G_SHIPS_MAX];
 
 /* g_globe.c */
 void G_cleanup_globe(void);
@@ -193,9 +196,6 @@ void G_ship_reselect(int ship, n_client_id_t);
 void G_ship_select(int ship);
 int G_spawn_ship(n_client_id_t, int tile, g_ship_name_t, int ship);
 void G_update_ships(void);
-
-extern g_ship_class_t g_ship_classes[G_SHIP_NAMES];
-extern g_ship_t g_ships[G_SHIPS_MAX];
 
 /* g_variables.c */
 extern c_var_t g_forest, g_globe_seed, g_globe_subdiv4, g_islands,

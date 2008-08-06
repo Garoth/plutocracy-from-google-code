@@ -345,6 +345,8 @@ static void sm_ship_cargo(void)
                 } else {
                         cargo->buy_price = N_receive_short();
                         cargo->sell_price = N_receive_short();
+                        cargo->auto_buy = cargo->buy_price >= 0;
+                        cargo->auto_sell = cargo->sell_price >= 0;
                 }
         }
         G_ship_reselect(-1, index);

@@ -14,6 +14,10 @@
 
 #include "g_common.h"
 
+/* Ships and ship classes */
+g_ship_t g_ships[G_SHIPS_MAX];
+g_ship_class_t g_ship_classes[G_SHIP_NAMES];
+
 /* Array of game nations */
 g_nation_t g_nations[G_NATION_NAMES];
 

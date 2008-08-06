@@ -26,7 +26,7 @@ typedef struct cargo_line {
 
 static cargo_line_t cargo_lines[G_CARGO_TYPES];
 static i_label_t title;
-static i_info_t cargo_info;
+static i_info_t cargo_info, right_info;
 static i_select_t mode, quantity, price, active;
 static i_selectable_t *cargo_group;
 static i_box_t button_box;
@@ -119,13 +119,22 @@ static void configure_selected(void)
 }
 
 /******************************************************************************\
+ Disable the trade window.
+\******************************************************************************/
+void I_disable_trade(void)
+{
+        I_toolbar_enable(&i_right_toolbar, i_trade_button, FALSE);
+}
+
+/******************************************************************************\
  Enable or disable the trade window.
 \******************************************************************************/
-void I_enable_trade(bool enable, bool left, bool right)
+void I_enable_trade(bool left, bool right, const char *right_name)
 {
-        I_toolbar_enable(&i_right_toolbar, i_trade_button, enable);
+        I_toolbar_enable(&i_right_toolbar, i_trade_button, TRUE);
         left_own = left;
         right_own = right;
+        I_info_configure(&right_info, right_name);
 }
 
 /******************************************************************************\
@@ -150,7 +159,7 @@ static void cargo_line_configure(cargo_line_t *cargo)
                                   C_va("%d", cargo->left_data.amount));
 
         /* Right amount */
-        if ((value = cargo->right_data.amount) > 0)
+        if ((value = cargo->right_data.amount) >= 0)
                 I_label_configure(&cargo->right, C_va("%d", value));
         else
                 cargo->right.widget.shown = FALSE;
@@ -164,9 +173,13 @@ static void cargo_line_configure(cargo_line_t *cargo)
                 cargo->selling_icon.widget.state = I_WS_READY;
 
         /* In-line price */
-        value = mode.index == MODE_BUY ? cargo->right_data.sell_price :
-                                         cargo->right_data.buy_price;
-        if ((cargo->price.widget.shown = value > 0))
+        if (mode.index == MODE_BUY)
+                value = cargo->right_data.auto_sell ?
+                        cargo->right_data.sell_price : -1;
+        else if (mode.index == MODE_SELL)
+                value = cargo->right_data.auto_buy ?
+                        cargo->right_data.buy_price : -1;
+        if ((cargo->price.widget.shown = value >= 0))
                 I_label_configure(&cargo->price, C_va("%dg", value));
 
         /* Control widgets */
@@ -321,6 +334,11 @@ void I_init_trade(i_window_t *window)
         I_select_change(&mode, 0);
         mode.on_change = (i_callback_f)mode_changed;
         I_widget_add(&window->widget, &mode.widget);
+
+        /* Cargo space */
+        I_info_init(&right_info,
+                    C_str("i-cargo-trading", "Trading with:"), NULL);
+        I_widget_add(&window->widget, &right_info.widget);
 
         /* Cargo space */
         I_info_init(&cargo_info, C_str("i-cargo", "Cargo space:"), "0/0");

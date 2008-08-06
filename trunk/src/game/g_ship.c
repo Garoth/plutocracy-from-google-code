@@ -15,10 +15,6 @@
 /* Maximum health value */
 #define HEALTH_MAX 100
 
-/* Ships and ship classes */
-g_ship_t g_ships[G_SHIPS_MAX];
-g_ship_class_t g_ship_classes[G_SHIP_NAMES];
-
 /******************************************************************************\
  Find an available tile around [tile] (including [tile]) and spawn a new ship
  of the given class there. If [tile] is negative, the ship will be placed on
@@ -87,6 +83,7 @@ init:   /* Initialize ship structure */
         g_ships[index].client = client;
         g_ships[index].health = g_ship_classes[name].health;
         g_ships[index].forward = g_tiles[tile].forward;
+        g_ships[index].trade_tile = g_ships[index].trade_ship = -1;
 
         /* Start out unnamed */
         C_strncpy_buf(g_ships[index].name, C_va("Unnamed #%d", index));
@@ -164,25 +161,38 @@ void G_render_ships(void)
 \******************************************************************************/
 static void ship_configure_trade(int index)
 {
+        g_ship_t *ship;
+        const char *right_name;
         int i;
+        bool right_own;
 
         /* Our client can't actually see this cargo -- we probably don't have
            the right data for it anyway! */
-        if (index < 0 || !g_ships[index].store.visible[n_client_id]) {
-                I_enable_trade(FALSE, FALSE, FALSE);
+        ship = g_ships + index;
+        if (index < 0 || !ship->store.visible[n_client_id]) {
+                I_disable_trade();
                 return;
         }
 
-        I_enable_trade(TRUE, g_ships[index].client == n_client_id, FALSE);
-        I_set_cargo_space(G_store_space(&g_ships[index].store),
-                          g_ship_classes[g_ships[index].class_name].cargo);
+        /* Who is our trading partner and are they one of ours? */
+        if (ship->trade_ship >= 0) {
+                right_own = g_ships[ship->trade_ship].client == n_client_id;
+                right_name = g_ships[ship->trade_ship].name;
+        } else {
+                right_own = FALSE;
+                right_name = NULL;
+        }
+        I_enable_trade(ship->client == n_client_id, right_own, right_name);
+        I_set_cargo_space(G_store_space(&ship->store),
+                          g_ship_classes[ship->class_name].cargo);
+
+        /* Configure the window with cargo information */
         for (i = 0; i < G_CARGO_TYPES; i++) {
-                i_cargo_data_t left;
+                i_cargo_data_t left, right;
                 g_cargo_t *cargo;
 
-                cargo = g_ships[index].store.cargo + i;
-
                 /* Our cargo */
+                cargo = ship->store.cargo + i;
                 left.amount = cargo->amount;
                 left.minimum = cargo->minimum;
                 left.maximum = cargo->maximum;
@@ -191,8 +201,83 @@ static void ship_configure_trade(int index)
                 left.auto_buy = cargo->auto_buy;
                 left.auto_sell = cargo->auto_sell;
 
-                I_configure_cargo(i, &left, NULL);
+                /* No trading partner */
+                if (ship->trade_ship < 0) {
+                        I_configure_cargo(i, &left, NULL);
+                        continue;
+                }
+
+                /* Partner's cargo */
+                cargo = g_ships[ship->trade_ship].store.cargo + i;
+                right.amount = cargo->amount;
+                right.sell_price = cargo->sell_price;
+                right.buy_price = cargo->buy_price;
+
+                /* Configure for trade */
+                I_configure_cargo(i, &left, &right);
         }
+}
+
+/******************************************************************************\
+ Returns TRUE if the given ship can trade with [tile].
+\******************************************************************************/
+static bool ship_can_trade_with(int index, int tile)
+{
+        int other;
+
+        other = g_tiles[tile].ship;
+        if (other < 0 || other == index || g_ships[other].rear_tile >= 0)
+                return FALSE;
+        return TRUE;
+}
+
+/******************************************************************************\
+ Check if the ship needs a new trading partner.
+\******************************************************************************/
+static void ship_update_trade(int index)
+{
+        g_ship_t *ship;
+        int i, trade_ship, trade_tile, neighbors[3];
+
+        /* Only need to do this for our own ships */
+        ship = g_ships + index;
+        if (ship->client != n_client_id)
+                return;
+
+        /* Cannot trade while moving */
+        if (ship->rear_tile > 0) {
+                trade_ship = -1;
+                trade_tile = -1;
+        }
+
+        /* Find a trading partner */
+        else {
+                R_get_tile_neighbors(ship->tile, neighbors);
+                for (trade_tile = trade_ship = -1, i = 0; i < 3; i++) {
+                        if (!ship_can_trade_with(index, neighbors[i]))
+                                continue;
+                        trade_tile = neighbors[i];
+                        trade_ship = g_tiles[trade_tile].ship;
+
+                        /* Found our old trading partner */
+                        if (ship->trade_ship == trade_ship) {
+                                ship->trade_tile = trade_tile;
+                                return;
+                        }
+                }
+        }
+
+        /* Still not partner */
+        if (trade_ship < 0 && ship->trade_ship < 0) {
+                ship->trade_tile = -1;
+                return;
+        }
+
+        /* Update to reflect our new trading partner */
+        ship->trade_tile = trade_tile;
+        ship->trade_ship = trade_ship;
+        if (g_selected_ship == index)
+                ship_configure_trade(index);
 }
 
 /******************************************************************************\
@@ -255,12 +340,9 @@ void G_update_ships(void)
         for (i = 0; i < G_SHIPS_MAX; i++) {
                 if (!g_ships[i].in_use)
                         continue;
-
-                /* Update visibility every frame */
-                ship_update_visible(i);
-
-                /* Move the ship along its path */
                 G_ship_update_move(i);
+                ship_update_trade(i);
+                ship_update_visible(i);
         }
 }
 

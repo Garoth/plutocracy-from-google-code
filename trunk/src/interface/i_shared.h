@@ -81,7 +81,8 @@ void I_select_ship(i_color_t, const char *name,
 /* i_trade.c */
 void I_configure_cargo(int index, const i_cargo_data_t *left,
                        const i_cargo_data_t *right);
-void I_enable_trade(bool enable, bool left_own, bool right_own);
+void I_disable_trade(void);
+void I_enable_trade(bool left_own, bool right_own, const char *right_name);
 void I_set_cargo_space(int used, int capacity);
 
 /* i_variables.c */
