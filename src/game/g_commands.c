@@ -218,18 +218,28 @@ void G_join_game(const char *address)
 void G_trade_params(int index, int buy_price, int sell_price,
                     int minimum, int maximum)
 {
-        i_cargo_t *cargo;
+        i_cargo_t old_cargo, *cargo;
 
         if (g_selected_ship < 0)
                 return;
         C_assert(g_ships[g_selected_ship].client == n_client_id);
         cargo = g_ships[g_selected_ship].store.cargo + index;
+        old_cargo = *cargo;
+
+        /* Update cargo */
         if ((cargo->auto_buy = buy_price >= 0))
                 cargo->buy_price = buy_price;
         if ((cargo->auto_sell = sell_price >= 0))
                 cargo->sell_price = sell_price;
         cargo->minimum = minimum;
         cargo->maximum = maximum;
+
+        /* Did anything actually change? */
+        if (old_cargo.auto_buy == cargo->auto_buy &&
+            old_cargo.auto_sell == cargo->auto_sell &&
+            (!old_cargo.auto_buy || old_cargo.buy_price == cargo->buy_price) &&
+            (!old_cargo.auto_sell || old_cargo.sell_price == cargo->sell_price))
+                return;
 
         /* Tell the server */
         if (n_client_id != N_HOST_CLIENT_ID)

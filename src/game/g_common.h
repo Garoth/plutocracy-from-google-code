@@ -63,12 +63,12 @@ typedef enum {
         G_SM_CHAT,
 
         /* Entity updates */
-        G_SM_SPAWN_SHIP,
         G_SM_SHIP_CARGO,
         G_SM_SHIP_MOVE,
         G_SM_SHIP_NAME,
         G_SM_SHIP_OWNER,
         G_SM_SHIP_PRICES,
+        G_SM_SHIP_SPAWN,
         G_SM_SHIP_TRANSACT,
         G_SM_BUILDING,
 
@@ -174,9 +174,6 @@ int G_set_tile_model(int tile, const char *path);
 
 extern g_tile_t g_tiles[R_TILES_MAX];
 
-/* g_host.c */
-void G_ship_send_cargo(int index, n_client_id_t);
-
 /* g_movement.c */
 bool G_open_tile(int tile, int exclude_ship);
 bool G_ship_move_to(int ship, int new_tile);
@@ -192,10 +189,33 @@ void G_reset_name_counts(void);
 
 /* g_ship.c */
 void G_render_ships(void);
-void G_ship_reselect(int ship, n_client_id_t);
-void G_ship_select(int ship);
-int G_spawn_ship(n_client_id_t, int tile, g_ship_name_t, int ship);
+void G_ship_reselect(int ship_i, n_client_id_t);
+void G_ship_select(int ship_i);
+void G_ship_send_cargo(int ship_i, n_client_id_t);
+int G_ship_spawn(int ship_i, n_client_id_t, int tile, g_ship_name_t);
 void G_update_ships(void);
+
+/* g_sync.c */
+#define G_corrupt_disconnect() G_corrupt_drop(N_SERVER_ID)
+#define G_corrupt_drop(c) G_corrupt_drop_full(__FILE__, __LINE__, __func__, c)
+void G_corrupt_drop_full(const char *file, int line, const char *func,
+                         n_client_id_t);
+#define G_receive_cargo(c) G_receive_range((c), 0, G_CARGO_TYPES)
+#define G_receive_client(c) G_receive_client_full(__FILE__, __LINE__, \
+                                                  __func__, (c))
+int G_receive_client_full(const char *file, int line, const char *func,
+                          n_client_id_t);
+#define G_receive_nation(c) G_receive_range((c), 0, G_NATION_NAMES)
+#define G_receive_range(c, min, max) \
+        G_receive_range_full(__FILE__, __LINE__, __func__, (c), (min), (max))
+int G_receive_range_full(const char *file, int line, const char *func,
+                        n_client_id_t, int min, int max);
+#define G_receive_ship(c) G_receive_ship_full(__FILE__, __LINE__, __func__, (c))
+int G_receive_ship_full(const char *file, int line, const char *func,
+                        n_client_id_t);
+#define G_receive_tile(c) G_receive_tile_full(__FILE__, __LINE__, __func__, (c))
+int G_receive_tile_full(const char *file, int line, const char *func,
+                        n_client_id_t);
 
 /* g_variables.c */
 extern c_var_t g_forest, g_globe_seed, g_globe_subdiv4, g_islands,
