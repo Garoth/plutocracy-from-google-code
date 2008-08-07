@@ -18,12 +18,12 @@
 
 /* There is a fixed number of nations */
 typedef enum {
+        G_NN_NONE,
         G_NN_RED,
         G_NN_GREEN,
         G_NN_BLUE,
         G_NN_PIRATE,
         G_NATION_NAMES,
-        G_NN_NONE,
 } g_nation_name_t;
 
 /* Cargo that a ship can carry */

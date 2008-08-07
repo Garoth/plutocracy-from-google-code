@@ -86,7 +86,7 @@ void N_receive_string(char *buffer, int size);
 #define N_send(n, fmt, ...) N_send_full(__FILE__, __LINE__, __func__, n, fmt, \
                                         ## __VA_ARGS__, N_SENTINEL);
 #define N_send_selected(fmt, ...) N_send_full(__FILE__, __LINE__, __func__, \
-                                              N_SELECTED_ID, fmt \
+                                              N_SELECTED_ID, fmt, \
                                               ## __VA_ARGS__, N_SENTINEL)
 
 bool N_send_char(char);;

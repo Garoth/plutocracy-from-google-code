@@ -103,6 +103,8 @@ void G_init_elements(void)
         C_assert(G_SERVER_MESSAGES < 256);
 
         /* Nation constants */
+        g_nations[G_NN_NONE].short_name = "";
+        g_nations[G_NN_NONE].long_name = "";
         g_nations[G_NN_RED].short_name = "red";
         g_nations[G_NN_RED].long_name = C_str("g-nation-red", "Ruby");
         g_nations[G_NN_GREEN].short_name = "green";
@@ -113,7 +115,7 @@ void G_init_elements(void)
         g_nations[G_NN_PIRATE].long_name = C_str("g-nation-pirate", "Pirate");
 
         /* Initialize nation window and color variables */
-        for (i = 0; i < G_NATION_NAMES; i++)
+        for (i = G_NN_NONE + 1; i < G_NATION_NAMES; i++)
                 C_var_update_data(g_nation_colors + i, nation_color_update,
                                   &g_nations[i].color);
 

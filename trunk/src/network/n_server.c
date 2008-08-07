@@ -24,6 +24,8 @@ static SOCKET listen_socket;
 \******************************************************************************/
 void N_stop_server(void)
 {
+        int i;
+
         if (n_client_id != N_HOST_CLIENT_ID)
                 return;
         n_client_id = N_INVALID_ID;
@@ -32,6 +34,13 @@ void N_stop_server(void)
         if (listen_socket != INVALID_SOCKET)
                 closesocket(listen_socket);
         listen_socket = INVALID_SOCKET;
+
+        /* Disconnect any active clients */
+        for (i = 0; i < N_CLIENTS_MAX; i++)
+                if (n_clients[i].connected) {
+                        closesocket(n_clients[i].socket);
+                        n_clients[i].connected = FALSE;
+                }
 
         C_debug("Stopped listen server");
 }
@@ -46,7 +55,7 @@ int N_start_server(n_callback_f server_func, n_callback_f client_func)
         char yes;
 #else
         int yes;
-#endif        
+#endif
 
         if (n_client_id == N_HOST_CLIENT_ID)
                 return TRUE;

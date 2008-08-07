@@ -19,71 +19,14 @@
 int g_clients_max;
 
 /******************************************************************************\
- Send updated cargo information to clients. If [client] is negative, all
- clients that can see the ship's cargo are updated.
-\******************************************************************************/
-void G_ship_send_cargo(int index, n_client_id_t client)
-{
-        int i;
-
-        /* Host already knows everything */
-        if (client == N_HOST_CLIENT_ID || n_client_id != N_HOST_CLIENT_ID)
-                return;
-
-        /* Pack all the cargo information */
-        N_send_start();
-        N_send_char(G_SM_SHIP_CARGO);
-        N_send_char(index);
-        for (i = 0; i < G_CARGO_TYPES; i++) {
-                i_cargo_t *cargo;
-
-                cargo = g_ships[index].store.cargo + i;
-                N_send_short(cargo->amount);
-                N_send_short(cargo->auto_buy ? cargo->buy_price : -1);
-                N_send_short(cargo->auto_sell ? cargo->sell_price : -1);
-        }
-
-        /* Already selected the target clients */
-        if (client == N_SELECTED_ID) {
-                N_send_selected(NULL);
-                return;
-        }
-
-        /* Send to selected clients */
-        if (client < 0 || client == N_BROADCAST_ID) {
-                for (i = 0; i < N_CLIENTS_MAX; i++)
-                        n_clients[i].selected = g_ships[index].store.visible[i];
-                N_send_selected(NULL);
-                return;
-        }
-
-        /* Send to a single client */
-        N_send(client, NULL);
-}
-
-/******************************************************************************\
- If a client has sent garbage data, call this to kick them out.
-\******************************************************************************/
-static void corrupt_kick(int client)
-{
-        N_send(client, "12ss", G_SM_POPUP, -1,
-               "g-host-invalid", "Your client sent invalid data.");
-        N_drop_client(client);
-}
-
-/******************************************************************************\
  Handles clients changing nations.
 \******************************************************************************/
 static void cm_affiliate(int client)
 {
         int nation, old, tile, ship;
 
-        nation = N_receive_char();
-        if (nation < 0 || nation >= G_NATION_NAMES) {
-                corrupt_kick(client);
-                return;
-        }
-        if (nation == g_clients[client].nation)
+        if ((nation = G_receive_nation(client)) < 0 ||
+            nation == g_clients[client].nation)
                 return;
         old = g_clients[client].nation;
         g_clients[client].nation = nation;
@@ -91,7 +34,7 @@ static void cm_affiliate(int client)
         /* If this client just joined a nation for the first time,
            try to give them a starter ship */
         tile = -1;
-        ship = G_spawn_ship(client, -1, G_SN_SLOOP, -1);
+        ship = G_ship_spawn(-1, client, -1, G_SN_SLOOP);
         if (old == G_NN_NONE && ship >= 0) {
                 tile = g_ships[ship].tile;
                 g_ships[ship].store.cargo[G_CT_GOLD].amount = 500;
@@ -99,7 +42,7 @@ static void cm_affiliate(int client)
                 g_ships[ship].store.cargo[G_CT_RATIONS].amount = 50;
 
                 /* Spawn a second ship for testing */
-                ship = G_spawn_ship(client, tile, G_SN_SPIDER, -1);
+                ship = G_ship_spawn(-1, client, tile, G_SN_SPIDER);
                 if (ship >= 0) {
                         g_ships[ship].store.cargo[G_CT_GOLD].amount = 1000;
                         g_ships[ship].store.cargo[G_CT_CREW].amount = 30;
@@ -107,7 +50,7 @@ static void cm_affiliate(int client)
                 }
 
                 /* And spawn a third ship for testing also */
-                ship = G_spawn_ship(client, tile, G_SN_GALLEON, -1);
+                ship = G_ship_spawn(-1, client, tile, G_SN_GALLEON);
                 if (ship >= 0) {
                         g_ships[ship].store.cargo[G_CT_GOLD].amount = 2000;
                         g_ships[ship].store.cargo[G_CT_CREW].amount = 50;
@@ -125,13 +68,8 @@ static void cm_ship_move(int client)
 {
         int ship, tile;
 
-        ship = N_receive_char();
-        tile = N_receive_short();
-        if (ship < 0 || ship >= G_SHIPS_MAX || tile < 0 || tile >= r_tiles) {
-                corrupt_kick(client);
-                return;
-        }
-        if (!g_ships[ship].in_use || g_ships[ship].client != client)
+        if ((ship = G_receive_ship(client)) < 0 ||
+            (tile = G_receive_tile(client)) < 0)
                 return;
         G_ship_path(ship, tile);
 }
@@ -189,7 +127,7 @@ static void cm_ship_name(int client)
 
         index = N_receive_char();
         if (index < 0 || index >= G_SHIPS_MAX) {
-                corrupt_kick(client);
+                G_corrupt_drop(client);
                 return;
         }
         if (g_ships[index].client != client)
@@ -210,6 +148,37 @@ static void cm_ship_name(int client)
 \******************************************************************************/
 static void cm_ship_prices(int client)
 {
+        int i, index, cargo, buy_price, sell_price;
+
+        if ((index = G_receive_ship(client)) < 0)
+                return;
+        cargo = N_receive_char();
+        if (cargo < 0 || cargo >= G_CARGO_TYPES) {
+                G_corrupt_drop(client);
+                return;
+        }
+        buy_price = N_receive_short();
+        sell_price = N_receive_short();
+
+        /* Clamp prices */
+        if (buy_price > 999)
+                buy_price = 999;
+        if (sell_price > 999)
+                sell_price = 999;
+
+        /* Select clients that can see this store */
+        for (i = 0; i < N_CLIENTS_MAX; i++)
+                if (g_ships[index].store.visible[i])
+                        n_clients[i].selected = TRUE;
+
+        /* Originating client already knows what the prices are */
+        n_clients[client].selected = FALSE;
+
+        /* The host needs to see this message to process the update */
+        n_clients[N_HOST_CLIENT_ID].selected = TRUE;
+
+        N_send_selected("11122", G_SM_SHIP_PRICES, index, cargo,
+                        buy_price, sell_price);
 }
 
 /******************************************************************************\
@@ -287,8 +256,8 @@ static void init_client(int client)
                         continue;
 
                 /* Owner, tile, class, index */
-                N_send(client, "11211", G_SM_SPAWN_SHIP, g_ships[i].client,
-                       g_ships[i].tile, g_ships[i].class_name, i);
+                N_send(client, "11121", G_SM_SHIP_SPAWN, i, g_ships[i].client,
+                       g_ships[i].tile, g_ships[i].class_name);
 
                 /* Name */
                 N_send(client, "11s", G_SM_SHIP_NAME, i, g_ships[i].name);

@@ -21,7 +21,7 @@
  a random open tile. If [index] is negative, the first available slot will be
  used.
 \******************************************************************************/
-int G_spawn_ship(n_client_id_t client, int tile, g_ship_name_t name, int index)
+int G_ship_spawn(int index, n_client_id_t client, int tile, g_ship_name_t name)
 {
         g_ship_t *ship;
         int i;
@@ -29,7 +29,7 @@ int G_spawn_ship(n_client_id_t client, int tile, g_ship_name_t name, int index)
         if (!N_client_valid(client) || tile >= r_tiles ||
             name < 0 || name >= G_SHIP_NAMES) {
                 C_warning("Invalid parameters (%d, %d, %d, %d)",
-                          client, tile, name, index);
+                          index, client, tile, name);
                 return -1;
         }
         if (index >= G_SHIPS_MAX) {
@@ -107,8 +107,8 @@ init:   /* Initialize ship structure */
 
         /* If we are the server, tell other clients */
         if (n_client_id == N_HOST_CLIENT_ID)
-                N_broadcast_except(N_HOST_CLIENT_ID, "11211", G_SM_SPAWN_SHIP,
-                                   client, tile, name, index);
+                N_broadcast_except(N_HOST_CLIENT_ID, "11121", G_SM_SHIP_SPAWN,
+                                   index, client, tile, name);
 
         /* If this is one of ours, name it */
         if (client == n_client_id) {
@@ -379,5 +379,48 @@ void G_ship_reselect(int index, n_client_id_t client)
         index = g_selected_ship;
         g_selected_ship = -1;
         G_ship_select(index);
+}
+
+/******************************************************************************\
+ Send updated cargo information to clients. If [client] is negative, all
+ clients that can see the ship's cargo are updated.
+\******************************************************************************/
+void G_ship_send_cargo(int index, n_client_id_t client)
+{
+        int i;
+
+        /* Host already knows everything */
+        if (client == N_HOST_CLIENT_ID || n_client_id != N_HOST_CLIENT_ID)
+                return;
+
+        /* Pack all the cargo information */
+        N_send_start();
+        N_send_char(G_SM_SHIP_CARGO);
+        N_send_char(index);
+        for (i = 0; i < G_CARGO_TYPES; i++) {
+                i_cargo_t *cargo;
+
+                cargo = g_ships[index].store.cargo + i;
+                N_send_short(cargo->amount);
+                N_send_short(cargo->auto_buy ? cargo->buy_price : -1);
+                N_send_short(cargo->auto_sell ? cargo->sell_price : -1);
+        }
+
+        /* Already selected the target clients */
+        if (client == N_SELECTED_ID) {
+                N_send_selected(NULL);
+                return;
+        }
+
+        /* Send to selected clients */
+        if (client < 0 || client == N_BROADCAST_ID) {
+                for (i = 0; i < N_CLIENTS_MAX; i++)
+                        n_clients[i].selected = g_ships[index].store.visible[i];
+                N_send_selected(NULL);
+                return;
+        }
+
+        /* Send to a single client */
+        N_send(client, NULL);
 }
 
