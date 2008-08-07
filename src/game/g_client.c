@@ -191,13 +191,11 @@ static void sm_init(void)
         I_select_nation(G_NN_NONE);
 
         /* Check the server's protocol */
-        protocol = N_receive_char();
-        if (protocol != G_PROTOCOL) {
-                const char *msg;
-
-                msg = C_va("Protocol mismatch (server %d, client %d).",
-                           protocol, G_PROTOCOL);
-                I_popup(NULL, C_str("g-incompatible", msg));
+        if ((protocol = N_receive_short()) != G_PROTOCOL) {
+                C_warning("Server protocol (%d) not equal to client (%d)",
+                          protocol, G_PROTOCOL);
+                I_popup(NULL, C_str("g-incompatible",
+                                    "Server protocol is not compatible"));
                 N_disconnect();
                 return;
         }
@@ -325,7 +323,6 @@ static void sm_ship_move(void)
 \******************************************************************************/
 static void sm_ship_cargo(void)
 {
-        g_cargo_t *cargo;
         int i, index;
 
         /* If we are hosting we already know all the information */
@@ -335,6 +332,8 @@ static void sm_ship_cargo(void)
         if ((index = receive_ship()) < 0)
                 return;
         for (i = 0; i < G_CARGO_TYPES; i++) {
+                i_cargo_t *cargo;
+
                 cargo = g_ships[index].store.cargo + i;
                 cargo->amount = N_receive_short();
 
@@ -414,7 +413,7 @@ void G_client_callback(int client, n_event_t event)
                 break;
 
         /* Ship changed names */
-        case G_SM_NAME_SHIP:
+        case G_SM_SHIP_NAME:
                 if ((i = receive_ship()) < 0)
                         return;
                 N_receive_string_buf(g_ships[i].name);

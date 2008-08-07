@@ -301,6 +301,15 @@ char *C_wrap_log(const char *, int margin, int wrap, int *plen);
 extern c_log_event_f c_log_func;
 extern c_log_mode_t c_log_mode;
 
+/* c_math.c */
+#define C_is_pow2(n) !(n & (n - 1))
+int C_next_pow2(int);
+int C_rand(void);
+#define C_rand_real() ((float)(C_rand() & 0xffff) / 0xffff)
+void C_rand_seed(unsigned int);
+c_vec3_t C_vec3_rotate_to(c_vec3_t from, c_vec3_t normal,
+                          float proportion, c_vec3_t to);
+
 /* c_memory.c */
 void C_array_append(c_array_t *, void *item);
 void C_array_cleanup(c_array_t *);
@@ -343,15 +352,6 @@ int C_mkdir(const char *path);
 int C_modified_time(const char *filename);
 const char *C_user_dir(void);
 void C_signal_handler(c_signal_f);
-
-/* c_math.c */
-#define C_is_pow2(n) !(n & (n - 1))
-int C_next_pow2(int);
-int C_rand(void);
-#define C_rand_real() ((float)(C_rand() & 0xffff) / 0xffff)
-void C_rand_seed(unsigned int);
-c_vec3_t C_vec3_rotate_to(c_vec3_t from, c_vec3_t normal,
-                          float proportion, c_vec3_t to);
 
 /* c_string.c */
 #define C_bool_string(b) ((b) ? "TRUE" : "FALSE")

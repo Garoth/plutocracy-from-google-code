@@ -198,7 +198,7 @@ void G_input_chat(char *message)
 }
 
 /******************************************************************************\
- Host a new game.
+ Interface wants us to join a game hosted at [address].
 \******************************************************************************/
 void G_join_game(const char *address)
 {
@@ -213,12 +213,12 @@ void G_join_game(const char *address)
 }
 
 /******************************************************************************\
- Host a new game.
+ Received updated trade parameters from the interface.
 \******************************************************************************/
 void G_trade_params(int index, int buy_price, int sell_price,
                     int minimum, int maximum)
 {
-        g_cargo_t *cargo;
+        i_cargo_t *cargo;
 
         if (g_selected_ship < 0)
                 return;
@@ -230,5 +230,44 @@ void G_trade_params(int index, int buy_price, int sell_price,
                 cargo->sell_price = sell_price;
         cargo->minimum = minimum;
         cargo->maximum = maximum;
+
+        /* Tell the server */
+        if (n_client_id != N_HOST_CLIENT_ID)
+                N_send(N_SERVER_ID, "11122", G_CM_SHIP_PRICES,
+                       g_selected_ship, index, buy_price, sell_price);
+}
+
+/******************************************************************************\
+ Transmit purchase/sale request for the currently selected ship from the
+ interface to the server.
+\******************************************************************************/
+void G_trade_cargo(bool buy, g_cargo_type_t cargo, int amount)
+{
+        g_ship_t *ship;
+
+        C_assert(cargo >= 0 && cargo < G_CARGO_TYPES);
+        ship = g_ships + g_selected_ship;
+        if (g_selected_ship < 0 || ship->trade_ship < 0)
+                return;
+
+        /* Clamp the amount to what we can actually transfer */
+        if (buy) {
+                int limit;
+
+                limit = G_store_fits(&ship->store, cargo);
+                if (amount > limit)
+                        amount = limit;
+                limit = g_ships[ship->trade_ship].store.cargo[cargo].amount;
+                if (amount > limit)
+                        amount = limit;
+        } else
+                if (amount > ship->store.cargo[cargo].amount)
+                        amount = ship->store.cargo[cargo].amount;
+        if (amount < 0)
+                return;
+
+        N_send(N_SERVER_ID, "112112", buy ? G_CM_SHIP_BUY : G_CM_SHIP_SELL,
+               g_selected_ship, ship->trade_tile,  ship->trade_ship,
+               cargo, amount);
 }
 

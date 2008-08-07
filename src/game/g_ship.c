@@ -23,6 +23,9 @@
 \******************************************************************************/
 int G_spawn_ship(n_client_id_t client, int tile, g_ship_name_t name, int index)
 {
+        g_ship_t *ship;
+        int i;
+
         if (!N_client_valid(client) || tile >= r_tiles ||
             name < 0 || name >= G_SHIP_NAMES) {
                 C_warning("Invalid parameters (%d, %d, %d, %d)",
@@ -74,24 +77,33 @@ int G_spawn_ship(n_client_id_t client, int tile, g_ship_name_t name, int index)
         }
 
 init:   /* Initialize ship structure */
-        C_zero(g_ships + index);
-        g_ships[index].in_use = TRUE;
-        g_ships[index].class_name = name;
-        g_ships[index].tile = g_ships[index].target = tile;
-        g_ships[index].rear_tile = -1;
-        g_ships[index].progress = 1.f;
-        g_ships[index].client = client;
-        g_ships[index].health = g_ship_classes[name].health;
-        g_ships[index].forward = g_tiles[tile].forward;
-        g_ships[index].trade_tile = g_ships[index].trade_ship = -1;
+        ship = g_ships + index;
+        C_zero(ship);
+        ship->in_use = TRUE;
+        ship->class_name = name;
+        ship->tile = ship->target = tile;
+        ship->rear_tile = -1;
+        ship->progress = 1.f;
+        ship->client = client;
+        ship->health = g_ship_classes[name].health;
+        ship->forward = g_tiles[tile].forward;
+        ship->trade_tile = ship->trade_ship = -1;
 
         /* Start out unnamed */
-        C_strncpy_buf(g_ships[index].name, C_va("Unnamed #%d", index));
+        C_strncpy_buf(ship->name, C_va("Unnamed #%d", index));
 
         /* Place the ship on the tile */
         G_set_tile_model(tile, g_ship_classes[name].model_path);
         g_tiles[tile].ship = index;
         g_tiles[tile].fade = 0.f;
+
+        /* Initialize store */
+        ship->store.capacity = g_ship_classes[ship->class_name].cargo;
+        for (i = 0; i < G_CARGO_TYPES; i++) {
+                ship->store.cargo[i].maximum = ship->store.capacity;
+                ship->store.cargo[i].buy_price = 50;
+                ship->store.cargo[i].sell_price = 50;
+        }
 
         /* If we are the server, tell other clients */
         if (n_client_id == N_HOST_CLIENT_ID)
@@ -100,9 +112,8 @@ init:   /* Initialize ship structure */
 
         /* If this is one of ours, name it */
         if (client == n_client_id) {
-                G_get_name_buf(G_NT_SHIP, g_ships[index].name);
-                N_send(N_SERVER_ID, "11s", G_CM_NAME_SHIP, index,
-                       g_ships[index].name);
+                G_get_name_buf(G_NT_SHIP, ship->name);
+                N_send(N_SERVER_ID, "11s", G_CM_SHIP_NAME, index, ship->name);
         }
 
         return index;
@@ -162,9 +173,7 @@ void G_render_ships(void)
 static void ship_configure_trade(int index)
 {
         g_ship_t *ship;
-        const char *right_name;
         int i;
-        bool right_own;
 
         /* Our client can't actually see this cargo -- we probably don't have
            the right data for it anyway! */
@@ -174,48 +183,25 @@ static void ship_configure_trade(int index)
                 return;
         }
 
-        /* Who is our trading partner and are they one of ours? */
-        if (ship->trade_ship >= 0) {
-                right_own = g_ships[ship->trade_ship].client == n_client_id;
-                right_name = g_ships[ship->trade_ship].name;
-        } else {
-                right_own = FALSE;
-                right_name = NULL;
-        }
-        I_enable_trade(ship->client == n_client_id, right_own, right_name);
+        /* Set our cargo space */
         I_set_cargo_space(G_store_space(&ship->store),
                           g_ship_classes[ship->class_name].cargo);
 
-        /* Configure the window with cargo information */
-        for (i = 0; i < G_CARGO_TYPES; i++) {
-                i_cargo_data_t left, right;
-                g_cargo_t *cargo;
-
-                /* Our cargo */
-                cargo = ship->store.cargo + i;
-                left.amount = cargo->amount;
-                left.minimum = cargo->minimum;
-                left.maximum = cargo->maximum;
-                left.sell_price = cargo->sell_price;
-                left.buy_price = cargo->buy_price;
-                left.auto_buy = cargo->auto_buy;
-                left.auto_sell = cargo->auto_sell;
-
-                /* No trading partner */
-                if (ship->trade_ship < 0) {
-                        I_configure_cargo(i, &left, NULL);
-                        continue;
-                }
-
-                /* Partner's cargo */
-                cargo = g_ships[ship->trade_ship].store.cargo + i;
-                right.amount = cargo->amount;
-                right.sell_price = cargo->sell_price;
-                right.buy_price = cargo->buy_price;
-
-                /* Configure for trade */
-                I_configure_cargo(i, &left, &right);
+        /* Configure without a trading partner */
+        if (ship->trade_ship < 0) {
+                I_enable_trade(ship->client == n_client_id, FALSE, NULL);
+                for (i = 0; i < G_CARGO_TYPES; i++)
+                        I_configure_cargo(i, ship->store.cargo + i, NULL);
+                return;
         }
+
+        /* Configure with a trading partner */
+        I_enable_trade(ship->client == n_client_id,
+                       g_ships[ship->trade_ship].client == n_client_id,
+                       g_ships[ship->trade_ship].name);
+        for (i = 0; i < G_CARGO_TYPES; i++)
+                I_configure_cargo(i, ship->store.cargo + i,
+                                  g_ships[ship->trade_ship].store.cargo + i);
 }
 
 /******************************************************************************\
