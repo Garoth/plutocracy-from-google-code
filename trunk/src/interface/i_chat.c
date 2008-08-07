@@ -217,7 +217,7 @@ static int scrollback_event(i_scrollback_t *scrollback, i_event_t event)
 {
         if ((event == I_EV_MOUSE_DOWN && i_mouse == SDL_BUTTON_RIGHT) ||
             (event == I_EV_KEY_DOWN && i_key == SDLK_ESCAPE))
-                show_scrollback(TRUE);
+                show_scrollback(FALSE);
         return I_scrollback_event(scrollback, event);
 }
 

@@ -35,7 +35,7 @@ void G_ship_send_cargo(int index, n_client_id_t client)
         N_send_char(G_SM_SHIP_CARGO);
         N_send_char(index);
         for (i = 0; i < G_CARGO_TYPES; i++) {
-                g_cargo_t *cargo;
+                i_cargo_t *cargo;
 
                 cargo = g_ships[index].store.cargo + i;
                 N_send_short(cargo->amount);
@@ -182,7 +182,7 @@ static void cm_name(int client)
 /******************************************************************************\
  Client wants to rename a ship.
 \******************************************************************************/
-static void cm_name_ship(int client)
+static void cm_ship_name(int client)
 {
         int index;
         char new_name[G_NAME_MAX];
@@ -199,10 +199,31 @@ static void cm_name_ship(int client)
         if (!new_name[0])
                 return;
         C_strncpy_buf(g_ships[index].name, new_name);
-        N_broadcast_except(client, "11s", G_SM_NAME_SHIP, index,
+        N_broadcast_except(client, "11s", G_SM_SHIP_NAME, index,
                            g_ships[index].name);
         C_debug("'%s' named ship %d '%s'", g_clients[client].name,
                 index, new_name);
+}
+
+/******************************************************************************\
+ Client changed cargo prices.
+\******************************************************************************/
+static void cm_ship_prices(int client)
+{
+}
+
+/******************************************************************************\
+ Client wants to buy something.
+\******************************************************************************/
+static void cm_ship_buy(int client)
+{
+}
+
+/******************************************************************************\
+ Client wants to sell something.
+\******************************************************************************/
+static void cm_ship_sell(int client)
+{
 }
 
 /******************************************************************************\
@@ -243,7 +264,7 @@ static void init_client(int client)
         g_clients[client].nation = G_NN_NONE;
 
         /* Communicate the globe info */
-        N_send(client, "11111422ff", G_SM_INIT, G_PROTOCOL, client,
+        N_send(client, "12111422ff", G_SM_INIT, G_PROTOCOL, client,
                g_clients_max, g_globe_subdiv4.value.n, g_globe_seed.value.n,
                g_islands.value.n, g_island_size.value.n,
                g_island_variance.value.f, r_solar_angle);
@@ -270,7 +291,7 @@ static void init_client(int client)
                        g_ships[i].tile, g_ships[i].class_name, i);
 
                 /* Name */
-                N_send(client, "11s", G_SM_NAME_SHIP, i, g_ships[i].name);
+                N_send(client, "11s", G_SM_SHIP_NAME, i, g_ships[i].name);
 
                 /* Cargo */
                 G_ship_send_cargo(i, client);
@@ -329,17 +350,26 @@ static void server_callback(int client, n_event_t event)
         case G_CM_AFFILIATE:
                 cm_affiliate(client);
                 break;
-        case G_CM_SHIP_MOVE:
-                cm_ship_move(client);
+        case G_CM_CHAT:
+                cm_chat(client);
                 break;
         case G_CM_NAME:
                 cm_name(client);
                 break;
-        case G_CM_NAME_SHIP:
-                cm_name_ship(client);
+        case G_CM_SHIP_BUY:
+                cm_ship_buy(client);
                 break;
-        case G_CM_CHAT:
-                cm_chat(client);
+        case G_CM_SHIP_NAME:
+                cm_ship_name(client);
+                break;
+        case G_CM_SHIP_MOVE:
+                cm_ship_move(client);
+                break;
+        case G_CM_SHIP_PRICES:
+                cm_ship_prices(client);
+                break;
+        case G_CM_SHIP_SELL:
+                cm_ship_sell(client);
                 break;
         default:
                 break;

@@ -38,21 +38,38 @@ static int nation_color_update(c_var_t *var, c_var_value_t value)
 }
 
 /******************************************************************************\
+ Returns the space one unit of a given cargo takes up.
+\******************************************************************************/
+static float cargo_space(g_cargo_type_t cargo)
+{
+        if (cargo == G_CT_GOLD)
+                return 0.01f;
+        return 1.f;
+}
+
+/******************************************************************************\
  Returns the amount of space the given cargo manifest contains.
 \******************************************************************************/
 int G_store_space(const g_store_t *store)
 {
         int i, space;
 
-        space = 0;
-        for (i = 0; i < G_CARGO_TYPES; i++)
-                space += store->cargo[i].amount;
-
-        /* Gold is special */
-        space += store->cargo[G_CT_GOLD].amount / 100 -
-                 store->cargo[G_CT_GOLD].amount;
-
+        for (space = i = 0; i < G_CARGO_TYPES; i++)
+                space += (int)ceilf(cargo_space(i) * store->cargo[i].amount);
         return space;
+}
+
+/******************************************************************************\
+ Returns the amount of a cargo that will fit in a given store.
+\******************************************************************************/
+int G_store_fits(const g_store_t *store, g_cargo_type_t cargo)
+{
+        int space;
+
+        space = store->capacity - G_store_space(store);
+        if (space < 0)
+                return 0;
+        return (int)floorf(space / cargo_space(cargo));
 }
 
 /******************************************************************************\
@@ -80,6 +97,10 @@ void G_init_elements(void)
         int i;
 
         C_status("Initializing game elements");
+
+        /* Check our constants */
+        C_assert(G_CLIENT_MESSAGES < 256);
+        C_assert(G_SERVER_MESSAGES < 256);
 
         /* Nation constants */
         g_nations[G_NN_RED].short_name = "red";

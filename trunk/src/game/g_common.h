@@ -18,7 +18,7 @@
 
 /* Network protocol used by the client and server. Increment when no longer
    compatible before releasing a new version of the game.*/
-#define G_PROTOCOL 2
+#define G_PROTOCOL 4
 
 /* Invalid island index */
 #define G_ISLAND_INVALID 255
@@ -27,16 +27,19 @@
 typedef enum {
         G_CM_NONE,
 
-        /* Messages for changing status */
+        /* Messages for changing client status */
         G_CM_AFFILIATE,
         G_CM_NAME,
-        G_CM_NAME_SHIP,
 
         /* Communication */
         G_CM_CHAT,
 
         /* Commands */
         G_CM_SHIP_MOVE,
+        G_CM_SHIP_NAME,
+        G_CM_SHIP_PRICES,
+        G_CM_SHIP_BUY,
+        G_CM_SHIP_SELL,
 
         G_CLIENT_MESSAGES
 } g_client_msg_t;
@@ -54,7 +57,6 @@ typedef enum {
         G_SM_DISCONNECTED,
         G_SM_AFFILIATE,
         G_SM_NAME,
-        G_SM_NAME_SHIP,
 
         /* Communication */
         G_SM_POPUP,
@@ -62,9 +64,12 @@ typedef enum {
 
         /* Entity updates */
         G_SM_SPAWN_SHIP,
-        G_SM_SHIP_MOVE,
         G_SM_SHIP_CARGO,
+        G_SM_SHIP_MOVE,
+        G_SM_SHIP_NAME,
         G_SM_SHIP_OWNER,
+        G_SM_SHIP_PRICES,
+        G_SM_SHIP_TRANSACT,
         G_SM_BUILDING,
 
         G_SERVER_MESSAGES
@@ -116,15 +121,9 @@ typedef struct g_ship_class {
         int health, cargo;
 } g_ship_class_t;
 
-/* Cargo item structure */
-typedef struct g_cargo {
-        short amount, buy_price, minimum, maximum, sell_price;
-        bool auto_buy, auto_sell;
-} g_cargo_t;
-
 /* Trading store structure */
 typedef struct g_store {
-        g_cargo_t cargo[G_CARGO_TYPES];
+        i_cargo_t cargo[G_CARGO_TYPES];
         short capacity;
         bool visible[N_CLIENTS_MAX];
 } g_store_t;
@@ -158,6 +157,7 @@ extern int g_hover_tile, g_hover_ship, g_selected_ship;
 void G_build(int tile, g_building_name_t, float progress);
 void G_init_elements(void);
 void G_reset_elements(void);
+int G_store_fits(const g_store_t *, g_cargo_type_t);
 int G_store_space(const g_store_t *);
 
 extern g_building_type_t g_building_types[G_BUILDING_NAMES];
