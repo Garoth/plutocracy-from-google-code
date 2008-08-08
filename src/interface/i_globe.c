@@ -20,7 +20,7 @@
 static c_vec3_t grab_normal;
 static c_vec2_t globe_motion;
 static float grab_angle;
-static int grabbing, grab_rolling, grab_times[2];
+static int grabbing, grab_rolling, grab_times[2], grab_button;
 
 /******************************************************************************\
  Performs ray-sphere intersection between an arbitrary ray and the globe. The
@@ -103,6 +103,7 @@ static void grab_globe(int x, int y)
         if (grabbing)
                 return;
         grabbing = TRUE;
+        grab_button = i_mouse;
         grab_times[0] = grab_times[1];
         grab_times[1] = c_time_msec;
         if (screen_to_normal(x, y, &grab_normal, &grab_angle)) {
@@ -122,6 +123,8 @@ static void release_globe(void)
 {
         c_vec3_t normal;
 
+        if (!grabbing)
+                return;
         grabbing = FALSE;
         R_release_cam();
 
@@ -238,12 +241,16 @@ void I_globe_event(i_event_t event)
                         R_zoom_cam_by(i_zoom_speed.value.f);
                 else if (i_mouse == SDL_BUTTON_WHEELUP)
                         R_zoom_cam_by(-i_zoom_speed.value.f);
-                else if (i_mouse == SDL_BUTTON_RIGHT)
+                else if (i_mouse == SDL_BUTTON_MIDDLE)
                         grab_globe(i_mouse_x, i_mouse_y);
-                G_process_click(i_mouse);
+                else if (i_mouse == SDL_BUTTON_LEFT) {
+                        if (!G_process_click(i_mouse))
+                                grab_globe(i_mouse_x, i_mouse_y);
+                } else
+                        G_process_click(i_mouse);
                 break;
         case I_EV_MOUSE_UP:
-                if (i_mouse == SDL_BUTTON_RIGHT)
+                if (i_mouse == grab_button)
                         release_globe();
                 break;
         case I_EV_MOUSE_MOVE:
