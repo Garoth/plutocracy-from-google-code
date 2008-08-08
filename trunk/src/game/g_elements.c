@@ -289,5 +289,8 @@ void G_reset_elements(void)
 
         /* Start out without a selected ship */
         G_ship_select(-1);
+
+        /* Not hovering over anything */
+        g_hover_ship = g_hover_tile = -1;
 }
 
