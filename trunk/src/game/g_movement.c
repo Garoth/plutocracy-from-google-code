@@ -250,7 +250,8 @@ static void position_ship(int ship)
                 return;
         new_tile = g_ships[ship].tile;
         old_tile = g_ships[ship].rear_tile;
-        model = &g_tiles[new_tile].model;
+        if (!(model = g_tiles[new_tile].model))
+                C_error("Ship has no model");
 
         /* If the ship is not moving, just place it on the tile */
         if (g_ships[ship].rear_tile < 0) {
@@ -274,7 +275,7 @@ static void position_ship(int ship)
                 float lerp;
 
                 lerp = ROTATION_RATE * c_frame_sec *
-                       g_ship_classes[g_ships[ship].class_name].speed;
+                       g_ship_classes[g_ships[ship].type].speed;
                 if (lerp > 1.f)
                         lerp = 1.f;
                 model->forward = C_vec3_norm(model->forward);
@@ -290,11 +291,11 @@ static void transfer_model(int from, int to)
 {
         if (from == to)
                 return;
-        R_model_cleanup(&g_tiles[to].model);
+        R_model_free(g_tiles[to].model);
         g_tiles[to].model = g_tiles[from].model;
         g_tiles[to].model_shown = TRUE;
         g_tiles[to].fade = 1.f;
-        C_zero(&g_tiles[from].model);
+        g_tiles[from].model = NULL;
 }
 
 /******************************************************************************\
@@ -334,7 +335,7 @@ static void move_ship(int i)
         /* Is this ship moving? */
         if (g_ships[i].path[0] <= 0 && g_ships[i].rear_tile < 0)
                 return;
-        speed = g_ship_classes[g_ships[i].class_name].speed;
+        speed = g_ship_classes[g_ships[i].type].speed;
         g_ships[i].progress += c_frame_sec * speed;
 
         /* Still in progress */

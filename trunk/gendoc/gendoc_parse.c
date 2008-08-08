@@ -13,7 +13,7 @@
 #include "gendoc.h"
 
 #define END_BRACE_MARK -2
-#define TOKENS 32
+#define TOKENS 128
 
 int d_num_tokens;
 

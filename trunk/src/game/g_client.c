@@ -230,15 +230,15 @@ static void sm_chat(void)
 \******************************************************************************/
 static void sm_ship_spawn(void)
 {
-        g_ship_name_t class_name;
+        g_ship_type_t type;
         n_client_id_t client;
         int tile, index;
 
         index = N_receive_char();
         client = N_receive_char();
         tile = N_receive_short();
-        class_name = N_receive_char();
-        if (G_ship_spawn(index, client, tile, class_name) < 0)
+        type = N_receive_char();
+        if (G_ship_spawn(index, client, tile, type) < 0)
                 G_corrupt_disconnect();
 }
 
@@ -417,25 +417,18 @@ void G_client_callback(int client, n_event_t event)
 
         /* Building changed */
         case G_SM_BUILDING:
-                i = N_receive_short();
-                j = N_receive_char();
-                if (i < 0 || i >= r_tiles || j < 0 || j >= G_BUILDING_NAMES) {
-                        G_corrupt_disconnect();
+                if ((i = G_receive_tile(-1)) < 0 ||
+                    (j = G_receive_range(-1, 0, G_BUILDING_TYPES)) < 0)
                         return;
-                }
                 G_build(i, j, N_receive_float());
                 break;
 
         /* Somebody connected but we don't have their name yet */
         case G_SM_CONNECTED:
-                i = N_receive_char();
-                if (i < 0 || i >= N_CLIENTS_MAX) {
-                        G_corrupt_disconnect();
+                if ((i = G_receive_range(-1, 0, N_CLIENTS_MAX)) < 0)
                         return;
-                }
                 n_clients[i].connected = TRUE;
                 C_zero(g_clients + i);
-                g_clients[i].nation = G_NN_NONE;
                 C_debug("Client %d connected", i);
                 break;
 

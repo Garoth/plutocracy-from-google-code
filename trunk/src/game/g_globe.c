@@ -249,14 +249,14 @@ int G_set_tile_model(int tile, const char *filename)
         }
 
         /* Try to load the new model */
-        R_model_cleanup(&g_tiles[tile].model);
-        if (!R_model_init(&g_tiles[tile].model, filename, TRUE))
+        R_model_free(g_tiles[tile].model);
+        if (!(g_tiles[tile].model = R_model_alloc(filename, TRUE)))
                 return FALSE;
 
         /* Fade the new model in */
-        g_tiles[tile].model.origin = g_tiles[tile].origin;
-        g_tiles[tile].model.normal = r_tile_params[tile].normal;
-        g_tiles[tile].model.forward = g_tiles[tile].forward;
+        g_tiles[tile].model->origin = g_tiles[tile].origin;
+        g_tiles[tile].model->normal = r_tile_params[tile].normal;
+        g_tiles[tile].model->forward = g_tiles[tile].forward;
         g_tiles[tile].model_shown = TRUE;
         g_tiles[tile].fade = 1.f;
         return TRUE;
@@ -270,7 +270,8 @@ void G_cleanup_globe(void)
         int i;
 
         for (i = 0; i < r_tiles; i++)
-                R_model_cleanup(&g_tiles[i].model);
+                R_model_free(g_tiles[i].model);
+        C_zero_buf(g_tiles);
 }
 
 /******************************************************************************\
@@ -429,8 +430,10 @@ void G_render_globe(void)
                 float mod;
 
                 g_tiles[i].visible = is_visible(g_tiles[i].origin);
-                mod = model_fade_mod(g_tiles[i].model.origin);
-                if (mod <= 0.f || !g_tiles[i].model.data)
+                if (!g_tiles[i].model)
+                        continue;
+                mod = model_fade_mod(g_tiles[i].model->origin);
+                if (mod <= 0.f)
                         continue;
 
                 /* Fade the model in */
@@ -444,14 +447,15 @@ void G_render_globe(void)
                 else {
                         g_tiles[i].fade -= MODEL_FADE * c_frame_sec;
                         if (g_tiles[i].fade <= 0.f) {
-                                R_model_cleanup(&g_tiles[i].model);
+                                R_model_free(g_tiles[i].model);
+                                g_tiles[i].model = NULL;
                                 continue;
                         }
                 }
 
-                R_adjust_light_for(g_tiles[i].model.origin);
-                g_tiles[i].model.modulate.a = g_tiles[i].fade * mod;
-                R_model_render(&g_tiles[i].model);
+                R_adjust_light_for(g_tiles[i].model->origin);
+                g_tiles[i].model->modulate.a = g_tiles[i].fade * mod;
+                R_model_render(g_tiles[i].model);
         }
         R_finish_globe();
 
@@ -525,7 +529,8 @@ void G_mouse_ray_miss(void)
 {
         if (g_hover_tile < 0)
                 return;
-        g_tiles[g_hover_tile].model.selected = FALSE;
+        if (g_tiles[g_hover_tile].model)
+                g_tiles[g_hover_tile].model->selected = FALSE;
         R_select_tile(g_hover_tile = -1, R_ST_NONE);
 }
 
@@ -547,8 +552,8 @@ void G_mouse_ray(c_vec3_t origin, c_vec3_t forward)
         }
 
         /* Disable selected tile effect for old model */
-        if (g_hover_tile >= 0)
-                g_tiles[g_hover_tile].model.selected = FALSE;
+        if (g_hover_tile >= 0 && g_tiles[g_hover_tile].model)
+                g_tiles[g_hover_tile].model->selected = FALSE;
 
         /* Iterate over all visible tiles to find the selected tile */
         for (i = 0, tile = -1, tile_z = 0.f; i < r_tiles; i++) {

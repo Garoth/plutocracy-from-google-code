@@ -58,12 +58,14 @@ static void hover_ship(int ship)
 
         if (g_hover_ship >= 0) {
                 tile = g_ships[g_hover_ship].tile;
-                g_tiles[tile].model.selected = FALSE;
+                if (g_tiles[tile].model)
+                        g_tiles[tile].model->selected = FALSE;
         }
         if ((g_hover_ship = ship) < 0)
                 return;
         tile = g_ships[ship].tile;
-        g_tiles[tile].model.selected = TRUE;
+        if (g_tiles[tile].model)
+                g_tiles[tile].model->selected = TRUE;
 }
 
 /******************************************************************************\
@@ -85,8 +87,8 @@ void G_hover_tile(int tile)
         ring_valid = can_interact(tile);
 
         /* Selecting a ship */
-        if (g_tiles[tile].ship >= 0) {
-        }
+        if (g_tiles[tile].ship >= 0)
+                hover_ship(g_tiles[tile].ship);
 
         /* If we are controlling a ship, we might want to move here */
         else if (g_selected_ship >= 0 && G_open_tile(tile, -1) &&
@@ -97,8 +99,11 @@ void G_hover_tile(int tile)
         }
 
         /* Select a tile */
-        else if (ring_valid)
+        else if (ring_valid) {
                 R_select_tile(tile, R_ST_TILE);
+                if (g_tiles[tile].model)
+                        g_tiles[tile].model->selected = TRUE;
+        }
 
         /* Can't select this */
         else {
@@ -107,9 +112,7 @@ void G_hover_tile(int tile)
                 return;
         }
 
-        /* Select whatever's in this tile */
         g_hover_tile = tile;
-        hover_ship(g_tiles[tile].ship);
 }
 
 /******************************************************************************\
@@ -242,9 +245,8 @@ void G_trade_params(int index, int buy_price, int sell_price,
                 return;
 
         /* Tell the server */
-        if (n_client_id != N_HOST_CLIENT_ID)
-                N_send(N_SERVER_ID, "11122", G_CM_SHIP_PRICES,
-                       g_selected_ship, index, buy_price, sell_price);
+        N_send(N_SERVER_ID, "11122", G_CM_SHIP_PRICES,
+               g_selected_ship, index, buy_price, sell_price);
 }
 
 /******************************************************************************\
@@ -257,7 +259,7 @@ void G_trade_cargo(bool buy, g_cargo_type_t cargo, int amount)
 
         C_assert(cargo >= 0 && cargo < G_CARGO_TYPES);
         ship = g_ships + g_selected_ship;
-        if (g_selected_ship < 0 || ship->trade_ship < 0)
+        if (g_selected_ship < 0 || ship->trade_tile < 0 || ship->trade_ship < 0)
                 return;
 
         /* Clamp the amount to what we can actually transfer */

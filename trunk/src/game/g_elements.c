@@ -14,15 +14,15 @@
 
 #include "g_common.h"
 
-/* Ships and ship classes */
+/* Ships and ship base classes */
 g_ship_t g_ships[G_SHIPS_MAX];
-g_ship_class_t g_ship_classes[G_SHIP_NAMES];
+g_ship_class_t g_ship_classes[G_SHIP_TYPES];
 
 /* Array of game nations */
 g_nation_t g_nations[G_NATION_NAMES];
 
-/* Array of building types */
-g_building_type_t g_building_types[G_BUILDING_NAMES];
+/* Array of building base classes */
+g_building_class_t g_building_classes[G_BUILDING_TYPES];
 
 /* Array of cargo names */
 const char *g_cargo_names[G_CARGO_TYPES];
@@ -148,13 +148,13 @@ void G_init_elements(void)
         g_cargo_names[G_CT_GILLNET] = C_str("g-cargo-gillner", "Gillnet");
 
         /* Setup buildings */
-        g_building_types[G_BN_NONE].name = "None";
-        g_building_types[G_BN_NONE].model_path = "";
-        g_building_types[G_BN_TREE].name = "Trees";
-        g_building_types[G_BN_TREE].model_path = "models/tree/deciduous.plum";
+        g_building_classes[G_BT_NONE].name = "None";
+        g_building_classes[G_BT_NONE].model_path = "";
+        g_building_classes[G_BT_TREE].name = "Trees";
+        g_building_classes[G_BT_TREE].model_path = "models/tree/deciduous.plum";
 
         /* Sloop */
-        pc = g_ship_classes + G_SN_SLOOP;
+        pc = g_ship_classes + G_ST_SLOOP;
         pc->name = C_str("g-ship-sloop", "Sloop");
         pc->model_path = "models/ship/sloop.plum";
         pc->speed = 1.f;
@@ -162,7 +162,7 @@ void G_init_elements(void)
         pc->cargo = 100;
 
         /* Spider */
-        pc = g_ship_classes + G_SN_SPIDER;
+        pc = g_ship_classes + G_ST_SPIDER;
         pc->name = C_str("g-ship-spider", "Spider");
         pc->model_path = "models/ship/spider.plum";
         pc->speed = 0.75f;
@@ -170,7 +170,7 @@ void G_init_elements(void)
         pc->cargo = 150;
 
         /* Galleon */
-        pc = g_ship_classes + G_SN_GALLEON;
+        pc = g_ship_classes + G_ST_GALLEON;
         pc->name = C_str("g-ship-galleon", "Galleon");
         pc->model_path = "models/ship/galleon.plum";
         pc->speed = 0.5f;
@@ -181,19 +181,19 @@ void G_init_elements(void)
 /******************************************************************************\
  Set a tile's building.
 \******************************************************************************/
-void G_build(int tile, g_building_name_t name, float progress)
+void G_build(int tile, g_building_type_t type, float progress)
 {
         /* Range checks */
         C_assert(tile >= 0 && tile < r_tiles);
-        C_assert(name >= 0 && name < G_BUILDING_NAMES);
+        C_assert(type >= 0 && type < G_BUILDING_TYPES);
         if (progress < 0.f)
                 progress = 0.f;
         if (progress > 1.f)
                 progress = 1.f;
 
-        g_tiles[tile].building = name;
+        g_tiles[tile].building = type;
         g_tiles[tile].progress = progress;
-        G_set_tile_model(tile, g_building_types[name].model_path);
+        G_set_tile_model(tile, g_building_classes[type].model_path);
 }
 
 /******************************************************************************\
@@ -212,7 +212,7 @@ void G_reset_elements(void)
 
         /* Reset tiles */
         for (i = 0; i < r_tiles; i++)
-                G_build(i, G_BN_NONE, 0.f);
+                G_build(i, G_BT_NONE, 0.f);
 
         /* The server "client" has fixed information */
         g_clients[N_SERVER_ID].nation = G_NN_PIRATE;
