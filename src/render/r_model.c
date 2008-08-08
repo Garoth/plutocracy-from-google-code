@@ -420,6 +420,32 @@ void R_model_cleanup(r_model_t *model)
 }
 
 /******************************************************************************\
+ Allocates memory for and initializes a model. Returns NULL if the model
+ failed to initialize.
+\******************************************************************************/
+r_model_t *R_model_alloc(const char *filename, bool cull)
+{
+        r_model_t model, *p;
+
+        if (!R_model_init(&model, filename, cull))
+                return NULL;
+        p = C_malloc(sizeof (model));
+        *p = model;
+        return p;
+}
+
+/******************************************************************************\
+ Frees an allocated model.
+\******************************************************************************/
+void R_model_free(r_model_t *model)
+{
+        if (!model)
+                return;
+        R_model_cleanup(model);
+        C_free(model);
+}
+
+/******************************************************************************\
  Updates animation progress and frame. Interpolates between key-frame meshes
  when necessary to smooth the animation.
 \******************************************************************************/

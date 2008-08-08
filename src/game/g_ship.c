@@ -10,6 +10,8 @@
  FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
 \******************************************************************************/
 
+/* Spawning, updating, and rendering ships */
+
 #include "g_common.h"
 
 /* Maximum health value */
@@ -21,15 +23,15 @@
  a random open tile. If [index] is negative, the first available slot will be
  used.
 \******************************************************************************/
-int G_ship_spawn(int index, n_client_id_t client, int tile, g_ship_name_t name)
+int G_ship_spawn(int index, n_client_id_t client, int tile, g_ship_type_t type)
 {
         g_ship_t *ship;
         int i;
 
         if (!N_client_valid(client) || tile >= r_tiles ||
-            name < 0 || name >= G_SHIP_NAMES) {
+            type < 0 || type >= G_SHIP_TYPES) {
                 C_warning("Invalid parameters (%d, %d, %d, %d)",
-                          index, client, tile, name);
+                          index, client, tile, type);
                 return -1;
         }
         if (index >= G_SHIPS_MAX) {
@@ -80,12 +82,12 @@ init:   /* Initialize ship structure */
         ship = g_ships + index;
         C_zero(ship);
         ship->in_use = TRUE;
-        ship->class_name = name;
+        ship->type = type;
         ship->tile = ship->target = tile;
         ship->rear_tile = -1;
         ship->progress = 1.f;
         ship->client = client;
-        ship->health = g_ship_classes[name].health;
+        ship->health = g_ship_classes[type].health;
         ship->forward = g_tiles[tile].forward;
         ship->trade_tile = ship->trade_ship = -1;
 
@@ -93,12 +95,12 @@ init:   /* Initialize ship structure */
         C_strncpy_buf(ship->name, C_va("Unnamed #%d", index));
 
         /* Place the ship on the tile */
-        G_set_tile_model(tile, g_ship_classes[name].model_path);
+        G_set_tile_model(tile, g_ship_classes[type].model_path);
         g_tiles[tile].ship = index;
         g_tiles[tile].fade = 0.f;
 
         /* Initialize store */
-        ship->store.capacity = g_ship_classes[ship->class_name].cargo;
+        ship->store.capacity = g_ship_classes[ship->type].cargo;
         for (i = 0; i < G_CARGO_TYPES; i++) {
                 ship->store.cargo[i].maximum = ship->store.capacity;
                 ship->store.cargo[i].buy_price = 50;
@@ -108,7 +110,7 @@ init:   /* Initialize ship structure */
         /* If we are the server, tell other clients */
         if (n_client_id == N_HOST_CLIENT_ID)
                 N_broadcast_except(N_HOST_CLIENT_ID, "11121", G_SM_SHIP_SPAWN,
-                                   index, client, tile, name);
+                                   index, client, tile, type);
 
         /* If this is one of ours, name it */
         if (client == n_client_id) {
@@ -155,12 +157,12 @@ void G_render_ships(void)
                         continue;
 
                 /* Draw the status display */
-                ship_class = g_ship_classes + ship->class_name;
+                ship_class = g_ship_classes + ship->type;
                 armor = (float)ship->armor / HEALTH_MAX;
                 health = (float)ship->health / HEALTH_MAX;
                 health_max = (float)ship_class->health / HEALTH_MAX;
                 color = g_nations[g_clients[ship->client].nation].color;
-                R_render_ship_status(&tile->model, health, health_max,
+                R_render_ship_status(tile->model, health, health_max,
                                      armor, health_max, color,
                                      g_selected_ship == i,
                                      ship->client == n_client_id);
@@ -185,7 +187,7 @@ static void ship_configure_trade(int index)
 
         /* Set our cargo space */
         I_set_cargo_space(G_store_space(&ship->store),
-                          g_ship_classes[ship->class_name].cargo);
+                          g_ship_classes[ship->type].cargo);
 
         /* Configure without a trading partner */
         if (ship->trade_ship < 0) {
@@ -337,7 +339,6 @@ void G_update_ships(void)
 \******************************************************************************/
 void G_ship_select(int index)
 {
-        g_ship_name_t class_name;
         i_color_t color;
         n_client_id_t client;
         bool own;
@@ -354,10 +355,9 @@ void G_ship_select(int index)
                         R_select_path(-1, NULL);
                 client = g_ships[index].client;
                 color = G_nation_to_color(g_clients[client].nation);
-                class_name = g_ships[index].class_name;
                 I_select_ship(color, g_ships[index].name,
                               g_clients[client].name,
-                              g_ship_classes[class_name].name);
+                              g_ship_classes[g_ships[index].type].name);
                 ship_configure_trade(index);
         } else {
                 R_select_path(-1, NULL);

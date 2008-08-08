@@ -11,7 +11,7 @@
 \******************************************************************************/
 
 /* Maximum number of ships in a game */
-#define G_SHIPS_MAX 128
+#define G_SHIPS_MAX 256
 
 /* Length of a name */
 #define G_NAME_MAX 16

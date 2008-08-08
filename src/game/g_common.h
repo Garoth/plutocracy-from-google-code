@@ -75,33 +75,41 @@ typedef enum {
         G_SERVER_MESSAGES
 } g_server_msg_t;
 
-/* Ship class names */
+/* Ship types */
 typedef enum {
-        G_SN_SLOOP,
-        G_SN_SPIDER,
-        G_SN_GALLEON,
-        G_SHIP_NAMES,
-        G_SN_NONE,
-} g_ship_name_t;
+        G_ST_NONE,
+        G_ST_SLOOP,
+        G_ST_SPIDER,
+        G_ST_GALLEON,
+        G_SHIP_TYPES,
+} g_ship_type_t;
 
 /* Building types */
 typedef enum {
-        G_BN_NONE,
-        G_BN_TREE,
-        G_BUILDING_NAMES
-} g_building_name_t;
+        G_BT_NONE,
+        G_BT_TREE,
+        G_BUILDING_TYPES
+} g_building_type_t;
 
-/* Name classes */
+/* Name types */
 typedef enum {
         G_NT_SHIP,
         G_NT_ISLAND,
         G_NAME_TYPES
 } g_name_type_t;
 
+/* Trading store structure */
+typedef struct g_store {
+        i_cargo_t cargo[G_CARGO_TYPES];
+        short capacity;
+        bool visible[N_CLIENTS_MAX];
+} g_store_t;
+
 /* A tile on the globe */
 typedef struct g_tile {
-        g_building_name_t building;
-        r_model_t model;
+        g_building_type_t building;
+        g_store_t *store;
+        r_model_t *model;
         c_vec3_t origin, forward;
         float progress, fade;
         int island, ship, search_parent, search_stamp;
@@ -114,36 +122,29 @@ typedef struct g_client {
         char name[G_NAME_MAX];
 } g_client_t;
 
-/* Structure containing ship class information */
-typedef struct g_ship_class {
+/* Structure containing ship type parameters */
+typedef struct g_ship_base {
         const char *model_path, *name;
         float speed;
         int health, cargo;
 } g_ship_class_t;
 
-/* Trading store structure */
-typedef struct g_store {
-        i_cargo_t cargo[G_CARGO_TYPES];
-        short capacity;
-        bool visible[N_CLIENTS_MAX];
-} g_store_t;
+/* Structure for building type parameters */
+typedef struct g_building_class {
+        const char *name, *model_path;
+} g_building_class_t;
 
 /* Structure containing ship information */
 typedef struct g_ship {
-        g_ship_name_t class_name;
+        g_ship_type_t type;
         g_store_t store;
         c_vec3_t forward;
         float progress;
-        int armor, client, health, rear_tile, target, tile,
-            trade_ship, trade_tile;
+        int armor, client, health, rear_tile, target, tile, trade_tile,
+            trade_ship;
         char path[R_PATH_MAX], name[G_NAME_MAX];
         bool in_use;
 } g_ship_t;
-
-/* Building structure */
-typedef struct g_building_type {
-        const char *name, *model_path;
-} g_building_type_t;
 
 /* g_client.c */
 void G_client_callback(int client, n_event_t);
@@ -154,14 +155,13 @@ extern g_client_t g_clients[N_CLIENTS_MAX + 1];
 extern int g_hover_tile, g_hover_ship, g_selected_ship;
 
 /* g_elements.c */
-void G_build(int tile, g_building_name_t, float progress);
+void G_build(int tile, g_building_type_t, float progress);
 void G_init_elements(void);
 void G_reset_elements(void);
 int G_store_fits(const g_store_t *, g_cargo_type_t);
 int G_store_space(const g_store_t *);
 
-extern g_building_type_t g_building_types[G_BUILDING_NAMES];
-extern g_ship_class_t g_ship_classes[G_SHIP_NAMES];
+extern g_ship_class_t g_ship_classes[G_SHIP_TYPES];
 extern g_ship_t g_ships[G_SHIPS_MAX];
 
 /* g_globe.c */
@@ -192,7 +192,7 @@ void G_render_ships(void);
 void G_ship_reselect(int ship_i, n_client_id_t);
 void G_ship_select(int ship_i);
 void G_ship_send_cargo(int ship_i, n_client_id_t);
-int G_ship_spawn(int ship_i, n_client_id_t, int tile, g_ship_name_t);
+int G_ship_spawn(int ship_i, n_client_id_t, int tile, g_ship_type_t);
 void G_update_ships(void);
 
 /* g_sync.c */

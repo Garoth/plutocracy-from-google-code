@@ -34,7 +34,7 @@ static void cm_affiliate(int client)
         /* If this client just joined a nation for the first time,
            try to give them a starter ship */
         tile = -1;
-        ship = G_ship_spawn(-1, client, -1, G_SN_SLOOP);
+        ship = G_ship_spawn(-1, client, -1, G_ST_SLOOP);
         if (old == G_NN_NONE && ship >= 0) {
                 tile = g_ships[ship].tile;
                 g_ships[ship].store.cargo[G_CT_GOLD].amount = 500;
@@ -42,7 +42,7 @@ static void cm_affiliate(int client)
                 g_ships[ship].store.cargo[G_CT_RATIONS].amount = 50;
 
                 /* Spawn a second ship for testing */
-                ship = G_ship_spawn(-1, client, tile, G_SN_SPIDER);
+                ship = G_ship_spawn(-1, client, tile, G_ST_SPIDER);
                 if (ship >= 0) {
                         g_ships[ship].store.cargo[G_CT_GOLD].amount = 1000;
                         g_ships[ship].store.cargo[G_CT_CREW].amount = 30;
@@ -50,7 +50,7 @@ static void cm_affiliate(int client)
                 }
 
                 /* And spawn a third ship for testing also */
-                ship = G_ship_spawn(-1, client, tile, G_SN_GALLEON);
+                ship = G_ship_spawn(-1, client, tile, G_ST_GALLEON);
                 if (ship >= 0) {
                         g_ships[ship].store.cargo[G_CT_GOLD].amount = 2000;
                         g_ships[ship].store.cargo[G_CT_CREW].amount = 50;
@@ -171,11 +171,11 @@ static void cm_ship_prices(int client)
                 if (g_ships[index].store.visible[i])
                         n_clients[i].selected = TRUE;
 
-        /* Originating client already knows what the prices are */
-        n_clients[client].selected = FALSE;
-
         /* The host needs to see this message to process the update */
         n_clients[N_HOST_CLIENT_ID].selected = TRUE;
+
+        /* Originating client already knows what the prices are */
+        n_clients[client].selected = FALSE;
 
         N_send_selected("11122", G_SM_SHIP_PRICES, index, cargo,
                         buy_price, sell_price);
@@ -184,15 +184,26 @@ static void cm_ship_prices(int client)
 /******************************************************************************\
  Client wants to buy something.
 \******************************************************************************/
-static void cm_ship_buy(int client)
+static void cm_ship_transact(int client, bool buy)
 {
-}
+        int i, ship, trade_tile, trade_ship, cargo, amount, neighbors[3];
 
-/******************************************************************************\
- Client wants to sell something.
-\******************************************************************************/
-static void cm_ship_sell(int client)
-{
+        if ((ship = G_receive_ship(client)) < 0 ||
+            (trade_tile = G_receive_tile(client)) < 0 ||
+            (trade_ship = G_receive_ship(client)) < 0 ||
+            (cargo = G_receive_cargo(client)) < 0)
+                return;
+        amount = N_receive_short();
+
+        /* Can we trade with this ship? */
+        R_get_tile_neighbors(g_ships[ship].tile, neighbors);
+        for (i = 0; trade_tile != neighbors[i]; i++)
+                if (i >= 3)
+                        return;
+        if (trade_ship != g_tiles[trade_tile].ship)
+                return;
+
+        /* TODO */
 }
 
 /******************************************************************************\
@@ -246,7 +257,7 @@ static void init_client(int client)
 
         /* Tell them about the buildings on them globe */
         for (i = 0; i < r_tiles; i++)
-                if (g_tiles[i].building != G_BN_NONE)
+                if (g_tiles[i].building != G_BT_NONE)
                         N_send(client, "121f", G_SM_BUILDING, i,
                                g_tiles[i].building, g_tiles[i].progress);
 
@@ -257,7 +268,7 @@ static void init_client(int client)
 
                 /* Owner, tile, class, index */
                 N_send(client, "11121", G_SM_SHIP_SPAWN, i, g_ships[i].client,
-                       g_ships[i].tile, g_ships[i].class_name);
+                       g_ships[i].tile, g_ships[i].type);
 
                 /* Name */
                 N_send(client, "11s", G_SM_SHIP_NAME, i, g_ships[i].name);
@@ -326,7 +337,8 @@ static void server_callback(int client, n_event_t event)
                 cm_name(client);
                 break;
         case G_CM_SHIP_BUY:
-                cm_ship_buy(client);
+        case G_CM_SHIP_SELL:
+                cm_ship_transact(client, token == G_CM_SHIP_BUY);
                 break;
         case G_CM_SHIP_NAME:
                 cm_ship_name(client);
@@ -336,9 +348,6 @@ static void server_callback(int client, n_event_t event)
                 break;
         case G_CM_SHIP_PRICES:
                 cm_ship_prices(client);
-                break;
-        case G_CM_SHIP_SELL:
-                cm_ship_sell(client);
                 break;
         default:
                 break;
@@ -356,7 +365,7 @@ static void initial_buildings(void)
                 if (R_terrain_base(r_tile_params[i].terrain) != R_T_GROUND)
                         continue;
                 if (C_rand_real() < g_forest.value.f)
-                        G_build(i, G_BN_TREE, 1.f);
+                        G_build(i, G_BT_TREE, 1.f);
         }
 }
 

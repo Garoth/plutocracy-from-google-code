@@ -59,9 +59,6 @@ void I_update_colors(void);
 extern int i_limbo;
 
 /* i_nations.c */
-void I_configure_nation(int nation, const char *short_name,
-                        const char *long_name);
-void I_init_nation(int i, const char *short_name, const char *long_name);
 void I_select_nation(int nation);
 
 /* i_players.c */
