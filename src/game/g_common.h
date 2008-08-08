@@ -101,14 +101,13 @@ typedef enum {
 /* Trading store structure */
 typedef struct g_store {
         i_cargo_t cargo[G_CARGO_TYPES];
-        short capacity;
+        short space_used, capacity;
         bool visible[N_CLIENTS_MAX];
 } g_store_t;
 
 /* A tile on the globe */
 typedef struct g_tile {
         g_building_type_t building;
-        g_store_t *store;
         r_model_t *model;
         c_vec3_t origin, forward;
         float progress, fade;
@@ -158,8 +157,11 @@ extern int g_hover_tile, g_hover_ship, g_selected_ship;
 void G_build(int tile, g_building_type_t, float progress);
 void G_init_elements(void);
 void G_reset_elements(void);
+int G_store_add(g_store_t *, g_cargo_type_t, int amount);
 int G_store_fits(const g_store_t *, g_cargo_type_t);
-int G_store_space(const g_store_t *);
+int G_limit_purchase(const g_store_t *buyer, const g_store_t *seller,
+                     g_cargo_type_t, int amount);
+int G_store_space(g_store_t *);
 
 extern g_ship_class_t g_ship_classes[G_SHIP_TYPES];
 extern g_ship_t g_ships[G_SHIPS_MAX];
@@ -189,10 +191,10 @@ void G_reset_name_counts(void);
 
 /* g_ship.c */
 void G_render_ships(void);
-void G_ship_reselect(int ship_i, n_client_id_t);
-void G_ship_select(int ship_i);
-void G_ship_send_cargo(int ship_i, n_client_id_t);
-int G_ship_spawn(int ship_i, n_client_id_t, int tile, g_ship_type_t);
+void G_ship_reselect(int ship, n_client_id_t);
+void G_ship_select(int ship);
+void G_ship_send_cargo(int ship, n_client_id_t);
+int G_ship_spawn(int ship, n_client_id_t, int tile, g_ship_type_t);
 void G_update_ships(void);
 
 /* g_sync.c */

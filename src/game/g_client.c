@@ -289,6 +289,7 @@ static void sm_ship_cargo(void)
                         cargo->auto_sell = cargo->sell_price >= 0;
                 }
         }
+        G_store_space(&g_ships[index].store);
         G_ship_reselect(-1, index);
 }
 
