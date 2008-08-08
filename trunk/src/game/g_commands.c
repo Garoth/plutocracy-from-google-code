@@ -263,19 +263,9 @@ void G_trade_cargo(bool buy, g_cargo_type_t cargo, int amount)
                 return;
 
         /* Clamp the amount to what we can actually transfer */
-        if (buy) {
-                int limit;
-
-                limit = G_store_fits(&ship->store, cargo);
-                if (amount > limit)
-                        amount = limit;
-                limit = g_ships[ship->trade_ship].store.cargo[cargo].amount;
-                if (amount > limit)
-                        amount = limit;
-        } else
-                if (amount > ship->store.cargo[cargo].amount)
-                        amount = ship->store.cargo[cargo].amount;
-        if (amount < 0)
+        if ((amount = G_limit_purchase(&ship->store,
+                                       &g_ships[ship->trade_ship].store,
+                                       cargo, amount)) < 0)
                 return;
 
         N_send(N_SERVER_ID, "112112", buy ? G_CM_SHIP_BUY : G_CM_SHIP_SELL,

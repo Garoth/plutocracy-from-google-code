@@ -37,24 +37,24 @@ static void cm_affiliate(int client)
         ship = G_ship_spawn(-1, client, -1, G_ST_SLOOP);
         if (old == G_NN_NONE && ship >= 0) {
                 tile = g_ships[ship].tile;
-                g_ships[ship].store.cargo[G_CT_GOLD].amount = 500;
-                g_ships[ship].store.cargo[G_CT_CREW].amount = 20;
-                g_ships[ship].store.cargo[G_CT_RATIONS].amount = 50;
+                G_store_add(&g_ships[ship].store, G_CT_GOLD, 500);
+                G_store_add(&g_ships[ship].store, G_CT_CREW, 10);
+                G_store_add(&g_ships[ship].store, G_CT_RATIONS, 50);
 
                 /* Spawn a second ship for testing */
                 ship = G_ship_spawn(-1, client, tile, G_ST_SPIDER);
                 if (ship >= 0) {
-                        g_ships[ship].store.cargo[G_CT_GOLD].amount = 1000;
-                        g_ships[ship].store.cargo[G_CT_CREW].amount = 30;
-                        g_ships[ship].store.cargo[G_CT_RATIONS].amount = 70;
+                        G_store_add(&g_ships[ship].store, G_CT_GOLD, 1000);
+                        G_store_add(&g_ships[ship].store, G_CT_CREW, 20);
+                        G_store_add(&g_ships[ship].store, G_CT_RATIONS, 70);
                 }
 
                 /* And spawn a third ship for testing also */
                 ship = G_ship_spawn(-1, client, tile, G_ST_GALLEON);
                 if (ship >= 0) {
-                        g_ships[ship].store.cargo[G_CT_GOLD].amount = 2000;
-                        g_ships[ship].store.cargo[G_CT_CREW].amount = 50;
-                        g_ships[ship].store.cargo[G_CT_RATIONS].amount = 100;
+                        G_store_add(&g_ships[ship].store, G_CT_GOLD, 2000);
+                        G_store_add(&g_ships[ship].store, G_CT_CREW, 50);
+                        G_store_add(&g_ships[ship].store, G_CT_RATIONS, 100);
                 }
         }
 
@@ -272,9 +272,6 @@ static void init_client(int client)
 
                 /* Name */
                 N_send(client, "11s", G_SM_SHIP_NAME, i, g_ships[i].name);
-
-                /* Cargo */
-                G_ship_send_cargo(i, client);
 
                 /* Movement */
                 if (g_ships[i].target != g_ships[i].tile)

@@ -269,6 +269,49 @@ static void ship_update_trade(int index)
 }
 
 /******************************************************************************\
+ Send updated cargo information to clients. If [client] is negative, all
+ clients that can see the ship's cargo are updated.
+\******************************************************************************/
+void G_ship_send_cargo(int index, n_client_id_t client)
+{
+        int i;
+
+        /* Host already knows everything */
+        if (client == N_HOST_CLIENT_ID || n_client_id != N_HOST_CLIENT_ID)
+                return;
+
+        /* Pack all the cargo information */
+        N_send_start();
+        N_send_char(G_SM_SHIP_CARGO);
+        N_send_char(index);
+        for (i = 0; i < G_CARGO_TYPES; i++) {
+                i_cargo_t *cargo;
+
+                cargo = g_ships[index].store.cargo + i;
+                N_send_short(cargo->amount);
+                N_send_short(cargo->auto_buy ? cargo->buy_price : -1);
+                N_send_short(cargo->auto_sell ? cargo->sell_price : -1);
+        }
+
+        /* Already selected the target clients */
+        if (client == N_SELECTED_ID) {
+                N_send_selected(NULL);
+                return;
+        }
+
+        /* Send to selected clients */
+        if (client < 0 || client == N_BROADCAST_ID) {
+                for (i = 0; i < N_CLIENTS_MAX; i++)
+                        n_clients[i].selected = g_ships[index].store.visible[i];
+                N_send_selected(NULL);
+                return;
+        }
+
+        /* Send to a single client */
+        N_send(client, NULL);
+}
+
+/******************************************************************************\
  Update which clients can see [ship]'s cargo. Also updates the ship's
  neighbors' visibility due to the [ship] having moved into its tile.
 \******************************************************************************/
@@ -301,7 +344,7 @@ static void ship_update_visible(int ship)
                                        g_ships[ship].store.visible[n_client_id])
                 ship_configure_trade(ship);
 
-        /* Update clients' cargo info */
+        /* Update clients' cargo info if we are the host */
         if (n_client_id != N_HOST_CLIENT_ID)
                 return;
 
@@ -379,48 +422,5 @@ void G_ship_reselect(int index, n_client_id_t client)
         index = g_selected_ship;
         g_selected_ship = -1;
         G_ship_select(index);
-}
-
-/******************************************************************************\
- Send updated cargo information to clients. If [client] is negative, all
- clients that can see the ship's cargo are updated.
-\******************************************************************************/
-void G_ship_send_cargo(int index, n_client_id_t client)
-{
-        int i;
-
-        /* Host already knows everything */
-        if (client == N_HOST_CLIENT_ID || n_client_id != N_HOST_CLIENT_ID)
-                return;
-
-        /* Pack all the cargo information */
-        N_send_start();
-        N_send_char(G_SM_SHIP_CARGO);
-        N_send_char(index);
-        for (i = 0; i < G_CARGO_TYPES; i++) {
-                i_cargo_t *cargo;
-
-                cargo = g_ships[index].store.cargo + i;
-                N_send_short(cargo->amount);
-                N_send_short(cargo->auto_buy ? cargo->buy_price : -1);
-                N_send_short(cargo->auto_sell ? cargo->sell_price : -1);
-        }
-
-        /* Already selected the target clients */
-        if (client == N_SELECTED_ID) {
-                N_send_selected(NULL);
-                return;
-        }
-
-        /* Send to selected clients */
-        if (client < 0 || client == N_BROADCAST_ID) {
-                for (i = 0; i < N_CLIENTS_MAX; i++)
-                        n_clients[i].selected = g_ships[index].store.visible[i];
-                N_send_selected(NULL);
-                return;
-        }
-
-        /* Send to a single client */
-        N_send(client, NULL);
 }
 
