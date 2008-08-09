@@ -173,7 +173,7 @@ void G_join_game(const char *address)
 void G_trade_params(int index, int buy_price, int sell_price,
                     int minimum, int maximum)
 {
-        i_cargo_t old_cargo, *cargo;
+        g_cargo_t old_cargo, *cargo;
 
         if (g_selected_ship < 0)
                 return;
@@ -190,38 +190,35 @@ void G_trade_params(int index, int buy_price, int sell_price,
         cargo->maximum = maximum;
 
         /* Did anything actually change? */
-        if (old_cargo.auto_buy == cargo->auto_buy &&
-            old_cargo.auto_sell == cargo->auto_sell &&
-            (!old_cargo.auto_buy || old_cargo.buy_price == cargo->buy_price) &&
-            (!old_cargo.auto_sell || old_cargo.sell_price == cargo->sell_price))
+        if (G_cargo_equal(&old_cargo, cargo))
                 return;
 
         /* Tell the server */
-        N_send(N_SERVER_ID, "11122", G_CM_SHIP_PRICES,
-               g_selected_ship, index, buy_price, sell_price);
+        N_send(N_SERVER_ID, "1112222", G_CM_SHIP_PRICES, g_selected_ship,
+               index, buy_price, sell_price, minimum, maximum);
 }
 
 /******************************************************************************\
  Transmit purchase/sale request for the currently selected ship from the
- interface to the server.
+ interface to the server. Use a negative amount to indicate a sale.
 \******************************************************************************/
-void G_trade_cargo(bool buy, g_cargo_type_t cargo, int amount)
+void G_buy_cargo(g_cargo_type_t cargo, int amount)
 {
-        g_ship_t *ship;
+        g_ship_t *ship, *partner;
 
         C_assert(cargo >= 0 && cargo < G_CARGO_TYPES);
         ship = g_ships + g_selected_ship;
-        if (g_selected_ship < 0 || ship->trade_tile < 0 || ship->trade_ship < 0)
+        if (g_selected_ship < 0 || ship->trade_tile < 0 ||
+            !G_ship_can_trade_with(g_selected_ship, ship->trade_tile))
                 return;
+        partner = g_ships + g_tiles[ship->trade_tile].ship;
 
         /* Clamp the amount to what we can actually transfer */
-        if ((amount = G_limit_purchase(&ship->store,
-                                       &g_ships[ship->trade_ship].store,
-                                       cargo, amount)) < 0)
+        if (!(amount = G_limit_purchase(&ship->store, &partner->store,
+                                        cargo, amount)))
                 return;
 
-        N_send(N_SERVER_ID, "112112", buy ? G_CM_SHIP_BUY : G_CM_SHIP_SELL,
-               g_selected_ship, ship->trade_tile,  ship->trade_ship,
-               cargo, amount);
+        N_send(N_SERVER_ID, "11212", G_CM_SHIP_BUY, g_selected_ship,
+               ship->trade_tile, cargo, amount);
 }
 

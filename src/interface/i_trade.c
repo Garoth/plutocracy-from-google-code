@@ -13,63 +13,52 @@
 #include "i_common.h"
 
 /* Modes */
-#define MODE_BUY 0
-#define MODE_SELL 1
+enum {
+        MODE_BUY,
+        MODE_SELL,
+};
 
 /* Cargo widget */
 typedef struct cargo_line {
         i_selectable_t sel;
         i_label_t left, label, price, right;
-        i_cargo_t left_data, right_data;
         i_image_t selling_icon, buying_icon;
-        bool no_auto;
+        i_cargo_info_t info;
+        bool no_auto, no_empty;
 } cargo_line_t;
 
 static cargo_line_t cargo_lines[G_CARGO_TYPES];
 static i_label_t title;
-static i_info_t cargo_info, right_info;
+static i_info_t space_info, right_info;
 static i_select_t mode, quantity, price, active;
 static i_selectable_t *cargo_group;
 static i_box_t button_box;
 static i_button_t transfer_button, ten_button, fifty_button;
 static int space_used, space_total;
-static bool left_own, right_own, configuring;
-
-/******************************************************************************\
- Returns TRUE if a transfer is possible.
-\******************************************************************************/
-static bool can_transfer(cargo_line_t *cargo, int amount)
-{
-        int gold, new_amount;
-
-        if (cargo->right_data.sell_price < 0)
-                return FALSE;
-        new_amount = cargo->left_data.amount + amount;
-        if (mode.index == MODE_BUY) {
-                gold = cargo_lines[G_CT_GOLD].left_data.amount;
-                return (space_total - space_used) >= amount &&
-                       cargo->right_data.auto_sell &&
-                       cargo->right_data.amount >= amount &&
-                       cargo->right_data.maximum >= new_amount &&
-                       gold >= amount * cargo->right_data.sell_price;
-        }
-        gold = cargo_lines[G_CT_GOLD].right_data.amount;
-        return cargo->right_data.auto_buy &&
-               cargo->left_data.amount >= amount &&
-               gold >= amount * cargo->right_data.sell_price;
-}
+static bool left_own, configuring;
 
 /******************************************************************************\
  Configures the transfer buttons.
 \******************************************************************************/
 static void configure_buttons(cargo_line_t *cargo)
 {
-        if (!can_transfer(cargo, 50))
-                fifty_button.widget.state = I_WS_DISABLED;
-        if (!can_transfer(cargo, 10))
-                ten_button.widget.state = I_WS_DISABLED;
-        if (!can_transfer(cargo, 1))
-                transfer_button.widget.state = I_WS_DISABLED;
+        const char *button_label;
+        int limit;
+
+        /* If there is no price, change to give/take or buy/sell otherwise */
+        if (mode.index == MODE_BUY)
+                button_label = cargo->info.p_buy_price ? "Buy" : "Take";
+        else
+                button_label = cargo->info.p_sell_price ? "Sell" : "Give";
+        I_button_configure(&transfer_button, NULL, button_label,
+                           I_BT_DECORATED);
+
+        /* Disabled buttons if we can't transfer that many */
+        limit = mode.index == MODE_BUY ? cargo->info.p_buy_limit :
+                                         cargo->info.p_sell_limit;
+        fifty_button.widget.state = limit < 50 ? I_WS_DISABLED : I_WS_READY;
+        ten_button.widget.state = limit < 10 ? I_WS_DISABLED : I_WS_READY;
+        transfer_button.widget.state = limit < 1 ? I_WS_DISABLED : I_WS_READY;
 }
 
 /******************************************************************************\
@@ -111,31 +100,37 @@ static void configure_controls(cargo_line_t *cargo)
         /* Limit controls to sane quantities */
         quantity.min = 0;
         quantity.max = space_total;
+        quantity.index = -1;
         price.min = 0;
         price.max = 999;
+        price.index = -1;
+
+        /* Cannot sell all of this cargo */
+        if (cargo->no_empty)
+                quantity.min = 1;
 
         if (mode.index == MODE_BUY) {
-                I_select_change(&active, cargo->left_data.auto_buy);
+                I_select_change(&active, cargo->info.auto_buy);
 
                 /* Force sane values relative to sell controls */
-                if (cargo->left_data.auto_sell) {
-                        quantity.min = cargo->left_data.minimum;
-                        price.max = cargo->left_data.sell_price;
+                if (cargo->info.auto_sell) {
+                        quantity.min = cargo->info.minimum;
+                        price.max = cargo->info.sell_price;
                 }
 
-                I_select_nearest(&quantity, cargo->left_data.maximum);
-                I_select_nearest(&price, cargo->left_data.buy_price);
-        } else if (mode.index == MODE_SELL) {
-                I_select_change(&active, cargo->left_data.auto_sell);
+                I_select_nearest(&quantity, cargo->info.maximum);
+                I_select_nearest(&price, cargo->info.buy_price);
+        } else {
+                I_select_change(&active, cargo->info.auto_sell);
 
                 /* Force sane values relative to buy controls */
-                if (cargo->left_data.auto_buy) {
-                        quantity.max = cargo->left_data.maximum;
-                        price.min = cargo->left_data.buy_price;
+                if (cargo->info.auto_buy) {
+                        quantity.max = cargo->info.maximum;
+                        price.min = cargo->info.buy_price;
                 }
 
-                I_select_nearest(&quantity, cargo->left_data.minimum);
-                I_select_nearest(&price, cargo->left_data.sell_price);
+                I_select_nearest(&quantity, cargo->info.minimum);
+                I_select_nearest(&price, cargo->info.sell_price);
         }
         configuring = FALSE;
         configure_buttons(cargo);
@@ -162,11 +157,10 @@ void I_disable_trade(void)
 /******************************************************************************\
  Enable or disable the trade window.
 \******************************************************************************/
-void I_enable_trade(bool left, bool right, const char *right_name)
+void I_enable_trade(bool left, const char *right_name)
 {
         I_toolbar_enable(&i_right_toolbar, i_trade_button, TRUE);
         left_own = left;
-        right_own = right;
         I_info_configure(&right_info, right_name);
 }
 
@@ -175,7 +169,7 @@ void I_enable_trade(bool left, bool right, const char *right_name)
 \******************************************************************************/
 void I_set_cargo_space(int used, int capacity)
 {
-        I_info_configure(&cargo_info, C_va("%d/%d", used, capacity));
+        I_info_configure(&space_info, C_va("%d/%d", used, capacity));
         space_used = used;
         space_total = capacity;
 }
@@ -188,12 +182,12 @@ static void cargo_line_configure(cargo_line_t *cargo)
         int value;
 
         /* Left amount */
-        if ((cargo->left.widget.shown = cargo->left_data.amount >= 0))
+        if ((cargo->left.widget.shown = cargo->info.amount >= 0))
                 I_label_configure(&cargo->left,
-                                  C_va("%d", cargo->left_data.amount));
+                                  C_va("%d", cargo->info.amount));
 
         /* Right amount */
-        cargo->right.widget.shown = (value = cargo->right_data.amount) >= 0;
+        cargo->right.widget.shown = (value = cargo->info.p_amount) >= 0;
         if (cargo->right.widget.shown)
                 I_label_configure(&cargo->right, C_va("%d", value));
 
@@ -201,25 +195,21 @@ static void cargo_line_configure(cargo_line_t *cargo)
         if (cargo->no_auto) {
                 cargo->buying_icon.widget.shown = FALSE;
                 cargo->selling_icon.widget.shown = FALSE;
+                cargo->price.widget.shown = FALSE;
+                return;
         }
 
         /* Automatic-buy/sell indicator icons */
-        else {
-                cargo->buying_icon.widget.state = I_WS_DISABLED;
-                cargo->selling_icon.widget.state = I_WS_DISABLED;
-                if (left_own && cargo->left_data.auto_buy)
-                        cargo->buying_icon.widget.state = I_WS_READY;
-                if (left_own && cargo->left_data.auto_sell)
-                        cargo->selling_icon.widget.state = I_WS_READY;
-        }
+        cargo->buying_icon.widget.state = I_WS_DISABLED;
+        cargo->selling_icon.widget.state = I_WS_DISABLED;
+        if (left_own && cargo->info.auto_buy)
+                cargo->buying_icon.widget.state = I_WS_READY;
+        if (left_own && cargo->info.auto_sell)
+                cargo->selling_icon.widget.state = I_WS_READY;
 
         /* In-line price */
-        if (mode.index == MODE_BUY)
-                value = cargo->right_data.auto_sell ?
-                        cargo->right_data.sell_price : -1;
-        else if (mode.index == MODE_SELL)
-                value = cargo->right_data.auto_buy ?
-                        cargo->right_data.buy_price : -1;
+        value = mode.index == MODE_BUY ? cargo->info.p_buy_price :
+                                         cargo->info.p_sell_price;
         if ((cargo->price.widget.shown = value >= 0))
                 I_label_configure(&cargo->price, C_va("%dg", value));
 }
@@ -227,25 +217,15 @@ static void cargo_line_configure(cargo_line_t *cargo)
 /******************************************************************************\
  Configures a cargo line on the trade window.
 \******************************************************************************/
-void I_configure_cargo(int i, const i_cargo_t *left, const i_cargo_t *right)
+void I_configure_cargo(int i, const i_cargo_info_t *info)
 {
         C_assert(i >= 0 && i < G_CARGO_TYPES);
-        if (left)
-                cargo_lines[i].left_data = *left;
-        else
-                cargo_lines[i].left_data.amount = -1;
-        if (right)
-                cargo_lines[i].right_data = *right;
-        else {
-                cargo_lines[i].right_data.amount = -1;
-                cargo_lines[i].right_data.auto_buy = FALSE;
-                cargo_lines[i].right_data.auto_sell = FALSE;
-        }
+        cargo_lines[i].info = *info;
 
         /* Update display line */
         cargo_line_configure(cargo_lines + i);
 
-        /* Updat controls */
+        /* Update controls */
         if (cargo_group == &cargo_lines[i].sel)
                 configure_controls(cargo_lines + i);
 }
@@ -267,24 +247,24 @@ static void controls_changed(void)
 
         /* Update our stored values */
         if (mode.index == MODE_BUY) {
-                cargo->left_data.auto_buy = active.index;
-                cargo->left_data.buy_price = I_select_value(&price);
-                cargo->left_data.maximum = I_select_value(&quantity);
+                cargo->info.auto_buy = active.index;
+                cargo->info.buy_price = I_select_value(&price);
+                cargo->info.maximum = I_select_value(&quantity);
         } else if (mode.index == MODE_SELL) {
-                cargo->left_data.auto_sell = active.index;
-                cargo->left_data.sell_price = I_select_value(&price);
-                cargo->left_data.minimum = I_select_value(&quantity);
+                cargo->info.auto_sell = active.index;
+                cargo->info.sell_price = I_select_value(&price);
+                cargo->info.minimum = I_select_value(&quantity);
         }
         cargo_line_configure(cargo);
 
         /* Pass update back to the game namespace */
         sell_price = buy_price = -1;
-        if (cargo->left_data.auto_buy)
-                buy_price = cargo->left_data.buy_price;
-        if (cargo->left_data.auto_sell)
-                sell_price = cargo->left_data.sell_price;
+        if (cargo->info.auto_buy)
+                buy_price = cargo->info.buy_price;
+        if (cargo->info.auto_sell)
+                sell_price = cargo->info.sell_price;
         G_trade_params(cargo - cargo_lines, buy_price, sell_price,
-                       cargo->left_data.minimum, cargo->left_data.maximum);
+                       cargo->info.minimum, cargo->info.maximum);
 }
 
 /******************************************************************************\
@@ -298,13 +278,9 @@ static void mode_changed(void)
         if (mode.index == MODE_BUY) {
                 I_label_configure(&active.label, "Auto-buy:");
                 I_label_configure(&quantity.label, "Maximum:");
-                I_button_configure(&transfer_button, NULL, "Buy",
-                                   I_BT_DECORATED);
         } else if (mode.index == MODE_SELL) {
                 I_label_configure(&active.label, "Auto-sell:");
                 I_label_configure(&quantity.label, "Minimum:");
-                I_button_configure(&transfer_button, NULL, "Sell",
-                                   I_BT_DECORATED);
         }
 
         /* Update prices */
@@ -370,7 +346,7 @@ static void transfer_cargo(const i_button_t *button)
                 return;
         amount = (int)(size_t)button->data;
         cargo = (g_cargo_type_t)((cargo_line_t *)cargo_group - cargo_lines);
-        G_trade_cargo(mode.index == MODE_BUY, cargo, amount);
+        G_buy_cargo(cargo, mode.index == MODE_BUY ? amount : -amount);
 }
 
 /******************************************************************************\
@@ -403,9 +379,9 @@ void I_init_trade(i_window_t *window)
         I_widget_add(&window->widget, &right_info.widget);
 
         /* Cargo space */
-        I_info_init(&cargo_info, C_str("i-cargo", "Cargo space:"), "0/0");
-        cargo_info.widget.margin_rear = 0.5f;
-        I_widget_add(&window->widget, &cargo_info.widget);
+        I_info_init(&space_info, C_str("i-cargo", "Cargo space:"), "0/0");
+        space_info.widget.margin_rear = 0.5f;
+        I_widget_add(&window->widget, &space_info.widget);
 
         /* Cargo items */
         cargo_group = &cargo_lines[0].sel;
@@ -419,6 +395,9 @@ void I_init_trade(i_window_t *window)
         /* Gold can't be auto-bought/sold */
         cargo_lines[G_CT_GOLD].no_auto = TRUE;
 
+        /* Don't get rid of all of your crew */
+        cargo_lines[G_CT_CREW].no_empty = TRUE;
+
         /* Selling, buying, both, or neither */
         I_select_init(&active, C_str("i-cargo-auto-buy", "Auto-buy:"), NULL);
         I_select_add_string(&active, C_str("i-yes", "Yes"));
@@ -430,16 +409,14 @@ void I_init_trade(i_window_t *window)
 
         /* Quantity */
         I_select_init(&quantity, C_str("i-cargo-maximum", "Maximum:"), NULL);
-        quantity.min = 0;
-        quantity.max = 100;
         quantity.decimals = 0;
+        quantity.max = 999.f;
         quantity.on_change = (i_callback_f)controls_changed;
         I_widget_add(&window->widget, &quantity.widget);
 
         /* Selling, buying, both, or neither */
         I_select_init(&price, C_str("i-cargo-price", "Price:"), NULL);
-        price.min = 0;
-        price.max = 999;
+        price.max = 999.f;
         price.suffix = "g";
         price.decimals = 0;
         price.on_change = (i_callback_f)controls_changed;

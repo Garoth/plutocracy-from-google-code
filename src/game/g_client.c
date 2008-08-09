@@ -266,14 +266,17 @@ static void sm_ship_cargo(void)
 {
         int i, index;
 
-        /* If we are hosting we already know all the information */
-        if (n_client_id == N_HOST_CLIENT_ID)
-                return;
-
         if ((index = G_receive_ship(-1)) < 0)
                 return;
+
+        /* If we are hosting we already know all the information */
+        if (n_client_id == N_HOST_CLIENT_ID) {
+                G_ship_reselect(index, -1);
+                return;
+        }
+
         for (i = 0; i < G_CARGO_TYPES; i++) {
-                i_cargo_t *cargo;
+                g_cargo_t *cargo;
 
                 cargo = g_ships[index].store.cargo + i;
                 cargo->amount = N_receive_short();
@@ -282,15 +285,19 @@ static void sm_ship_cargo(void)
                 if (g_ships[index].client == n_client_id) {
                         N_receive_short();
                         N_receive_short();
+                        N_receive_short();
+                        N_receive_short();
                 } else {
                         cargo->buy_price = N_receive_short();
                         cargo->sell_price = N_receive_short();
                         cargo->auto_buy = cargo->buy_price >= 0;
                         cargo->auto_sell = cargo->sell_price >= 0;
+                        cargo->minimum = N_receive_short();
+                        cargo->maximum = N_receive_short();
                 }
         }
         G_store_space(&g_ships[index].store);
-        G_ship_reselect(-1, index);
+        G_ship_reselect(index, -1);
 }
 
 /******************************************************************************\
@@ -298,7 +305,7 @@ static void sm_ship_cargo(void)
 \******************************************************************************/
 static void sm_ship_prices(void)
 {
-        i_cargo_t *cargo;
+        g_cargo_t *cargo;
         int ship_i, cargo_i, buy_price, sell_price;
 
         ship_i = G_receive_ship(-1);
@@ -315,11 +322,14 @@ static void sm_ship_prices(void)
         if ((cargo->auto_sell = sell_price >= 0))
                 cargo->sell_price = sell_price;
 
+        /* Save quantities */
+        cargo->minimum = N_receive_short();
+        cargo->maximum = N_receive_short();
+
         /* Update trade window */
-        if (g_selected_ship < 0 ||
-            g_ships[g_selected_ship].trade_ship != ship_i)
-                return;
-        G_ship_reselect(-1, -1);
+        G_ship_reselect(-1, ship_i);
+        if (g_tiles[g_ships[g_selected_ship].trade_tile].ship == ship_i)
+                G_ship_reselect(-1, -1);
 }
 
 /******************************************************************************\

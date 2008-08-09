@@ -26,7 +26,6 @@
 int G_ship_spawn(int index, n_client_id_t client, int tile, g_ship_type_t type)
 {
         g_ship_t *ship;
-        int i;
 
         if (!N_client_valid(client) || tile >= r_tiles ||
             type < 0 || type >= G_SHIP_TYPES) {
@@ -89,7 +88,7 @@ init:   /* Initialize ship structure */
         ship->client = client;
         ship->health = g_ship_classes[type].health;
         ship->forward = g_tiles[tile].forward;
-        ship->trade_tile = ship->trade_ship = -1;
+        ship->trade_tile = -1;
 
         /* Start out unnamed */
         C_strncpy_buf(ship->name, C_va("Unnamed #%d", index));
@@ -100,12 +99,7 @@ init:   /* Initialize ship structure */
         g_tiles[tile].fade = 0.f;
 
         /* Initialize store */
-        ship->store.capacity = g_ship_classes[ship->type].cargo;
-        for (i = 0; i < G_CARGO_TYPES; i++) {
-                ship->store.cargo[i].maximum = ship->store.capacity;
-                ship->store.cargo[i].buy_price = 50;
-                ship->store.cargo[i].sell_price = 50;
-        }
+        G_store_init(&ship->store, g_ship_classes[ship->type].cargo);
 
         /* If we are the server, tell other clients */
         if (n_client_id == N_HOST_CLIENT_ID)
@@ -174,7 +168,7 @@ void G_render_ships(void)
 \******************************************************************************/
 static void ship_configure_trade(int index)
 {
-        g_ship_t *ship;
+        g_ship_t *ship, *partner;
         int i;
 
         /* Our client can't actually see this cargo -- we probably don't have
@@ -185,38 +179,86 @@ static void ship_configure_trade(int index)
                 return;
         }
 
+        /* Do we have a trading partner? */
+        if (ship->trade_tile > 0) {
+                partner = g_ships + g_tiles[ship->trade_tile].ship;
+                I_enable_trade(ship->client == n_client_id, partner->name);
+        } else {
+                partner = NULL;
+                I_enable_trade(ship->client == n_client_id, NULL);
+        }
+
         /* Set our cargo space */
         I_set_cargo_space(G_store_space(&ship->store),
                           g_ship_classes[ship->type].cargo);
 
-        /* Configure without a trading partner */
-        if (ship->trade_ship < 0) {
-                I_enable_trade(ship->client == n_client_id, FALSE, NULL);
-                for (i = 0; i < G_CARGO_TYPES; i++)
-                        I_configure_cargo(i, ship->store.cargo + i, NULL);
-                return;
-        }
+        /* Configure cargo items */
+        for (i = 0; i < G_CARGO_TYPES; i++) {
+                i_cargo_info_t info;
+                g_cargo_t *cargo;
 
-        /* Configure with a trading partner */
-        I_enable_trade(ship->client == n_client_id,
-                       g_ships[ship->trade_ship].client == n_client_id,
-                       g_ships[ship->trade_ship].name);
-        for (i = 0; i < G_CARGO_TYPES; i++)
-                I_configure_cargo(i, ship->store.cargo + i,
-                                  g_ships[ship->trade_ship].store.cargo + i);
+                /* Our side */
+                cargo = ship->store.cargo + i;
+                info.amount = cargo->amount;
+                info.auto_buy = cargo->auto_buy;
+                info.auto_sell = cargo->auto_sell;
+                info.buy_price = cargo->buy_price;
+                info.sell_price = cargo->sell_price;
+                info.minimum = cargo->minimum;
+                info.maximum = cargo->maximum;
+
+                /* No trade partner */
+                info.p_buy_limit = 0;
+                info.p_buy_price = -1;
+                info.p_sell_limit = 0;
+                info.p_sell_price = -1;
+                if (!partner) {
+                        info.p_amount = -1;
+                        I_configure_cargo(i, &info);
+                        continue;
+                }
+
+                /* Trade partner's side */
+                cargo = partner->store.cargo + i;
+                info.p_amount = cargo->amount;
+                if (cargo->auto_sell) {
+                        info.p_buy_price = partner->store.cargo[i].sell_price;
+                        info.p_buy_limit = G_limit_purchase(&ship->store,
+                                                            &partner->store,
+                                                            i, 999);
+                }
+                if (cargo->auto_buy) {
+                        info.p_sell_price = partner->store.cargo[i].buy_price;
+                        info.p_sell_limit = -G_limit_purchase(&ship->store,
+                                                              &partner->store,
+                                                              i, -999);
+                }
+                I_configure_cargo(i, &info);
+        }
 }
 
 /******************************************************************************\
- Returns TRUE if the given ship can trade with [tile].
+ Returns TRUE if a ship can trade with another ship.
 \******************************************************************************/
-static bool ship_can_trade_with(int index, int tile)
+static bool ship_can_trade(int index)
 {
-        int other;
+        return index >= 0 && index < G_SHIPS_MAX &&
+               g_ships[index].in_use && g_ships[index].rear_tile < 0 &&
+               g_ships[index].health > 0;
+}
 
-        other = g_tiles[tile].ship;
-        if (other < 0 || other == index || g_ships[other].rear_tile >= 0)
-                return FALSE;
-        return TRUE;
+/******************************************************************************\
+ Returns TRUE if a ship can trade with the given tile.
+\******************************************************************************/
+bool G_ship_can_trade_with(int index, int tile)
+{
+        int i, neighbors[3];
+
+        R_get_tile_neighbors(g_ships[index].tile, neighbors);
+        for (i = 0; i < 3; i++)
+                if (neighbors[i] == tile)
+                        return ship_can_trade(g_tiles[tile].ship);
+        return FALSE;
 }
 
 /******************************************************************************\
@@ -225,45 +267,34 @@ static bool ship_can_trade_with(int index, int tile)
 static void ship_update_trade(int index)
 {
         g_ship_t *ship;
-        int i, trade_ship, trade_tile, neighbors[3];
+        int i, trade_tile, neighbors[3];
 
         /* Only need to do this for our own ships */
         ship = g_ships + index;
         if (ship->client != n_client_id)
                 return;
 
-        /* Cannot trade while moving */
-        if (ship->rear_tile > 0) {
-                trade_ship = -1;
-                trade_tile = -1;
-        }
-
         /* Find a trading partner */
-        else {
+        trade_tile = -1;
+        if (ship->rear_tile < 0) {
                 R_get_tile_neighbors(ship->tile, neighbors);
-                for (trade_tile = trade_ship = -1, i = 0; i < 3; i++) {
-                        if (!ship_can_trade_with(index, neighbors[i]))
+                for (i = 0; i < 3; i++) {
+                        if (!ship_can_trade(g_tiles[neighbors[i]].ship))
                                 continue;
                         trade_tile = neighbors[i];
-                        trade_ship = g_tiles[trade_tile].ship;
 
                         /* Found our old trading partner */
-                        if (ship->trade_ship == trade_ship) {
-                                ship->trade_tile = trade_tile;
+                        if (trade_tile == g_ships[index].trade_tile)
                                 return;
-                        }
                 }
         }
 
-        /* Still not partner */
-        if (trade_ship < 0 && ship->trade_ship < 0) {
-                ship->trade_tile = -1;
+        /* Still no partner */
+        if (trade_tile < 0 && ship->trade_tile < 0)
                 return;
-        }
 
         /* Update to reflect our new trading partner */
         ship->trade_tile = trade_tile;
-        ship->trade_ship = trade_ship;
         if (g_selected_ship == index)
                 ship_configure_trade(index);
 }
@@ -285,12 +316,14 @@ void G_ship_send_cargo(int index, n_client_id_t client)
         N_send_char(G_SM_SHIP_CARGO);
         N_send_char(index);
         for (i = 0; i < G_CARGO_TYPES; i++) {
-                i_cargo_t *cargo;
+                g_cargo_t *cargo;
 
                 cargo = g_ships[index].store.cargo + i;
                 N_send_short(cargo->amount);
                 N_send_short(cargo->auto_buy ? cargo->buy_price : -1);
                 N_send_short(cargo->auto_sell ? cargo->sell_price : -1);
+                N_send_short(cargo->minimum);
+                N_send_short(cargo->maximum);
         }
 
         /* Already selected the target clients */
@@ -422,5 +455,15 @@ void G_ship_reselect(int index, n_client_id_t client)
         index = g_selected_ship;
         g_selected_ship = -1;
         G_ship_select(index);
+}
+
+/******************************************************************************\
+ Returns TRUE if a ship index is valid and can be controlled by the given
+ client.
+\******************************************************************************/
+bool G_ship_controlled_by(int index, n_client_id_t client)
+{
+        return index >= 0 && index < G_SHIPS_MAX && g_ships[index].in_use &&
+               g_ships[index].health > 0 && g_ships[index].client == client;
 }
 
