@@ -20,6 +20,9 @@
 /* Proportion of the remaining rotation a ship does per second */
 #define ROTATION_RATE 3.f
 
+/* Optimal proportion of crew to cargo space */
+#define CREW_OPTIMAL_PROP 0.25f
+
 /* Structure for searched tile nodes */
 typedef struct search_node {
         float dist;
@@ -239,9 +242,27 @@ failed: /* If we can't reach the target, and we have a valid path, try
 }
 
 /******************************************************************************\
+ Return the speed of a ship with all modifiers applied.
+\******************************************************************************/
+static float ship_speed(int index)
+{
+        g_store_t *store;
+        float speed;
+
+        speed = g_ship_classes[g_ships[index].type].speed;
+        store = &g_ships[index].store;
+
+        /* Crew modifier */
+        speed *= sqrtf(store->cargo[G_CT_CREW].amount /
+                       (CREW_OPTIMAL_PROP * store->capacity));
+
+        return speed;
+}
+
+/******************************************************************************\
  Position and orient the ship's model.
 \******************************************************************************/
-static void position_ship(int ship)
+static void ship_position_model(int ship)
 {
         r_model_t *model;
         int new_tile, old_tile;
@@ -274,8 +295,7 @@ static void position_ship(int ship)
         if (!C_vec3_eq(model->forward, g_ships[ship].forward)) {
                 float lerp;
 
-                lerp = ROTATION_RATE * c_frame_sec *
-                       g_ship_classes[g_ships[ship].type].speed;
+                lerp = ROTATION_RATE * c_frame_sec * ship_speed(ship);
                 if (lerp > 1.f)
                         lerp = 1.f;
                 model->forward = C_vec3_norm(model->forward);
@@ -325,18 +345,16 @@ bool G_ship_move_to(int i, int new_tile)
 /******************************************************************************\
  Move a ship forward.
 \******************************************************************************/
-static void move_ship(int i)
+static void ship_move(int i)
 {
         c_vec3_t forward;
-        float speed;
         int old_tile, new_tile, neighbors[3];
         bool arrived, open;
 
         /* Is this ship moving? */
         if (g_ships[i].path[0] <= 0 && g_ships[i].rear_tile < 0)
                 return;
-        speed = g_ship_classes[g_ships[i].type].speed;
-        g_ships[i].progress += c_frame_sec * speed;
+        g_ships[i].progress += c_frame_sec * ship_speed(i);
 
         /* Still in progress */
         if (g_ships[i].progress < 1.f)
@@ -400,7 +418,7 @@ static void move_ship(int i)
 \******************************************************************************/
 void G_ship_update_move(int i)
 {
-        move_ship(i);
-        position_ship(i);
+        ship_move(i);
+        ship_position_model(i);
 }
 

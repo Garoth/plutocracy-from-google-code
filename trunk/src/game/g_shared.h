@@ -74,11 +74,11 @@ void G_init(void);
 void G_update_client(void);
 
 /* g_commands.c */
+void G_buy_cargo(g_cargo_type_t, int amount);
 void G_input_chat(char *message);
 void G_join_game(const char *address);
 void G_leave_game(void);
 bool G_process_click(int button);
-void G_trade_cargo(bool buy, g_cargo_type_t, int amount);
 void G_trade_params(int cargo, int buy_price, int sell_price,
                     int minimum, int maximum);
 

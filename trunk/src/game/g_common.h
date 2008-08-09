@@ -39,7 +39,6 @@ typedef enum {
         G_CM_SHIP_NAME,
         G_CM_SHIP_PRICES,
         G_CM_SHIP_BUY,
-        G_CM_SHIP_SELL,
 
         G_CLIENT_MESSAGES
 } g_client_msg_t;
@@ -98,9 +97,15 @@ typedef enum {
         G_NAME_TYPES
 } g_name_type_t;
 
+/* Structure for information for a single cargo item */
+typedef struct g_cargo {
+        int amount, buy_price, maximum, minimum, sell_price;
+        bool auto_buy, auto_sell;
+} g_cargo_t;
+
 /* Trading store structure */
 typedef struct g_store {
-        i_cargo_t cargo[G_CARGO_TYPES];
+        g_cargo_t cargo[G_CARGO_TYPES];
         short space_used, capacity;
         bool visible[N_CLIENTS_MAX];
 } g_store_t;
@@ -139,8 +144,7 @@ typedef struct g_ship {
         g_store_t store;
         c_vec3_t forward;
         float progress;
-        int armor, client, health, rear_tile, target, tile, trade_tile,
-            trade_ship;
+        int armor, client, health, rear_tile, target, tile, trade_tile;
         char path[R_PATH_MAX], name[G_NAME_MAX];
         bool in_use;
 } g_ship_t;
@@ -157,11 +161,6 @@ extern int g_hover_tile, g_hover_ship, g_selected_ship;
 void G_build(int tile, g_building_type_t, float progress);
 void G_init_elements(void);
 void G_reset_elements(void);
-int G_store_add(g_store_t *, g_cargo_type_t, int amount);
-int G_store_fits(const g_store_t *, g_cargo_type_t);
-int G_limit_purchase(const g_store_t *buyer, const g_store_t *seller,
-                     g_cargo_type_t, int amount);
-int G_store_space(g_store_t *);
 
 extern g_ship_class_t g_ship_classes[G_SHIP_TYPES];
 extern g_ship_t g_ships[G_SHIPS_MAX];
@@ -190,6 +189,8 @@ void G_load_names(void);
 void G_reset_name_counts(void);
 
 /* g_ship.c */
+bool G_ship_can_trade_with(int index, int tile);
+bool G_ship_controlled_by(int ship, n_client_id_t);
 void G_render_ships(void);
 void G_ship_reselect(int ship, n_client_id_t);
 void G_ship_select(int ship);
@@ -218,6 +219,16 @@ int G_receive_ship_full(const char *file, int line, const char *func,
 #define G_receive_tile(c) G_receive_tile_full(__FILE__, __LINE__, __func__, (c))
 int G_receive_tile_full(const char *file, int line, const char *func,
                         n_client_id_t);
+
+/* g_trade.c */
+bool G_cargo_equal(const g_cargo_t *, const g_cargo_t *);
+int G_limit_purchase(const g_store_t *buyer, const g_store_t *seller,
+                     g_cargo_type_t, int amount);
+int G_store_add(g_store_t *, g_cargo_type_t, int amount);
+int G_store_fits(const g_store_t *, g_cargo_type_t);
+void G_store_init(g_store_t *, int capacity);
+void G_store_select_clients(const g_store_t *);
+int G_store_space(g_store_t *);
 
 /* g_variables.c */
 extern c_var_t g_forest, g_globe_seed, g_globe_subdiv4, g_islands,

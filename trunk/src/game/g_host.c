@@ -45,7 +45,7 @@ static void cm_affiliate(int client)
                 ship = G_ship_spawn(-1, client, tile, G_ST_SPIDER);
                 if (ship >= 0) {
                         G_store_add(&g_ships[ship].store, G_CT_GOLD, 1000);
-                        G_store_add(&g_ships[ship].store, G_CT_CREW, 20);
+                        G_store_add(&g_ships[ship].store, G_CT_CREW, 15);
                         G_store_add(&g_ships[ship].store, G_CT_RATIONS, 70);
                 }
 
@@ -53,7 +53,7 @@ static void cm_affiliate(int client)
                 ship = G_ship_spawn(-1, client, tile, G_ST_GALLEON);
                 if (ship >= 0) {
                         G_store_add(&g_ships[ship].store, G_CT_GOLD, 2000);
-                        G_store_add(&g_ships[ship].store, G_CT_CREW, 50);
+                        G_store_add(&g_ships[ship].store, G_CT_CREW, 20);
                         G_store_add(&g_ships[ship].store, G_CT_RATIONS, 100);
                 }
         }
@@ -69,7 +69,8 @@ static void cm_ship_move(int client)
         int ship, tile;
 
         if ((ship = G_receive_ship(client)) < 0 ||
-            (tile = G_receive_tile(client)) < 0)
+            (tile = G_receive_tile(client)) < 0 ||
+            !G_ship_controlled_by(ship, client))
                 return;
         G_ship_path(ship, tile);
 }
@@ -125,12 +126,8 @@ static void cm_ship_name(int client)
         int index;
         char new_name[G_NAME_MAX];
 
-        index = N_receive_char();
-        if (index < 0 || index >= G_SHIPS_MAX) {
-                G_corrupt_drop(client);
-                return;
-        }
-        if (g_ships[index].client != client)
+        if ((index = G_receive_ship(client)) < 0 ||
+            !G_ship_controlled_by(index, client))
                 return;
         N_receive_string_buf(new_name);
         C_sanitize(new_name);
@@ -148,23 +145,28 @@ static void cm_ship_name(int client)
 \******************************************************************************/
 static void cm_ship_prices(int client)
 {
-        int i, index, cargo, buy_price, sell_price;
+        int i, index, cargo, buy_price, sell_price, minimum, maximum;
 
-        if ((index = G_receive_ship(client)) < 0)
+        if ((index = G_receive_ship(client)) < 0 ||
+            !G_ship_controlled_by(index, client))
                 return;
         cargo = N_receive_char();
         if (cargo < 0 || cargo >= G_CARGO_TYPES) {
                 G_corrupt_drop(client);
                 return;
         }
+
+        /* Prices */
         buy_price = N_receive_short();
         sell_price = N_receive_short();
-
-        /* Clamp prices */
         if (buy_price > 999)
                 buy_price = 999;
         if (sell_price > 999)
                 sell_price = 999;
+
+        /* Quantities */
+        minimum = N_receive_short();
+        maximum = N_receive_short();
 
         /* Select clients that can see this store */
         for (i = 0; i < N_CLIENTS_MAX; i++)
@@ -177,33 +179,52 @@ static void cm_ship_prices(int client)
         /* Originating client already knows what the prices are */
         n_clients[client].selected = FALSE;
 
-        N_send_selected("11122", G_SM_SHIP_PRICES, index, cargo,
-                        buy_price, sell_price);
+        N_send_selected("1112222", G_SM_SHIP_PRICES, index, cargo,
+                        buy_price, sell_price, minimum, maximum);
 }
 
 /******************************************************************************\
  Client wants to buy something.
 \******************************************************************************/
-static void cm_ship_transact(int client, bool buy)
+static void cm_ship_buy(int client)
 {
-        int i, ship, trade_tile, trade_ship, cargo, amount, neighbors[3];
+        g_store_t *buyer, *seller;
+        int ship, trade_tile, trade_ship, cargo, amount, gold;
 
         if ((ship = G_receive_ship(client)) < 0 ||
             (trade_tile = G_receive_tile(client)) < 0 ||
-            (trade_ship = G_receive_ship(client)) < 0 ||
-            (cargo = G_receive_cargo(client)) < 0)
+            (cargo = G_receive_cargo(client)) < 0 ||
+            !G_ship_controlled_by(ship, client) ||
+            !G_ship_can_trade_with(ship, trade_tile))
                 return;
+        trade_ship = g_tiles[trade_tile].ship;
         amount = N_receive_short();
-
-        /* Can we trade with this ship? */
-        R_get_tile_neighbors(g_ships[ship].tile, neighbors);
-        for (i = 0; trade_tile != neighbors[i]; i++)
-                if (i >= 3)
-                        return;
-        if (trade_ship != g_tiles[trade_tile].ship)
+        buyer = &g_ships[ship].store;
+        seller = &g_ships[trade_ship].store;
+        amount = G_limit_purchase(buyer, seller, cargo, amount);
+        if (amount == 0)
                 return;
 
-        /* TODO */
+        /* Do the transfer. Cargo must be subtracted before it is added or
+           it could overflow and get clamped! */
+        if (amount > 0) {
+                gold = seller->cargo[cargo].sell_price * amount;
+                G_store_add(buyer, G_CT_GOLD, -gold);
+                G_store_add(seller, cargo, -amount);
+                G_store_add(seller, G_CT_GOLD, gold);
+                G_store_add(buyer, cargo, amount);
+        } else {
+                amount = -amount;
+                gold = seller->cargo[cargo].buy_price * amount;
+                G_store_add(seller, G_CT_GOLD, -gold);
+                G_store_add(buyer, cargo, -amount);
+                G_store_add(buyer, G_CT_GOLD, gold);
+                G_store_add(seller, cargo, amount);
+        }
+
+        /* Update cargo data */
+        G_ship_send_cargo(trade_ship, -1);
+        G_ship_send_cargo(ship, -1);
 }
 
 /******************************************************************************\
@@ -334,8 +355,7 @@ static void server_callback(int client, n_event_t event)
                 cm_name(client);
                 break;
         case G_CM_SHIP_BUY:
-        case G_CM_SHIP_SELL:
-                cm_ship_transact(client, token == G_CM_SHIP_BUY);
+                cm_ship_buy(client);
                 break;
         case G_CM_SHIP_NAME:
                 cm_ship_name(client);

@@ -38,10 +38,11 @@ typedef enum {
 typedef void (*i_ring_f)(i_ring_icon_t);
 
 /* Structure for passing information to trade window */
-typedef struct i_cargo {
-        int amount, buy_price, maximum, minimum, sell_price;
+typedef struct i_cargo_info {
+        int amount, buy_price, sell_price, maximum, minimum,
+            p_amount, p_buy_limit, p_sell_limit, p_buy_price, p_sell_price;
         bool auto_buy, auto_sell;
-} i_cargo_t;
+} i_cargo_info_t;
 
 /* i_chat.c */
 void I_print_chat(const char *name, i_color_t, const char *message);
@@ -76,10 +77,9 @@ void I_select_ship(i_color_t, const char *name,
                    const char *owner, const char *class_name);
 
 /* i_trade.c */
-void I_configure_cargo(int index, const i_cargo_t *left,
-                       const i_cargo_t *right);
+void I_configure_cargo(int index, const i_cargo_info_t *);
 void I_disable_trade(void);
-void I_enable_trade(bool left_own, bool right_own, const char *right_name);
+void I_enable_trade(bool left_own, const char *right_name);
 void I_set_cargo_space(int used, int capacity);
 
 /* i_variables.c */
