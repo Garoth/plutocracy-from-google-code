@@ -17,6 +17,8 @@
 /* Maximum health value */
 #define HEALTH_MAX 100
 
+static int focus_stamp;
+
 /******************************************************************************\
  Find an available tile around [tile] (including [tile]) and spawn a new ship
  of the given class there. If [tile] is negative, the ship will be placed on
@@ -423,13 +425,18 @@ void G_ship_hover(int index)
                 g_ship_class_t *ship_class;
                 i_color_t color;
 
-                /* Show the hover window after a delay */
-                if (!hover_time || c_time_msec - hover_time < G_HOVER_DELAY ||
-                    index < 0)
+                if (index < 0)
                         return;
+
+                /* Ship can get unhighlighted for whatever reason */
                 ship = g_ships + index;
-                ship_class = g_ship_classes + ship->type;
+                g_tiles[ship->tile].model.selected = TRUE;
+
+                /* Show the hover window after a delay */
+                if (!hover_time || c_time_msec - hover_time < G_HOVER_DELAY)
+                        return;
                 hover_time = 0;
+                ship_class = g_ship_classes + ship->type;
                 I_hover_show(ship->name);
 
                 /* Owner */
@@ -497,6 +504,9 @@ void G_ship_select(int index)
                 R_select_path(-1, NULL);
                 ship_configure_trade(-1);
         }
+
+        /* Selecting a ship resets the focus order */
+        focus_stamp++;
 }
 
 /******************************************************************************\
@@ -522,5 +532,48 @@ bool G_ship_controlled_by(int index, n_client_id_t client)
 {
         return index >= 0 && index < G_SHIPS_MAX && g_ships[index].in_use &&
                g_ships[index].health > 0 && g_ships[index].client == client;
+}
+
+/******************************************************************************\
+ Focus on the next suitable ship.
+\******************************************************************************/
+void G_focus_next_ship(void)
+{
+        float best_dist;
+        int i, best_i, tile, available;
+
+        /* If we have a ship selected, just center on that */
+        if (g_selected_ship >= 0) {
+                tile = g_ships[g_selected_ship].tile;
+                R_rotate_cam_to(g_tiles[tile].model.origin);
+                return;
+        }
+
+        /* Find the closest available ship */
+        available = 0;
+        best_i = -1;
+        best_dist = C_FLOAT_MAX;
+        for (i = 0; i < G_SHIPS_MAX; i++) {
+                c_vec3_t origin;
+                float dist;
+
+                if (!G_ship_controlled_by(i, n_client_id) ||
+                    g_ships[i].focus_stamp >= focus_stamp)
+                        continue;
+                available++;
+                origin = g_tiles[g_ships[i].tile].model.origin;
+                dist = C_vec3_len(C_vec3_sub(r_cam_origin, origin));
+                if (dist < best_dist) {
+                        best_dist = dist;
+                        best_i = i;
+                }
+        }
+        if (available <= 1)
+                focus_stamp++;
+        if (best_i < 0)
+                return;
+        g_ships[best_i].focus_stamp = focus_stamp;
+        tile = g_ships[best_i].tile;
+        R_rotate_cam_to(g_tiles[tile].model.origin);
 }
 

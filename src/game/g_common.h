@@ -147,7 +147,8 @@ typedef struct g_ship {
         g_store_t store;
         c_vec3_t forward;
         float progress;
-        int armor, client, health, rear_tile, target, tile, trade_tile;
+        int armor, client, focus_stamp, health, rear_tile, target, tile,
+            trade_tile;
         char path[R_PATH_MAX], name[G_NAME_MAX];
         bool in_use;
 } g_ship_t;
@@ -191,6 +192,7 @@ void G_load_names(void);
 void G_reset_name_counts(void);
 
 /* g_ship.c */
+void G_focus_next_ship(void);
 void G_render_ships(void);
 bool G_ship_can_trade_with(int index, int tile);
 bool G_ship_controlled_by(int ship, n_client_id_t);
