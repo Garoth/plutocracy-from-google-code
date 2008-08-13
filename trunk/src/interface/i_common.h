@@ -147,7 +147,7 @@ typedef struct i_button {
 /* Labels only have text */
 typedef struct i_label {
         i_widget_t widget;
-        r_sprite_t text;
+        r_text_t text;
         r_font_t font;
         i_color_t color;
         i_justify_t justify;

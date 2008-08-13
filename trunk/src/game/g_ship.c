@@ -180,17 +180,16 @@ static void ship_configure_trade(int index)
         }
 
         /* Do we have a trading partner? */
+        G_store_space(&ship->store);
         if (ship->trade_tile > 0) {
                 partner = g_ships + g_tiles[ship->trade_tile].ship;
-                I_enable_trade(ship->client == n_client_id, partner->name);
+                I_enable_trade(ship->client == n_client_id, partner->name,
+                               ship->store.space_used, ship->store.capacity);
         } else {
                 partner = NULL;
-                I_enable_trade(ship->client == n_client_id, NULL);
+                I_enable_trade(ship->client == n_client_id, NULL,
+                               ship->store.space_used, ship->store.capacity);
         }
-
-        /* Set our cargo space */
-        I_set_cargo_space(G_store_space(&ship->store),
-                          g_ship_classes[ship->type].cargo);
 
         /* Configure cargo items */
         for (i = 0; i < G_CARGO_TYPES; i++) {
