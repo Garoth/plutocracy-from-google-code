@@ -107,8 +107,7 @@ typedef struct i_widget {
         c_vec2_t origin, size;
         i_event_f event_func;
         i_widget_state_t state;
-        float fade, margin_front, margin_rear, padding;
-        int expand;
+        float expand, fade, margin_front, margin_rear, padding;
         bool auto_configure, configured, entry, shown, heap, pack_skip,
              steal_keys;
 } i_widget_t;

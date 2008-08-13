@@ -75,6 +75,9 @@
 /* Floating-point PI */
 #define C_PI 3.14159265358979323846f
 
+/* E */
+#define C_E 2.7182818284590452f
+
 /* Golden ratio */
 #define C_TAU 1.61803398874989f
 
