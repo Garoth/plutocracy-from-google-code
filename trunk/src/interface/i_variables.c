@@ -21,6 +21,9 @@ c_var_t i_border, i_color, i_color_alt, i_fade, i_shadow, i_theme;
 /* Interface usability variables */
 c_var_t i_scroll_speed, i_zoom_speed;
 
+/* Input parameters */
+c_var_t i_ip;
+
 /* Interface test variables */
 c_var_t i_test_globe;
 
@@ -60,6 +63,11 @@ void I_register_variables(void)
         C_register_float(&i_zoom_speed, "i_zoom_speed", 1.f,
                          "globe zoom speed in units per click");
         i_zoom_speed.edit = C_VE_ANYTIME;
+
+        /* Input parameters */
+        C_register_string(&i_ip, "i_ip", "127.0.0.1",
+                          "the last entered ip address");
+        i_ip.edit = C_VE_ANYTIME;
 
         /* Interface test variables */
         C_register_integer(&i_test_globe, "i_test_globe", FALSE,

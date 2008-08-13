@@ -76,6 +76,7 @@ static void quit_button_clicked(i_button_t *button)
 \******************************************************************************/
 static void ip_entry_changed(void)
 {
+        C_strncpy_buf(i_ip.value.s, ip_entry.buffer);
         if (ip_entry.buffer[0] && join_button.widget.state == I_WS_DISABLED)
                 join_button.widget.state = I_WS_READY;
         else if (!ip_entry.buffer[0])
@@ -139,7 +140,8 @@ void I_init_game(i_window_t *window)
         I_widget_add(&left_box.widget, &quit_button.widget);
 
         /* IP entry */
-        I_entry_init(&ip_entry, "127.0.0.1");
+        C_var_unlatch(&i_ip);
+        I_entry_init(&ip_entry, i_ip.value.s);
         ip_entry.widget.margin_rear = 0.5f;
         ip_entry.on_change = (i_callback_f)ip_entry_changed;
         I_widget_add(&right_box.widget, &ip_entry.widget);
