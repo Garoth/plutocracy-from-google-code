@@ -275,6 +275,8 @@ void I_toolbar_toggle(i_toolbar_t *toolbar, int i)
         if (!toolbar || i < 0 || i >= toolbar->children ||
             toolbar->buttons[i].widget.state == I_WS_DISABLED)
                 return;
+        if (toolbar->open_window && !toolbar->open_window->widget.shown)
+                toolbar->open_window = NULL;
         window = toolbar->windows + i;
         if (toolbar->open_window == window) {
                 I_widget_event(&window->widget, I_EV_HIDE);

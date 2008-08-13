@@ -32,7 +32,7 @@ i_widget_t i_root;
 int i_limbo;
 
 /* Indices of buttons on the right toolbar */
-int i_players_button, i_ship_button, i_trade_button;
+int i_players_button, i_trade_button;
 
 /* Right toolbar */
 i_toolbar_t i_right_toolbar;
@@ -324,10 +324,10 @@ void I_global_key(void)
         }
 
         /* Toggle a toolbar window */
-        else if (i_key >= SDLK_F1 && i_key <= SDLK_F4)
+        else if (i_key >= SDLK_F1 && i_key <= SDLK_F3)
                 I_toolbar_toggle(&left_toolbar, i_key - SDLK_F1);
-        else if (i_key >= SDLK_F5 && i_key <= SDLK_F8)
-                I_toolbar_toggle(&i_right_toolbar, i_key - SDLK_F5);
+        else if (i_key >= SDLK_F6 && i_key <= SDLK_F8)
+                I_toolbar_toggle(&i_right_toolbar, i_key - SDLK_F6);
 }
 
 /******************************************************************************\
@@ -371,19 +371,15 @@ void I_init(void)
 
         /* Right toolbar */
         I_toolbar_init(&i_right_toolbar, TRUE);
-        I_toolbar_add_button(&i_right_toolbar, "gui/icons/nations.png",
-                             (i_callback_f)I_init_nations);
-        i_ship_button = I_toolbar_add_button(&i_right_toolbar,
-                                             "gui/icons/ship.png",
-                                             (i_callback_f)I_init_ship);
         i_trade_button = I_toolbar_add_button(&i_right_toolbar,
                                               "gui/icons/trade.png",
                                               (i_callback_f)I_init_trade);
+        I_toolbar_add_button(&i_right_toolbar, "gui/icons/nations.png",
+                             (i_callback_f)I_init_nations);
         i_players_button = I_toolbar_add_button(&i_right_toolbar,
                                                 "gui/icons/players.png",
                                                 (i_callback_f)I_init_players);
         I_widget_add(&i_root, &i_right_toolbar.widget);
-        i_right_toolbar.buttons[i_ship_button].widget.state = I_WS_DISABLED;
         i_right_toolbar.buttons[i_trade_button].widget.state = I_WS_DISABLED;
 
         /* Theme can now be modified dynamically */

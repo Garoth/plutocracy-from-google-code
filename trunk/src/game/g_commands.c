@@ -38,58 +38,39 @@ void G_change_nation(int index)
 }
 
 /******************************************************************************\
- Update which ship the mouse is hovering over. Pass -1 to deselect.
-\******************************************************************************/
-static void hover_ship(int ship)
-{
-        int tile;
-
-        if (g_hover_ship >= 0) {
-                tile = g_ships[g_hover_ship].tile;
-                if (g_tiles[tile].model)
-                        g_tiles[tile].model->selected = FALSE;
-        }
-        if ((g_hover_ship = ship) < 0)
-                return;
-        tile = g_ships[ship].tile;
-        if (g_tiles[tile].model)
-                g_tiles[tile].model->selected = TRUE;
-}
-
-/******************************************************************************\
  Updates which tile the mouse is hovering over. Pass -1 to deselect.
 \******************************************************************************/
 void G_hover_tile(int tile)
 {
+        static r_select_type_t select_type;
+        r_select_type_t new_select_type;
+
         C_assert(tile < r_tiles);
+        new_select_type = R_ST_NONE;
+
+        /* Selecting a tile to move the current ship to */
+        if (G_open_tile(tile, -1) &&
+            G_ship_controlled_by(g_selected_ship, n_client_id))
+                new_select_type = R_ST_GOTO;
+
+        /* Apply the new tile selection */
+        if (tile == g_hover_tile && new_select_type == select_type) {
+                G_ship_hover(tile >= 0 ? g_tiles[tile].ship : -1);
+                return;
+        }
 
         /* Deselect the old tile */
-        if (g_hover_tile >= 0)
-                hover_ship(-1);
-        R_select_tile(g_hover_tile = -1, R_ST_NONE);
-        if (tile < 0)
-                return;
-
-        /* Selecting a ship */
-        if (g_tiles[tile].ship >= 0)
-                hover_ship(g_tiles[tile].ship);
-
-        /* If we are controlling a ship, we might want to move here */
-        else if (g_selected_ship >= 0 && G_open_tile(tile, -1) &&
-                 g_ships[g_selected_ship].client == n_client_id) {
-                R_select_tile(tile, R_ST_GOTO);
-                g_hover_tile = tile;
-                return;
-        }
-
-        /* Can't select this */
-        else {
+        if (g_hover_tile >= 0) {
+                G_ship_hover(-1);
                 R_select_tile(-1, R_ST_NONE);
-                g_hover_tile = -1;
-                hover_ship(-1);
-                return;
         }
 
+        /* Apply new selection */
+        select_type = new_select_type;
+        if ((g_hover_tile = tile) < 0)
+                return;
+        R_select_tile(tile, select_type);
+        G_ship_hover(g_tiles[tile].ship);
         g_hover_tile = tile;
 }
 
@@ -220,5 +201,18 @@ void G_buy_cargo(g_cargo_type_t cargo, int amount)
 
         N_send(N_SERVER_ID, "11212", G_CM_SHIP_BUY, g_selected_ship,
                ship->trade_tile, cargo, amount);
+}
+
+/******************************************************************************\
+ A keypress event was forwarded from the interface.
+\******************************************************************************/
+void G_process_key(int key, bool shift, bool ctrl, bool alt)
+{
+        if (key == SDLK_SPACE && g_selected_ship >= 0) {
+                int tile;
+
+                tile = g_ships[g_selected_ship].tile;
+                R_rotate_cam_to(g_tiles[tile].model.origin);
+        }
 }
 

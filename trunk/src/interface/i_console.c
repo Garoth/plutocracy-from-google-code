@@ -156,7 +156,7 @@ static void I_console_print(i_color_t color, const char *string)
         if (locked)
                 return;
         locked = TRUE;
-        label = I_label_new(string);
+        label = I_label_alloc(string);
         label->font = R_FONT_CONSOLE;
         label->color = color;
         I_widget_add(&scrollback.widget, &label->widget);

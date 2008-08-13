@@ -79,6 +79,7 @@ void G_input_chat(char *message);
 void G_join_game(const char *address);
 void G_leave_game(void);
 bool G_process_click(int button);
+void G_process_key(int key, bool shift, bool ctrl, bool alt);
 void G_trade_params(int cargo, int buy_price, int sell_price,
                     int minimum, int maximum);
 

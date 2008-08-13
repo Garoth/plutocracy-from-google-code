@@ -333,9 +333,13 @@ void I_widget_event(i_widget_t *widget, i_event_t event)
         }
 
         /* The only event an unconfigured widget can handle is I_EV_CONFIGURE */
-        if (!widget->configured && event != I_EV_CONFIGURE)
-                C_error("Propagated %s to unconfigured %s",
-                        I_event_string(event), widget->name);
+        if (!widget->configured && event != I_EV_CONFIGURE) {
+                if (widget->auto_configure)
+                        I_widget_event(widget, I_EV_CONFIGURE);
+                if (!widget->configured)
+                        C_error("Propagated %s to unconfigured %s",
+                                I_event_string(event), widget->name);
+        }
 
         /* Print out the event in debug mode */
         if (i_debug.value.n >= 2)
