@@ -205,11 +205,7 @@ void G_buy_cargo(g_cargo_type_t cargo, int amount)
 \******************************************************************************/
 void G_process_key(int key, bool shift, bool ctrl, bool alt)
 {
-        if (key == SDLK_SPACE && g_selected_ship >= 0) {
-                int tile;
-
-                tile = g_ships[g_selected_ship].tile;
-                R_rotate_cam_to(g_tiles[tile].model.origin);
-        }
+        if (key == SDLK_SPACE)
+                G_focus_next_ship();
 }
 
