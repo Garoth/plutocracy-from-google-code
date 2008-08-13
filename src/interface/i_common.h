@@ -109,7 +109,8 @@ typedef struct i_widget {
         i_widget_state_t state;
         float fade, margin_front, margin_rear, padding;
         int expand;
-        bool configured, entry, shown, heap, steal_keys, pack_skip;
+        bool auto_configure, configured, entry, shown, heap, pack_skip,
+             steal_keys;
 } i_widget_t;
 
 /* Windows are decorated containers */
@@ -299,7 +300,7 @@ void I_theme_texture(r_texture_t **, const char *name);
 
 extern i_toolbar_t i_right_toolbar;
 extern i_widget_t i_root;
-extern int i_players_button, i_ship_button, i_trade_button;
+extern int i_players_button, i_trade_button;
 
 /* i_nations.c */
 void I_init_nations(i_window_t *);
@@ -328,11 +329,12 @@ void I_init_ship(i_window_t *);
 
 /* i_static.c */
 void I_box_init(i_box_t *, i_pack_t, float width);
+i_info_t *I_info_alloc(const char *label, const char *info);
 void I_info_init(i_info_t *, const char *label, const char *info);
 void I_info_configure(i_info_t *, const char *);
 void I_label_init(i_label_t *, const char *);
 void I_label_configure(i_label_t *, const char *);
-i_label_t *I_label_new(const char *);
+i_label_t *I_label_alloc(const char *);
 void I_image_init(i_image_t *, const char *icon);
 #define I_image_init_sep(i) I_image_init_themed(i, NULL)
 void I_image_init_themed(i_image_t *, r_texture_t **);

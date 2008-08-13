@@ -225,6 +225,7 @@ void I_globe_event(i_event_t event)
                         R_zoom_cam_by(i_zoom_speed.value.f);
                 if (i_key == '=')
                         R_zoom_cam_by(-i_zoom_speed.value.f);
+                G_process_key(i_key, i_key_shift, i_key_ctrl, i_key_alt);
                 break;
         case I_EV_KEY_UP:
                 if ((i_key == SDLK_RIGHT && globe_motion.x < 0.f) ||

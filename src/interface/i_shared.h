@@ -47,6 +47,12 @@ typedef struct i_cargo_info {
 /* i_chat.c */
 void I_print_chat(const char *name, i_color_t, const char *message);
 
+/* i_hover.c */
+void I_hover_add(const char *label, const char *value);
+void I_hover_add_color(const char *label, const char *value, i_color_t);
+void I_hover_close(void);
+void I_hover_show(const char *title);
+
 /* i_layout.c */
 void I_cleanup(void);
 void I_dispatch(const SDL_Event *);
@@ -70,11 +76,6 @@ void I_configure_player_num(int num);
 void I_reset_ring(void);
 void I_add_to_ring(i_ring_icon_t, int enabled);
 void I_show_ring(i_ring_f callback);
-
-/* i_ship.c */
-void I_deselect_ship(void);
-void I_select_ship(i_color_t, const char *name,
-                   const char *owner, const char *class_name);
 
 /* i_trade.c */
 void I_configure_cargo(int index, const i_cargo_info_t *);

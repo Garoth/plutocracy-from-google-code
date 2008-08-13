@@ -23,6 +23,9 @@
 /* Invalid island index */
 #define G_ISLAND_INVALID 255
 
+/* Delay in milliseconds before the hover window is displayed */
+#define G_HOVER_DELAY 500
+
 /* Message tokens sent by clients */
 typedef enum {
         G_CM_NONE,
@@ -113,7 +116,7 @@ typedef struct g_store {
 /* A tile on the globe */
 typedef struct g_tile {
         g_building_type_t building;
-        r_model_t *model;
+        r_model_t model;
         c_vec3_t origin, forward;
         float progress, fade;
         int island, ship, search_parent, search_stamp;
@@ -168,7 +171,6 @@ extern g_ship_t g_ships[G_SHIPS_MAX];
 /* g_globe.c */
 void G_cleanup_globe(void);
 void G_init_globe(void);
-bool G_is_visible(c_vec3_t origin);
 void G_generate_globe(int subdiv4, int islands, int island_size,
                       float variance);
 int G_set_tile_model(int tile, const char *path);
@@ -189,9 +191,10 @@ void G_load_names(void);
 void G_reset_name_counts(void);
 
 /* g_ship.c */
+void G_render_ships(void);
 bool G_ship_can_trade_with(int index, int tile);
 bool G_ship_controlled_by(int ship, n_client_id_t);
-void G_render_ships(void);
+void G_ship_hover(int index);
 void G_ship_reselect(int ship, n_client_id_t);
 void G_ship_select(int ship);
 void G_ship_send_cargo(int ship, n_client_id_t);

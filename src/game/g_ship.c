@@ -156,7 +156,7 @@ void G_render_ships(void)
                 health = (float)ship->health / HEALTH_MAX;
                 health_max = (float)ship_class->health / HEALTH_MAX;
                 color = g_nations[g_clients[ship->client].nation].color;
-                R_render_ship_status(tile->model, health, health_max,
+                R_render_ship_status(&tile->model, health, health_max,
                                      armor, health_max, color,
                                      g_selected_ship == i,
                                      ship->client == n_client_id);
@@ -411,6 +411,68 @@ void G_update_ships(void)
 }
 
 /******************************************************************************\
+ Update which ship the mouse is hovering over and setup the hover window.
+ Pass -1 to deselect.
+\******************************************************************************/
+void G_ship_hover(int index)
+{
+        static int hover_time;
+        int tile;
+
+        if (g_hover_ship == index) {
+                g_ship_t *ship;
+                g_ship_class_t *ship_class;
+                i_color_t color;
+
+                /* Show the hover window after a delay */
+                if (!hover_time || c_time_msec - hover_time < G_HOVER_DELAY ||
+                    index < 0)
+                        return;
+                ship = g_ships + index;
+                ship_class = g_ship_classes + ship->type;
+                hover_time = 0;
+                I_hover_show(ship->name);
+
+                /* Owner */
+                color = G_nation_to_color(g_clients[ship->client].nation);
+                I_hover_add_color("Owner:", g_clients[ship->client].name,
+                                  color);
+
+                /* Health */
+                I_hover_add("Health:", C_va("%d/%d", ship->health,
+                                            ship_class->health));
+
+                if (ship->store.visible[n_client_id]) {
+
+                        /* Cargo */
+                        I_hover_add("Cargo:",
+                                    C_va("%d/%d", ship->store.space_used,
+                                                  ship->store.capacity));
+
+                        /* Gold */
+                        I_hover_add("Gold:",
+                                    C_va("%dg", ship->store.cargo[G_CT_GOLD]));
+                }
+                return;
+        }
+
+        /* Clean up the last hovered-over ship */
+        if (g_hover_ship >= 0) {
+                tile = g_ships[g_hover_ship].tile;
+                g_tiles[tile].model.selected = FALSE;
+                hover_time = 0;
+                I_hover_close();
+        }
+
+        /* Highlight the new ship */
+        if ((g_hover_ship = index) < 0)
+                return;
+        tile = g_ships[index].tile;
+        g_tiles[tile].model.selected = TRUE;
+        hover_time = c_time_msec;
+}
+
+/******************************************************************************\
  Select a ship. Pass a negative [index] to deselect.
 \******************************************************************************/
 void G_ship_select(int index)
@@ -431,13 +493,9 @@ void G_ship_select(int index)
                         R_select_path(-1, NULL);
                 client = g_ships[index].client;
                 color = G_nation_to_color(g_clients[client].nation);
-                I_select_ship(color, g_ships[index].name,
-                              g_clients[client].name,
-                              g_ship_classes[g_ships[index].type].name);
                 ship_configure_trade(index);
         } else {
                 R_select_path(-1, NULL);
-                I_deselect_ship();
                 ship_configure_trade(-1);
         }
 }

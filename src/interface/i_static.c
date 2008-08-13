@@ -109,7 +109,7 @@ void I_label_init(i_label_t *label, const char *text)
 /******************************************************************************\
  Dynamically allocates a label widget.
 \******************************************************************************/
-i_label_t *I_label_new(const char *text)
+i_label_t *I_label_alloc(const char *text)
 {
         i_label_t *label;
 
@@ -245,6 +245,7 @@ int I_info_event(i_info_t *info, i_event_t event)
         info->widget.size = I_widget_child_bounds(&info->widget);
         return FALSE;
 }
+
 /******************************************************************************\
  Initializes an info widget.
 \******************************************************************************/
@@ -266,6 +267,19 @@ void I_info_init(i_info_t *info, const char *left, const char *right)
         I_label_init(&info->right, right);
         info->right.color = I_COLOR_ALT;
         I_widget_add(&info->widget, &info->right.widget);
+}
+
+/******************************************************************************\
+ Allocate a new info widget on the heap.
+\******************************************************************************/
+i_info_t *I_info_alloc(const char *left, const char *right)
+{
+        i_info_t *info;
+
+        info = C_malloc(sizeof (*info));
+        I_info_init(info, left, right);
+        info->widget.heap = TRUE;
+        return info;
 }
 
 /******************************************************************************\

@@ -271,8 +271,7 @@ static void ship_position_model(int ship)
                 return;
         new_tile = g_ships[ship].tile;
         old_tile = g_ships[ship].rear_tile;
-        if (!(model = g_tiles[new_tile].model))
-                C_error("Ship has no model");
+        model = &g_tiles[new_tile].model;
 
         /* If the ship is not moving, just place it on the tile */
         if (g_ships[ship].rear_tile < 0) {
@@ -311,11 +310,11 @@ static void transfer_model(int from, int to)
 {
         if (from == to)
                 return;
-        R_model_free(g_tiles[to].model);
+        R_model_cleanup(&g_tiles[to].model);
         g_tiles[to].model = g_tiles[from].model;
         g_tiles[to].model_shown = TRUE;
         g_tiles[to].fade = 1.f;
-        g_tiles[from].model = NULL;
+        C_zero(&g_tiles[from].model);
 }
 
 /******************************************************************************\
