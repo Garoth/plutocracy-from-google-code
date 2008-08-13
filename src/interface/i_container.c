@@ -69,12 +69,14 @@ void I_widget_remove_children(i_widget_t *widget, int cleanup)
 /******************************************************************************\
  Gives extra space to expanding child widgets.
 \******************************************************************************/
-static void expand_children(i_widget_t *widget, c_vec2_t size, int expanders)
+static void expand_children(i_widget_t *widget, c_vec2_t size, float expand)
 {
         c_vec2_t offset, share;
         i_widget_t *child;
 
-        size = C_vec2_divf(size, (float)expanders);
+        if (!expand)
+                return;
+        size = C_vec2_divf(size, expand);
         offset = C_vec2(0.f, 0.f);
         for (child = widget->child; child; child = child->next) {
                 if (child->pack_skip)
@@ -98,14 +100,14 @@ void I_widget_pack(i_widget_t *widget, i_pack_t pack, i_fit_t fit)
 {
         i_widget_t *child;
         c_vec2_t origin, size;
-        int expanders;
+        float expand;
 
         /* First, let every widget claim the minimum space it requires */
         size = C_vec2_subf(widget->size,
                            widget->padding * i_border.value.n * 2.f);
         origin = C_vec2_addf(widget->origin,
                              widget->padding * i_border.value.n);
-        expanders = 0;
+        expand = 0.f;
         for (child = widget->child; child; child = child->next) {
                 float margin_front, margin_rear;
 
@@ -133,18 +135,18 @@ void I_widget_pack(i_widget_t *widget, i_pack_t pack, i_fit_t fit)
                         size.y -= child->size.y + margin_front + margin_rear;
                 }
                 if (child->expand > 0)
-                        expanders += child->expand;
+                        expand += child->expand;
         }
 
         /* If there is left over space and we are not collapsing, assign it
            to any expandable widgets */
         if (fit == I_FIT_NONE) {
-                if (pack == I_PACK_H && expanders) {
+                if (pack == I_PACK_H && expand) {
                         size.y = 0.f;
-                        expand_children(widget, size, expanders);
-                } else if (pack == I_PACK_V && expanders) {
+                        expand_children(widget, size, expand);
+                } else if (pack == I_PACK_V && expand) {
                         size.x = 0.f;
-                        expand_children(widget, size, expanders);
+                        expand_children(widget, size, expand);
                 }
                 return;
         }
@@ -244,20 +246,20 @@ void I_widget_add_pack(i_widget_t *parent, i_widget_t *widget,
         /* If there is left over space and we are not collapsing, assign it
            to any expandable widgets */
         if (fit == I_FIT_NONE) {
-                int expanders;
+                float expand;
 
                 /* Count expanders */
-                expanders = 0;
+                expand = 0.f;
                 for (widget = parent->child; widget; widget = widget->next)
                         if (widget->expand > 0)
-                                expanders += widget->expand;
+                                expand += widget->expand;
 
-                if (pack == I_PACK_H && expanders) {
+                if (pack == I_PACK_H && expand) {
                         space = C_vec2(space.x - bounds.x, 0.f);
-                        expand_children(widget, space, expanders);
-                } else if (pack == I_PACK_V && expanders) {
+                        expand_children(widget, space, expand);
+                } else if (pack == I_PACK_V && expand) {
                         space = C_vec2(0.f, space.y - bounds.y);
-                        expand_children(widget, space, expanders);
+                        expand_children(widget, space, expand);
                 }
                 return;
         }

@@ -64,7 +64,7 @@ int G_store_fits(const g_store_t *store, g_cargo_type_t cargo)
 {
         int space_left;
 
-        if ((space_left = store->capacity - store->space_used) < 0)
+        if ((space_left = store->capacity - store->space_used) <= 0)
                 return 0;
         return (int)floorf(space_left / cargo_space(cargo));
 }

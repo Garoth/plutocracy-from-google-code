@@ -59,16 +59,13 @@ void G_hover_tile(int tile)
                 return;
         }
 
-        /* Deselect the old tile */
-        if (g_hover_tile >= 0) {
-                G_ship_hover(-1);
-                R_select_tile(-1, R_ST_NONE);
-        }
-
         /* Apply new selection */
         select_type = new_select_type;
-        if ((g_hover_tile = tile) < 0)
+        if ((g_hover_tile = tile) < 0) {
+                G_ship_hover(-1);
+                R_select_tile(-1, R_ST_NONE);
                 return;
+        }
         R_select_tile(tile, select_type);
         G_ship_hover(g_tiles[tile].ship);
         g_hover_tile = tile;

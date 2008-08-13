@@ -20,8 +20,10 @@
 /* Proportion of the remaining rotation a ship does per second */
 #define ROTATION_RATE 3.f
 
-/* Optimal proportion of crew to cargo space */
-#define CREW_OPTIMAL_PROP 0.25f
+/* Factor in the speed modifier equation that determines how quickly adding
+   crew increases ship speed. The larger the factor the faster speed will
+   rise with crew. */
+#define CREW_SPEED_FACTOR 10.f
 
 /* Structure for searched tile nodes */
 typedef struct search_node {
@@ -253,8 +255,10 @@ static float ship_speed(int index)
         store = &g_ships[index].store;
 
         /* Crew modifier */
-        speed *= sqrtf(store->cargo[G_CT_CREW].amount /
-                       (CREW_OPTIMAL_PROP * store->capacity));
+        C_assert(store->cargo[G_CT_CREW].amount >= 0);
+        speed *= (-1.f / (CREW_SPEED_FACTOR * store->cargo[G_CT_CREW].amount /
+                         store->capacity + 1.f) + 1.f) *
+                 (1.f + 1.f / CREW_SPEED_FACTOR);
 
         return speed;
 }
