@@ -24,7 +24,7 @@
 #define G_ISLAND_INVALID 255
 
 /* Delay in milliseconds before the hover window is displayed */
-#define G_HOVER_DELAY 500
+#define G_HOVER_DELAY 750
 
 /* Message tokens sent by clients */
 typedef enum {

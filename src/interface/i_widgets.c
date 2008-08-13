@@ -173,7 +173,7 @@ i_widget_t *I_widget_top_level(i_widget_t *widget)
 /******************************************************************************\
  Returns a statically allocated string containing the name of an event token.
 \******************************************************************************/
-const char *I_event_string(i_event_t event)
+const char *I_event_to_string(i_event_t event)
 {
         switch (event) {
         case I_EV_NONE:
@@ -329,7 +329,9 @@ void I_widget_event(i_widget_t *widget, i_event_t event)
         if (!widget->name[0] || !widget->event_func) {
                 if (event == I_EV_CLEANUP)
                         return;
-                C_error("Propagated event to uninitialized widget");
+                C_error("Propagated %s to uninitialized widget, parent is %s",
+                        I_event_to_string(event),
+                        widget->parent ? widget->parent->name : "NULL");
         }
 
         /* The only event an unconfigured widget can handle is I_EV_CONFIGURE */
@@ -338,15 +340,15 @@ void I_widget_event(i_widget_t *widget, i_event_t event)
                         I_widget_event(widget, I_EV_CONFIGURE);
                 if (!widget->configured)
                         C_error("Propagated %s to unconfigured %s",
-                                I_event_string(event), widget->name);
+                                I_event_to_string(event), widget->name);
         }
 
         /* Print out the event in debug mode */
         if (i_debug.value.n >= 2)
                 switch (event) {
                 default:
-                        C_trace("%s --> %s",
-                                I_event_string(event), widget->name);
+                        C_trace("%s --> %s", I_event_to_string(event),
+                                widget->name);
                 case I_EV_RENDER:
                 case I_EV_MOUSE_MOVE:
                 case I_EV_MOUSE_FOCUS:

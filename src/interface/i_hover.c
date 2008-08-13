@@ -26,7 +26,7 @@ static bool hover_window_event(i_window_t *window, i_event_t event)
         if (event == I_EV_CONFIGURE) {
                 window->widget.origin = C_vec2((float)i_border.value.n,
                                                (float)i_border.value.n);
-                window->widget.size = C_vec2(160.f, 0.f);
+                window->widget.size = C_vec2(200.f, 0.f);
         }
 
         return I_window_event(window, event);
@@ -60,6 +60,8 @@ void I_hover_show(const char *title)
 \******************************************************************************/
 void I_hover_close(void)
 {
+        if (!hover_window.widget.configured)
+                return;
         I_widget_event(&hover_window.widget, I_EV_HIDE);
 }
 

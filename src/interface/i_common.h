@@ -356,7 +356,7 @@ void I_init_video(i_window_t *);
 void I_update_video(void);
 
 /* i_widgets.c */
-const char *I_event_string(i_event_t);
+const char *I_event_to_string(i_event_t);
 c_vec2_t I_widget_bounds(const i_widget_t *, i_pack_t);
 bool I_widget_child_of(const i_widget_t *parent, const i_widget_t *child);
 void I_widget_event(i_widget_t *, i_event_t);
