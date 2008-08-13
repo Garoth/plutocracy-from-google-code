@@ -43,38 +43,39 @@ int I_label_event(i_label_t *label, i_event_t event)
 
                 if (label->width > 0.f)
                         label->widget.size.x = label->width;
-                R_sprite_cleanup(&label->text);
-                R_sprite_init_text(&label->text, label->font,
-                                   label->widget.size.x, i_shadow.value.f,
-                                   FALSE, label->buffer);
-                label->widget.size.y = label->text.size.y;
+                R_text_configure(&label->text, label->font,
+                                 label->widget.size.x, i_shadow.value.f,
+                                 FALSE, label->buffer);
+                label->widget.size.y = label->text.sprite.size.y;
                 if (!label->widget.size.x)
-                        label->widget.size.x = label->text.size.x;
-                label->text.modulate = i_colors[label->color];
+                        label->widget.size.x = label->text.sprite.size.x;
         case I_EV_MOVED:
-                label->text.origin = label->widget.origin;
+                label->text.sprite.origin = label->widget.origin;
 
                 /* Justify widget text */
-                if (label->text.size.x < label->widget.size.x &&
+                if (label->text.sprite.size.x < label->widget.size.x &&
                     label->justify != I_JUSTIFY_LEFT) {
                         float space;
 
-                        space = label->widget.size.x - label->text.size.x;
+                        space = label->widget.size.x -
+                                label->text.sprite.size.x;
                         if (label->justify == I_JUSTIFY_RIGHT)
-                                label->text.origin.x += space;
+                                label->text.sprite.origin.x += space;
                         else if (label->justify == I_JUSTIFY_CENTER)
-                                label->text.origin.x += space / 2.f;
+                                label->text.sprite.origin.x += space / 2.f;
                 }
 
-                label->text.origin = C_vec2_clamp(label->text.origin,
-                                                  r_pixel_scale.value.f);
+                label->text.sprite.origin =
+                        C_vec2_clamp(label->text.sprite.origin,
+                                     r_pixel_scale.value.f);
                 break;
         case I_EV_CLEANUP:
-                R_sprite_cleanup(&label->text);
+                R_text_cleanup(&label->text);
                 break;
         case I_EV_RENDER:
-                label->text.modulate.a = label->widget.fade;
-                R_sprite_render(&label->text);
+                label->text.sprite.modulate = i_colors[label->color];
+                label->text.sprite.modulate.a = label->widget.fade;
+                R_text_render(&label->text);
                 break;
         default:
                 break;
@@ -100,6 +101,7 @@ void I_label_init(i_label_t *label, const char *text)
                 return;
         C_zero(label);
         I_widget_init(&label->widget, "Label");
+        R_text_init(&label->text);
         label->widget.event_func = (i_event_f)I_label_event;
         label->widget.state = I_WS_READY;
         label->font = R_FONT_GUI;
@@ -260,11 +262,12 @@ void I_info_init(i_info_t *info, const char *left, const char *right)
 
         /* Label */
         I_label_init(&info->left, left);
-        info->left.widget.expand = TRUE;
         I_widget_add(&info->widget, &info->left.widget);
 
         /* Info */
         I_label_init(&info->right, right);
+        info->right.widget.expand = TRUE;
+        info->right.justify = I_JUSTIFY_RIGHT;
         info->right.color = I_COLOR_ALT;
         I_widget_add(&info->widget, &info->right.widget);
 }

@@ -157,21 +157,21 @@ void I_disable_trade(void)
 /******************************************************************************\
  Enable or disable the trade window.
 \******************************************************************************/
-void I_enable_trade(bool left, const char *right_name)
+void I_enable_trade(bool left, const char *right_name, int used, int capacity)
 {
         I_toolbar_enable(&i_right_toolbar, i_trade_button, TRUE);
         left_own = left;
-        I_info_configure(&right_info, right_name);
-}
 
-/******************************************************************************\
- Configures store cargo space.
-\******************************************************************************/
-void I_set_cargo_space(int used, int capacity)
-{
+        /* Trading partner */
+        I_info_configure(&right_info, right_name);
+
+        /* Cargo space */
         I_info_configure(&space_info, C_va("%d/%d", used, capacity));
         space_used = used;
         space_total = capacity;
+
+        /* The window may need repacking */
+        I_widget_event(I_widget_top_level(&right_info.widget), I_EV_CONFIGURE);
 }
 
 /******************************************************************************\

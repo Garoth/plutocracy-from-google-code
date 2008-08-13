@@ -80,7 +80,7 @@ void I_show_ring(i_ring_f callback);
 /* i_trade.c */
 void I_configure_cargo(int index, const i_cargo_info_t *);
 void I_disable_trade(void);
-void I_enable_trade(bool left_own, const char *right_name);
+void I_enable_trade(bool left_own, const char *partner, int used, int capacity);
 void I_set_cargo_space(int used, int capacity);
 
 /* i_variables.c */

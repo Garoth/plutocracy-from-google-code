@@ -64,6 +64,10 @@ void I_configure_player(int index, const char *name, i_color_t color, bool host)
         C_assert(index >= 0 && index < PLAYERS);
         configure_player(index, name, color, host);
         I_widget_event(&players[index].box.widget, I_EV_CONFIGURE);
+
+        /* Window may need repacking */
+        I_widget_event(I_widget_top_level(&players[index].box.widget),
+                       I_EV_CONFIGURE);
 }
 
 /******************************************************************************\
@@ -76,7 +80,7 @@ void I_configure_player_num(int num)
         for (i = 0; i < num; i++) {
                 players[i].box.widget.shown = TRUE;
                 players[i].box.widget.pack_skip = FALSE;
-                configure_player(i, NULL, I_COLOR, FALSE);
+                I_configure_player(i, NULL, I_COLOR, FALSE);
         }
         for (; i < PLAYERS; i++) {
                 players[i].box.widget.shown = FALSE;

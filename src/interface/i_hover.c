@@ -26,7 +26,7 @@ static bool hover_window_event(i_window_t *window, i_event_t event)
         if (event == I_EV_CONFIGURE) {
                 window->widget.origin = C_vec2((float)i_border.value.n,
                                                (float)i_border.value.n);
-                window->widget.size = C_vec2(200.f, 0.f);
+                window->widget.size = C_vec2(180.f, 0.f);
         }
 
         return I_window_event(window, event);

@@ -323,7 +323,7 @@ void R_text_configure(r_text_t *text, r_font_t font, float wrap, float shadow,
 {
         if (text->font == font && text->wrap == wrap &&
             text->shadow == shadow && text->invert == invert &&
-            !strcasecmp(string, text->buffer))
+            !strcmp(string, text->buffer))
                 return;
         R_sprite_cleanup(&text->sprite);
         R_sprite_init_text(&text->sprite, font, wrap, shadow, invert, string);
