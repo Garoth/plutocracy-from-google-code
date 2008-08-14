@@ -474,7 +474,7 @@ void G_update_client(void)
 }
 
 /******************************************************************************\
- Initialize game structures before play.
+ Initialize game structures.
 \******************************************************************************/
 void G_init(void)
 {

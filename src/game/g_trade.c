@@ -88,7 +88,7 @@ int G_store_add(g_store_t *store, g_cargo_type_t cargo, int amount)
         /* Don't put in more than what it can hold */
         store->cargo[cargo].amount += amount;
         if ((excess = G_store_space(store) - store->capacity) > 0) {
-                store->cargo[cargo].amount -= (int)(excess / 
+                store->cargo[cargo].amount -= (int)(excess /
                                                     cargo_space(cargo));
                 store->space_used = store->capacity;
         }
