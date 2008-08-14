@@ -88,7 +88,8 @@ int G_store_add(g_store_t *store, g_cargo_type_t cargo, int amount)
         /* Don't put in more than what it can hold */
         store->cargo[cargo].amount += amount;
         if ((excess = G_store_space(store) - store->capacity) > 0) {
-                store->cargo[cargo].amount -= excess / cargo_space(cargo);
+                store->cargo[cargo].amount -= (int)(excess / 
+                                                    cargo_space(cargo));
                 store->space_used = store->capacity;
         }
         C_assert(store->cargo[cargo].amount >= 0);
@@ -143,8 +144,8 @@ int G_limit_purchase(const g_store_t *buyer, const g_store_t *seller,
                         amount = limit;
 
                 /* How much of the gold can the seller hold? */
-                limit = (seller->capacity - seller->space_used) /
-                        (cargo_space(G_CT_GOLD) * amount * price);
+                limit = (int)((seller->capacity - seller->space_used) /
+                              (cargo_space(G_CT_GOLD) * amount * price));
                 if (amount > limit)
                         amount = limit;
         }
@@ -176,7 +177,7 @@ void G_store_init(g_store_t *store, int capacity)
         C_zero(store);
         store->capacity = capacity;
         for (i = 0; i < G_CARGO_TYPES; i++) {
-                store->cargo[i].maximum = capacity / cargo_space(i);
+                store->cargo[i].maximum = (int)(capacity / cargo_space(i));
                 store->cargo[i].buy_price = 50;
                 store->cargo[i].sell_price = 50;
         }

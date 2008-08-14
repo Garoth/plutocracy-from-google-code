@@ -112,7 +112,7 @@ static void send_buffer(n_client_id_t client)
 
         /* Send TCP/IP message */
         socket = N_client_to_socket(client);
-        for (bytes_sent = i = 0; bytes_sent < n_sync_size && i < 5; i++) {
+        for (ret = bytes_sent = i = 0; bytes_sent < n_sync_size && i < 5; i++) {
                 const char *error;
                 int ret;
 

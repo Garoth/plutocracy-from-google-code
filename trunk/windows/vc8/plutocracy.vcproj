@@ -502,6 +502,10 @@
 				</FileConfiguration>
 			</File>
 			<File
+				RelativePath="..\..\src\interface\i_hover.c"
+				>
+			</File>
+			<File
 				RelativePath="..\..\src\interface\i_layout.c"
 				>
 				<FileConfiguration
@@ -583,10 +587,6 @@
 			</File>
 			<File
 				RelativePath="..\..\src\interface\i_shared.h"
-				>
-			</File>
-			<File
-				RelativePath="..\..\src\interface\i_ship.c"
 				>
 			</File>
 			<File
@@ -762,6 +762,10 @@
 				</FileConfiguration>
 			</File>
 			<File
+				RelativePath="..\..\src\game\g_movement.c"
+				>
+			</File>
+			<File
 				RelativePath="..\..\src\game\g_names.c"
 				>
 			</File>
@@ -771,6 +775,14 @@
 			</File>
 			<File
 				RelativePath="..\..\src\game\g_ship.c"
+				>
+			</File>
+			<File
+				RelativePath="..\..\src\game\g_sync.c"
+				>
+			</File>
+			<File
+				RelativePath="..\..\src\game\g_trade.c"
 				>
 			</File>
 			<File
@@ -855,6 +867,10 @@
 			</File>
 			<File
 				RelativePath="..\..\src\network\n_shared.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\src\network\n_socket.c"
 				>
 			</File>
 			<File

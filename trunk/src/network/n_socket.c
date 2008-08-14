@@ -30,6 +30,7 @@ SOCKET N_client_to_socket(n_client_id_t client)
 /******************************************************************************\
  Pass the value returned by the socket operation as [ret]. Returns NULL if no
  real error was generated otherwise returns the string representation of it.
+ TODO: Function to convert WinSock error codes to strings
 \******************************************************************************/
 const char *N_socket_error(int ret)
 {
@@ -39,7 +40,7 @@ const char *N_socket_error(int ret)
         /* No data (WinSock) */
         if (WSAGetLastError() == WSAEWOULDBLOCK)
                 return NULL;
-        return WSAGetLastError();
+        return C_va("%d", WSAGetLastError());
 #else
         /* No data (Berkeley) */
         if (errno == EAGAIN || errno == EWOULDBLOCK)

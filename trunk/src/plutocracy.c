@@ -215,7 +215,7 @@ int main(int argc, char *argv[])
         C_test_mem_check();
 
         /* Seed the system random number generator */
-        srand(time(NULL));
+        srand((unsigned int)time(NULL));
 
         /* Initialize */
         C_status("Initializing " PACKAGE_STRING " client");

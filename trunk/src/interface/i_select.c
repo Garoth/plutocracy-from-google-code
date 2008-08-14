@@ -32,7 +32,7 @@ static float select_widest(i_select_t *select)
                         fmt = C_va("%%.0%df", select->decimals);
                 size = R_font_size(select->item.font,
                                    C_va(fmt, select->max, select->suffix));
-                return size.x / r_pixel_scale.value.f;
+                return (size.x + i_border.value.n) / r_pixel_scale.value.f;
         }
 
         /* Cycle through each option */
@@ -45,7 +45,7 @@ static float select_widest(i_select_t *select)
                         width = size.x;
                 select->list_len++;
         }
-        return width;
+        return width + i_border.value.n;
 }
 
 /******************************************************************************\
@@ -306,7 +306,7 @@ void I_select_update(i_select_t *select)
         if (select->variable->type == C_VT_FLOAT)
                 I_select_nearest(select, select->variable->value.f);
         else if (select->variable->type == C_VT_INTEGER)
-                I_select_nearest(select, select->variable->value.n);
+                I_select_nearest(select, (float)select->variable->value.n);
         else
                 C_error("Invalid variable type %d", select->variable->type);
 }
@@ -324,6 +324,7 @@ float I_select_value(const i_select_t *select)
                 return select->min + select->index * select->increment;
 
         /* Cycle through to find our option */
+        option = select->options;
         for (i = 0; option; i++, option = option->next)
                 if (i == select->index)
                         return option->value;
@@ -357,7 +358,6 @@ void I_select_init(i_select_t *select, const char *label, const char *suffix)
         I_button_init(&select->left, "gui/icons/arrow-left.png", NULL,
                       I_BT_ROUND);
         select->left.widget.state = I_WS_DISABLED;
-        select->left.widget.margin_rear = 0.5f;
         select->left.on_click = (i_callback_f)left_arrow_clicked;
         select->left.data = select;
         I_widget_add(&select->widget, &select->left.widget);
@@ -372,7 +372,6 @@ void I_select_init(i_select_t *select, const char *label, const char *suffix)
         I_button_init(&select->right, "gui/icons/arrow-right.png", NULL,
                       I_BT_ROUND);
         select->right.widget.state = I_WS_DISABLED;
-        select->right.widget.margin_front = 0.5f;
         select->right.on_click = (i_callback_f)right_arrow_clicked;
         select->right.data = select;
         I_widget_add(&select->widget, &select->right.widget);

@@ -148,7 +148,7 @@ void G_join_game(const char *address)
 /******************************************************************************\
  Received updated trade parameters from the interface.
 \******************************************************************************/
-void G_trade_params(int index, int buy_price, int sell_price,
+void G_trade_params(g_cargo_type_t index, int buy_price, int sell_price,
                     int minimum, int maximum)
 {
         g_cargo_t old_cargo, *cargo;
