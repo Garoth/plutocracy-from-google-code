@@ -99,7 +99,7 @@ static void configure_controls(cargo_line_t *cargo)
 
         /* Limit controls to sane quantities */
         quantity.min = 0;
-        quantity.max = space_total;
+        quantity.max = (float)space_total;
         quantity.index = -1;
         price.min = 0;
         price.max = 999;
@@ -114,23 +114,23 @@ static void configure_controls(cargo_line_t *cargo)
 
                 /* Force sane values relative to sell controls */
                 if (cargo->info.auto_sell) {
-                        quantity.min = cargo->info.minimum;
-                        price.max = cargo->info.sell_price;
+                        quantity.min = (float)cargo->info.minimum;
+                        price.max = (float)cargo->info.sell_price;
                 }
 
-                I_select_nearest(&quantity, cargo->info.maximum);
-                I_select_nearest(&price, cargo->info.buy_price);
+                I_select_nearest(&quantity, (float)cargo->info.maximum);
+                I_select_nearest(&price, (float)cargo->info.buy_price);
         } else {
                 I_select_change(&active, cargo->info.auto_sell);
 
                 /* Force sane values relative to buy controls */
                 if (cargo->info.auto_buy) {
-                        quantity.max = cargo->info.maximum;
-                        price.min = cargo->info.buy_price;
+                        quantity.max = (float)cargo->info.maximum;
+                        price.min = (float)cargo->info.buy_price;
                 }
 
-                I_select_nearest(&quantity, cargo->info.minimum);
-                I_select_nearest(&price, cargo->info.sell_price);
+                I_select_nearest(&quantity, (float)cargo->info.minimum);
+                I_select_nearest(&price, (float)cargo->info.sell_price);
         }
         configuring = FALSE;
         configure_buttons(cargo);
@@ -248,12 +248,12 @@ static void controls_changed(void)
         /* Update our stored values */
         if (mode.index == MODE_BUY) {
                 cargo->info.auto_buy = active.index;
-                cargo->info.buy_price = I_select_value(&price);
-                cargo->info.maximum = I_select_value(&quantity);
+                cargo->info.buy_price = (int)I_select_value(&price);
+                cargo->info.maximum = (int)I_select_value(&quantity);
         } else if (mode.index == MODE_SELL) {
                 cargo->info.auto_sell = active.index;
-                cargo->info.sell_price = I_select_value(&price);
-                cargo->info.minimum = I_select_value(&quantity);
+                cargo->info.sell_price = (int)I_select_value(&price);
+                cargo->info.minimum = (int)I_select_value(&quantity);
         }
         cargo_line_configure(cargo);
 
@@ -263,7 +263,8 @@ static void controls_changed(void)
                 buy_price = cargo->info.buy_price;
         if (cargo->info.auto_sell)
                 sell_price = cargo->info.sell_price;
-        G_trade_params(cargo - cargo_lines, buy_price, sell_price,
+        G_trade_params((g_cargo_type_t)(cargo - cargo_lines), 
+                       buy_price, sell_price,
                        cargo->info.minimum, cargo->info.maximum);
 }
 

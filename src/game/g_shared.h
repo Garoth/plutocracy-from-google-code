@@ -80,7 +80,7 @@ void G_join_game(const char *address);
 void G_leave_game(void);
 bool G_process_click(int button);
 void G_process_key(int key, bool shift, bool ctrl, bool alt);
-void G_trade_params(int cargo, int buy_price, int sell_price,
+void G_trade_params(g_cargo_type_t, int buy_price, int sell_price,
                     int minimum, int maximum);
 
 /* g_elements.c */

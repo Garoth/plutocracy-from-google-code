@@ -52,7 +52,7 @@ void G_register_variables(void)
                            "maximum size of islands, 0 for default");
         C_register_float(&g_island_variance, "g_island_variance", -1.f,
                            "proportion of island size to randomize");
-        C_register_float(&g_forest, "g_forest", 0.8,
+        C_register_float(&g_forest, "g_forest", 0.8f,
                            "proportion of tiles that have trees");
 
         /* Nation colors */
