@@ -270,9 +270,9 @@ SDL_Surface *R_surface_load_png(const char *filename, bool *alpha)
 
         /* If an error occurs in libpng, it will longjmp back here */
         if (setjmp(png_ptr->jmpbuf)) {
-		C_warning("Error loading PNG '%s'", filename);
-		goto cleanup;
-	}
+                C_warning("Error loading PNG '%s'", filename);
+                goto cleanup;
+        }
 
         /* Allocate a PNG info struct */
         info_ptr = png_create_info_struct(png_ptr);
@@ -398,9 +398,9 @@ int R_surface_save(SDL_Surface *surface, const char *filename)
 
         /* If an error occurs in libpng, it will longjmp back here */
         if (setjmp(png_ptr->jmpbuf)) {
-		C_warning("Error saving PNG '%s'", filename);
-		goto cleanup;
-	}
+                C_warning("Error saving PNG '%s'", filename);
+                goto cleanup;
+        }
 
         /* Allocate a PNG info struct */
         info_ptr = png_create_info_struct(png_ptr);

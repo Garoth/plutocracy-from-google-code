@@ -263,7 +263,7 @@ static void controls_changed(void)
                 buy_price = cargo->info.buy_price;
         if (cargo->info.auto_sell)
                 sell_price = cargo->info.sell_price;
-        G_trade_params((g_cargo_type_t)(cargo - cargo_lines), 
+        G_trade_params((g_cargo_type_t)(cargo - cargo_lines),
                        buy_price, sell_price,
                        cargo->info.minimum, cargo->info.maximum);
 }

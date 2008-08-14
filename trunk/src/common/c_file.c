@@ -135,7 +135,8 @@ void C_file_flush(c_file_t *file)
 
 /******************************************************************************\
  Format a string according to [fmt] and write it to file [file]. Returns the
- number of bytes actually written.
+ number of bytes actually written. This version accepts a va_list parameter
+ instead of an actual variable argument list.
 \******************************************************************************/
 int C_file_vprintf(c_file_t *file, const char *fmt, va_list va)
 {
@@ -152,7 +153,7 @@ int C_file_vprintf(c_file_t *file, const char *fmt, va_list va)
 \******************************************************************************/
 int C_file_printf(c_file_t *file, const char *fmt, ...)
 {
-	va_list ap;
+        va_list ap;
         int ret;
 
         va_start(ap, fmt);

@@ -54,7 +54,7 @@ i_color_t G_nation_to_color(g_nation_name_t nation)
 }
 
 /******************************************************************************\
- Initialize game structures before play.
+ Initialize game elements.
 \******************************************************************************/
 void G_init_elements(void)
 {

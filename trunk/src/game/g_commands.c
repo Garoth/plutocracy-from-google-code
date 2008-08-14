@@ -19,7 +19,7 @@
 int g_hover_tile, g_hover_ship, g_selected_ship;
 
 /******************************************************************************\
- Leave the current game.
+ Interface wants us to leave the current game.
 \******************************************************************************/
 void G_leave_game(void)
 {

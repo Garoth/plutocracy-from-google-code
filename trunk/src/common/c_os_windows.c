@@ -19,7 +19,7 @@
 
 /******************************************************************************\
  Creates directory if it does not already exist. Returns TRUE if the directory
- exists after the call.
+ exists after the call. Windows version.
 \******************************************************************************/
 int C_mkdir(const char *path)
 {
@@ -34,7 +34,7 @@ int C_mkdir(const char *path)
 
 /******************************************************************************\
  Returns the path to the user's writeable Plutocracy directory without
- trailing slash.
+ trailing slash. Windows version.
 \******************************************************************************/
 const char *C_user_dir(void)
 {
@@ -54,7 +54,7 @@ const char *C_user_dir(void)
 }
 
 /******************************************************************************\
- Returns the path to the program installation.
+ Returns the path to the program installation. Windows version.
 \******************************************************************************/
 const char *C_app_dir(void)
 {

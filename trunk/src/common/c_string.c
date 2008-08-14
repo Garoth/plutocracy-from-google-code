@@ -42,39 +42,39 @@ static int translations_len;
 \******************************************************************************/
 char *C_vanv(int *plen, const char *fmt, va_list va)
 {
-	static char buffer[C_VA_BUFFERS][C_VA_BUFFER_SIZE];
-	static int which;
-	int len;
+        static char buffer[C_VA_BUFFERS][C_VA_BUFFER_SIZE];
+        static int which;
+        int len;
 
-	which++;
-	if (which >= C_VA_BUFFERS)
-	        which = 0;
-	len = vsnprintf(buffer[which], sizeof (buffer[which]), fmt, va);
-	if (plen)
-		*plen = len;
-	return buffer[which];
+        which++;
+        if (which >= C_VA_BUFFERS)
+                which = 0;
+        len = vsnprintf(buffer[which], sizeof (buffer[which]), fmt, va);
+        if (plen)
+                *plen = len;
+        return buffer[which];
 }
 
 char *C_van(int *plen, const char *fmt, ...)
 {
-	va_list va;
-	char *string;
+        va_list va;
+        char *string;
 
-	va_start(va, fmt);
-	string = C_vanv(plen, fmt, va);
-	va_end(va);
-	return string;
+        va_start(va, fmt);
+        string = C_vanv(plen, fmt, va);
+        va_end(va);
+        return string;
 }
 
 char *C_va(const char *fmt, ...)
 {
-	va_list va;
-	char *string;
+        va_list va;
+        char *string;
 
-	va_start(va, fmt);
-	string = C_vanv(NULL, fmt, va);
-	va_end(va);
-	return string;
+        va_start(va, fmt);
+        string = C_vanv(NULL, fmt, va);
+        va_end(va);
+        return string;
 }
 
 /******************************************************************************\
