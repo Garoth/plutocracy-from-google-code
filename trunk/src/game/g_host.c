@@ -34,8 +34,8 @@ static void cm_affiliate(int client)
         /* If this client just joined a nation for the first time,
            try to give them a starter ship */
         tile = -1;
-        ship = G_ship_spawn(-1, client, -1, G_ST_SLOOP);
-        if (old == G_NN_NONE && ship >= 0) {
+        if (old == G_NN_NONE &&
+            (ship = G_ship_spawn(-1, client, -1, G_ST_SLOOP)) >= 0) {
                 tile = g_ships[ship].tile;
                 G_store_add(&g_ships[ship].store, G_CT_GOLD, 500);
                 G_store_add(&g_ships[ship].store, G_CT_CREW, 10);

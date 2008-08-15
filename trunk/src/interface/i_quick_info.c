@@ -10,17 +10,17 @@
  FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
 \******************************************************************************/
 
-/* Window to provide information about the currently hovered-over tile */
+/* Window to provide quick information about the current selection */
 
 #include "i_common.h"
 
 static i_label_t title_label;
-static i_window_t hover_window;
+static i_window_t quick_info_window;
 
 /******************************************************************************\
  Event function for hover window.
 \******************************************************************************/
-static bool hover_window_event(i_window_t *window, i_event_t event)
+static bool quick_info_event(i_window_t *window, i_event_t event)
 {
         /* Position and size the window */
         if (event == I_EV_CONFIGURE) {
@@ -33,58 +33,68 @@ static bool hover_window_event(i_window_t *window, i_event_t event)
 }
 
 /******************************************************************************\
- Show the hover window and set its title.
+ Show the quick info window and set its title.
 \******************************************************************************/
-void I_hover_show(const char *title)
+void I_quick_info_show(const char *title)
 {
+        float fade;
+
         /* Get rid of the old window */
-        I_widget_event(&hover_window.widget, I_EV_CLEANUP);
+        fade = quick_info_window.widget.fade;
+        I_widget_event(&quick_info_window.widget, I_EV_CLEANUP);
 
         /* Add the window to the root widget */
-        I_window_init(&hover_window);
-        hover_window.widget.auto_configure = TRUE;
-        hover_window.widget.event_func = (i_event_f)hover_window_event;
-        hover_window.fit = I_FIT_BOTTOM;
-        hover_window.popup = TRUE;
-        I_widget_add(&i_root, &hover_window.widget);
+        I_window_init(&quick_info_window);
+        quick_info_window.widget.auto_configure = TRUE;
+        quick_info_window.widget.event_func = (i_event_f)quick_info_event;
+        quick_info_window.fit = I_FIT_BOTTOM;
+        quick_info_window.popup = TRUE;
+        quick_info_window.auto_hide = TRUE;
+        I_widget_add(&i_root, &quick_info_window.widget);
 
         /* Add the title */
         I_label_init(&title_label, title);
         title_label.font = R_FONT_TITLE;
-        I_widget_add(&hover_window.widget, &title_label.widget);
+        I_widget_add(&quick_info_window.widget, &title_label.widget);
+
+        /* Preserve the window's fade */
+        I_widget_fade(&quick_info_window.widget, fade);
 }
 
 /******************************************************************************\
- Close the hover window. The window will need to be initialized again the next
- time it is shown.
+ Close the quick info window. The window will need to be initialized again the
+ next time it is shown.
 \******************************************************************************/
-void I_hover_close(void)
+void I_quick_info_close(void)
 {
-        if (!hover_window.widget.configured)
+        if (!quick_info_window.widget.configured)
                 return;
-        I_widget_event(&hover_window.widget, I_EV_HIDE);
+        I_widget_event(&quick_info_window.widget, I_EV_HIDE);
 }
 
 /******************************************************************************\
- Add an information item to the hover window.
+ Add an information item to the quick info window.
 \******************************************************************************/
-void I_hover_add(const char *label, const char *value)
+void I_quick_info_add(const char *label, const char *value)
 {
         i_info_t *info;
 
         info = I_info_alloc(label, value);
-        I_widget_add(&hover_window.widget, &info->widget);
+        I_widget_add(&quick_info_window.widget, &info->widget);
+        I_widget_fade(&info->widget, quick_info_window.widget.fade);
 }
 
 /******************************************************************************\
- Add a colored information item to the hover window.
+ Add a colored information item to the quick info window.
 \******************************************************************************/
-void I_hover_add_color(const char *label, const char *value, i_color_t color)
+void I_quick_info_add_color(const char *label, const char *value,
+                            i_color_t color)
 {
         i_info_t *info;
 
         info = I_info_alloc(label, value);
+        I_widget_add(&quick_info_window.widget, &info->widget);
+        I_widget_fade(&info->widget, quick_info_window.widget.fade);
         info->right.color = color;
-        I_widget_add(&hover_window.widget, &info->widget);
 }
 

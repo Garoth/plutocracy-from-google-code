@@ -528,7 +528,6 @@ void G_mouse_ray_miss(void)
 {
         if (g_hover_tile < 0)
                 return;
-        g_tiles[g_hover_tile].model.selected = FALSE;
         R_select_tile(g_hover_tile = -1, R_ST_NONE);
 }
 
@@ -548,10 +547,6 @@ void G_mouse_ray(c_vec3_t origin, c_vec3_t forward)
                 G_hover_tile(g_hover_tile);
                 return;
         }
-
-        /* Disable selected tile effect for old model */
-        if (g_hover_tile >= 0)
-                g_tiles[g_hover_tile].model.selected = FALSE;
 
         /* Iterate over all visible tiles to find the selected tile */
         for (i = 0, tile = -1, tile_z = 0.f; i < r_tiles; i++) {

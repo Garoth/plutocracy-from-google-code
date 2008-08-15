@@ -78,18 +78,26 @@ typedef enum {
         R_ST_NONE,
 } r_select_type_t;
 
+/* Model selection types */
+typedef enum {
+        R_MS_NONE,
+        R_MS_SELECTED,
+        R_MS_HOVER,
+} r_model_select_t;
+
 /* Opaque texture object */
 typedef struct r_texture r_texture_t;
 
 /* Model instance type */
 typedef struct r_model {
-        c_vec3_t origin, normal, forward;
-        c_color_t modulate;
-        GLfloat matrix[16];
         struct r_model_data *data;
+        r_model_select_t selected;
+        c_vec3_t origin, normal, forward;
+        c_color_t additive, modulate;
+        GLfloat matrix[16];
         float scale;
         int anim, frame, last_frame, last_frame_time, time_left;
-        bool unlit, selected;
+        bool unlit;
 } r_model_t;
 
 /* 2D textured quad sprite, can only be rendered in 2D mode */
