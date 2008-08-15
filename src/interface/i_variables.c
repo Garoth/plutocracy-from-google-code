@@ -16,7 +16,8 @@
 c_var_t i_debug;
 
 /* Theme variables */
-c_var_t i_border, i_color, i_color_alt, i_fade, i_shadow, i_theme;
+c_var_t i_border, i_color, i_color_alt, i_color_bad, i_color_good,
+        i_fade, i_shadow, i_theme;
 
 /* Interface usability variables */
 c_var_t i_scroll_speed, i_zoom_speed;
@@ -46,6 +47,12 @@ void I_register_variables(void)
         C_register_string(&i_color_alt, "i_color_alt", "butter1",
                           "interface alternate text color");
         i_color_alt.archive = FALSE;
+        C_register_string(&i_color_bad, "i_color_bad", "#fca64f",
+                          "interface 'bad' text color");
+        i_color_bad.archive = FALSE;
+        C_register_string(&i_color_good, "i_color_good", "#d9fc4f",
+                          "interface 'good' text color");
+        i_color_good.archive = FALSE;
         C_register_float(&i_fade, "i_fade", 4.f,
                          "rate of fade in and out for widgets");
         i_fade.archive = FALSE;

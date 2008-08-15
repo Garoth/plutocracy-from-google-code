@@ -69,6 +69,8 @@ static int root_event(i_widget_t *root, i_event_t event)
         case I_EV_CONFIGURE:
                 i_colors[I_COLOR] = C_color_string(i_color.value.s);
                 i_colors[I_COLOR_ALT] = C_color_string(i_color_alt.value.s);
+                i_colors[I_COLOR_BAD] = C_color_string(i_color_bad.value.s);
+                i_colors[I_COLOR_GOOD] = C_color_string(i_color_good.value.s);
                 I_update_colors();
 
                 /* Size and position limbo logo */

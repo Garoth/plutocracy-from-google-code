@@ -91,6 +91,7 @@ init:   /* Initialize ship structure */
         ship->health = g_ship_classes[type].health;
         ship->forward = g_tiles[tile].forward;
         ship->trade_tile = -1;
+        ship->focus_stamp = -1;
 
         /* Start out unnamed */
         C_strncpy_buf(ship->name, C_va("Unnamed #%d", index));
@@ -417,65 +418,64 @@ void G_update_ships(void)
 \******************************************************************************/
 void G_ship_hover(int index)
 {
-        static int hover_time;
-        int tile;
+        r_model_t *model;
 
+        if (g_hover_ship >= 0)
+                model = &g_tiles[g_ships[g_hover_ship].tile].model;
         if (g_hover_ship == index) {
-                g_ship_t *ship;
-                g_ship_class_t *ship_class;
-                i_color_t color;
-
                 if (index < 0)
                         return;
 
                 /* Ship can get unhighlighted for whatever reason */
-                ship = g_ships + index;
-                g_tiles[ship->tile].model.selected = TRUE;
+                if (!model->selected)
+                        model->selected = R_MS_HOVER;
 
-                /* Show the hover window after a delay */
-                if (!hover_time || c_time_msec - hover_time < G_HOVER_DELAY)
-                        return;
-                hover_time = 0;
-                ship_class = g_ship_classes + ship->type;
-                I_hover_show(ship->name);
-
-                /* Owner */
-                color = G_nation_to_color(g_clients[ship->client].nation);
-                I_hover_add_color("Owner:", g_clients[ship->client].name,
-                                  color);
-
-                /* Health */
-                I_hover_add("Health:", C_va("%d/%d", ship->health,
-                                            ship_class->health));
-
-                if (ship->store.visible[n_client_id]) {
-
-                        /* Cargo */
-                        I_hover_add("Cargo:",
-                                    C_va("%d/%d", ship->store.space_used,
-                                                  ship->store.capacity));
-
-                        /* Gold */
-                        I_hover_add("Gold:",
-                                    C_va("%dg", ship->store.cargo[G_CT_GOLD]));
-                }
                 return;
         }
 
-        /* Clean up the last hovered-over ship */
-        if (g_hover_ship >= 0) {
-                tile = g_ships[g_hover_ship].tile;
-                g_tiles[tile].model.selected = FALSE;
-                hover_time = 0;
-                I_hover_close();
-        }
+        /* Deselect last hovered-over ship */
+        if (g_hover_ship >= 0 && model->selected == R_MS_HOVER)
+                model->selected = R_MS_NONE;
 
         /* Highlight the new ship */
         if ((g_hover_ship = index) < 0)
                 return;
-        tile = g_ships[index].tile;
-        g_tiles[tile].model.selected = TRUE;
-        hover_time = c_time_msec;
+        model = &g_tiles[g_ships[index].tile].model;
+        if (!model->selected)
+                model->selected = R_MS_HOVER;
+}
+
+/******************************************************************************\
+ Setup the quick info window to reflect a ship's information.
+\******************************************************************************/
+static void ship_quick_info(int index)
+{
+        g_ship_t *ship;
+        g_ship_class_t *ship_class;
+        i_color_t color;
+        float prop;
+
+        if (index < 0) {
+                I_quick_info_close();
+                return;
+        }
+        ship = g_ships + index;
+        ship_class = g_ship_classes + ship->type;
+        I_quick_info_show(ship->name);
+
+        /* Owner */
+        color = G_nation_to_color(g_clients[ship->client].nation);
+        I_quick_info_add_color("Owner:", g_clients[ship->client].name, color);
+
+        /* Health */
+        color = I_COLOR_ALT;
+        prop = (float)ship->health / ship_class->health;
+        if (prop >= 0.67)
+                color = I_COLOR_GOOD;
+        if (prop <= 0.33)
+                color = I_COLOR_BAD;
+        I_quick_info_add_color("Health:", C_va("%d/%d", ship->health,
+                                               ship_class->health), color);
 }
 
 /******************************************************************************\
@@ -483,30 +483,40 @@ void G_ship_hover(int index)
 \******************************************************************************/
 void G_ship_select(int index)
 {
-        i_color_t color;
-        n_client_id_t client;
-        bool own;
+        r_model_t *model;
 
         if (g_selected_ship == index)
                 return;
-        g_selected_ship = index;
-        own = FALSE;
+
+        /* Deselect previous ship */
+        if (g_selected_ship >= 0) {
+                model = &g_tiles[g_ships[g_selected_ship].tile].model;
+                model->selected = R_MS_NONE;
+        }
+
+        /* Select the new ship */
         if (index >= 0) {
-                own = g_ships[index].client == n_client_id;
-                if (own && g_selected_ship == index)
+                model = &g_tiles[g_ships[index].tile].model;
+                model->selected = R_MS_SELECTED;
+
+                /* Only show the path of our own ships */
+                if (g_ships[index].client == n_client_id)
                         R_select_path(g_ships[index].tile, g_ships[index].path);
                 else
                         R_select_path(-1, NULL);
-                client = g_ships[index].client;
-                color = G_nation_to_color(g_clients[client].nation);
-                ship_configure_trade(index);
-        } else {
-                R_select_path(-1, NULL);
-                ship_configure_trade(-1);
         }
+
+        /* Deselect */
+        else
+                R_select_path(-1, NULL);
+
+        ship_configure_trade(index);
+        ship_quick_info(index);
 
         /* Selecting a ship resets the focus order */
         focus_stamp++;
+
+        g_selected_ship = index;
 }
 
 /******************************************************************************\

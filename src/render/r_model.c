@@ -482,6 +482,7 @@ static void update_animation(r_model_t *model)
 \******************************************************************************/
 void R_model_render(r_model_t *model)
 {
+        c_color_t add_color;
         c_vec3_t side;
         mesh_t *meshes;
         int i;
@@ -551,11 +552,16 @@ void R_model_render(r_model_t *model)
                 glMaterialfv(GL_FRONT, GL_SPECULAR, (GLfloat *)&color);
         }
 
-        /* If this model is selected, multitexture the selected texture */
-        if (model->selected && r_white_tex && r_ext.multitexture > 1) {
+        /* If this model is selected, multitexture the selected color */
+        add_color = model->additive;
+        if (model->selected == R_MS_SELECTED)
+                add_color = C_color_add(model->additive, r_fog_color);
+        else if (model->selected == R_MS_HOVER)
+                add_color = C_color_add(model->additive, r_select_color);
+        if (add_color.a > 0.f && r_white_tex && r_ext.multitexture > 1) {
                 c_color_t mod_color;
 
-                mod_color = C_color_mod(r_select_color, r_select_color.a);
+                mod_color = C_color_mod(add_color, add_color.a);
                 r_ext.glActiveTexture(GL_TEXTURE1);
                 glEnable(GL_TEXTURE_2D);
                 glBindTexture(GL_TEXTURE_2D, r_white_tex->gl_name);

@@ -120,24 +120,46 @@ void R_render_ship_status(const r_model_t *model, float left, float left_max,
 {
         R_push_mode(R_MODE_3D);
         R_gl_disable(GL_LIGHTING);
+
+        /* Modulate and position with the ship model */
         modulate = C_color_scale(modulate, model->modulate);
         glColor4f(modulate.r, modulate.g, modulate.b, modulate.a);
         glMultMatrixf(model->matrix);
+
+        /* Do not write to the depth buffer or we might occlude another
+           status display which looks wrong */
         glDepthMask(GL_FALSE);
+
+        /* Outer circle, solid for ours and dashed for others' ships */
         render_quad(own ? quad_tex : quad_other_tex);
-        if (selected) {
+
+        /* Render selection circle if selected or hovering */
+        if (selected || model->selected) {
+                float alpha;
+
+                alpha = r_select_color.a;
+                if (selected)
+                        alpha = r_fog_color.a;
                 glColor4f(r_select_color.r, r_select_color.g, r_select_color.b,
-                          r_fog_color.a);
+                          alpha);
                 render_quad(select_tex);
         }
+
+        /* If multisampling is on, enable it or the edges of the bars will
+           have aliasing */
         if (r_multisample.value.n)
                 R_gl_enable(GL_MULTISAMPLE);
+
+        /* Render the health bars' maximum values */
         glColor4f(modulate.r, modulate.g, modulate.b,
                   modulate.a * BAR_BACKGROUND);
         render_bars(left_max, right_max);
+
+        /* Render the health bars' actual values */
         glColor4f(modulate.r, modulate.g, modulate.b,
                   modulate.a * (1.f - BAR_BACKGROUND));
         render_bars(left, right);
+
         glDepthMask(GL_TRUE);
 
         /* Make sure these are off after the interleaved array calls */

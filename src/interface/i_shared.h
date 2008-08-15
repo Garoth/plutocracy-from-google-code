@@ -21,6 +21,8 @@ typedef enum {
         I_COLOR_GREEN,
         I_COLOR_BLUE,
         I_COLOR_PIRATE,
+        I_COLOR_GOOD,
+        I_COLOR_BAD,
         I_COLORS
 } i_color_t;
 
@@ -47,11 +49,11 @@ typedef struct i_cargo_info {
 /* i_chat.c */
 void I_print_chat(const char *name, i_color_t, const char *message);
 
-/* i_hover.c */
-void I_hover_add(const char *label, const char *value);
-void I_hover_add_color(const char *label, const char *value, i_color_t);
-void I_hover_close(void);
-void I_hover_show(const char *title);
+/* i_quick_info.c */
+void I_quick_info_add(const char *label, const char *value);
+void I_quick_info_add_color(const char *label, const char *value, i_color_t);
+void I_quick_info_close(void);
+void I_quick_info_show(const char *title);
 
 /* i_layout.c */
 void I_cleanup(void);

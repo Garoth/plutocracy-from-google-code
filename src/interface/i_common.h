@@ -347,8 +347,9 @@ void I_theme_statics(void);
 void I_init_trade(i_window_t *);
 
 /* i_variables.c */
-extern c_var_t i_border, i_color, i_color_alt, i_debug, i_fade, i_ip,
-               i_scroll_speed, i_shadow, i_test_globe, i_theme, i_zoom_speed;
+extern c_var_t i_border, i_color, i_color_alt, i_color_bad, i_color_good,
+               i_debug, i_fade, i_ip, i_scroll_speed, i_shadow,
+               i_test_globe, i_theme, i_zoom_speed;
 
 /* i_video.c */
 void I_init_video(i_window_t *);
@@ -359,6 +360,7 @@ const char *I_event_to_string(i_event_t);
 c_vec2_t I_widget_bounds(const i_widget_t *, i_pack_t);
 bool I_widget_child_of(const i_widget_t *parent, const i_widget_t *child);
 void I_widget_event(i_widget_t *, i_event_t);
+void I_widget_fade(i_widget_t *, float opacity);
 void I_widget_focus(i_widget_t *, bool key, bool mouse);
 void I_widget_init(i_widget_t *, const char *class_name);
 void I_widget_move(i_widget_t *, c_vec2_t new_origin);

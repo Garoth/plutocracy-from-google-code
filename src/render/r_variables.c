@@ -44,9 +44,9 @@ c_var_t r_screenshots_dir;
 void R_register_variables(void)
 {
         /* Video parameters */
-        C_register_integer(&r_width, "r_width", 640, "window width in pixels");
+        C_register_integer(&r_width, "r_width", 800, "window width in pixels");
         r_width.unsafe = TRUE;
-        C_register_integer(&r_height, "r_height", 480,
+        C_register_integer(&r_height, "r_height", 600,
                            "window height in pixels");
         r_height.unsafe = TRUE;
         C_register_integer(&r_color_bits, "r_color_bits", 0,

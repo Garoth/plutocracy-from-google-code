@@ -534,6 +534,21 @@ void I_widget_focus(i_widget_t *widget, bool key, bool mouse)
 }
 
 /******************************************************************************\
+ Fade a widget and its children to a specific opacity.
+\******************************************************************************/
+void I_widget_fade(i_widget_t *widget, float fade)
+{
+        if (!widget)
+                return;
+        widget->fade = fade;
+        widget = widget->child;
+        while (widget) {
+                I_widget_fade(widget, fade);
+                widget = widget->next;
+        }
+}
+
+/******************************************************************************\
  Handle an SDL event. Does not allow multiple keys or mouse buttons to be
  pressed at the same time.
 \******************************************************************************/
