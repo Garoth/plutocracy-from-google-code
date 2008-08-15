@@ -232,15 +232,32 @@ static int set_video_mode(void)
 
 /******************************************************************************\
  Checks the extension string to see if an extension is listed.
- FIXME: Will return false-positive for partial match
 \******************************************************************************/
-static int check_extension(const char *ext)
+static bool check_extension(const char *ext)
 {
         static const char *ext_str;
+        static int ext_str_len;
+        const char *str;
+        int len;
 
-        if (!ext_str)
+        if (!ext_str) {
                 ext_str = (const char *)glGetString(GL_EXTENSIONS);
-        return strstr(ext_str, ext) != NULL;
+                if (!ext_str)
+                        return FALSE;
+                ext_str_len = C_strlen(ext_str);
+        }
+        len = C_strlen(ext);
+        for (str = ext_str; ; ) {
+                str = strstr(str, ext);
+                if (!*str)
+                        break;
+                if (str + len > ext_str + ext_str_len)
+                        return FALSE;
+                if (str[len] > ' ')
+                        continue;
+                return TRUE;
+        }
+        return FALSE;
 }
 
 /******************************************************************************\
