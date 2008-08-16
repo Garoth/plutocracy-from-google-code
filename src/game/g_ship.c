@@ -476,6 +476,16 @@ static void ship_quick_info(int index)
                 color = I_COLOR_BAD;
         I_quick_info_add_color("Health:", C_va("%d/%d", ship->health,
                                                ship_class->health), color);
+
+        /* Armor */
+        color = I_COLOR_ALT;
+        prop = (float)ship->armor / ship_class->health;
+        if (prop >= 0.67)
+                color = I_COLOR_GOOD;
+        if (prop <= 0.33)
+                color = I_COLOR_BAD;
+        I_quick_info_add_color("Armor:", C_va("%d/%d", ship->armor,
+                                               ship_class->health), color);
 }
 
 /******************************************************************************\
