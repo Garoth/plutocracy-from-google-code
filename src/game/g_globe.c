@@ -15,9 +15,6 @@
 
 #include "g_common.h"
 
-/* Maximum number of islands. Do not set this value above G_ISLAND_INVALID. */
-#define ISLAND_NUM 254
-
 /* Maximum island size */
 #define ISLAND_SIZE 256
 
@@ -33,17 +30,14 @@
 /* Distance that models fade out */
 #define MODEL_FADE_DIST 4.f
 
-/* Island structure */
-typedef struct g_island {
-        int tiles, land, root;
-} g_island_t;
-
 /* Island tiles with game data */
 g_tile_t g_tiles[R_TILES_MAX];
 
-static g_island_t islands[ISLAND_NUM];
+/* Array of islands */
+g_island_t g_islands[G_ISLAND_NUM];
+int g_islands_len;
+
 static float visible_range;
-static int islands_len;
 
 /******************************************************************************\
  Randomly selects a tile ground terrain based on climate approximations.
@@ -85,23 +79,40 @@ static void sanitise_terrain(void)
                             g_tiles[region[j]].island != g_tiles[i].island)
                                 goto skip_shallow;
                 r_tile_params[i].terrain = R_T_SAND;
-                islands[g_tiles[i].island].land++;
+                g_islands[g_tiles[i].island].land++;
                 land++;
-skip_shallow:   ;
+skip_shallow:   continue;
         }
 
         /* During the second pass, convert sand tiles to ground tiles and
-           set terrain height */
+           set terrain height. Also remove any shallow water tiles that are
+           not next to shore. */
         hot = cold = temp = 0;
         for (i = 0; i < r_tiles; i++) {
+                r_terrain_t terrain;
+
+                /* Convert shallow water to deep water if not next to shore */
+                if (r_tile_params[i].terrain == R_T_SHALLOW) {
+                        region_len = R_get_tile_region(i, region);
+                        for (j = 0; j < region_len; j++) {
+                                terrain = r_tile_params[region[j]].terrain;
+                                if (terrain == R_T_SAND)
+                                        goto skip_deep;
+                        }
+                        r_tile_params[region[j]].terrain = R_T_WATER;
+skip_deep:              continue;
+                }
+
+                /* Convert fully surrounded sand to ground */
                 if (r_tile_params[i].terrain != R_T_SAND)
                         continue;
                 region_len = R_get_tile_region(i, region);
-                for (j = 0; j < region_len; j++)
-                        if (r_tile_params[region[j]].terrain == R_T_SHALLOW ||
-                            r_tile_params[region[j]].terrain == R_T_WATER ||
+                for (j = 0; j < region_len; j++) {
+                        terrain = r_tile_params[region[j]].terrain;
+                        if (terrain == R_T_SHALLOW || terrain == R_T_WATER ||
                             g_tiles[region[j]].island != g_tiles[i].island)
                                 goto skip_sand;
+                }
                 r_tile_params[i].terrain = choose_terrain(i);
 
                 /* Give height to tile region */
@@ -114,15 +125,15 @@ skip_shallow:   ;
                         hot++;
                 else if (r_tile_params[i].terrain == R_T_GROUND_COLD)
                         cold++;
-skip_sand:      ;
+skip_sand:      continue;
         }
 
         /* Count failed islands */
-        for (failed = 0, i = 0; i < islands_len; i++)
-                if (islands[i].land < ISLAND_LAND)
+        for (failed = 0, i = 0; i < g_islands_len; i++)
+                if (g_islands[i].land < ISLAND_LAND)
                         failed++;
         C_debug("%d of %d islands succeeded",
-                islands_len - failed, islands_len);
+                g_islands_len - failed, g_islands_len);
 
         /* During the third pass, smooth terrain height and remove failed
            islands*/
@@ -130,7 +141,7 @@ skip_sand:      ;
                 float height;
 
                 /* Remove this tile if it belongs to a failed island */
-                if (islands[g_tiles[i].island].land < ISLAND_LAND) {
+                if (g_islands[g_tiles[i].island].land < ISLAND_LAND) {
                         r_tile_params[i].terrain = R_T_WATER;
                         r_tile_params[i].height = 0.f;
                         g_tiles[i].island = G_ISLAND_INVALID;
@@ -153,10 +164,10 @@ skip_sand:      ;
                         "%d cold (%d%%)", sand, 100 * sand / land,
                         temp, 100 * temp / land, hot, 100 * hot / land,
                         cold, 100 * cold / land);
-        for (i = 0; i < islands_len; i++)
+        for (i = 0; i < g_islands_len; i++)
                 C_trace("Island %d, %d of %d land tiles (%d%%)",
-                        i, islands[i].land, islands[i].tiles,
-                        100 * islands[i].land / islands[i].tiles);
+                        i, g_islands[i].land, g_islands[i].tiles,
+                        100 * g_islands[i].land / g_islands[i].tiles);
 }
 
 /******************************************************************************\
@@ -171,8 +182,8 @@ static bool grow_island(int i, int limit)
                 limit = ISLAND_LAND * 3;
         if (limit > ISLAND_SIZE)
                 limit = ISLAND_SIZE;
-        islands[i].tiles = 0;
-        islands[i].land = 0;
+        g_islands[i].tiles = 0;
+        g_islands[i].land = 0;
 
         /* Find an unused root tile */
         for (j = start = C_rand() % r_tiles; j < r_tiles; j++)
@@ -183,8 +194,9 @@ static bool grow_island(int i, int limit)
                         goto grow;
         return FALSE;
 
-grow:   edges[0] = islands[i].root = j;
-        for (size = 1; size && islands[i].tiles < limit; islands[i].tiles++) {
+grow:   edges[0] = g_islands[i].root = j;
+        for (size = 1; size && g_islands[i].tiles < limit;
+             g_islands[i].tiles++) {
                 int k, index, neighbors[3];
 
                 index = C_rand() % size;
@@ -222,15 +234,15 @@ static void grow_islands(int num, int island_size, float variance)
 
         if (num < 1 || island_size < 1)
                 return;
-        if (num > ISLAND_NUM)
-                num = ISLAND_NUM;
+        if (num > G_ISLAND_NUM)
+                num = G_ISLAND_NUM;
         if (island_size > ISLAND_SIZE)
                 island_size = ISLAND_SIZE;
         C_debug("Growing %d, %d-tile islands", num, island_size);
-        for (islands_len = 0; islands_len < num; islands_len++) {
+        for (g_islands_len = 0; g_islands_len < num; g_islands_len++) {
                 limit = (int)((1.f - variance * C_rand_real()) * island_size);
-                if (!grow_island(islands_len, limit)) {
-                        C_debug("Could only fit %d islands", islands_len);
+                if (!grow_island(g_islands_len, limit)) {
+                        C_debug("Could only fit %d g_islands", g_islands_len);
                         break;
                 }
         }
@@ -300,14 +312,14 @@ void G_init_globe(void)
 {
         /* Generate a starter globe */
         C_var_unlatch(&g_globe_subdiv4);
-        C_var_unlatch(&g_islands);
+        C_var_unlatch(&g_island_num);
         C_var_unlatch(&g_island_size);
         C_var_unlatch(&g_island_variance);
         if (g_globe_subdiv4.value.n < 3)
                 g_globe_subdiv4.value.n = 3;
         if (g_globe_subdiv4.value.n > 5)
                 g_globe_subdiv4.value.n = 5;
-        G_generate_globe(g_globe_subdiv4.value.n, g_islands.value.n,
+        G_generate_globe(g_globe_subdiv4.value.n, g_island_num.value.n,
                          g_island_size.value.n, g_island_variance.value.f);
 }
 
@@ -352,7 +364,7 @@ void G_generate_globe(int subdiv4, int override_islands, int override_size,
                 break;
         default:
                 C_warning("Invalid subdivision %d", subdiv4);
-                islands_len = 0;
+                g_islands_len = 0;
                 return;
         }
         if (override_islands > 0)
@@ -387,8 +399,8 @@ void G_generate_globe(int subdiv4, int override_islands, int override_size,
         C_var_update(&g_test_tile, (c_var_update_f)test_tiles_update);
 
         /* Deselect everything */
-        g_hover_tile = -1;
-        g_selected_ship = -1;
+        g_hover_tile = g_selected_tile = -1;
+        g_hover_ship = g_selected_ship = -1;
 }
 
 /******************************************************************************\
@@ -458,7 +470,7 @@ void G_render_globe(void)
         }
         R_finish_globe();
 
-        /* Render a test line from the selected tile */
+        /* Render a test line from the hover tile */
         if (g_test_globe.value.n && g_hover_tile >= 0) {
                 c_vec3_t b;
 
@@ -526,9 +538,7 @@ static int ray_intersects_tile(c_vec3_t o, c_vec3_t d, int tile)
 \******************************************************************************/
 void G_mouse_ray_miss(void)
 {
-        if (g_hover_tile < 0)
-                return;
-        R_select_tile(g_hover_tile = -1, R_ST_NONE);
+        G_hover_tile(-1);
 }
 
 /******************************************************************************\
@@ -541,7 +551,7 @@ void G_mouse_ray(c_vec3_t origin, c_vec3_t forward)
         float tile_z, z;
         int i, tile;
 
-        /* We can quit early if the selected tile is still being hovered over */
+        /* We can quit early if the hover tile is still being hovered over */
         if (g_hover_tile >= 0 && g_tiles[g_hover_tile].visible &&
             ray_intersects_tile(origin, forward, g_hover_tile)) {
                 G_hover_tile(g_hover_tile);

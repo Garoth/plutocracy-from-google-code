@@ -168,6 +168,7 @@ void R_zoom_cam_by(float);
 
 /* r_globe.c */
 void R_finish_globe(void);
+void R_hover_tile(int tile, r_select_type_t);
 void R_select_path(int tile, const char *path);
 void R_select_tile(int tile, r_select_type_t);
 void R_start_globe(void);

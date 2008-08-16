@@ -17,7 +17,7 @@
 /* Sine-wave blending modulation for the tile selection */
 #define SELECT_FREQ 0.005f
 #define SELECT_AMP 0.250f
-#define SELECT_MODULATE 0.67f
+#define SELECT_MODULATE 0.5f
 
 /* Current selection color */
 c_color_t r_select_color;
@@ -32,10 +32,10 @@ float r_globe_light;
 float r_zoom_max;
 
 /* Select overlays */
-static r_vertex3_t select_verts[3], path_verts[R_PATH_MAX * 3];
+static r_vertex3_t hover_verts[3], select_verts[3], path_verts[R_PATH_MAX * 3];
 static r_texture_t *select_tex[R_SELECT_TYPES];
-static r_select_type_t select_type;
-static int selected_tile, path_len;
+static r_select_type_t hover_type, select_type;
+static int hover_tile, selected_tile, path_len;
 
 /* Original globe colors */
 static c_color_t material_colors[3];
@@ -118,12 +118,26 @@ void R_start_globe(void)
         r_select_color.a *= SELECT_MODULATE * (1.f - SELECT_AMP *
                             (1.f - sinf(SELECT_FREQ * c_time_msec)));
 
+        /* Render hover triangle */
+        if (hover_tile >= 0 && hover_type != R_ST_NONE) {
+                R_gl_disable(GL_LIGHTING);
+                R_texture_select(select_tex[hover_type]);
+                glColor4f(r_select_color.r, r_select_color.g,
+                          r_select_color.b, r_select_color.a);
+                glInterleavedArrays(R_VERTEX3_FORMAT, sizeof (*hover_verts),
+                                    hover_verts);
+                glDrawArrays(GL_TRIANGLES, 0, 3);
+                glColor4f(1.f, 1.f, 1.f, 1.f);
+                C_count_add(&r_count_faces, 1);
+                R_gl_restore();
+        }
+
         /* Render selection triangle */
         if (selected_tile >= 0 && select_type != R_ST_NONE) {
                 R_gl_disable(GL_LIGHTING);
                 R_texture_select(select_tex[select_type]);
-                glColor4f(r_select_color.r, r_select_color.g,
-                          r_select_color.b, r_select_color.a);
+                glColor4f(r_fog_color.r, r_fog_color.g,
+                          r_fog_color.b, r_fog_color.a);
                 glInterleavedArrays(R_VERTEX3_FORMAT, sizeof (*select_verts),
                                     select_verts);
                 glDrawArrays(GL_TRIANGLES, 0, 3);
@@ -187,13 +201,36 @@ static void copy_tile_vertices(int tile, r_vertex3_t *verts)
 }
 
 /******************************************************************************\
+ Picks a tile on the globe to highlight during rendering with selection
+ modulation over time.
+\******************************************************************************/
+void R_hover_tile(int tile, r_select_type_t type)
+{
+        if (hover_tile == tile)
+                return;
+        if (tile < 0 || type == R_ST_NONE) {
+                hover_tile = -1;
+                hover_type = R_ST_NONE;
+                return;
+        }
+        hover_type = type;
+        hover_tile = tile;
+        copy_tile_vertices(tile, hover_verts);
+}
+
+/******************************************************************************\
  Picks a tile on the globe to highlight during rendering.
 \******************************************************************************/
 void R_select_tile(int tile, r_select_type_t type)
 {
-        select_type = type;
-        if (selected_tile == tile || tile < 0 || type == R_ST_NONE)
+        if (selected_tile == tile)
                 return;
+        if (tile < 0 || type == R_ST_NONE) {
+                selected_tile = -1;
+                select_type = R_ST_NONE;
+                return;
+        }
+        select_type = type;
         selected_tile = tile;
         copy_tile_vertices(tile, select_verts);
 }
