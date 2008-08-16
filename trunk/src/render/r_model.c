@@ -555,9 +555,9 @@ void R_model_render(r_model_t *model)
         /* If this model is selected, multitexture the selected color */
         add_color = model->additive;
         if (model->selected == R_MS_SELECTED)
-                add_color = C_color_add(model->additive, r_fog_color);
-        else if (model->selected == R_MS_HOVER)
                 add_color = C_color_add(model->additive, r_select_color);
+        else if (model->selected == R_MS_HOVER)
+                add_color = C_color_add(model->additive, r_hover_color);
         if (add_color.a > 0.f && r_white_tex && r_ext.multitexture > 1) {
                 c_color_t mod_color;
 

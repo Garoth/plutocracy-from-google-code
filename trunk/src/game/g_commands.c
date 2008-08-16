@@ -88,8 +88,17 @@ void G_hover_tile(int tile)
 
         /* Selecting an island tile */
         else if (tile >= 0 && r_tile_params[tile].terrain != R_T_WATER &&
-                 g_tiles[tile].ship < 0 && tile != g_selected_tile)
-                new_select_type = R_ST_TILE;
+                 g_tiles[tile].ship < 0) {
+                if (tile != g_selected_tile)
+                        new_select_type = R_ST_TILE;
+        }
+
+        /* Selecting a ship */
+        else if (g_tiles[tile].ship >= 0);
+
+        /* Can't select this tile */
+        else
+                tile = -1;
 
         /* Still hovering over the same tile */
         if (tile == g_hover_tile && new_select_type == select_type) {
