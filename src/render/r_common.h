@@ -138,7 +138,7 @@ extern GLfloat r_cam_matrix[16];
 void R_cleanup_globe(void);
 void R_init_globe(void);
 
-extern c_color_t r_material[3], r_select_color;
+extern c_color_t r_hover_color, r_material[3], r_select_color;
 
 /* r_mode.c */
 #define R_check_errors() R_check_errors_full(__FILE__, __LINE__, __func__);

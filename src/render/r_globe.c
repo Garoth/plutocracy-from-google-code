@@ -15,12 +15,13 @@
 #include "r_common.h"
 
 /* Sine-wave blending modulation for the tile selection */
-#define SELECT_FREQ 0.005f
-#define SELECT_AMP 0.250f
-#define SELECT_MODULATE 0.5f
+#define HOVER_FREQ 0.005f
+#define HOVER_AMP 0.250f
+#define HOVER_OPACITY 0.25f
+#define SELECT_OPACITY 0.5f
 
-/* Current selection color */
-c_color_t r_select_color;
+/* Current hover and selection colors */
+c_color_t r_hover_color, r_select_color;
 
 /* Globe material colors after modulation */
 c_color_t r_material[3];
@@ -112,18 +113,22 @@ void R_start_globe(void)
         /* Render the globe through a vertex buffer object */
         R_vbo_render(&r_globe_vbo);
 
-        /* Sine-wave modulate the selection highlight. Even though no tile may
-           be selected, this color could be used elsewhere. */
+        /* Base selection color on the fog color */
         r_select_color = r_fog_color;
-        r_select_color.a *= SELECT_MODULATE * (1.f - SELECT_AMP *
-                            (1.f - sinf(SELECT_FREQ * c_time_msec)));
+        r_select_color.a *= SELECT_OPACITY;
+
+        /* Sine-wave modulate the hover highlight. Even though no tile may
+           be selected, this color could be used elsewhere. */
+        r_hover_color = r_fog_color;
+        r_hover_color.a *= HOVER_OPACITY * (1.f - HOVER_AMP *
+                           (1.f - sinf(HOVER_FREQ * c_time_msec)));
 
         /* Render hover triangle */
         if (hover_tile >= 0 && hover_type != R_ST_NONE) {
                 R_gl_disable(GL_LIGHTING);
                 R_texture_select(select_tex[hover_type]);
-                glColor4f(r_select_color.r, r_select_color.g,
-                          r_select_color.b, r_select_color.a);
+                glColor4f(r_hover_color.r, r_hover_color.g,
+                          r_hover_color.b, r_hover_color.a);
                 glInterleavedArrays(R_VERTEX3_FORMAT, sizeof (*hover_verts),
                                     hover_verts);
                 glDrawArrays(GL_TRIANGLES, 0, 3);
@@ -136,8 +141,8 @@ void R_start_globe(void)
         if (selected_tile >= 0 && select_type != R_ST_NONE) {
                 R_gl_disable(GL_LIGHTING);
                 R_texture_select(select_tex[select_type]);
-                glColor4f(r_fog_color.r, r_fog_color.g,
-                          r_fog_color.b, r_fog_color.a);
+                glColor4f(r_select_color.r, r_select_color.g,
+                          r_select_color.b, r_select_color.a);
                 glInterleavedArrays(R_VERTEX3_FORMAT, sizeof (*select_verts),
                                     select_verts);
                 glDrawArrays(GL_TRIANGLES, 0, 3);
