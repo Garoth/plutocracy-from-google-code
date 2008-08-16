@@ -16,7 +16,7 @@
 c_var_t g_test_globe, g_test_tile;
 
 /* Globe variables */
-c_var_t g_forest, g_globe_seed, g_globe_subdiv4, g_islands, g_island_size,
+c_var_t g_forest, g_globe_seed, g_globe_subdiv4, g_island_num, g_island_size,
         g_island_variance;
 
 /* Nation colors */
@@ -46,7 +46,7 @@ void G_register_variables(void)
         g_globe_seed.archive = FALSE;
         C_register_integer(&g_globe_subdiv4, "g_globe_subdiv4", 4,
                            "globe subdivision iterations, 0-5");
-        C_register_integer(&g_islands, "g_islands", 0,
+        C_register_integer(&g_island_num, "g_islands", 0,
                            "number of islands, 0 for default");
         C_register_integer(&g_island_size, "g_island_size", 0,
                            "maximum size of islands, 0 for default");

@@ -23,6 +23,9 @@
 /* Invalid island index */
 #define G_ISLAND_INVALID 255
 
+/* Maximum number of islands. Do not set this value above G_ISLAND_INVALID. */
+#define G_ISLAND_NUM 254
+
 /* Delay in milliseconds before the hover window is displayed */
 #define G_HOVER_DELAY 750
 
@@ -153,13 +156,20 @@ typedef struct g_ship {
         bool in_use;
 } g_ship_t;
 
+/* Island structure */
+typedef struct g_island {
+        int tiles, land, root, town_tile;
+} g_island_t;
+
 /* g_client.c */
 void G_client_callback(int client, n_event_t);
 void G_hover_tile(int tile);
 i_color_t G_nation_to_color(g_nation_name_t);
 
 extern g_client_t g_clients[N_CLIENTS_MAX + 1];
-extern int g_hover_tile, g_hover_ship, g_selected_ship;
+
+/* g_commands.c */
+extern int g_hover_tile, g_hover_ship, g_selected_tile, g_selected_ship;
 
 /* g_elements.c */
 void G_build(int tile, g_building_type_t, float progress);
@@ -177,6 +187,8 @@ void G_generate_globe(int subdiv4, int islands, int island_size,
 int G_set_tile_model(int tile, const char *path);
 
 extern g_tile_t g_tiles[R_TILES_MAX];
+extern g_island_t g_islands[G_ISLAND_NUM];
+extern int g_islands_len;
 
 /* g_movement.c */
 bool G_open_tile(int tile, int exclude_ship);
@@ -236,7 +248,7 @@ void G_store_select_clients(const g_store_t *);
 int G_store_space(g_store_t *);
 
 /* g_variables.c */
-extern c_var_t g_forest, g_globe_seed, g_globe_subdiv4, g_islands,
+extern c_var_t g_forest, g_globe_seed, g_globe_subdiv4, g_island_num,
                g_island_size, g_island_variance, g_name,
                g_nation_colors[G_NATION_NAMES], g_players,
                g_test_globe, g_test_tile;
