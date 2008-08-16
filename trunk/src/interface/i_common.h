@@ -203,7 +203,7 @@ typedef struct i_select {
         c_var_t *variable;
         void *data;
         float min, max, increment;
-        int decimals, index, list_len;
+        int decimals, digits, index, list_len;
         const char *suffix;
 } i_select_t;
 

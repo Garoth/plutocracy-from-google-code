@@ -410,15 +410,15 @@ void I_init_trade(i_window_t *window)
 
         /* Quantity */
         I_select_init(&quantity, C_str("i-cargo-maximum", "Maximum:"), NULL);
+        quantity.digits = 3;
         quantity.decimals = 0;
-        quantity.item.width_sample = "999";
         quantity.on_change = (i_callback_f)controls_changed;
         I_widget_add(&window->widget, &quantity.widget);
 
         /* Selling, buying, both, or neither */
         I_select_init(&price, C_str("i-cargo-price", "Price:"), NULL);
-        price.item.width_sample = "999g";
         price.suffix = "g";
+        price.digits = 3;
         price.decimals = 0;
         price.on_change = (i_callback_f)controls_changed;
         I_widget_add(&window->widget, &price.widget);

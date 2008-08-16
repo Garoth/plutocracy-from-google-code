@@ -25,13 +25,21 @@ static float select_widest(i_select_t *select)
         /* Numeric widget maximum is assumed to be widest */
         if (!select->options) {
                 const char *fmt;
+                float max;
+
+                /* Fixed number of digits */
+                max = select->max;
+                if (select->digits > 0)
+                        max = pow(10, select->digits) - 1.f;
+                else if (select->digits < 0)
+                        max = -pow(10, select->digits) + 1.f;
 
                 if (select->suffix)
                         fmt = C_va("%%.0%df%%s", select->decimals);
                 else
                         fmt = C_va("%%.0%df", select->decimals);
                 size = R_font_size(select->item.font,
-                                   C_va(fmt, select->max, select->suffix));
+                                   C_va(fmt, max, select->suffix));
                 return (size.x + i_border.value.n) / r_pixel_scale.value.f;
         }
 
