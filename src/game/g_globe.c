@@ -99,7 +99,7 @@ skip_shallow:   continue;
                                 if (terrain == R_T_SAND)
                                         goto skip_deep;
                         }
-                        r_tile_params[region[j]].terrain = R_T_WATER;
+                        r_tile_params[i].terrain = R_T_WATER;
 skip_deep:              continue;
                 }
 
