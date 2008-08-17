@@ -14,8 +14,7 @@
 
 #include "g_common.h"
 
-/* Ships and ship base classes */
-g_ship_t g_ships[G_SHIPS_MAX];
+/* Ship base classes */
 g_ship_class_t g_ship_classes[G_SHIP_TYPES];
 
 /* Array of game nations */
@@ -58,7 +57,8 @@ i_color_t G_nation_to_color(g_nation_name_t nation)
 \******************************************************************************/
 void G_init_elements(void)
 {
-        g_ship_class_t *pc;
+        g_ship_class_t *sc;
+        g_building_class_t *bc;
         int i;
 
         C_status("Initializing game elements");
@@ -112,35 +112,40 @@ void G_init_elements(void)
         g_cargo_names[G_CT_PLATING] = C_str("g-cargo-plating", "Plating");
         g_cargo_names[G_CT_GILLNET] = C_str("g-cargo-gillner", "Gillnet");
 
-        /* Setup buildings */
-        g_building_classes[G_BT_NONE].name = "None";
-        g_building_classes[G_BT_NONE].model_path = "";
-        g_building_classes[G_BT_TREE].name = "Trees";
-        g_building_classes[G_BT_TREE].model_path = "models/tree/deciduous.plum";
+        /* Nothing built */
+        bc = g_building_classes + G_BT_NONE;
+        bc->name = "Empty";
+        bc->model_path = "";
+
+        /* Trees */
+        bc = g_building_classes + G_BT_TREE;
+        bc->name = "Trees";
+        bc->model_path = "models/tree/deciduous.plum";
+        bc->health = 100;
 
         /* Sloop */
-        pc = g_ship_classes + G_ST_SLOOP;
-        pc->name = C_str("g-ship-sloop", "Sloop");
-        pc->model_path = "models/ship/sloop.plum";
-        pc->speed = 1.f;
-        pc->health = 40;
-        pc->cargo = 100;
+        sc = g_ship_classes + G_ST_SLOOP;
+        sc->name = C_str("g-ship-sloop", "Sloop");
+        sc->model_path = "models/ship/sloop.plum";
+        sc->speed = 1.f;
+        sc->health = 40;
+        sc->cargo = 100;
 
         /* Spider */
-        pc = g_ship_classes + G_ST_SPIDER;
-        pc->name = C_str("g-ship-spider", "Spider");
-        pc->model_path = "models/ship/spider.plum";
-        pc->speed = 0.75f;
-        pc->health = 80;
-        pc->cargo = 150;
+        sc = g_ship_classes + G_ST_SPIDER;
+        sc->name = C_str("g-ship-spider", "Spider");
+        sc->model_path = "models/ship/spider.plum";
+        sc->speed = 0.75f;
+        sc->health = 80;
+        sc->cargo = 150;
 
         /* Galleon */
-        pc = g_ship_classes + G_ST_GALLEON;
-        pc->name = C_str("g-ship-galleon", "Galleon");
-        pc->model_path = "models/ship/galleon.plum";
-        pc->speed = 0.5f;
-        pc->health = 100;
-        pc->cargo = 200;
+        sc = g_ship_classes + G_ST_GALLEON;
+        sc->name = C_str("g-ship-galleon", "Galleon");
+        sc->model_path = "models/ship/galleon.plum";
+        sc->speed = 0.5f;
+        sc->health = 100;
+        sc->cargo = 200;
 }
 
 /******************************************************************************\
@@ -158,7 +163,7 @@ void G_build(int tile, g_building_type_t type, float progress)
 
         g_tiles[tile].building = type;
         g_tiles[tile].progress = progress;
-        G_set_tile_model(tile, g_building_classes[type].model_path);
+        G_tile_model(tile, g_building_classes[type].model_path);
 }
 
 /******************************************************************************\

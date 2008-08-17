@@ -17,6 +17,12 @@
 /* Maximum health value */
 #define HEALTH_MAX 100
 
+/* Ships array */
+g_ship_t g_ships[G_SHIPS_MAX];
+
+/* The ship the mouse is hovering over and the currently selected ship */
+int g_hover_ship, g_selected_ship;
+
 static int focus_stamp;
 
 /******************************************************************************\
@@ -97,7 +103,7 @@ init:   /* Initialize ship structure */
         C_strncpy_buf(ship->name, C_va("Unnamed #%d", index));
 
         /* Place the ship on the tile */
-        G_set_tile_model(tile, g_ship_classes[type].model_path);
+        G_tile_model(tile, g_ship_classes[type].model_path);
         g_tiles[tile].ship = index;
         g_tiles[tile].fade = 0.f;
 
