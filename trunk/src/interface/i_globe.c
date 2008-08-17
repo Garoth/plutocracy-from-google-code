@@ -244,10 +244,7 @@ void I_globe_event(i_event_t event)
                         R_zoom_cam_by(-i_zoom_speed.value.f);
                 else if (i_mouse == SDL_BUTTON_MIDDLE)
                         grab_globe(i_mouse_x, i_mouse_y);
-                else if (i_mouse == SDL_BUTTON_LEFT) {
-                        if (!G_process_click(i_mouse))
-                                grab_globe(i_mouse_x, i_mouse_y);
-                } else
+                else
                         G_process_click(i_mouse);
                 break;
         case I_EV_MOUSE_UP:
