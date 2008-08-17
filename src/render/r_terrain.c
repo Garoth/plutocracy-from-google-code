@@ -416,6 +416,29 @@ r_terrain_t R_terrain_base(r_terrain_t terrain)
 }
 
 /******************************************************************************\
+ Returns a string containing the name of the terrain.
+\******************************************************************************/
+const char *R_terrain_to_string(r_terrain_t terrain)
+{
+        switch (terrain) {
+        case R_T_GROUND_HOT:
+                return "Tropical";
+        case R_T_GROUND_COLD:
+                return "Tundra";
+        case R_T_GROUND:
+                return "Temperate";
+        case R_T_SAND:
+                return "Sand";
+        case R_T_WATER:
+                return "Ocean";
+        case R_T_SHALLOW:
+                return "Shallow";
+        default:
+                return "Invalid";
+        }
+}
+
+/******************************************************************************\
  Selects a terrain index for a tile depending on its region.
 \******************************************************************************/
 static int get_tile_terrain(int tile)

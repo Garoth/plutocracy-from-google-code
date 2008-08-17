@@ -30,9 +30,6 @@
 /* Distance that models fade out */
 #define MODEL_FADE_DIST 4.f
 
-/* Island tiles with game data */
-g_tile_t g_tiles[R_TILES_MAX];
-
 /* Array of islands */
 g_island_t g_islands[G_ISLAND_NUM];
 int g_islands_len;
@@ -249,32 +246,6 @@ static void grow_islands(int num, int island_size, float variance)
 }
 
 /******************************************************************************\
- Initialize and position a tile's model. Returns FALSE if the model failed to
- load.
-\******************************************************************************/
-int G_set_tile_model(int tile, const char *filename)
-{
-        /* Fade out if clearing the tile */
-        if (!filename || !filename[0]) {
-                g_tiles[tile].model_shown = FALSE;
-                return TRUE;
-        }
-
-        /* Try to load the new model */
-        R_model_cleanup(&g_tiles[tile].model);
-        if (!R_model_init(&g_tiles[tile].model, filename, TRUE))
-                return FALSE;
-
-        /* Fade the new model in */
-        g_tiles[tile].model.origin = g_tiles[tile].origin;
-        g_tiles[tile].model.normal = r_tile_params[tile].normal;
-        g_tiles[tile].model.forward = g_tiles[tile].forward;
-        g_tiles[tile].model_shown = TRUE;
-        g_tiles[tile].fade = 1.f;
-        return TRUE;
-}
-
-/******************************************************************************\
  Cleanup globe assets.
 \******************************************************************************/
 void G_cleanup_globe(void)
@@ -298,9 +269,9 @@ static int test_tiles_update(c_var_t *var, c_var_value_t value)
         for (i = 0; i < r_tiles; i++)
                 if (!R_water_terrain(r_tile_params[i].terrain)) {
                         if (failed)
-                                G_set_tile_model(i, "");
+                                G_tile_model(i, "");
                         else
-                                failed = !G_set_tile_model(i, value.s);
+                                failed = !G_tile_model(i, value.s);
                 }
         return TRUE;
 }
@@ -538,7 +509,7 @@ static int ray_intersects_tile(c_vec3_t o, c_vec3_t d, int tile)
 \******************************************************************************/
 void G_mouse_ray_miss(void)
 {
-        G_hover_tile(-1);
+        G_tile_hover(-1);
 }
 
 /******************************************************************************\
@@ -554,7 +525,7 @@ void G_mouse_ray(c_vec3_t origin, c_vec3_t forward)
         /* We can quit early if the hover tile is still being hovered over */
         if (g_hover_tile >= 0 && g_tiles[g_hover_tile].visible &&
             ray_intersects_tile(origin, forward, g_hover_tile)) {
-                G_hover_tile(g_hover_tile);
+                G_tile_hover(g_hover_tile);
                 return;
         }
 
@@ -572,6 +543,6 @@ void G_mouse_ray(c_vec3_t origin, c_vec3_t forward)
                 }
         }
 
-        G_hover_tile(tile);
+        G_tile_hover(tile);
 }
 

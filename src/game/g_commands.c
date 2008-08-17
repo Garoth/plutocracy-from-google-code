@@ -14,10 +14,6 @@
 
 #include "g_common.h"
 
-/* The currently selected tile and ship index. Negative values indicate an
-   invalid selection. */
-int g_hover_tile, g_hover_ship, g_selected_tile, g_selected_ship;
-
 /******************************************************************************\
  Interface wants us to leave the current game.
 \******************************************************************************/
@@ -30,129 +26,11 @@ void G_leave_game(void)
 }
 
 /******************************************************************************\
- Returns TRUE if the currently selected ship is controlled by the player
- and can settle in the given [tile].
-\******************************************************************************/
-static bool can_settle(int tile)
-{
-        int i, neighbors[3];
-
-        /* Must be controlling this ship */
-        if (!G_ship_controlled_by(g_selected_ship, n_client_id))
-                return FALSE;
-
-        /* Must be a neighboring tile */
-        R_get_tile_neighbors(g_ships[g_selected_ship].tile, neighbors);
-        for (i = 0; neighbors[i] != tile; i++)
-                if (i >= 2)
-                        return FALSE;
-
-        /* Must be on shore */
-        if (R_terrain_base(r_tile_params[tile].terrain) != R_T_SAND)
-                return FALSE;
-
-        /* Must be uninhabited */
-        if (g_islands[g_tiles[tile].island].town_tile >= 0)
-                return FALSE;
-
-        /* Can only build on an open tile */
-        if (g_tiles[tile].building > G_BT_TREE)
-                return FALSE;
-
-        return TRUE;
-}
-
-/******************************************************************************\
  Change the player's nation.
 \******************************************************************************/
 void G_change_nation(int index)
 {
         N_send(N_SERVER_ID, "11", G_CM_AFFILIATE, index);
-}
-
-/******************************************************************************\
- Updates which tile the mouse is hovering over. Pass -1 to turn off.
-\******************************************************************************/
-void G_hover_tile(int tile)
-{
-        static r_select_type_t select_type;
-        r_select_type_t new_select_type;
-
-        C_assert(tile < r_tiles);
-        new_select_type = R_ST_NONE;
-
-        /* Selecting a tile to move the current ship to */
-        if (G_open_tile(tile, -1) &&
-            G_ship_controlled_by(g_selected_ship, n_client_id))
-                new_select_type = R_ST_GOTO;
-
-        /* Selecting an island tile */
-        else if (tile >= 0 && r_tile_params[tile].terrain != R_T_WATER &&
-                 g_tiles[tile].ship < 0) {
-                if (tile != g_selected_tile)
-                        new_select_type = R_ST_TILE;
-        }
-
-        /* Selecting a ship */
-        else if (g_tiles[tile].ship >= 0);
-
-        /* Can't select this tile */
-        else
-                tile = -1;
-
-        /* Still hovering over the same tile */
-        if (tile == g_hover_tile && new_select_type == select_type) {
-                G_ship_hover(tile >= 0 ? g_tiles[tile].ship : -1);
-
-                /* Tile can get deselected for whatever reason */
-                if (select_type != R_ST_NONE &&
-                    g_tiles[tile].model.selected == R_MS_NONE)
-                        g_tiles[tile].model.selected = R_MS_HOVER;
-                return;
-        }
-
-        /* Deselect the old tile */
-        if (g_hover_tile >= 0 && g_tiles[g_hover_tile].ship < 0 &&
-            g_tiles[g_hover_tile].model.selected == R_MS_HOVER)
-                g_tiles[g_hover_tile].model.selected = R_MS_NONE;
-
-        /* Apply new hover */
-        select_type = new_select_type;
-        R_hover_tile(tile, select_type);
-        if ((g_hover_tile = tile) < 0 || new_select_type == R_ST_NONE) {
-                G_ship_hover(-1);
-                return;
-        }
-        if (g_tiles[tile].ship >= 0) {
-                G_ship_hover(g_tiles[tile].ship);
-                return;
-        }
-
-        /* Select the tile building model if there is no ship there */
-        if (select_type != R_ST_NONE &&
-            g_tiles[tile].model.selected == R_MS_NONE)
-                g_tiles[tile].model.selected = R_MS_HOVER;
-}
-
-/******************************************************************************\
- Selects a tile.
-\******************************************************************************/
-static void select_tile(int tile)
-{
-        if (g_selected_tile == tile)
-                return;
-
-        /* Deselect previous tile */
-        if (g_selected_tile >= 0)
-                g_tiles[g_selected_tile].model.selected = R_MS_NONE;
-
-        /* Select the new tile */
-        if ((g_selected_tile = tile) >= 0) {
-                g_tiles[tile].model.selected = R_MS_SELECTED;
-                R_hover_tile(-1, R_ST_NONE);
-        }
-
-        R_select_tile(tile, R_ST_TILE);
 }
 
 /******************************************************************************\
@@ -170,7 +48,7 @@ bool G_process_click(int button)
 
                 /* Selecting a ship */
                 if (g_hover_ship >= 0) {
-                        select_tile(-1);
+                        G_tile_select(-1);
                         G_ship_select(g_hover_ship != g_selected_ship ?
                                       g_hover_ship : -1);
                         return TRUE;
@@ -179,13 +57,14 @@ bool G_process_click(int button)
                 /* Selecting a tile */
                 if (g_hover_tile >= 0) {
                         G_ship_select(-1);
-                        select_tile(g_hover_tile != g_selected_tile ?
-                                    g_hover_tile : - 1);
+                        G_tile_select(g_hover_tile != g_selected_tile ?
+                                      g_hover_tile : - 1);
                         return TRUE;
                 }
 
                 /* Failed to select anything */
                 G_ship_select(-1);
+                G_tile_select(-1);
                 return FALSE;
         }
 

@@ -122,7 +122,7 @@ typedef struct g_tile {
         r_model_t model;
         c_vec3_t origin, forward;
         float progress, fade;
-        int island, ship, search_parent, search_stamp;
+        int health, island, ship, search_parent, search_stamp;
         bool model_shown, visible;
 } g_tile_t;
 
@@ -142,6 +142,7 @@ typedef struct g_ship_base {
 /* Structure for building type parameters */
 typedef struct g_building_class {
         const char *name, *model_path;
+        int health;
 } g_building_class_t;
 
 /* Structure containing ship information */
@@ -163,13 +164,9 @@ typedef struct g_island {
 
 /* g_client.c */
 void G_client_callback(int client, n_event_t);
-void G_hover_tile(int tile);
 i_color_t G_nation_to_color(g_nation_name_t);
 
 extern g_client_t g_clients[N_CLIENTS_MAX + 1];
-
-/* g_commands.c */
-extern int g_hover_tile, g_hover_ship, g_selected_tile, g_selected_ship;
 
 /* g_elements.c */
 void G_build(int tile, g_building_type_t, float progress);
@@ -177,16 +174,14 @@ void G_init_elements(void);
 void G_reset_elements(void);
 
 extern g_ship_class_t g_ship_classes[G_SHIP_TYPES];
-extern g_ship_t g_ships[G_SHIPS_MAX];
+extern g_building_class_t g_building_classes[G_BUILDING_TYPES];
 
 /* g_globe.c */
 void G_cleanup_globe(void);
 void G_init_globe(void);
 void G_generate_globe(int subdiv4, int islands, int island_size,
                       float variance);
-int G_set_tile_model(int tile, const char *path);
 
-extern g_tile_t g_tiles[R_TILES_MAX];
 extern g_island_t g_islands[G_ISLAND_NUM];
 extern int g_islands_len;
 
@@ -215,6 +210,9 @@ void G_ship_send_cargo(int ship, n_client_id_t);
 int G_ship_spawn(int ship, n_client_id_t, int tile, g_ship_type_t);
 void G_update_ships(void);
 
+extern g_ship_t g_ships[G_SHIPS_MAX];
+extern int g_hover_ship, g_selected_ship;
+
 /* g_sync.c */
 #define G_corrupt_disconnect() G_corrupt_drop(N_SERVER_ID)
 #define G_corrupt_drop(c) G_corrupt_drop_full(__FILE__, __LINE__, __func__, c)
@@ -236,6 +234,14 @@ int G_receive_ship_full(const char *file, int line, const char *func,
 #define G_receive_tile(c) G_receive_tile_full(__FILE__, __LINE__, __func__, (c))
 int G_receive_tile_full(const char *file, int line, const char *func,
                         n_client_id_t);
+
+/* g_tile.c */
+void G_tile_hover(int tile);
+void G_tile_select(int tile);
+bool G_tile_model(int tile, const char *filename);
+
+extern g_tile_t g_tiles[R_TILES_MAX];
+extern int g_hover_tile, g_selected_tile;
 
 /* g_trade.c */
 bool G_cargo_equal(const g_cargo_t *, const g_cargo_t *);
