@@ -30,9 +30,9 @@ static float select_widest(i_select_t *select)
                 /* Fixed number of digits */
                 max = select->max;
                 if (select->digits > 0)
-                        max = pow(10, select->digits) - 1.f;
+                        max = powf(10, select->digits) - 1.f;
                 else if (select->digits < 0)
-                        max = -pow(10, select->digits) + 1.f;
+                        max = -powf(10, select->digits) + 1.f;
 
                 if (select->suffix)
                         fmt = C_va("%%.0%df%%s", select->decimals);

@@ -502,10 +502,6 @@
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="..\..\src\interface\i_hover.c"
-				>
-			</File>
-			<File
 				RelativePath="..\..\src\interface\i_layout.c"
 				>
 				<FileConfiguration
@@ -545,6 +541,10 @@
 			</File>
 			<File
 				RelativePath="..\..\src\interface\i_players.c"
+				>
+			</File>
+			<File
+				RelativePath="..\..\src\interface\i_quick_info.c"
 				>
 			</File>
 			<File
@@ -779,6 +779,10 @@
 			</File>
 			<File
 				RelativePath="..\..\src\game\g_sync.c"
+				>
+			</File>
+			<File
+				RelativePath="..\..\src\game\g_tile.c"
 				>
 			</File>
 			<File
