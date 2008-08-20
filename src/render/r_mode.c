@@ -432,6 +432,7 @@ void R_init(void)
         char buffer[64];
 
         C_status("Opening window");
+        C_var_unlatch(&r_pixel_scale);
         C_count_reset(&r_count_faces);
 
         /* Print the video driver name */
