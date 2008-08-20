@@ -178,14 +178,18 @@ static void scrollback_button_click(void)
 
 /******************************************************************************\
  A key event was delivered to the root window that may be relevant to chat.
+ Returns FALSE if the event should not be propagated to the other handlers.
 \******************************************************************************/
-void I_chat_event(i_event_t event)
+bool I_chat_event(i_event_t event)
 {
         if (event != I_EV_KEY_DOWN || i_key_focus != &i_root)
-                return;
-        if (i_key == SDLK_ESCAPE)
+                return TRUE;
+        if (i_key == SDLK_ESCAPE) {
+                if (!scrollback.widget.shown)
+                        return TRUE;
                 show_scrollback(FALSE);
-        else if (i_key == SDLK_PAGEUP) {
+                return FALSE;
+        } else if (i_key == SDLK_PAGEUP) {
                 show_scrollback(TRUE);
                 I_scrollback_scroll(&scrollback, TRUE);
         } else if (i_key == SDLK_PAGEDOWN) {
@@ -193,6 +197,7 @@ void I_chat_event(i_event_t event)
                 I_scrollback_scroll(&scrollback, FALSE);
         } else if (i_key == SDLK_RETURN)
                 I_show_chat();
+        return TRUE;
 }
 
 /******************************************************************************\

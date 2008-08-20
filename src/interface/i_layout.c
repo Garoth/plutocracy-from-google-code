@@ -126,7 +126,8 @@ static int root_event(i_widget_t *root, i_event_t event)
         }
 
         /* Propagate events to special handlers */
-        I_chat_event(event);
+        if (!I_chat_event(event))
+                return TRUE;
         I_globe_event(event);
 
         return TRUE;
@@ -420,8 +421,8 @@ void I_cleanup(void)
 \******************************************************************************/
 void I_render(void)
 {
-        /* If video parameters changed last frame, we need to reconfigure */
-        if (r_pixel_scale.changed > layout_frame ||
+        /* If video parameters changed, we need to reconfigure */
+        if (r_scale_2d_frame > layout_frame ||
             r_width.changed > layout_frame ||
             r_height.changed > layout_frame) {
                 theme_configure();

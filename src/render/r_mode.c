@@ -40,6 +40,11 @@ int r_extensions[R_EXTENSIONS];
 /* The 3D-mode projection matrix */
 GLfloat r_proj_matrix[16];
 
+/* Effective pixel scale value. Use this instead of [r_pixel_scale] because
+   the latter might be in a special mode. */
+float r_scale_2d;
+int r_scale_2d_frame;
+
 /* Clipping stack */
 static int clip_stack;
 static float clip_values[CLIP_STACK * 4];
@@ -136,14 +141,38 @@ void R_gl_restore(void)
 \******************************************************************************/
 static void pixel_scale_update(void)
 {
-        if (r_pixel_scale.value.f < R_PIXEL_SCALE_MIN)
-                r_pixel_scale.value.f = R_PIXEL_SCALE_MIN;
-        if (r_pixel_scale.value.f > R_PIXEL_SCALE_MAX)
-                r_pixel_scale.value.f = R_PIXEL_SCALE_MAX;
-        r_width_2d = (int)(r_width.value.n / r_pixel_scale.value.f + 0.5f);
-        r_height_2d = (int)(r_height.value.n / r_pixel_scale.value.f + 0.5f);
-        R_free_fonts();
-        R_load_fonts();
+        float new_scale_2d;
+
+        /* Automatic pixel scale */
+        if (!r_pixel_scale.value.f) {
+                float min;
+
+                min = r_width.value.n;
+                if (r_height.value.n < min)
+                        min = r_height.value.n;
+                new_scale_2d = min < 256.f ? 1.f : min / r_height.stock.n;
+        }
+
+        /* Directly set */
+        else
+                new_scale_2d = r_pixel_scale.value.f;
+
+        /* Allowed ranges */
+        if (new_scale_2d < 0.5f)
+                new_scale_2d = 0.5f;
+        if (new_scale_2d > 2.0f)
+                new_scale_2d = 2.0f;
+
+        /* Pixel scale changed */
+        if (new_scale_2d != r_scale_2d) {
+                r_scale_2d = new_scale_2d;
+                r_scale_2d_frame = c_frame;
+                R_free_fonts();
+                R_load_fonts();
+        }
+
+        r_width_2d = (int)(r_width.value.n / r_scale_2d + 0.5f);
+        r_height_2d = (int)(r_height.value.n / r_scale_2d + 0.5f);
         C_debug("2D area %dx%d", r_width_2d, r_height_2d);
 }
 
@@ -687,6 +716,11 @@ void R_start_frame(void)
 {
         int clear_flags;
 
+        /* Pixel scale changes affect the entire frame so wait until it is
+           done before applying the new value */
+        if (C_var_unlatch(&r_pixel_scale) && !r_restart)
+                pixel_scale_update();
+
         /* Video can only be restarted at the start of the frame */
         if (r_restart) {
                 set_video_mode();
@@ -696,10 +730,6 @@ void R_start_frame(void)
                 r_init_frame = c_frame;
                 r_restart = FALSE;
         }
-
-        /* Pixel scale should only be updated at the start of the frame */
-        if (C_var_unlatch(&r_pixel_scale))
-                pixel_scale_update();
 
         /* Only clear the screen if r_clear is set */
         clear_flags = GL_DEPTH_BUFFER_BIT;

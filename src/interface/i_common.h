@@ -257,7 +257,7 @@ void I_button_configure(i_button_t *, const char *icon, const char *text,
 void I_theme_buttons(void);
 
 /* i_chat.c */
-void I_chat_event(i_event_t);
+bool I_chat_event(i_event_t);
 void I_focus_chat(void);
 void I_hide_chat(void);
 void I_init_chat(void);
@@ -348,7 +348,7 @@ void I_init_trade(i_window_t *);
 
 /* i_variables.c */
 extern c_var_t i_border, i_color, i_color_alt, i_color_bad, i_color_good,
-               i_debug, i_fade, i_ip, i_scroll_speed, i_shadow,
+               i_debug, i_edge_scroll, i_fade, i_ip, i_scroll_speed, i_shadow,
                i_test_globe, i_theme, i_zoom_speed;
 
 /* i_video.c */

@@ -39,7 +39,7 @@ int I_label_event(i_label_t *label, i_event_t event)
                 if (label->width_sample)
                         label->width = R_font_size(label->font,
                                                    label->width_sample).x /
-                                       r_pixel_scale.value.f;
+                                       r_scale_2d;
 
                 if (label->width > 0.f)
                         label->widget.size.x = label->width;
@@ -66,8 +66,7 @@ int I_label_event(i_label_t *label, i_event_t event)
                 }
 
                 label->text.sprite.origin =
-                        C_vec2_clamp(label->text.sprite.origin,
-                                     r_pixel_scale.value.f);
+                        R_pixel_clamp(label->text.sprite.origin);
                 break;
         case I_EV_CLEANUP:
                 R_text_cleanup(&label->text);

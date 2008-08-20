@@ -495,7 +495,7 @@ static void load_font(r_font_t font, c_var_t *var, int size)
 {
         int points;
 
-        points = (int)ceilf(size * r_pixel_scale.value.f);
+        points = (int)ceilf(size * r_scale_2d);
         if (points < FONT_SIZE_MIN)
                 points = FONT_SIZE_MIN;
         C_zero(fonts + font);

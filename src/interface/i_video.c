@@ -221,9 +221,12 @@ void I_init_video(i_window_t *window)
         select = options + OPT_PIXEL_SCALE;
         I_select_init(select, C_str("i-video-pixel-scale", "Scale 2D:"), NULL);
         select->variable = &r_pixel_scale;
-        select->min = 0.5f;
-        select->max = 2.0f;
-        select->increment = 0.25f;
+        I_select_add_float(select, 2.00f, "2.00");
+        I_select_add_float(select, 1.50f, "1.50");
+        I_select_add_float(select, 1.00f, "1.00");
+        I_select_add_float(select, 0.75f, "0.75");
+        I_select_add_float(select, 0.50f, "0.50");
+        I_select_add_float(select, 0.00f, "Auto");
         I_widget_add(&window->widget, &select->widget);
 
         /* Select draw distance */
