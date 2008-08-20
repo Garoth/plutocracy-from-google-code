@@ -344,7 +344,7 @@ static int popup_event(i_widget_t *widget, i_event_t event)
 
         switch (event) {
         case I_EV_CONFIGURE:
-                height = R_font_height(R_FONT_GUI) / r_pixel_scale.value.f;
+                height = R_font_height(R_FONT_GUI) / r_scale_2d;
                 if (height < 16.f)
                         height = 16.f;
                 widget->size = C_vec2(0.f, height + i_border.value.n * 2.f);

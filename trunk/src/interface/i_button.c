@@ -143,8 +143,7 @@ int I_button_event(i_button_t *button, i_event_t event)
                 }
 
                 /* Clamp origins to prevent blurriness */
-                button->text.origin = C_vec2_clamp(button->text.origin,
-                                                   r_pixel_scale.value.f);
+                button->text.origin = R_pixel_clamp(button->text.origin);
 
                 break;
         case I_EV_CLEANUP:

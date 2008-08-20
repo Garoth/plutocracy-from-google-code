@@ -131,7 +131,7 @@ void R_sprite_render(const r_sprite_t *sprite)
         /* Render textured quad */
         half = C_vec2_divf(sprite->size, 2.f);
         if (sprite->unscaled)
-                half = C_vec2_divf(half, r_pixel_scale.value.f / 2.f);
+                half = C_vec2_divf(half, r_scale_2d / 2.f);
         verts[0].co = C_vec3(-half.x, half.y, 0.f);
         verts[0].uv = C_vec2(0.f, 1.f);
         verts[1].co = C_vec3(-half.x, -half.y, 0.f);
@@ -174,11 +174,11 @@ static void blit_shadowed(SDL_Surface *dest, SDL_Surface *src,
                 C_warning("Failed to lock source surface");
                 return;
         }
-        if (r_pixel_scale.value.f < 1.f) {
-                alpha *= r_pixel_scale.value.f;
+        if (r_scale_2d < 1.f) {
+                alpha *= r_scale_2d;
                 w1 = alpha;
         } else
-                w1 = (2.f - r_pixel_scale.value.f) * alpha;
+                w1 = (2.f - r_scale_2d) * alpha;
         w2 = alpha - w1;
         for (y = 0; y < src->h + 2; y++)
                 for (x = 0; x < src->w + 2; x++) {
@@ -241,7 +241,7 @@ void R_sprite_init_text(r_sprite_t *sprite, r_font_t font, float wrap,
         /* Wrap the text and figure out how large the surface needs to be. The
            width and height also need to be expanded by a pixel to leave room
            for the shadow (up to 2 pixels). */
-        wrap *= r_pixel_scale.value.f;
+        wrap *= r_scale_2d;
         last_line = 0;
         last_break = 0;
         width = 0;
@@ -310,8 +310,8 @@ void R_sprite_init_text(r_sprite_t *sprite, r_font_t font, float wrap,
            the sprite itself can be manipulated as expected */
         R_sprite_init(sprite, NULL);
         sprite->texture = tex;
-        sprite->size.x = width / r_pixel_scale.value.f;
-        sprite->size.y = height / r_pixel_scale.value.f;
+        sprite->size.x = width / r_scale_2d;
+        sprite->size.y = height / r_scale_2d;
 }
 
 /******************************************************************************\
@@ -323,7 +323,7 @@ void R_text_configure(r_text_t *text, r_font_t font, float wrap, float shadow,
 {
         if (text->font == font && text->wrap == wrap &&
             text->shadow == shadow && text->invert == invert &&
-            !strcmp(string, text->buffer))
+            r_scale_2d_frame < text->frame && !strcmp(string, text->buffer))
                 return;
         R_sprite_cleanup(&text->sprite);
         R_sprite_init_text(&text->sprite, font, wrap, shadow, invert, string);
@@ -341,15 +341,18 @@ void R_text_configure(r_text_t *text, r_font_t font, float wrap, float shadow,
 void R_text_render(r_text_t *text)
 {
         /* Pixel scale changes require re-initialization */
-        if (r_pixel_scale.changed > text->frame) {
+        if (r_scale_2d_frame > text->frame) {
                 c_vec2_t origin;
+                c_color_t modulate;
 
-                text->frame = c_frame;
                 origin = text->sprite.origin;
+                modulate = text->sprite.modulate;
                 R_sprite_cleanup(&text->sprite);
                 R_sprite_init_text(&text->sprite, text->font, text->wrap,
                                    text->shadow, text->invert, text->buffer);
                 text->sprite.origin = origin;
+                text->sprite.modulate = modulate;
+                text->frame = c_frame;
         }
 
         R_sprite_render(&text->sprite);
@@ -532,7 +535,7 @@ void R_billboard_render(r_billboard_t *bb)
            direction and with depth testing */
         bb->sprite.origin.x = co.x - bb->sprite.size.x * 0.5f;
         bb->sprite.origin.y = co.y - bb->sprite.size.y * 0.5f;
-        bb->sprite.size.x = bb->size / r_pixel_scale.value.f;
+        bb->sprite.size.x = bb->size / r_scale_2d;
         bb->sprite.size.y = bb->sprite.size.x;
         bb->sprite.z = co.z;
         R_sprite_render(&bb->sprite);

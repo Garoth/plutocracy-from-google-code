@@ -40,7 +40,7 @@ static float select_widest(i_select_t *select)
                         fmt = C_va("%%.0%df", select->decimals);
                 size = R_font_size(select->item.font,
                                    C_va(fmt, max, select->suffix));
-                return (size.x + i_border.value.n) / r_pixel_scale.value.f;
+                return (size.x + i_border.value.n) / r_scale_2d;
         }
 
         /* Cycle through each option */
@@ -48,7 +48,7 @@ static float select_widest(i_select_t *select)
         select->list_len = 0;
         for (option = select->options; option; option = option->next) {
                 size = R_font_size(select->item.font, option->string);
-                size.x /= r_pixel_scale.value.f;
+                size.x /= r_scale_2d;
                 if (size.x > width)
                         width = size.x;
                 select->list_len++;
@@ -65,8 +65,7 @@ int I_select_event(i_select_t *select, i_event_t event)
                 if (select->index < 0)
                         I_select_change(select, 0);
                 select->item.width = select_widest(select);
-                select->widget.size.y = R_font_height(R_FONT_GUI) /
-                                        r_pixel_scale.value.f;
+                select->widget.size.y = R_font_height(R_FONT_GUI) / r_scale_2d;
                 I_widget_pack(&select->widget, I_PACK_H, I_FIT_NONE);
                 select->widget.size = I_widget_child_bounds(&select->widget);
                 return FALSE;

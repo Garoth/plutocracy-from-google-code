@@ -60,7 +60,7 @@ void R_register_variables(void)
         r_windowed.unsafe = TRUE;
         C_register_integer(&r_vsync, "r_vsync", TRUE, "enable vertical sync");
         C_register_float(&r_gamma, "r_gamma", 1, "brightness gamma correction");
-        C_register_float(&r_pixel_scale, "r_pixel_scale", 1,
+        C_register_float(&r_pixel_scale, "r_pixel_scale", 0.f,
                          "scales the interface pixel unit");
         C_register_string(&r_clear, "r_clear", "", "background clear color");
         C_register_integer(&r_gl_errors, "r_gl_errors", 0,

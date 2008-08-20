@@ -588,8 +588,8 @@ void I_dispatch(const SDL_Event *ev)
                 break;
         case SDL_MOUSEMOTION:
                 event = I_EV_MOUSE_MOVE;
-                i_mouse_x = (int)(ev->motion.x / r_pixel_scale.value.f + 0.5f);
-                i_mouse_y = (int)(ev->motion.y / r_pixel_scale.value.f + 0.5f);
+                i_mouse_x = (int)(ev->motion.x / r_scale_2d + 0.5f);
+                i_mouse_y = (int)(ev->motion.y / r_scale_2d + 0.5f);
                 find_focus();
                 break;
         case SDL_MOUSEBUTTONDOWN:

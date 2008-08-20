@@ -185,6 +185,7 @@ void R_clip_rect(c_vec2_t origin, c_vec2_t size);
 void R_clip_disable(void);
 void R_finish_frame(void);
 void R_init(void);
+#define R_pixel_clamp(v) C_vec2_clamp((v), r_scale_2d)
 void R_pop_clip(void);
 void R_push_clip(void);
 const char *R_save_screenshot(void);
@@ -192,8 +193,8 @@ void R_start_frame(void);
 
 extern c_count_t r_count_faces;
 extern c_vec3_t r_cam_forward, r_cam_normal, r_cam_origin;
-extern float r_cam_zoom;
-extern int r_width_2d, r_height_2d, r_restart;
+extern float r_cam_zoom, r_scale_2d;
+extern int r_width_2d, r_height_2d, r_restart, r_scale_2d_frame;
 
 /* r_model.c */
 r_model_t *R_model_alloc(const char *filename, bool cull);

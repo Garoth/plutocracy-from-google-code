@@ -200,6 +200,53 @@ static void test_globe(void)
 }
 
 /******************************************************************************\
+ Scroll the globe by moving the mouse to the edge of the screen.
+\******************************************************************************/
+static void mouse_scroll(void)
+{
+        c_vec2_t scroll;
+        float best, amount;
+
+        if (i_edge_scroll.value.f < 0.f)
+                return;
+        best = 0.f;
+
+        /* Scroll right */
+        amount = 1.f - i_mouse_x / i_edge_scroll.value.f;
+        if (amount > best)
+                best = amount;
+
+        /* Scroll left */
+        amount = 1.f - (r_width_2d - i_mouse_x) /
+                       i_edge_scroll.value.f;
+        if (amount > best)
+                best = amount;
+
+        /* Scroll up */
+        amount = 1.f - i_mouse_y / i_edge_scroll.value.f;
+        if (amount > best)
+                best = amount;
+
+        /* Scroll down */
+        amount = 1.f - (r_height_2d - i_mouse_y) /
+                       i_edge_scroll.value.f;
+        if (amount > best)
+                best = amount;
+
+        /* Mouse must be off-screen */
+        if (best > 1.f)
+                return;
+
+        /* Determine direction */
+        scroll = C_vec2_norm(C_vec2(i_mouse_x - r_width_2d / 2.f,
+                                    i_mouse_y - r_height_2d / 2.f));
+
+        /* Apply scroll for this frame */
+        best *= -c_frame_sec * i_scroll_speed.value.f;
+        R_move_cam_by(C_vec2_scalef(scroll, best));
+}
+
+/******************************************************************************\
  Processes events from the root window that affect the globe.
 \******************************************************************************/
 void I_globe_event(i_event_t event)
@@ -261,8 +308,8 @@ void I_globe_event(i_event_t event)
                 break;
         case I_EV_RENDER:
                 test_globe();
-                if (globe_motion.x || globe_motion.y)
-                        R_move_cam_by(C_vec2_scalef(globe_motion, c_frame_sec));
+                R_move_cam_by(C_vec2_scalef(globe_motion, c_frame_sec));
+                mouse_scroll();
 
                 /* Because the globe can move by itself for various reasons,
                    do the mouse trace every frame */

@@ -59,7 +59,7 @@ static void entry_set_pos(i_entry_t *entry, int pos)
                 memcpy(buf, entry->buffer, pos_i);
                 buf[pos_i] = NUL;
                 size = C_vec2_divf(R_font_size(R_FONT_CONSOLE, buf),
-                                   r_pixel_scale.value.f);
+                                   r_scale_2d);
                 entry->cursor.origin.x += size.x;
         }
 
@@ -91,7 +91,7 @@ static void entry_moved(i_entry_t *entry)
         origin = entry->widget.origin;
         entry->window.sprite.origin = origin;
         origin.x -= entry->scroll;
-        origin = C_vec2_clamp(origin, r_pixel_scale.value.f);
+        origin = R_pixel_clamp(origin);
         entry->text.origin = origin;
         entry_set_pos(entry, entry->pos);
 }
@@ -240,7 +240,7 @@ int I_entry_event(i_entry_t *entry, i_event_t event)
                 R_sprite_init_text(&entry->text, R_FONT_CONSOLE, 0,
                                    i_shadow.value.f, FALSE, entry->buffer);
                 entry->widget.size.y = R_font_line_skip(R_FONT_CONSOLE) /
-                                       r_pixel_scale.value.f + 1;
+                                       r_scale_2d + 1;
                 entry->text.modulate = i_colors[I_COLOR];
 
                 /* Setup work area window */

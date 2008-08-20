@@ -20,7 +20,7 @@ c_var_t i_border, i_color, i_color_alt, i_color_bad, i_color_good,
         i_fade, i_shadow, i_theme;
 
 /* Interface usability variables */
-c_var_t i_scroll_speed, i_zoom_speed;
+c_var_t i_edge_scroll, i_scroll_speed, i_zoom_speed;
 
 /* Input parameters */
 c_var_t i_ip;
@@ -70,6 +70,9 @@ void I_register_variables(void)
         C_register_float(&i_zoom_speed, "i_zoom_speed", 1.f,
                          "globe zoom speed in units per click");
         i_zoom_speed.edit = C_VE_ANYTIME;
+        C_register_float(&i_edge_scroll, "i_edge_scroll", 8.f,
+                         "mouse scroll distance from edge of screen");
+        i_edge_scroll.edit = C_VE_ANYTIME;
 
         /* Input parameters */
         C_register_string(&i_ip, "i_ip", "127.0.0.1",
