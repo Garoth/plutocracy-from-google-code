@@ -33,7 +33,7 @@ float r_cam_zoom;
 GLfloat r_cam_matrix[16];
 
 static c_vec3_t cam_rot_diff, gradual_axis;
-static GLfloat cam_rotation[16];
+static GLfloat cam_rotation[16], good_rotation[16];
 static float cam_zoom_diff, gradual_angle;
 static int last_cam_move;
 static bool cam_gradual, cam_momentum;
@@ -48,6 +48,34 @@ void R_init_camera(void)
         cam_rotation[5] = 1.f;
         cam_rotation[10] = 1.f;
         cam_rotation[15] = 1.f;
+}
+
+/******************************************************************************\
+ We want to make sure the camera matrix does not get corrupted.
+\******************************************************************************/
+static void check_rotation(void)
+{
+        int i;
+
+        /* Check the matrix and save it if it is valid */
+        for (i = 0; isfinite(cam_rotation[i]); i++)
+                if (i >= 15) {
+                        memcpy(good_rotation, cam_rotation,
+                               sizeof (good_rotation));
+                        return;
+                }
+
+        /* Revert to the last good matrix */
+        C_warning("Camera corrupted, reverting to last good values");
+        memcpy(cam_rotation, good_rotation, sizeof (cam_rotation));
+
+        /* Try to fix the camera settings */
+        cam_gradual = FALSE;
+        cam_momentum = FALSE;
+        cam_rot_diff = C_vec3(0.f, 0.f, 0.f);
+        gradual_axis = C_vec3(1.f, 0.f, 0.f);
+        gradual_angle = 0.f;
+        cam_zoom_diff = 0.f;
 }
 
 /******************************************************************************\
@@ -148,6 +176,7 @@ void R_update_camera(void)
 
         /* Recreate the full camera matrix with the new rotation */
         glGetFloatv(GL_MODELVIEW_MATRIX, cam_rotation);
+        check_rotation();
         glLoadIdentity();
         glTranslatef(0, 0, -r_globe_radius - r_cam_zoom);
         glMultMatrixf(cam_rotation);

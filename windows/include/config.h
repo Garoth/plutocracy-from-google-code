@@ -41,3 +41,7 @@
 #define strcasecmp _stricmp
 #define strncasecmp _strnicmp
 
+/* For isnormal() */
+#include <float.h>
+#define isnormal _isnormal
+
