@@ -15,10 +15,11 @@
 #include "i_common.h"
 
 /* Time in milliseconds since the last click to qualify as a double-click */
-#define DOUBLE_CLICK_MSEC 500
+#define DOUBLE_CLICK_MSEC 1000
+#define DOUBLE_CLICK_DIST 8.f
 
 static c_vec3_t grab_normal;
-static c_vec2_t globe_motion;
+static c_vec2_t globe_motion, grab_coords[2];
 static float grab_angle;
 static int grabbing, grab_rolling, grab_times[2], grab_button;
 
@@ -104,8 +105,13 @@ static void grab_globe(int x, int y)
                 return;
         grabbing = TRUE;
         grab_button = i_mouse;
+
+        /* Preserve grab timestamp and position for double-click detection */
         grab_times[0] = grab_times[1];
         grab_times[1] = c_time_msec;
+        grab_coords[0] = grab_coords[1];
+        grab_coords[1] = C_vec2(x, y);
+
         if (screen_to_normal(x, y, &grab_normal, &grab_angle)) {
                 grab_rolling = FALSE;
                 grab_normal = R_rotate_from_cam(grab_normal);
@@ -131,6 +137,8 @@ static void release_globe(void)
         /* Check if this is a double right click */
         if (i_mouse_focus != &i_root ||
             c_time_msec - grab_times[0] > DOUBLE_CLICK_MSEC ||
+            C_vec2_len(C_vec2_sub(grab_coords[0],
+                       C_vec2(i_mouse_x, i_mouse_y))) > DOUBLE_CLICK_DIST ||
             !screen_to_normal(i_mouse_x, i_mouse_y, &normal, NULL))
                 return;
         grab_times[0] = 0;

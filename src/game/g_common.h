@@ -93,6 +93,7 @@ typedef enum {
 typedef enum {
         G_BT_NONE,
         G_BT_TREE,
+        G_BT_TOWN_HALL,
         G_BUILDING_TYPES
 } g_building_type_t;
 
@@ -132,8 +133,14 @@ typedef struct g_client {
         char name[G_NAME_MAX];
 } g_client_t;
 
+/* Structure to represent resource cost */
+typedef struct g_cost {
+        short cargo[G_CARGO_TYPES];
+} g_cost_t;
+
 /* Structure containing ship type parameters */
 typedef struct g_ship_base {
+        g_cost_t cost;
         const char *model_path, *name;
         float speed;
         int health, cargo;
@@ -141,6 +148,7 @@ typedef struct g_ship_base {
 
 /* Structure for building type parameters */
 typedef struct g_building_class {
+        g_cost_t cost;
         const char *name, *model_path;
         int health;
 } g_building_class_t;
@@ -169,7 +177,6 @@ i_color_t G_nation_to_color(g_nation_name_t);
 extern g_client_t g_clients[N_CLIENTS_MAX + 1];
 
 /* g_elements.c */
-void G_build(int tile, g_building_type_t, float progress);
 void G_init_elements(void);
 void G_reset_elements(void);
 
@@ -184,6 +191,9 @@ void G_generate_globe(int subdiv4, int islands, int island_size,
 
 extern g_island_t g_islands[G_ISLAND_NUM];
 extern int g_islands_len;
+
+/* g_host.c */
+extern bool g_host_inited;
 
 /* g_movement.c */
 bool G_open_tile(int tile, int exclude_ship);
@@ -236,6 +246,7 @@ int G_receive_tile_full(const char *file, int line, const char *func,
                         n_client_id_t);
 
 /* g_tile.c */
+void G_tile_build(int tile, g_building_type_t, float progress);
 void G_tile_hover(int tile);
 void G_tile_select(int tile);
 bool G_tile_model(int tile, const char *filename);
@@ -244,9 +255,11 @@ extern g_tile_t g_tiles[R_TILES_MAX];
 extern int g_hover_tile, g_selected_tile;
 
 /* g_trade.c */
+int G_build_time(const g_cost_t *);
 bool G_cargo_equal(const g_cargo_t *, const g_cargo_t *);
 int G_limit_purchase(const g_store_t *buyer, const g_store_t *seller,
                      g_cargo_type_t, int amount);
+bool G_pay(n_client_id_t, int tile, const g_cost_t *, bool pay);
 int G_store_add(g_store_t *, g_cargo_type_t, int amount);
 int G_store_fits(const g_store_t *, g_cargo_type_t);
 void G_store_init(g_store_t *, int capacity);

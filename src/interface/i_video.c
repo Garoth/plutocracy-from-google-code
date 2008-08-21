@@ -222,7 +222,9 @@ void I_init_video(i_window_t *window)
         I_select_init(select, C_str("i-video-pixel-scale", "Scale 2D:"), NULL);
         select->variable = &r_pixel_scale;
         I_select_add_float(select, 2.00f, "2.00");
+        I_select_add_float(select, 1.75f, "1.75");
         I_select_add_float(select, 1.50f, "1.50");
+        I_select_add_float(select, 1.25f, "1.25");
         I_select_add_float(select, 1.00f, "1.00");
         I_select_add_float(select, 0.75f, "0.75");
         I_select_add_float(select, 0.50f, "0.50");

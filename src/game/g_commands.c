@@ -84,6 +84,24 @@ bool G_process_click(int button)
                 return TRUE;
         }
 
+        /* Opening the selected tile's ring menu */
+        if (g_selected_tile >= 0 && g_selected_tile == g_hover_tile) {
+                g_building_class_t *bc;
+                bool can_pay;
+
+                /* Settling the island */
+                if (g_islands[g_tiles[g_selected_tile].island].town_tile < 0 ) {
+                        bc = g_building_classes + G_BT_TOWN_HALL;
+                        can_pay = G_pay(n_client_id, g_selected_tile,
+                                        &bc->cost, FALSE);
+                        I_reset_ring();
+                        I_add_to_ring(I_RI_MILL, can_pay);
+                        I_show_ring(NULL);
+                }
+
+                return TRUE;
+        }
+
         return FALSE;
 }
 

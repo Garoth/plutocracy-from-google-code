@@ -323,9 +323,6 @@ void I_select_nearest(i_select_t *, float value);
 void I_select_update(i_select_t *);
 float I_select_value(const i_select_t *);
 
-/* i_ship.c */
-void I_init_ship(i_window_t *);
-
 /* i_static.c */
 void I_box_init(i_box_t *, i_pack_t, float width);
 i_info_t *I_info_alloc(const char *label, const char *info);

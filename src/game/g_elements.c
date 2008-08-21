@@ -123,6 +123,14 @@ void G_init_elements(void)
         bc->model_path = "models/tree/deciduous.plum";
         bc->health = 100;
 
+        /* Town hall */
+        bc = g_building_classes + G_BT_TOWN_HALL;
+        bc->name = "Town Hall";
+        bc->health = 250;
+        bc->model_path = "models/test/mill.plum";
+        bc->cost.cargo[G_CT_GOLD] = 500;
+        bc->cost.cargo[G_CT_LUMBER] = 100;
+
         /* Sloop */
         sc = g_ship_classes + G_ST_SLOOP;
         sc->name = C_str("g-ship-sloop", "Sloop");
@@ -137,7 +145,7 @@ void G_init_elements(void)
         sc->model_path = "models/ship/spider.plum";
         sc->speed = 0.75f;
         sc->health = 80;
-        sc->cargo = 150;
+        sc->cargo = 250;
 
         /* Galleon */
         sc = g_ship_classes + G_ST_GALLEON;
@@ -145,25 +153,24 @@ void G_init_elements(void)
         sc->model_path = "models/ship/galleon.plum";
         sc->speed = 0.5f;
         sc->health = 100;
-        sc->cargo = 200;
+        sc->cargo = 400;
 }
 
 /******************************************************************************\
- Set a tile's building.
+ Converts a cost to a build time.
 \******************************************************************************/
-void G_build(int tile, g_building_type_t type, float progress)
+int G_build_time(const g_cost_t *cost)
 {
-        /* Range checks */
-        C_assert(tile >= 0 && tile < r_tiles);
-        C_assert(type >= 0 && type < G_BUILDING_TYPES);
-        if (progress < 0.f)
-                progress = 0.f;
-        if (progress > 1.f)
-                progress = 1.f;
+        g_cost_t delay;
+        int i, time;
 
-        g_tiles[tile].building = type;
-        g_tiles[tile].progress = progress;
-        G_tile_model(tile, g_building_classes[type].model_path);
+        if (!cost)
+                return 0;
+        delay = *cost;
+        delay.cargo[G_CT_GOLD] /= 100;
+        for (time = i = 0; i < G_CARGO_TYPES; i++)
+                time += delay.cargo[i] * 100;
+        return time;
 }
 
 /******************************************************************************\
@@ -172,6 +179,8 @@ void G_build(int tile, g_building_type_t type, float progress)
 void G_reset_elements(void)
 {
         int i;
+
+        g_host_inited = FALSE;
 
         /* Reset ships */
         memset(g_ships, 0, sizeof (g_ships));
@@ -182,7 +191,7 @@ void G_reset_elements(void)
 
         /* Reset tiles */
         for (i = 0; i < r_tiles; i++)
-                G_build(i, G_BT_NONE, 0.f);
+                G_tile_build(i, G_BT_NONE, 0.f);
 
         /* The server "client" has fixed information */
         g_clients[N_SERVER_ID].nation = G_NN_PIRATE;
