@@ -431,7 +431,7 @@ void G_client_callback(int client, n_event_t event)
                 if ((i = G_receive_tile(-1)) < 0 ||
                     (j = G_receive_range(-1, 0, G_BUILDING_TYPES)) < 0)
                         return;
-                G_build(i, j, N_receive_float());
+                G_tile_build(i, j, N_receive_float());
                 break;
 
         /* Somebody connected but we don't have their name yet */

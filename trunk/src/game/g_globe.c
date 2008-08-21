@@ -179,8 +179,11 @@ static bool grow_island(int i, int limit)
                 limit = ISLAND_LAND * 3;
         if (limit > ISLAND_SIZE)
                 limit = ISLAND_SIZE;
+
+        /* Initialize island structure */
         g_islands[i].tiles = 0;
         g_islands[i].land = 0;
+        g_islands[i].town_tile = -1;
 
         /* Find an unused root tile */
         for (j = start = C_rand() % r_tiles; j < r_tiles; j++)
@@ -350,7 +353,7 @@ void G_generate_globe(int subdiv4, int override_islands, int override_size,
         /* This call actually raises the tiles to match terrain height */
         R_configure_globe();
 
-        /* Calculate tile vectors and place starter buildings */
+        /* Calculate tile vectors */
         for (i = 0; i < r_tiles; i++) {
                 c_vec3_t coords[3];
 

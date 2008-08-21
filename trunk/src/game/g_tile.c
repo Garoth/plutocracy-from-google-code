@@ -183,3 +183,26 @@ void G_tile_hover(int tile)
                 g_tiles[tile].model.selected = R_MS_HOVER;
 }
 
+/******************************************************************************\
+ Start constructing a building on this tile.
+\******************************************************************************/
+void G_tile_build(int tile, g_building_type_t type, float progress)
+{
+        /* Range checks */
+        if (tile < 0 || tile >= r_tiles || type < 0 || type >= G_BUILDING_TYPES)
+                return;
+        if (progress < 0.f)
+                progress = 0.f;
+        if (progress > 1.f)
+                progress = 1.f;
+
+        g_tiles[tile].building = type;
+        g_tiles[tile].progress = progress;
+        G_tile_model(tile, g_building_classes[type].model_path);
+
+        /* Let all connected clients know about this */
+        if (!g_host_inited)
+                return;
+        N_broadcast("121f", G_SM_BUILDING, tile, type, progress);
+}
+

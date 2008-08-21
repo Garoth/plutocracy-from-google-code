@@ -28,11 +28,11 @@ typedef enum {
 
 /* Ring icon names */
 typedef enum {
-        I_RI_TEST_BLANK,
-        I_RI_TEST_MILL,
-        I_RI_TEST_TREE,
-        I_RI_TEST_DISABLED,
-        I_RI_TEST_SHIP,
+        I_RI_NONE,
+        I_RI_UNKNOWN,
+        I_RI_MILL,
+        I_RI_TREE,
+        I_RI_SHIP,
         I_RING_ICONS,
 } i_ring_icon_t;
 
@@ -83,7 +83,6 @@ void I_show_ring(i_ring_f callback);
 void I_configure_cargo(int index, const i_cargo_info_t *);
 void I_disable_trade(void);
 void I_enable_trade(bool left_own, const char *partner, int used, int capacity);
-void I_set_cargo_space(int used, int capacity);
 
 /* i_variables.c */
 void I_register_variables(void);

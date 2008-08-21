@@ -191,3 +191,60 @@ void G_store_init(g_store_t *store, int capacity)
         store->cargo[G_CT_CREW].minimum = 1;
 }
 
+/******************************************************************************\
+ Determines whether a player can make a payment at a specific tile, returns
+ TRUE if payment is possible.
+\******************************************************************************/
+bool G_pay(n_client_id_t client, int tile, const g_cost_t *cost, bool pay)
+{
+        g_cost_t unpaid;
+        int i, j, neighbors[3];
+
+        if (!cost)
+                return FALSE;
+        unpaid = *cost;
+
+        /* Just search neighboring ships until plots are implemented */
+        R_get_tile_neighbors(tile, neighbors);
+        for (i = 0; i < 3; i++) {
+                g_store_t *store;
+                int ship;
+                bool modified;
+
+                ship = g_tiles[neighbors[i]].ship;
+                if (!G_ship_controlled_by(ship, client) ||
+                    g_ships[ship].rear_tile >= 0)
+                        continue;
+                store = &g_ships[ship].store;
+
+                /* Check what this ship can pay */
+                for (modified = FALSE, j = 0; j < G_CARGO_TYPES; j++) {
+                        int available;
+
+                        available = store->cargo[j].amount -
+                                    store->cargo[j].minimum;
+                        if (available <= 0)
+                                continue;
+                        if (available > unpaid.cargo[j])
+                                available = unpaid.cargo[j];
+                        unpaid.cargo[j] -= available;
+
+                        /* Actually do the transfer */
+                        if (pay) {
+                                store->cargo[j].amount -= available;
+                                modified = TRUE;
+                        }
+                }
+
+                /* Update the ship's cargo */
+                if (modified)
+                        G_ship_send_cargo(ship, -1);
+        }
+
+        /* See if everything has been paid for */
+        for (i = 0; i < G_CARGO_TYPES; i++)
+                if (unpaid.cargo[i] > 0)
+                        return FALSE;
+        return TRUE;
+}
+

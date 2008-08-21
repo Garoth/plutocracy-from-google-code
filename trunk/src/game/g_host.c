@@ -16,7 +16,11 @@
 
 #include "g_common.h"
 
+/* This game's client limit */
 int g_clients_max;
+
+/* TRUE if the server has finished initializing */
+bool g_host_inited;
 
 /******************************************************************************\
  Handles clients changing nations.
@@ -45,7 +49,7 @@ static void cm_affiliate(int client)
                 ship = G_ship_spawn(-1, client, tile, G_ST_SPIDER);
                 if (ship >= 0) {
                         G_store_add(&g_ships[ship].store, G_CT_GOLD, 1000);
-                        G_store_add(&g_ships[ship].store, G_CT_CREW, 15);
+                        G_store_add(&g_ships[ship].store, G_CT_CREW, 25);
                         G_store_add(&g_ships[ship].store, G_CT_RATIONS, 70);
                 }
 
@@ -53,8 +57,9 @@ static void cm_affiliate(int client)
                 ship = G_ship_spawn(-1, client, tile, G_ST_GALLEON);
                 if (ship >= 0) {
                         G_store_add(&g_ships[ship].store, G_CT_GOLD, 2000);
-                        G_store_add(&g_ships[ship].store, G_CT_CREW, 20);
+                        G_store_add(&g_ships[ship].store, G_CT_CREW, 40);
                         G_store_add(&g_ships[ship].store, G_CT_RATIONS, 100);
+                        G_store_add(&g_ships[ship].store, G_CT_LUMBER, 100);
                 }
         }
 
@@ -382,7 +387,7 @@ static void initial_buildings(void)
                 if (R_terrain_base(r_tile_params[i].terrain) != R_T_GROUND)
                         continue;
                 if (C_rand_real() < g_forest.value.f)
-                        G_build(i, G_BT_TREE, 1.f);
+                        G_tile_build(i, G_BT_TREE, 1.f);
         }
 }
 
@@ -465,6 +470,9 @@ void G_host_game(void)
 
         I_leave_limbo();
         I_popup(NULL, "Hosted a new game.");
+
+        /* Finished initialization */
+        g_host_inited = TRUE;
 }
 
 /******************************************************************************\
