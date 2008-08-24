@@ -565,6 +565,16 @@ void I_dispatch(const SDL_Event *ev)
 
         /* Before dispatch */
         switch (ev->type) {
+        case SDL_ACTIVEEVENT:
+
+                /* If the mouse focus was lost, reset the cursor position */
+                if (!ev->active.gain &&
+                    (ev->active.state & SDL_APPMOUSEFOCUS)) {
+                        i_mouse_x = -1;
+                        i_mouse_y = -1;
+                }
+
+                return;
         case SDL_KEYDOWN:
                 event = I_EV_KEY_DOWN;
                 i_key = ev->key.keysym.sym;

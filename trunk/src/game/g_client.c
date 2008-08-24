@@ -255,51 +255,9 @@ static void sm_ship_state(void)
         target = N_receive_short();
         g_ships[index].health = N_receive_short();
         g_ships[index].store.cargo[G_CT_CREW].amount = N_receive_short();
-
-        /* Don't re-path unless something changed */
-        if (G_ship_move_to(index, tile) || target != g_ships[index].target)
+        if (target != g_ships[index].target)
                 G_ship_path(index, target);
-}
-
-/******************************************************************************\
- A ship's cargo manifest changed.
-\******************************************************************************/
-static void sm_ship_cargo(void)
-{
-        int i, index;
-
-        if ((index = G_receive_ship(-1)) < 0)
-                return;
-
-        /* If we are hosting we already know all the information */
-        if (n_client_id == N_HOST_CLIENT_ID) {
-                G_ship_reselect(index, -1);
-                return;
-        }
-
-        for (i = 0; i < G_CARGO_TYPES; i++) {
-                g_cargo_t *cargo;
-
-                cargo = g_ships[index].store.cargo + i;
-                cargo->amount = N_receive_short();
-
-                /* Clients determine the prices for their own ships */
-                if (g_ships[index].client == n_client_id) {
-                        N_receive_short();
-                        N_receive_short();
-                        N_receive_short();
-                        N_receive_short();
-                } else {
-                        cargo->buy_price = N_receive_short();
-                        cargo->sell_price = N_receive_short();
-                        cargo->auto_buy = cargo->buy_price >= 0;
-                        cargo->auto_sell = cargo->sell_price >= 0;
-                        cargo->minimum = N_receive_short();
-                        cargo->maximum = N_receive_short();
-                }
-        }
-        G_store_space(&g_ships[index].store);
-        G_ship_reselect(index, -1);
+        G_ship_move_to(index, tile);
 }
 
 /******************************************************************************\
@@ -403,11 +361,21 @@ void G_client_callback(int client, n_event_t event)
         case G_SM_SHIP_STATE:
                 sm_ship_state();
                 break;
-        case G_SM_SHIP_CARGO:
-                sm_ship_cargo();
-                break;
         case G_SM_SHIP_PRICES:
                 sm_ship_prices();
+                break;
+
+        /* A ship's cargo manifest changed */
+        case G_SM_SHIP_CARGO:
+                if ((i = G_receive_ship(-1)) < 0)
+                        return;
+                if (n_client_id != N_HOST_CLIENT_ID) {
+                        bool own;
+
+                        own = G_ship_controlled_by(i, n_client_id);
+                        G_store_receive(&g_ships[i].store, own);
+                }
+                G_ship_reselect(i, -1);
                 break;
 
         /* Ship changed names */

@@ -98,9 +98,9 @@ void G_ship_path(int ship, int target)
         search_node_t nodes[SEARCH_BREADTH];
         int i, nodes_len, closest, path_len, neighbors[3];
 
-        /* Tell other clients of the path change */
+        if (g_ships[ship].target != target)
+                g_ships[ship].modified = TRUE;
         g_ships[ship].target = target;
-        G_ship_send_state(ship, -1);
 
         /* Silent fail */
         if (target < 0 || target >= r_tiles || g_ships[ship].tile == target) {
@@ -324,15 +324,23 @@ static void transfer_model(int from, int to)
 }
 
 /******************************************************************************\
- Move a ship to a new tile. Returns TRUE if the ship was moved.
+ Move a ship to a new tile. Returns TRUE if the ship was moved. This is only
+ for cases where the client and server are out of sync.
 \******************************************************************************/
 bool G_ship_move_to(int i, int new_tile)
 {
-        int old_tile;
+        int old_tile, neighbors[3];
 
         old_tile = g_ships[i].tile;
+
+        /* Don't bother if we are already there */
         if (g_ships[i].rear_tile == new_tile || new_tile == old_tile ||
             !G_open_tile(new_tile, i))
+                return FALSE;
+
+        /* Don't bother if we will be there on our next move */
+        R_get_tile_neighbors(g_ships[i].tile, neighbors);
+        if (g_ships[i].path[0] && neighbors[g_ships[i].path[0] - 1] == new_tile)
                 return FALSE;
 
         /* Remove this ship from the old tile */
@@ -340,10 +348,15 @@ bool G_ship_move_to(int i, int new_tile)
         if (g_ships[i].rear_tile >= 0)
                 g_tiles[g_ships[i].rear_tile].ship = -1;
 
+        /* Move to the new tile */
         transfer_model(old_tile, new_tile);
         g_ships[i].rear_tile = old_tile;
         g_ships[i].tile = new_tile;
         g_tiles[new_tile].ship = i;
+
+        /* Make a new path to our target */
+        G_ship_path(i, g_ships[i].target);
+
         return TRUE;
 }
 

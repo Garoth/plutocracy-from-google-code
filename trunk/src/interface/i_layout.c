@@ -294,6 +294,7 @@ void I_enter_limbo(void)
         i_limbo = TRUE;
         I_widget_event(&i_right_toolbar.widget, I_EV_HIDE);
         I_hide_chat();
+        I_quick_info_close();
 }
 
 /******************************************************************************\

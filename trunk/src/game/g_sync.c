@@ -24,7 +24,6 @@ void G_corrupt_drop_full(const char *file, int line, const char *func,
                        N_client_to_string(client));
         if (client < 0 || client == N_SERVER_ID) {
                 I_popup(NULL, "Server sent invalid data.");
-                I_quick_info_close();
                 N_disconnect();
         } else {
                 N_send(client, "12ss", G_SM_POPUP, -1,
