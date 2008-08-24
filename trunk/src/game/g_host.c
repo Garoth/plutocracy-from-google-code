@@ -39,28 +39,11 @@ static void cm_affiliate(int client)
            try to give them a starter ship */
         tile = -1;
         if (old == G_NN_NONE &&
-            (ship = G_ship_spawn(-1, client, -1, G_ST_SLOOP)) >= 0) {
+            (ship = G_ship_spawn(-1, client, -1, G_ST_SPIDER)) >= 0) {
                 tile = g_ships[ship].tile;
                 G_store_add(&g_ships[ship].store, G_CT_GOLD, 500);
-                G_store_add(&g_ships[ship].store, G_CT_CREW, 10);
-                G_store_add(&g_ships[ship].store, G_CT_RATIONS, 50);
-
-                /* Spawn a second ship for testing */
-                ship = G_ship_spawn(-1, client, tile, G_ST_SPIDER);
-                if (ship >= 0) {
-                        G_store_add(&g_ships[ship].store, G_CT_GOLD, 1000);
-                        G_store_add(&g_ships[ship].store, G_CT_CREW, 25);
-                        G_store_add(&g_ships[ship].store, G_CT_RATIONS, 70);
-                }
-
-                /* And spawn a third ship for testing also */
-                ship = G_ship_spawn(-1, client, tile, G_ST_GALLEON);
-                if (ship >= 0) {
-                        G_store_add(&g_ships[ship].store, G_CT_GOLD, 2000);
-                        G_store_add(&g_ships[ship].store, G_CT_CREW, 40);
-                        G_store_add(&g_ships[ship].store, G_CT_RATIONS, 100);
-                        G_store_add(&g_ships[ship].store, G_CT_LUMBER, 100);
-                }
+                G_store_add(&g_ships[ship].store, G_CT_CREW, 25);
+                G_store_add(&g_ships[ship].store, G_CT_RATIONS, 25);
         }
 
         N_broadcast("1112", G_SM_AFFILIATE, client, nation, tile);
@@ -271,7 +254,8 @@ static void cm_tile_ring(int client)
 
                 /* Pay for and build the town hall */
                 G_pay(n_client_id, tile, &bc->cost, TRUE);
-                G_tile_build(tile, G_BT_TOWN_HALL, 0.f);
+                G_tile_build(tile, G_BT_TOWN_HALL, g_clients[client].nation,
+                             0.f);
                 return;
         }
 }
@@ -331,8 +315,7 @@ static void init_client(int client)
 
                 /* Movement */
                 if (g_ships[i].target != g_ships[i].tile)
-                        N_send(client, "1122", G_SM_SHIP_MOVE,
-                               i, g_ships[i].tile, g_ships[i].target);
+                        G_ship_send_state(i, client);
         }
 }
 
@@ -349,12 +332,8 @@ static void client_disconnected(int client)
 
         /* Disown their ships */
         for (i = 0; i < G_SHIPS_MAX; i++)
-                if (g_ships[i].client == client) {
-                        g_ships[i].client = N_SERVER_ID;
-                        N_broadcast_except(N_HOST_CLIENT_ID, "111",
-                                           G_SM_SHIP_OWNER, i, N_SERVER_ID);
-                        G_ship_reselect(i, -1);
-                }
+                if (g_ships[i].client == client)
+                        N_broadcast("111", G_SM_SHIP_OWNER, i, N_SERVER_ID);
 }
 
 /******************************************************************************\
@@ -420,7 +399,7 @@ static void initial_buildings(void)
                 if (R_terrain_base(r_tile_params[i].terrain) != R_T_GROUND)
                         continue;
                 if (C_rand_real() < g_forest.value.f)
-                        G_tile_build(i, G_BT_TREE, 1.f);
+                        G_tile_build(i, G_BT_TREE, G_NN_NONE, 1.f);
         }
 }
 

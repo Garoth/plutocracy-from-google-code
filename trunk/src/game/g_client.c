@@ -245,7 +245,7 @@ static void sm_ship_spawn(void)
 /******************************************************************************\
  Receive a ship path.
 \******************************************************************************/
-static void sm_ship_move(void)
+static void sm_ship_state(void)
 {
         int index, tile, target;
 
@@ -253,6 +253,8 @@ static void sm_ship_move(void)
                 return;
         tile = N_receive_short();
         target = N_receive_short();
+        g_ships[index].health = N_receive_short();
+        g_ships[index].store.cargo[G_CT_CREW].amount = N_receive_short();
 
         /* Don't re-path unless something changed */
         if (G_ship_move_to(index, tile) || target != g_ships[index].target)
@@ -350,7 +352,7 @@ static int name_update(c_var_t *var, c_var_value_t value)
 void G_client_callback(int client, n_event_t event)
 {
         g_server_msg_t token;
-        int i, j;
+        int i, j, k;
 
         C_assert(client == N_SERVER_ID);
 
@@ -398,8 +400,8 @@ void G_client_callback(int client, n_event_t event)
         case G_SM_SHIP_SPAWN:
                 sm_ship_spawn();
                 break;
-        case G_SM_SHIP_MOVE:
-                sm_ship_move();
+        case G_SM_SHIP_STATE:
+                sm_ship_state();
                 break;
         case G_SM_SHIP_CARGO:
                 sm_ship_cargo();
@@ -420,7 +422,7 @@ void G_client_callback(int client, n_event_t event)
         /* Ship changed owners */
         case G_SM_SHIP_OWNER:
                 if ((i = G_receive_ship(-1)) < 0 ||
-                    (j = G_receive_cargo(-1)) < 0)
+                    (j = G_receive_client(-1)) < 0)
                         return;
                 g_ships[i].client = j;
                 G_ship_reselect(i, -1);
@@ -429,9 +431,10 @@ void G_client_callback(int client, n_event_t event)
         /* Building changed */
         case G_SM_BUILDING:
                 if ((i = G_receive_tile(-1)) < 0 ||
-                    (j = G_receive_range(-1, 0, G_BUILDING_TYPES)) < 0)
+                    (j = G_receive_range(-1, 0, G_BUILDING_TYPES)) < 0 ||
+                    (k = G_receive_nation(-1)) < 0)
                         return;
-                G_tile_build(i, j, N_receive_float());
+                G_tile_build(i, j, k, N_receive_float());
                 break;
 
         /* Somebody connected but we don't have their name yet */

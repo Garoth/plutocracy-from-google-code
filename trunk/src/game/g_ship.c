@@ -17,6 +17,9 @@
 /* Maximum health value */
 #define HEALTH_MAX 100
 
+/* Maximum crew value */
+#define CREW_MAX (G_SHIP_OPTIMAL_CREW * 400)
+
 /* Ships array */
 g_ship_t g_ships[G_SHIPS_MAX];
 
@@ -133,7 +136,7 @@ void G_render_ships(void)
         const g_ship_t *ship;
         const g_tile_t *tile;
         c_color_t color;
-        float armor, health, health_max;
+        float crew, crew_max, health, health_max;
         int i;
 
         if (i_limbo)
@@ -161,12 +164,14 @@ void G_render_ships(void)
 
                 /* Draw the status display */
                 ship_class = g_ship_classes + ship->type;
-                armor = (float)ship->armor / HEALTH_MAX;
+                crew_max = ship->store.capacity * G_SHIP_OPTIMAL_CREW /
+                           CREW_MAX;
+                crew = (float)ship->store.cargo[G_CT_CREW].amount / CREW_MAX;
                 health = (float)ship->health / HEALTH_MAX;
                 health_max = (float)ship_class->health / HEALTH_MAX;
                 color = g_nations[g_clients[ship->client].nation].color;
                 R_render_ship_status(&tile->model, health, health_max,
-                                     armor, health_max, color,
+                                     crew, crew_max, color,
                                      g_selected_ship == i,
                                      ship->client == n_client_id);
         }
@@ -246,7 +251,7 @@ static void ship_configure_trade(int index)
 }
 
 /******************************************************************************\
- Returns TRUE if a ship can trade with another ship.
+ Returns TRUE if a ship is capable of trading.
 \******************************************************************************/
 static bool ship_can_trade(int index)
 {
@@ -403,6 +408,39 @@ static void ship_update_visible(int ship)
 }
 
 /******************************************************************************\
+ Feed the ship's crew at regular interval.
+\******************************************************************************/
+static void ship_update_food(int ship)
+{
+        int crew, available;
+
+        if (c_time_msec < g_ships[ship].lunch_time ||
+            g_ships[ship].store.cargo[G_CT_CREW].amount <= 0)
+                return;
+        crew = g_ships[ship].store.cargo[G_CT_CREW].amount;
+
+        /* Consume rations first */
+        if (g_ships[ship].store.cargo[G_CT_RATIONS].amount > 0) {
+                available = G_cargo_nutritional_value(G_CT_RATIONS);
+                G_store_add(&g_ships[ship].store, G_CT_RATIONS, -1);
+        }
+
+        /* Out of food, it's cannibalism time */
+        else {
+                available = G_cargo_nutritional_value(G_CT_CREW);
+                G_store_add(&g_ships[ship].store, G_CT_CREW, -1);
+        }
+
+        g_ships[ship].lunch_time = c_time_msec + available / crew;
+
+        /* Did the crew just starve to death? */
+        if (g_ships[ship].store.cargo[G_CT_CREW].amount <= 0)
+                N_broadcast("111", G_SM_SHIP_OWNER, ship, N_SERVER_ID);
+
+        G_ship_send_cargo(ship, -1);
+}
+
+/******************************************************************************\
  Updates ship positions and actions.
 \******************************************************************************/
 void G_update_ships(void)
@@ -415,6 +453,7 @@ void G_update_ships(void)
                 G_ship_update_move(i);
                 ship_update_trade(i);
                 ship_update_visible(i);
+                ship_update_food(i);
         }
 }
 
@@ -460,6 +499,7 @@ static void ship_quick_info(int index)
         g_ship_class_t *ship_class;
         i_color_t color;
         float prop;
+        int i, total;
 
         if (index < 0) {
                 I_quick_info_close();
@@ -483,15 +523,39 @@ static void ship_quick_info(int index)
         I_quick_info_add_color("Health:", C_va("%d/%d", ship->health,
                                                ship_class->health), color);
 
-        /* Armor */
+        /* Crew */
         color = I_COLOR_ALT;
-        prop = (float)ship->armor / ship_class->health;
+        i = ship->store.cargo[G_CT_CREW].amount;
+        total = ship->store.capacity * G_SHIP_OPTIMAL_CREW;
+        prop = (float)i / total;
         if (prop >= 0.67)
                 color = I_COLOR_GOOD;
         if (prop <= 0.33)
                 color = I_COLOR_BAD;
-        I_quick_info_add_color("Armor:", C_va("%d/%d", ship->armor,
-                                               ship_class->health), color);
+        I_quick_info_add_color("Crew:", C_va("%d/%d", i, total), color);
+        if (i <= 0)
+                return;
+
+        /* Food supply before resorting to cannibalism */
+        if (!g_ships[index].store.visible[n_client_id])
+                return;
+        for (total = i = 0; i < G_CARGO_TYPES; i++) {
+                if (i == G_CT_CREW)
+                        continue;
+                total += G_cargo_nutritional_value(i) *
+                         g_ships[index].store.cargo[i].amount;
+        }
+        total = (total + g_ships[index].store.cargo[G_CT_CREW].amount - 1) /
+                g_ships[index].store.cargo[G_CT_CREW].amount;
+        if (total > 60000)
+                I_quick_info_add_color("Food:", C_va("%d min", total / 60000),
+                                       I_COLOR_GOOD);
+        else if (total > 0)
+                I_quick_info_add_color("Food:", C_va("%d sec", total / 1000),
+                                       I_COLOR_ALT);
+        else
+                I_quick_info_add_color("Food:", "STARVING", I_COLOR_BAD);
+
 }
 
 /******************************************************************************\
@@ -601,5 +665,18 @@ void G_focus_next_ship(void)
         g_ships[best_i].focus_stamp = focus_stamp;
         tile = g_ships[best_i].tile;
         R_rotate_cam_to(g_tiles[tile].model.origin);
+}
+
+/******************************************************************************\
+ Sends out the ship's current state.
+\******************************************************************************/
+void G_ship_send_state(int ship, n_client_id_t client)
+{
+        if (n_client_id != N_HOST_CLIENT_ID)
+                return;
+        N_broadcast_except(N_HOST_CLIENT_ID, "112222", G_SM_SHIP_STATE,
+                           ship, g_ships[ship].tile, g_ships[ship].target,
+                           g_ships[ship].health,
+                           g_ships[ship].store.cargo[G_CT_CREW].amount);
 }
 

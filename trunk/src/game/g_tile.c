@@ -185,7 +185,8 @@ void G_tile_hover(int tile)
 /******************************************************************************\
  Start constructing a building on this tile.
 \******************************************************************************/
-void G_tile_build(int tile, g_building_type_t type, float progress)
+void G_tile_build(int tile, g_building_type_t type, g_nation_name_t nation,
+                  float progress)
 {
         /* Range checks */
         if (tile < 0 || tile >= r_tiles || type < 0 || type >= G_BUILDING_TYPES)
@@ -198,6 +199,7 @@ void G_tile_build(int tile, g_building_type_t type, float progress)
         g_tiles[tile].building = type;
         g_tiles[tile].progress = progress;
         g_tiles[tile].health = g_building_classes[type].health;
+        g_tiles[tile].nation = nation;
         G_tile_model(tile, g_building_classes[type].model_path);
 
         /* Fade the model in if it is still building */
@@ -211,7 +213,7 @@ void G_tile_build(int tile, g_building_type_t type, float progress)
         /* Let all connected clients know about this */
         if (!g_host_inited)
                 return;
-        N_broadcast_except(N_HOST_CLIENT_ID, "121f", G_SM_BUILDING,
-                           tile, type, progress);
+        N_broadcast_except(N_HOST_CLIENT_ID, "1211f", G_SM_BUILDING,
+                           tile, type, nation, progress);
 }
 

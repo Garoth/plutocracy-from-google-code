@@ -96,16 +96,46 @@ bool G_process_click(int button)
 
         /* Opening the selected tile's ring menu */
         if (g_selected_tile >= 0 && g_selected_tile == g_hover_tile) {
-                g_building_class_t *bc;
                 bool can_pay;
 
-                /* Settling the island */
-                if (g_islands[g_tiles[g_selected_tile].island].town_tile < 0) {
-                        bc = g_building_classes + G_BT_TOWN_HALL;
+                /* Build shipyard in tech preview */
+                if (g_tiles[g_selected_tile].building == G_BT_NONE) {
+                        g_building_class_t *bc;
+
+                        bc = g_building_classes + G_BT_SHIPYARD;
                         can_pay = G_pay(n_client_id, g_selected_tile,
                                         &bc->cost, FALSE);
                         I_reset_ring();
                         I_add_to_ring(I_RI_TOWN_HALL, can_pay);
+                        I_show_ring((i_ring_f)tile_ring);
+                }
+
+                /* Operate shipyard in tech preview */
+                else if (g_tiles[g_selected_tile].building == G_BT_SHIPYARD &&
+                         g_tiles[g_selected_tile].nation ==
+                         g_clients[n_client_id].nation) {
+                        g_ship_class_t *sc;
+
+                        I_reset_ring();
+
+                        /* Sloop */
+                        sc = g_ship_classes + G_ST_SLOOP;
+                        can_pay = G_pay(n_client_id, g_selected_tile,
+                                        &sc->cost, FALSE);
+                        I_add_to_ring(I_RI_SLOOP, can_pay);
+
+                        /* Spider */
+                        sc = g_ship_classes + G_ST_SPIDER;
+                        can_pay = G_pay(n_client_id, g_selected_tile,
+                                        &sc->cost, FALSE);
+                        I_add_to_ring(I_RI_SPIDER, can_pay);
+
+                        /* Galleon */
+                        sc = g_ship_classes + G_ST_GALLEON;
+                        can_pay = G_pay(n_client_id, g_selected_tile,
+                                        &sc->cost, FALSE);
+                        I_add_to_ring(I_RI_GALLEON, can_pay);
+
                         I_show_ring((i_ring_f)tile_ring);
                 }
 

@@ -23,7 +23,7 @@
 /* Factor in the speed modifier equation that determines how quickly adding
    crew increases ship speed. The larger the factor the faster speed will
    rise with crew. */
-#define CREW_SPEED_FACTOR 10.f
+#define CREW_SPEED_FACTOR 5.f
 
 /* Structure for searched tile nodes */
 typedef struct search_node {
@@ -99,9 +99,8 @@ void G_ship_path(int ship, int target)
         int i, nodes_len, closest, path_len, neighbors[3];
 
         /* Tell other clients of the path change */
-        if (n_client_id == N_HOST_CLIENT_ID)
-                N_broadcast_except(N_HOST_CLIENT_ID, "1122", G_SM_SHIP_MOVE,
-                                   ship, g_ships[ship].tile, target);
+        g_ships[ship].target = target;
+        G_ship_send_state(ship, -1);
 
         /* Silent fail */
         if (target < 0 || target >= r_tiles || g_ships[ship].tile == target) {
@@ -249,15 +248,18 @@ failed: /* If we can't reach the target, and we have a valid path, try
 static float ship_speed(int index)
 {
         g_store_t *store;
-        float speed;
+        float crew, speed;
 
         speed = g_ship_classes[g_ships[index].type].speed;
         store = &g_ships[index].store;
 
         /* Crew modifier */
         C_assert(store->cargo[G_CT_CREW].amount >= 0);
-        speed *= (-1.f / (CREW_SPEED_FACTOR * store->cargo[G_CT_CREW].amount /
-                         store->capacity + 1.f) + 1.f) *
+        crew = (float)store->cargo[G_CT_CREW].amount /
+               (G_SHIP_OPTIMAL_CREW * store->capacity);
+        if (crew > 1.f)
+                crew = 1.f;
+        speed *= (-1.f / (CREW_SPEED_FACTOR * crew + 1.f) + 1.f) *
                  (1.f + 1.f / CREW_SPEED_FACTOR);
 
         return speed;

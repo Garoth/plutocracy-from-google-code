@@ -35,6 +35,9 @@
 /* Length of a name */
 #define G_NAME_MAX 16
 
+/* Proportion of cargo defined as the "optimal" crew amount */
+#define G_SHIP_OPTIMAL_CREW 0.2f
+
 /* Message tokens sent by clients */
 typedef enum {
         G_CM_NONE,
@@ -61,26 +64,26 @@ typedef enum {
         G_SM_NONE,
 
         /* Synchronization messages */
-        G_SM_INIT,
         G_SM_CLIENT,
+        G_SM_INIT,
 
         /* Messages for when clients change status */
+        G_SM_AFFILIATE,
         G_SM_CONNECTED,
         G_SM_DISCONNECTED,
-        G_SM_AFFILIATE,
         G_SM_NAME,
 
         /* Communication */
-        G_SM_POPUP,
         G_SM_CHAT,
+        G_SM_POPUP,
 
         /* Entity updates */
         G_SM_SHIP_CARGO,
-        G_SM_SHIP_MOVE,
         G_SM_SHIP_NAME,
         G_SM_SHIP_OWNER,
         G_SM_SHIP_PRICES,
         G_SM_SHIP_SPAWN,
+        G_SM_SHIP_STATE,
         G_SM_SHIP_TRANSACT,
         G_SM_BUILDING,
 
@@ -101,6 +104,10 @@ typedef enum {
         G_BT_NONE,
         G_BT_TREE,
         G_BT_TOWN_HALL,
+
+        /* Tech preview buildings */
+        G_BT_SHIPYARD,
+
         G_BUILDING_TYPES
 } g_building_type_t;
 
@@ -127,6 +134,7 @@ typedef struct g_store {
 /* A tile on the globe */
 typedef struct g_tile {
         g_building_type_t building;
+        g_nation_name_t nation;
         r_model_t model;
         c_vec3_t origin, forward;
         float progress, fade;
@@ -166,7 +174,7 @@ typedef struct g_ship {
         g_store_t store;
         c_vec3_t forward;
         float progress;
-        int armor, client, focus_stamp, health, rear_tile, target, tile,
+        int client, focus_stamp, health, lunch_time, rear_tile, target, tile,
             trade_tile;
         char path[R_PATH_MAX], name[G_NAME_MAX];
         bool in_use;
@@ -184,6 +192,7 @@ i_color_t G_nation_to_color(g_nation_name_t);
 extern g_client_t g_clients[N_CLIENTS_MAX + 1];
 
 /* g_elements.c */
+int G_cargo_nutritional_value(g_cargo_type_t);
 void G_init_elements(void);
 void G_reset_elements(void);
 
@@ -224,6 +233,7 @@ void G_ship_hover(int index);
 void G_ship_reselect(int ship, n_client_id_t);
 void G_ship_select(int ship);
 void G_ship_send_cargo(int ship, n_client_id_t);
+void G_ship_send_state(int ship, n_client_id_t);
 int G_ship_spawn(int ship, n_client_id_t, int tile, g_ship_type_t);
 void G_update_ships(void);
 
@@ -253,7 +263,7 @@ int G_receive_tile_full(const char *file, int line, const char *func,
                         n_client_id_t);
 
 /* g_tile.c */
-void G_tile_build(int tile, g_building_type_t, float progress);
+void G_tile_build(int tile, g_building_type_t, g_nation_name_t, float progress);
 void G_tile_hover(int tile);
 void G_tile_select(int tile);
 bool G_tile_model(int tile, const char *filename);

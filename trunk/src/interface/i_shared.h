@@ -39,6 +39,12 @@ typedef enum {
         /* Buildings */
         I_RI_TOWN_HALL,
 
+        /* Tech preview */
+        I_RI_SHIPYARD,
+        I_RI_SLOOP,
+        I_RI_SPIDER,
+        I_RI_GALLEON,
+
         I_RING_ICONS,
 } i_ring_icon_t;
 
