@@ -25,35 +25,12 @@ typedef enum {
         G_CT_GOLD,
         G_CT_CREW,
 
-        /* Foods */
+        /* Tech preview resources */
         G_CT_RATIONS,
-        G_CT_BREAD,
-        G_CT_FISH,
-        G_CT_FRUIT,
-
-        /* Luxuries */
-        G_CT_RUM,
-        G_CT_FURNITURE,
-        G_CT_CLOTH,
-        G_CT_SUGAR,
-
-        /* Raw materials */
-        G_CT_GRAIN,
-        G_CT_COTTON,
-        G_CT_LUMBER,
+        G_CT_WOOD,
         G_CT_IRON,
 
-        /* Equipment */
-        G_CT_CANNON,
-        G_CT_ROUNDSHOT,
-        G_CT_PLATING,
-        G_CT_GILLNET,
-
         G_CARGO_TYPES,
-        G_CT_FOODS = G_CT_RATIONS,
-        G_CT_MATERIALS = G_CT_GRAIN,
-        G_CT_LUXURIES = G_CT_RUM,
-        G_CT_EQUIPMENT = G_CT_CANNON,
 } g_cargo_type_t;
 
 /* Structure for each nation */

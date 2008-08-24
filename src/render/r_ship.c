@@ -96,6 +96,16 @@ static void render_bars(float left, float right)
 {
         const unsigned short indices[6] = {5, 4, 2, 6, 3, 4};
 
+        /* Check ranges */
+        if (left < 0.f)
+                left = 0.f;
+        if (left > 1.f)
+                left = 1.f;
+        if (right < 0.f)
+                right = 0.f;
+        if (right > 1.f)
+                right = 1.f;
+
         /* Dynamically position the top left and right vertices */
         left = cosf(left * C_PI / 2.f + C_PI / 4.f) / C_COS_45;
         right = cosf(right * C_PI / 2.f + C_PI / 4.f) / C_COS_45;

@@ -53,6 +53,21 @@ i_color_t G_nation_to_color(g_nation_name_t nation)
 }
 
 /******************************************************************************\
+ Milliseconds one crew member can survive after eating one unit of [cargo].
+\******************************************************************************/
+int G_cargo_nutritional_value(g_cargo_type_t cargo)
+{
+        switch (cargo) {
+        case G_CT_CREW:
+                return 200000;
+        case G_CT_RATIONS:
+                return 400000;
+        default:
+                return 0;
+        }
+}
+
+/******************************************************************************\
  Initialize game elements.
 \******************************************************************************/
 void G_init_elements(void)
@@ -88,29 +103,10 @@ void G_init_elements(void)
         g_cargo_names[G_CT_GOLD] = C_str("g-cargo-gold", "Gold");
         g_cargo_names[G_CT_CREW] = C_str("g-cargo-crew", "Crew");
 
-        /* Food cargo */
+        /* Tech preview cargo */
         g_cargo_names[G_CT_RATIONS] = C_str("g-cargo-rations", "Rations");
-        g_cargo_names[G_CT_BREAD] = C_str("g-cargo-bread", "Bread");
-        g_cargo_names[G_CT_FISH] = C_str("g-cargo-fish", "Fish");
-        g_cargo_names[G_CT_FRUIT] = C_str("g-cargo-fruit", "Fruit");
-
-        /* Raw material cargo */
-        g_cargo_names[G_CT_GRAIN] = C_str("g-cargo-grain", "Grain");
-        g_cargo_names[G_CT_COTTON] = C_str("g-cargo-cotton", "Cotton");
-        g_cargo_names[G_CT_LUMBER] = C_str("g-cargo-lumber", "Lumber");
+        g_cargo_names[G_CT_WOOD] = C_str("g-cargo-wood", "Wood");
         g_cargo_names[G_CT_IRON] = C_str("g-cargo-iron", "Iron");
-
-        /* Luxury cargo */
-        g_cargo_names[G_CT_RUM] = C_str("g-cargo-rum", "Rum");
-        g_cargo_names[G_CT_FURNITURE] = C_str("g-cargo-furniture", "Furniture");
-        g_cargo_names[G_CT_CLOTH] = C_str("g-cargo-cloth", "Cloth");
-        g_cargo_names[G_CT_SUGAR] = C_str("g-cargo-sugar", "Sugar");
-
-        /* Equipment cargo */
-        g_cargo_names[G_CT_CANNON] = C_str("g-cargo-cannon", "Cannon");
-        g_cargo_names[G_CT_ROUNDSHOT] = C_str("g-cargo-roundshot", "Ammo");
-        g_cargo_names[G_CT_PLATING] = C_str("g-cargo-plating", "Plating");
-        g_cargo_names[G_CT_GILLNET] = C_str("g-cargo-gillner", "Gillnet");
 
         /* Nothing built */
         bc = g_building_classes + G_BT_NONE;
@@ -123,29 +119,35 @@ void G_init_elements(void)
         bc->model_path = "models/tree/deciduous.plum";
         bc->health = 100;
 
-        /* Town hall */
-        bc = g_building_classes + G_BT_TOWN_HALL;
-        bc->name = "Town Hall";
+        /* Tech preview shipyard */
+        bc = g_building_classes + G_BT_SHIPYARD;
+        bc->name = "Shipyard";
         bc->health = 250;
-        bc->model_path = "models/test/mill.plum";
-        bc->cost.cargo[G_CT_GOLD] = 500;
-        bc->cost.cargo[G_CT_LUMBER] = 100;
+        bc->model_path = "models/water/dock.plum";
+        bc->cost.cargo[G_CT_GOLD] = 1000;
+        bc->cost.cargo[G_CT_WOOD] = 200;
 
         /* Sloop */
         sc = g_ship_classes + G_ST_SLOOP;
         sc->name = C_str("g-ship-sloop", "Sloop");
         sc->model_path = "models/ship/sloop.plum";
         sc->speed = 1.f;
-        sc->health = 40;
+        sc->health = 50;
         sc->cargo = 100;
+        sc->cost.cargo[G_CT_GOLD] = 300;
+        sc->cost.cargo[G_CT_WOOD] = 50;
+        sc->cost.cargo[G_CT_IRON] = 50;
 
         /* Spider */
         sc = g_ship_classes + G_ST_SPIDER;
         sc->name = C_str("g-ship-spider", "Spider");
         sc->model_path = "models/ship/spider.plum";
         sc->speed = 0.75f;
-        sc->health = 80;
+        sc->health = 75;
         sc->cargo = 250;
+        sc->cost.cargo[G_CT_GOLD] = 400;
+        sc->cost.cargo[G_CT_WOOD] = 75;
+        sc->cost.cargo[G_CT_IRON] = 25;
 
         /* Galleon */
         sc = g_ship_classes + G_ST_GALLEON;
@@ -154,6 +156,9 @@ void G_init_elements(void)
         sc->speed = 0.5f;
         sc->health = 100;
         sc->cargo = 400;
+        sc->cost.cargo[G_CT_GOLD] = 600;
+        sc->cost.cargo[G_CT_WOOD] = 100;
+        sc->cost.cargo[G_CT_IRON] = 100;
 }
 
 /******************************************************************************\
@@ -191,7 +196,7 @@ void G_reset_elements(void)
 
         /* Reset tiles */
         for (i = 0; i < r_tiles; i++)
-                G_tile_build(i, G_BT_NONE, 0.f);
+                G_tile_build(i, G_BT_NONE, G_NN_NONE, 0.f);
 
         /* The server "client" has fixed information */
         g_clients[N_SERVER_ID].nation = G_NN_PIRATE;

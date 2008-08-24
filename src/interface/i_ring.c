@@ -130,19 +130,33 @@ void I_init_ring(void)
         ring_widget.state = I_WS_READY;
         ring_widget.shown = FALSE;
 
-        /* Initialize the button widgets */
+        /* Generic buttons */
         I_button_init(button_widgets + I_RI_NONE,
                       "gui/icons/ring/none.png", NULL, I_BT_ROUND);
         I_button_init(button_widgets + I_RI_UNKNOWN,
                       "gui/icons/ring/unknown.png", NULL, I_BT_ROUND);
+        I_button_init(button_widgets + I_RI_SHIP,
+                      "gui/icons/ring/ship.png", NULL, I_BT_ROUND);
+
+        /* Building buttons */
         I_button_init(button_widgets + I_RI_MILL,
                       "gui/icons/ring/mill.png", NULL, I_BT_ROUND);
         I_button_init(button_widgets + I_RI_TREE,
                       "gui/icons/ring/tree.png", NULL, I_BT_ROUND);
-        I_button_init(button_widgets + I_RI_SHIP,
-                      "gui/icons/ring/ship.png", NULL, I_BT_ROUND);
         I_button_init(button_widgets + I_RI_TOWN_HALL,
                       "gui/icons/ring/unknown.png", NULL, I_BT_ROUND);
+
+        /* Tech preview buttons */
+        I_button_init(button_widgets + I_RI_SHIPYARD,
+                      "gui/icons/ring/unknown.png", NULL, I_BT_ROUND);
+        I_button_init(button_widgets + I_RI_SLOOP,
+                      "gui/icons/ring/ship.png", NULL, I_BT_ROUND);
+        I_button_init(button_widgets + I_RI_SPIDER,
+                      "gui/icons/ring/ship.png", NULL, I_BT_ROUND);
+        I_button_init(button_widgets + I_RI_GALLEON,
+                      "gui/icons/ring/ship.png", NULL, I_BT_ROUND);
+
+        /* Finish initializing the button widgets */
         for (i = 0; i < I_RING_ICONS; i++) {
                 I_widget_add(&ring_widget, &button_widgets[i].widget);
                 button_widgets[i].on_click = (i_callback_f)button_clicked;
