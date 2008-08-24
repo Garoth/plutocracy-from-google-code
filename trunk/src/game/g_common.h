@@ -29,6 +29,12 @@
 /* Delay in milliseconds before the hover window is displayed */
 #define G_HOVER_DELAY 750
 
+/* Maximum number of ships in a game */
+#define G_SHIPS_MAX 256
+
+/* Length of a name */
+#define G_NAME_MAX 16
+
 /* Message tokens sent by clients */
 typedef enum {
         G_CM_NONE,
@@ -45,6 +51,7 @@ typedef enum {
         G_CM_SHIP_NAME,
         G_CM_SHIP_PRICES,
         G_CM_SHIP_BUY,
+        G_CM_TILE_RING,
 
         G_CLIENT_MESSAGES
 } g_client_msg_t;

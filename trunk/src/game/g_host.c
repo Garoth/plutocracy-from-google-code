@@ -247,6 +247,36 @@ static void cm_chat(int client)
 }
 
 /******************************************************************************\
+ Client wants to do something to a tile via a ring command.
+\******************************************************************************/
+static void cm_tile_ring(int client)
+{
+        g_building_class_t *bc;
+        i_ring_icon_t icon;
+        int tile;
+
+        tile = G_receive_tile(client);
+        icon = (i_ring_icon_t)G_receive_range(client, 0, I_RING_ICONS);
+        if (tile < 0 || icon < 0)
+                return;
+
+        /* Client wants to settle an island */
+        if (icon == I_RI_TOWN_HALL) {
+                bc = g_building_classes + G_BT_TOWN_HALL;
+
+                /* Can you do it? */
+                if (g_islands[g_tiles[tile].island].town_tile >= 0 ||
+                    !G_pay(n_client_id, tile, &bc->cost, FALSE))
+                        return;
+
+                /* Pay for and build the town hall */
+                G_pay(n_client_id, tile, &bc->cost, TRUE);
+                G_tile_build(tile, G_BT_TOWN_HALL, 0.f);
+                return;
+        }
+}
+
+/******************************************************************************\
  Initialize a new client.
 \******************************************************************************/
 static void init_client(int client)
@@ -370,6 +400,9 @@ static void server_callback(int client, n_event_t event)
                 break;
         case G_CM_SHIP_PRICES:
                 cm_ship_prices(client);
+                break;
+        case G_CM_TILE_RING:
+                cm_tile_ring(client);
                 break;
         default:
                 break;

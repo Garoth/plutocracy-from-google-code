@@ -10,12 +10,6 @@
  FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
 \******************************************************************************/
 
-/* Maximum number of ships in a game */
-#define G_SHIPS_MAX 256
-
-/* Length of a name */
-#define G_NAME_MAX 16
-
 /* There is a fixed number of nations */
 typedef enum {
         G_NN_NONE,

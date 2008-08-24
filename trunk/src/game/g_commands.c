@@ -34,6 +34,16 @@ void G_change_nation(int index)
 }
 
 /******************************************************************************\
+ Callback for ring opened when right-clicking a tile.
+\******************************************************************************/
+static void tile_ring(i_ring_icon_t icon)
+{
+        if (g_selected_tile < 0)
+                return;
+        N_send(N_SERVER_ID, "121", G_CM_TILE_RING, g_selected_tile, icon);
+}
+
+/******************************************************************************\
  Called when the interface root window receives a click. Returns FALSE is
  no action was taken.
 \******************************************************************************/
@@ -90,13 +100,13 @@ bool G_process_click(int button)
                 bool can_pay;
 
                 /* Settling the island */
-                if (g_islands[g_tiles[g_selected_tile].island].town_tile < 0 ) {
+                if (g_islands[g_tiles[g_selected_tile].island].town_tile < 0) {
                         bc = g_building_classes + G_BT_TOWN_HALL;
                         can_pay = G_pay(n_client_id, g_selected_tile,
                                         &bc->cost, FALSE);
                         I_reset_ring();
-                        I_add_to_ring(I_RI_MILL, can_pay);
-                        I_show_ring(NULL);
+                        I_add_to_ring(I_RI_TOWN_HALL, can_pay);
+                        I_show_ring((i_ring_f)tile_ring);
                 }
 
                 return TRUE;
