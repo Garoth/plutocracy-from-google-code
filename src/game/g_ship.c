@@ -314,30 +314,34 @@ static void ship_update_trade(int index)
 
 /******************************************************************************\
  Send updated cargo information to clients. If [client] is negative, all
- clients that can see the ship's cargo are updated.
+ clients that can see the ship's cargo are updated and only modified cargo
+ entries are communicated.
 \******************************************************************************/
 void G_ship_send_cargo(int index, n_client_id_t client)
 {
         int i;
+        bool broadcast;
 
         /* Host already knows everything */
         if (client == N_HOST_CLIENT_ID || n_client_id != N_HOST_CLIENT_ID)
+                return;
+
+        /* If crew changed, send the new value via status update */
+        if (g_ships[index].store.modified & (1 << G_CT_CREW)) {
+                g_ships[index].store.modified &= ~(1 << G_CT_CREW);
+                g_ships[index].modified = TRUE;
+        }
+
+        /* Nothing is sent if broadcasting an unmodified store */
+        if ((broadcast = client < 0 || client == N_BROADCAST_ID) &&
+            !g_ships[index].modified)
                 return;
 
         /* Pack all the cargo information */
         N_send_start();
         N_send_char(G_SM_SHIP_CARGO);
         N_send_char(index);
-        for (i = 0; i < G_CARGO_TYPES; i++) {
-                g_cargo_t *cargo;
-
-                cargo = g_ships[index].store.cargo + i;
-                N_send_short(cargo->amount);
-                N_send_short(cargo->auto_buy ? cargo->buy_price : -1);
-                N_send_short(cargo->auto_sell ? cargo->sell_price : -1);
-                N_send_short(cargo->minimum);
-                N_send_short(cargo->maximum);
-        }
+        G_store_send(&g_ships[index].store, !broadcast);
 
         /* Already selected the target clients */
         if (client == N_SELECTED_ID) {
@@ -345,8 +349,8 @@ void G_ship_send_cargo(int index, n_client_id_t client)
                 return;
         }
 
-        /* Send to selected clients */
-        if (client < 0 || client == N_BROADCAST_ID) {
+        /* Send to clients that can see complete cargo information */
+        if (broadcast) {
                 for (i = 0; i < N_CLIENTS_MAX; i++)
                         n_clients[i].selected = g_ships[index].store.visible[i];
                 N_send_selected(NULL);
@@ -354,7 +358,21 @@ void G_ship_send_cargo(int index, n_client_id_t client)
         }
 
         /* Send to a single client */
-        N_send(client, NULL);
+        if (g_ships[index].store.visible[client])
+                N_send(client, NULL);
+}
+
+/******************************************************************************\
+ Sends out the ship's current state.
+\******************************************************************************/
+void G_ship_send_state(int ship, n_client_id_t client)
+{
+        if (n_client_id != N_HOST_CLIENT_ID)
+                return;
+        N_broadcast_except(N_HOST_CLIENT_ID, "112222", G_SM_SHIP_STATE,
+                           ship, g_ships[ship].tile, g_ships[ship].target,
+                           g_ships[ship].health,
+                           g_ships[ship].store.cargo[G_CT_CREW].amount);
 }
 
 /******************************************************************************\
@@ -364,7 +382,7 @@ void G_ship_send_cargo(int index, n_client_id_t client)
 static void ship_update_visible(int ship)
 {
         int i, client, neighbors[3];
-        bool old_visible[N_CLIENTS_MAX];
+        bool old_visible[N_CLIENTS_MAX], selected;
 
         memcpy(old_visible, g_ships[ship].store.visible, sizeof (old_visible));
         C_zero_buf(g_ships[ship].store.visible);
@@ -390,21 +408,24 @@ static void ship_update_visible(int ship)
                                        g_ships[ship].store.visible[n_client_id])
                 ship_configure_trade(ship);
 
-        /* Update clients' cargo info if we are the host */
-        if (n_client_id != N_HOST_CLIENT_ID)
+        /* No need to send updates here if we aren't hosting or if the store is
+           modified */
+        if (n_client_id != N_HOST_CLIENT_ID || g_ships[ship].store.modified)
                 return;
 
         /* Only send the update to clients that can see the store now but
            couldn't see it before */
-        for (i = 0; i < N_CLIENTS_MAX; i++) {
+        for (selected = FALSE, i = 0; i < N_CLIENTS_MAX; i++) {
                 n_clients[i].selected = FALSE;
                 if (i == N_HOST_CLIENT_ID)
                         continue;
-                if (!old_visible[i] && g_ships[ship].store.visible[i])
+                if (!old_visible[i] && g_ships[ship].store.visible[i]) {
                         n_clients[i].selected = TRUE;
+                        selected = TRUE;
+                }
         }
-
-        G_ship_send_cargo(ship, N_SELECTED_ID);
+        if (selected)
+                G_ship_send_cargo(ship, N_SELECTED_ID);
 }
 
 /******************************************************************************\
@@ -414,6 +435,11 @@ static void ship_update_food(int ship)
 {
         int crew, available;
 
+        /* Only the host updates food */
+        if (n_client_id != N_HOST_CLIENT_ID)
+                return;
+
+        /* Not time to eat yet */
         if (c_time_msec < g_ships[ship].lunch_time ||
             g_ships[ship].store.cargo[G_CT_CREW].amount <= 0)
                 return;
@@ -436,8 +462,6 @@ static void ship_update_food(int ship)
         /* Did the crew just starve to death? */
         if (g_ships[ship].store.cargo[G_CT_CREW].amount <= 0)
                 N_broadcast("111", G_SM_SHIP_OWNER, ship, N_SERVER_ID);
-
-        G_ship_send_cargo(ship, -1);
 }
 
 /******************************************************************************\
@@ -454,6 +478,14 @@ void G_update_ships(void)
                 ship_update_trade(i);
                 ship_update_visible(i);
                 ship_update_food(i);
+
+                /* If the cargo manfiest changed, send updates once per frame */
+                if (g_ships[i].store.modified)
+                        G_ship_send_cargo(i, -1);
+
+                /* If the ship state changed, send an update */
+                if (g_ships[i].modified)
+                        G_ship_send_state(i, -1);
         }
 }
 
@@ -616,12 +648,25 @@ void G_ship_reselect(int index, n_client_id_t client)
 
 /******************************************************************************\
  Returns TRUE if a ship index is valid and can be controlled by the given
- client.
+ client. Also doubles as a way to check if the index is valid to begin with.
 \******************************************************************************/
 bool G_ship_controlled_by(int index, n_client_id_t client)
 {
         return index >= 0 && index < G_SHIPS_MAX && g_ships[index].in_use &&
                g_ships[index].health > 0 && g_ships[index].client == client;
+}
+
+/******************************************************************************\
+ Returns TRUE if the ship is owned by a hostile player.
+\******************************************************************************/
+bool G_ship_hostile(int index)
+{
+        if (index < 0 || index >= G_SHIPS_MAX || !g_ships[index].in_use)
+                return FALSE;
+
+        /* For the tech preview, all nations are permanently at war */
+        return g_clients[g_ships[index].client].nation !=
+               g_clients[n_client_id].nation;
 }
 
 /******************************************************************************\
@@ -665,18 +710,5 @@ void G_focus_next_ship(void)
         g_ships[best_i].focus_stamp = focus_stamp;
         tile = g_ships[best_i].tile;
         R_rotate_cam_to(g_tiles[tile].model.origin);
-}
-
-/******************************************************************************\
- Sends out the ship's current state.
-\******************************************************************************/
-void G_ship_send_state(int ship, n_client_id_t client)
-{
-        if (n_client_id != N_HOST_CLIENT_ID)
-                return;
-        N_broadcast_except(N_HOST_CLIENT_ID, "112222", G_SM_SHIP_STATE,
-                           ship, g_ships[ship].tile, g_ships[ship].target,
-                           g_ships[ship].health,
-                           g_ships[ship].store.cargo[G_CT_CREW].amount);
 }
 

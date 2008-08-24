@@ -80,6 +80,7 @@ int G_store_add(g_store_t *store, g_cargo_type_t cargo, int amount)
         /* Store is already overflowing */
         if (store->space_used > store->capacity)
                 return 0;
+        store->modified |= 1 << cargo;
 
         /* Don't take more than what's there */
         if (amount < -store->cargo[cargo].amount)
@@ -231,14 +232,10 @@ bool G_pay(n_client_id_t client, int tile, const g_cost_t *cost, bool pay)
 
                         /* Actually do the transfer */
                         if (pay) {
-                                store->cargo[j].amount -= available;
+                                G_store_add(store, j, -available);
                                 modified = TRUE;
                         }
                 }
-
-                /* Update the ship's cargo */
-                if (modified)
-                        G_ship_send_cargo(ship, -1);
         }
 
         /* See if everything has been paid for */
@@ -246,5 +243,70 @@ bool G_pay(n_client_id_t client, int tile, const g_cost_t *cost, bool pay)
                 if (unpaid.cargo[i] > 0)
                         return FALSE;
         return TRUE;
+}
+
+/******************************************************************************\
+ Add the cargo contents to the current network message. Note that this call
+ does not actually send the information, you must finish and send the message
+ yourself with N_send(NULL).
+
+ If [force] is TRUE, modified status is ignored and unchanged after this call.
+\******************************************************************************/
+void G_store_send(g_store_t *store, bool force)
+{
+        int i;
+
+        C_assert(N_CLIENTS_MAX <= 32);
+        N_send_int(store->modified);
+        for (i = 0; i < G_CARGO_TYPES; i++) {
+                g_cargo_t *cargo;
+
+                if (!force && !(store->modified & (1 << i)))
+                        continue;
+                cargo = store->cargo + i;
+                N_send_short(cargo->amount);
+                N_send_short(cargo->auto_buy ? cargo->buy_price : -1);
+                N_send_short(cargo->auto_sell ? cargo->sell_price : -1);
+                N_send_short(cargo->minimum);
+                N_send_short(cargo->maximum);
+        }
+        if (!force)
+                store->modified = 0;
+}
+
+/******************************************************************************\
+ Read the cargo contents to the message receive buffer. If [ignore_prices] is
+ TRUE, price settings will not be overwritten.
+\******************************************************************************/
+void G_store_receive(g_store_t *store, bool ignore_prices)
+{
+        int i, modified;
+
+        C_assert(N_CLIENTS_MAX <= 32);
+        modified = N_receive_int();
+        if (!modified)
+                return;
+        for (i = 0; i < G_CARGO_TYPES; i++) {
+                g_cargo_t *cargo;
+
+                if (!(modified & (1 << i)))
+                        continue;
+                cargo = store->cargo + i;
+                cargo->amount = N_receive_short();
+                if (ignore_prices) {
+                        N_receive_short();
+                        N_receive_short();
+                        N_receive_short();
+                        N_receive_short();
+                        continue;
+                }
+                cargo->buy_price = N_receive_short();
+                cargo->sell_price = N_receive_short();
+                cargo->auto_buy = cargo->buy_price >= 0;
+                cargo->auto_sell = cargo->sell_price >= 0;
+                cargo->minimum = N_receive_short();
+                cargo->maximum = N_receive_short();
+        }
+        G_store_space(store);
 }
 

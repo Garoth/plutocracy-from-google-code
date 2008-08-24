@@ -14,6 +14,9 @@
 
 #include "g_common.h"
 
+/* The ship that was right-clicked on */
+static int ring_ship;
+
 /******************************************************************************\
  Interface wants us to leave the current game.
 \******************************************************************************/
@@ -41,6 +44,16 @@ static void tile_ring(i_ring_icon_t icon)
         if (g_selected_tile < 0)
                 return;
         N_send(N_SERVER_ID, "121", G_CM_TILE_RING, g_selected_tile, icon);
+}
+
+/******************************************************************************\
+ Callback for ring opened when right-clicking a ship.
+\******************************************************************************/
+static void ship_ring(i_ring_icon_t icon)
+{
+        if (g_selected_ship < 0 || ring_ship < 0)
+                return;
+        N_send(N_SERVER_ID, "111", G_CM_SHIP_RING, ring_ship, icon);
 }
 
 /******************************************************************************\
@@ -83,13 +96,20 @@ bool G_process_click(int button)
                 return FALSE;
 
         /* Controlling a ship */
-        if (g_selected_ship >= 0 &&
-            g_ships[g_selected_ship].client == n_client_id) {
+        if (G_ship_controlled_by(g_selected_ship, n_client_id)) {
 
                 /* Ordered an ocean move */
                 if (g_hover_tile >= 0 && G_open_tile(g_hover_tile, -1))
                         N_send(N_SERVER_ID, "112", G_CM_SHIP_MOVE,
                                g_selected_ship, g_hover_tile);
+
+                /* Right-clicked on a ship */
+                if (g_hover_ship >= 0) {
+                        ring_ship = g_hover_ship;
+                        I_reset_ring();
+                        I_add_to_ring(I_RI_BOARD, G_ship_hostile(g_hover_ship));
+                        I_show_ring((i_ring_f)ship_ring);
+                }
 
                 return TRUE;
         }

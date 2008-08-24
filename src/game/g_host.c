@@ -209,10 +209,6 @@ static void cm_ship_buy(int client)
                 G_store_add(buyer, G_CT_GOLD, gold);
                 G_store_add(seller, cargo, amount);
         }
-
-        /* Update cargo data */
-        G_ship_send_cargo(trade_ship, -1);
-        G_ship_send_cargo(ship, -1);
 }
 
 /******************************************************************************\
@@ -305,16 +301,10 @@ static void init_client(int client)
         for (i = 0; i < G_SHIPS_MAX; i++) {
                 if (!g_ships[i].in_use)
                         continue;
-
-                /* Owner, tile, class, index */
                 N_send(client, "11121", G_SM_SHIP_SPAWN, i, g_ships[i].client,
                        g_ships[i].tile, g_ships[i].type);
-
-                /* Name */
                 N_send(client, "11s", G_SM_SHIP_NAME, i, g_ships[i].name);
-
-                /* Movement */
-                if (g_ships[i].target != g_ships[i].tile)
+                if (!g_ships[i].modified)
                         G_ship_send_state(i, client);
         }
 }

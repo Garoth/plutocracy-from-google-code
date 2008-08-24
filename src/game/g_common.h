@@ -50,10 +50,11 @@ typedef enum {
         G_CM_CHAT,
 
         /* Commands */
+        G_CM_SHIP_BUY,
         G_CM_SHIP_MOVE,
         G_CM_SHIP_NAME,
         G_CM_SHIP_PRICES,
-        G_CM_SHIP_BUY,
+        G_CM_SHIP_RING,
         G_CM_TILE_RING,
 
         G_CLIENT_MESSAGES
@@ -127,6 +128,7 @@ typedef struct g_cargo {
 /* Trading store structure */
 typedef struct g_store {
         g_cargo_t cargo[G_CARGO_TYPES];
+        int modified;
         short space_used, capacity;
         bool visible[N_CLIENTS_MAX];
 } g_store_t;
@@ -174,10 +176,10 @@ typedef struct g_ship {
         g_store_t store;
         c_vec3_t forward;
         float progress;
-        int client, focus_stamp, health, lunch_time, rear_tile, target, tile,
-            trade_tile;
+        int client, focus_stamp, health, lunch_time, rear_tile, target,
+            tile, trade_tile;
         char path[R_PATH_MAX], name[G_NAME_MAX];
-        bool in_use;
+        bool in_use, modified;
 } g_ship_t;
 
 /* Island structure */
@@ -227,9 +229,10 @@ void G_reset_name_counts(void);
 /* g_ship.c */
 void G_focus_next_ship(void);
 void G_render_ships(void);
-bool G_ship_can_trade_with(int index, int tile);
+bool G_ship_can_trade_with(int ship, int tile);
 bool G_ship_controlled_by(int ship, n_client_id_t);
-void G_ship_hover(int index);
+bool G_ship_hostile(int ship);
+void G_ship_hover(int ship);
 void G_ship_reselect(int ship, n_client_id_t);
 void G_ship_select(int ship);
 void G_ship_send_cargo(int ship, n_client_id_t);
@@ -280,7 +283,9 @@ bool G_pay(n_client_id_t, int tile, const g_cost_t *, bool pay);
 int G_store_add(g_store_t *, g_cargo_type_t, int amount);
 int G_store_fits(const g_store_t *, g_cargo_type_t);
 void G_store_init(g_store_t *, int capacity);
+void G_store_receive(g_store_t *, bool ignore_prices);
 void G_store_select_clients(const g_store_t *);
+void G_store_send(g_store_t *, bool force);
 int G_store_space(g_store_t *);
 
 /* g_variables.c */
