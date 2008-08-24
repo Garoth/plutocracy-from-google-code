@@ -41,6 +41,11 @@ bool G_tile_model(int tile, const char *filename)
         g_tiles[tile].model.forward = g_tiles[tile].forward;
         g_tiles[tile].model_shown = TRUE;
         g_tiles[tile].fade = 1.f;
+
+        /* Selected tile? */
+        if (g_selected_tile == tile)
+                g_tiles[tile].model.selected = R_MS_SELECTED;
+
         return TRUE;
 }
 
@@ -62,13 +67,7 @@ static void tile_quick_info(int index)
         building_class = g_building_classes + tile->building;
         I_quick_info_show(building_class->name);
 
-        /* Owner */
-        I_quick_info_add("Owner:", NULL);
-
-        /* Island */
-        I_quick_info_add("Island:", NULL);
-
-        /* Island */
+        /* Terrain */
         I_quick_info_add("Terrain:",
                          R_terrain_to_string(r_tile_params[index].terrain));
 
@@ -198,11 +197,21 @@ void G_tile_build(int tile, g_building_type_t type, float progress)
 
         g_tiles[tile].building = type;
         g_tiles[tile].progress = progress;
+        g_tiles[tile].health = g_building_classes[type].health;
         G_tile_model(tile, g_building_classes[type].model_path);
+
+        /* Fade the model in if it is still building */
+        if (progress < 1.f)
+                g_tiles[tile].fade = 0.f;
+
+        /* If we just built a new town hall, update the island */
+        if (type == G_BT_TOWN_HALL)
+                g_islands[g_tiles[tile].island].town_tile = tile;
 
         /* Let all connected clients know about this */
         if (!g_host_inited)
                 return;
-        N_broadcast("121f", G_SM_BUILDING, tile, type, progress);
+        N_broadcast_except(N_HOST_CLIENT_ID, "121f", G_SM_BUILDING,
+                           tile, type, progress);
 }
 

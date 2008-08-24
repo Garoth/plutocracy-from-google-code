@@ -103,10 +103,9 @@ static void parse_header(const char *filename)
                         /* Function pointer */
                         if (D_token(d_num_tokens - 2)[0] == ')')
                                 for (i = 1; i < d_num_tokens - 2; i++)
-                                        if (D_token(i)[0] == '(' &&
-                                            D_token(i + 1)[0] == '*')
+                                        if (D_token(i)[0] == ')')
                                                 D_strncpy_buf(current.name,
-                                                              D_token(i + 2));
+                                                              D_token(i - 1));
 
                         D_strncpy_buf(current.def, D_def());
                         D_strncpy_buf(current.comment, D_comment());

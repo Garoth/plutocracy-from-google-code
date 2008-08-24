@@ -29,10 +29,16 @@ typedef enum {
 /* Ring icon names */
 typedef enum {
         I_RI_NONE,
+
+        /* Testing */
         I_RI_UNKNOWN,
         I_RI_MILL,
         I_RI_TREE,
         I_RI_SHIP,
+
+        /* Buildings */
+        I_RI_TOWN_HALL,
+
         I_RING_ICONS,
 } i_ring_icon_t;
 

@@ -141,6 +141,8 @@ void I_init_ring(void)
                       "gui/icons/ring/tree.png", NULL, I_BT_ROUND);
         I_button_init(button_widgets + I_RI_SHIP,
                       "gui/icons/ring/ship.png", NULL, I_BT_ROUND);
+        I_button_init(button_widgets + I_RI_TOWN_HALL,
+                      "gui/icons/ring/unknown.png", NULL, I_BT_ROUND);
         for (i = 0; i < I_RING_ICONS; i++) {
                 I_widget_add(&ring_widget, &button_widgets[i].widget);
                 button_widgets[i].on_click = (i_callback_f)button_clicked;
