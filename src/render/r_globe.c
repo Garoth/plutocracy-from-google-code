@@ -169,10 +169,10 @@ void R_start_globe(void)
         glDisableClientState(GL_VERTEX_ARRAY);
         glDisableClientState(GL_NORMAL_ARRAY);
         R_check_errors();
-        C_count_add(&r_count_faces, r_tiles);
+        C_count_add(&r_count_faces, r_tiles_max);
 
         /* Render the globe's normals for testing */
-        R_render_normals(3 * r_tiles, &r_globe_verts[0].v.co,
+        R_render_normals(3 * r_tiles_max, &r_globe_verts[0].v.co,
                          &r_globe_verts[0].v.no, sizeof (*r_globe_verts));
 }
 

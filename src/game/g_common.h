@@ -133,15 +133,31 @@ typedef struct g_store {
         bool visible[N_CLIENTS_MAX];
 } g_store_t;
 
-/* A tile on the globe */
-typedef struct g_tile {
-        g_building_type_t building;
+/* Structure to represent resource cost */
+typedef struct g_cost {
+        short cargo[G_CARGO_TYPES];
+} g_cost_t;
+
+/* Structure for building type parameters */
+typedef struct g_building_class {
+        g_cost_t cost;
+        const char *name, *model_path;
+        int health;
+} g_building_class_t;
+
+/* Structure containing building information */
+typedef struct g_building {
+        g_building_type_t type;
         g_nation_name_t nation;
         r_model_t model;
-        c_vec3_t origin, forward;
-        float progress, fade;
-        int health, island, ship, search_parent, search_stamp;
-        bool model_shown, visible;
+        int health;
+} g_building_t;
+
+/* A tile on the globe */
+typedef struct g_tile {
+        g_building_t *building;
+        int island, ship, search_parent, search_stamp;
+        bool visible;
 } g_tile_t;
 
 /* Structure for each player */
@@ -149,11 +165,6 @@ typedef struct g_client {
         int nation;
         char name[G_NAME_MAX];
 } g_client_t;
-
-/* Structure to represent resource cost */
-typedef struct g_cost {
-        short cargo[G_CARGO_TYPES];
-} g_cost_t;
 
 /* Structure containing ship type parameters */
 typedef struct g_ship_base {
@@ -163,17 +174,11 @@ typedef struct g_ship_base {
         int health, cargo;
 } g_ship_class_t;
 
-/* Structure for building type parameters */
-typedef struct g_building_class {
-        g_cost_t cost;
-        const char *name, *model_path;
-        int health;
-} g_building_class_t;
-
 /* Structure containing ship information */
 typedef struct g_ship {
         g_ship_type_t type;
         g_store_t store;
+        r_model_t model;
         c_vec3_t forward;
         float progress;
         int client, focus_stamp, health, lunch_time,
@@ -202,7 +207,6 @@ extern g_ship_class_t g_ship_classes[G_SHIP_TYPES];
 extern g_building_class_t g_building_classes[G_BUILDING_TYPES];
 
 /* g_globe.c */
-void G_cleanup_globe(void);
 void G_init_globe(void);
 void G_generate_globe(int subdiv4, int islands, int island_size,
                       float variance);
@@ -227,6 +231,7 @@ void G_load_names(void);
 void G_reset_name_counts(void);
 
 /* g_ship.c */
+void G_cleanup_ships(void);
 void G_focus_next_ship(void);
 void G_render_ships(void);
 bool G_ship_can_trade_with(int ship, int tile);
@@ -266,10 +271,11 @@ int G_receive_tile_full(const char *file, int line, const char *func,
                         n_client_id_t);
 
 /* g_tile.c */
-void G_tile_build(int tile, g_building_type_t, g_nation_name_t, float progress);
+void G_cleanup_tiles(void);
+void G_tile_build(int tile, g_building_type_t, g_nation_name_t);
 void G_tile_hover(int tile);
 void G_tile_select(int tile);
-bool G_tile_model(int tile, const char *filename);
+void G_tile_position_model(int tile, r_model_t *);
 
 extern g_tile_t g_tiles[R_TILES_MAX];
 extern int g_hover_tile, g_selected_tile;

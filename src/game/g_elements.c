@@ -186,17 +186,12 @@ void G_reset_elements(void)
         int i;
 
         g_host_inited = FALSE;
-
-        /* Reset ships */
-        memset(g_ships, 0, sizeof (g_ships));
+        G_cleanup_ships();
+        G_cleanup_tiles();
 
         /* Reset clients, keeping names */
         for (i = 0; i < N_CLIENTS_MAX; i++)
                 g_clients[i].nation = G_NN_NONE;
-
-        /* Reset tiles */
-        for (i = 0; i < r_tiles; i++)
-                G_tile_build(i, G_BT_NONE, G_NN_NONE, 0.f);
 
         /* The server "client" has fixed information */
         g_clients[N_SERVER_ID].nation = G_NN_PIRATE;

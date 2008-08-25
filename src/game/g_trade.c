@@ -206,7 +206,7 @@ bool G_pay(n_client_id_t client, int tile, const g_cost_t *cost, bool pay)
         unpaid = *cost;
 
         /* Just search neighboring ships until plots are implemented */
-        R_get_tile_neighbors(tile, neighbors);
+        R_tile_neighbors(tile, neighbors);
         for (i = 0; i < 3; i++) {
                 g_store_t *store;
                 int ship;

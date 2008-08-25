@@ -38,7 +38,7 @@ bool G_open_tile(int tile, int ship)
 {
         return (g_tiles[tile].ship < 0 ||
                 (ship >= 0 && g_tiles[tile].ship == ship)) &&
-               R_water_terrain(r_tile_params[tile].terrain);
+               R_water_terrain(r_tiles[tile].terrain);
 }
 
 /******************************************************************************\
@@ -47,7 +47,8 @@ bool G_open_tile(int tile, int ship)
 \******************************************************************************/
 static float tile_dist(int a, int b)
 {
-        return C_vec3_len(C_vec3_sub(g_tiles[b].origin, g_tiles[a].origin));
+        return C_vec3_len(C_vec3_sub(r_tiles[b].origin,
+                                     r_tiles[a].origin));
 }
 
 /******************************************************************************\
@@ -65,7 +66,7 @@ static int farthest_path_tile(int ship)
                 next = g_ships[ship].path[path_len++];
                 if (next <= 0)
                         return tile;
-                R_get_tile_neighbors(tile, neighbors);
+                R_tile_neighbors(tile, neighbors);
                 next = neighbors[next - 1];
                 if (!G_open_tile(next, ship) || R_land_bridge(tile, next))
                         return tile;
@@ -79,7 +80,7 @@ static bool ship_leaving_tile(int tile)
 {
         int ship;
 
-        C_assert(tile >= 0 && tile < r_tiles);
+        C_assert(tile >= 0 && tile < r_tiles_max);
         ship = g_tiles[tile].ship;
         if (ship >= 0 && ship < G_SHIPS_MAX &&
             g_ships[ship].tile != g_ships[ship].rear_tile &&
@@ -104,7 +105,8 @@ void G_ship_path(int ship, int target)
                 g_ships[ship].modified = TRUE;
 
         /* Silent fail */
-        if (target < 0 || target >= r_tiles || g_ships[ship].tile == target) {
+        if (target < 0 || target >= r_tiles_max ||
+            g_ships[ship].tile == target) {
                 g_ships[ship].path[0] = NUL;
                 g_ships[ship].target = g_ships[ship].tile;
                 if (g_ships[ship].client == n_client_id &&
@@ -145,7 +147,7 @@ void G_ship_path(int ship, int target)
                         (nodes_len - closest) * sizeof (*nodes));
 
                 /* Add its children */
-                R_get_tile_neighbors(node.tile, neighbors);
+                R_tile_neighbors(node.tile, neighbors);
                 for (i = 0; i < 3; i++) {
                         int stamp;
                         bool open;
@@ -215,7 +217,7 @@ rewind: /* Count length of the path */
                 parent = g_tiles[i].search_parent;
                 if (parent < 0)
                         break;
-                R_get_tile_neighbors(parent, neighbors);
+                R_tile_neighbors(parent, neighbors);
                 for (j = 0; neighbors[j] != i; j++);
                 g_ships[ship].path[--path_len] = j + 1;
                 i = parent;
@@ -248,7 +250,7 @@ failed: /* If we can't reach the target, and we have a valid path, try
 
                 fmt = C_str("i-ship-destination",
                             "%s can't reach destination.");
-                I_popup(&g_tiles[g_ships[ship].tile].origin,
+                I_popup(&r_tiles[g_ships[ship].tile].origin,
                         C_va(fmt, g_ships[ship].name));
         }
 }
@@ -288,23 +290,23 @@ static void ship_position_model(int ship)
                 return;
         new_tile = g_ships[ship].tile;
         old_tile = g_ships[ship].rear_tile;
-        model = &g_tiles[new_tile].model;
+        model = &g_ships[ship].model;
 
         /* If the ship is not moving, just place it on the tile */
         if (g_ships[ship].rear_tile < 0) {
-                model->normal = r_tile_params[new_tile].normal;
-                model->origin = g_tiles[new_tile].origin;
+                model->normal = r_tiles[new_tile].normal;
+                model->origin = r_tiles[new_tile].origin;
         }
 
         /* Otherwise interpolate normal and origin */
         else {
-                model->normal = C_vec3_lerp(r_tile_params[old_tile].normal,
+                model->normal = C_vec3_lerp(r_tiles[old_tile].normal,
                                             g_ships[ship].progress,
-                                            r_tile_params[new_tile].normal);
+                                            r_tiles[new_tile].normal);
                 model->normal = C_vec3_norm(model->normal);
-                model->origin = C_vec3_lerp(g_tiles[old_tile].origin,
+                model->origin = C_vec3_lerp(r_tiles[old_tile].origin,
                                             g_ships[ship].progress,
-                                            g_tiles[new_tile].origin);
+                                            r_tiles[new_tile].origin);
         }
 
         /* Rotate toward the forward vector */
@@ -318,20 +320,6 @@ static void ship_position_model(int ship)
                 model->forward = C_vec3_rotate_to(model->forward, model->normal,
                                                   lerp, g_ships[ship].forward);
         }
-}
-
-/******************************************************************************\
- Transfer the model of a ship from one tile to another.
-\******************************************************************************/
-static void transfer_model(int from, int to)
-{
-        if (from == to)
-                return;
-        R_model_cleanup(&g_tiles[to].model);
-        g_tiles[to].model = g_tiles[from].model;
-        g_tiles[to].model_shown = TRUE;
-        g_tiles[to].fade = 1.f;
-        C_zero(&g_tiles[from].model);
 }
 
 /******************************************************************************\
@@ -350,7 +338,7 @@ bool G_ship_move_to(int i, int new_tile)
                 return FALSE;
 
         /* Don't bother if we will be there on our next move */
-        R_get_tile_neighbors(g_ships[i].tile, neighbors);
+        R_tile_neighbors(g_ships[i].tile, neighbors);
         if (g_ships[i].path[0] && neighbors[g_ships[i].path[0] - 1] == new_tile)
                 return FALSE;
 
@@ -360,7 +348,6 @@ bool G_ship_move_to(int i, int new_tile)
                 g_tiles[g_ships[i].rear_tile].ship = -1;
 
         /* Move to the new tile */
-        transfer_model(old_tile, new_tile);
         g_ships[i].rear_tile = old_tile;
         g_ships[i].tile = new_tile;
         g_tiles[new_tile].ship = i;
@@ -408,7 +395,7 @@ static void ship_move(int i)
         /* Get new destination tile */
         if (!(arrived = g_ships[i].path[0] <= 0)) {
                 old_tile = g_ships[i].tile;
-                R_get_tile_neighbors(old_tile, neighbors);
+                R_tile_neighbors(old_tile, neighbors);
                 new_tile = (int)(g_ships[i].path[0] - 1);
                 new_tile = neighbors[new_tile];
         }
@@ -443,10 +430,9 @@ static void ship_move(int i)
                 R_select_path(new_tile, g_ships[i].path);
 
         /* Rotate to face the new tile */
-        forward = C_vec3_norm(C_vec3_sub(g_tiles[new_tile].origin,
-                                         g_tiles[old_tile].origin));
+        forward = C_vec3_norm(C_vec3_sub(r_tiles[new_tile].origin,
+                                         r_tiles[old_tile].origin));
 
-        transfer_model(old_tile, new_tile);
         g_ships[i].progress = g_ships[i].progress - 1.f;
         g_ships[i].rear_tile = old_tile;
         g_ships[i].tile = new_tile;

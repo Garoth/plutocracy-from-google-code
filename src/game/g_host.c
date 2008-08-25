@@ -258,8 +258,7 @@ static void cm_tile_ring(int client)
 
                 /* Pay for and build the town hall */
                 G_pay(n_client_id, tile, &bc->cost, TRUE);
-                G_tile_build(tile, G_BT_TOWN_HALL, g_clients[client].nation,
-                             0.f);
+                G_tile_build(tile, G_BT_TOWN_HALL, g_clients[client].nation);
                 return;
         }
 }
@@ -321,10 +320,10 @@ static void init_client(int client)
                                g_clients[i].nation, g_clients[i].name);
 
         /* Tell them about the buildings on them globe */
-        for (i = 0; i < r_tiles; i++)
-                if (g_tiles[i].building != G_BT_NONE)
-                        N_send(client, "121f", G_SM_BUILDING, i,
-                               g_tiles[i].building, g_tiles[i].progress);
+        for (i = 0; i < r_tiles_max; i++)
+                if (g_tiles[i].building)
+                        N_send(client, "121", G_SM_BUILDING, i,
+                               g_tiles[i].building->type);
 
         /* Tell them about all the ships on the globe */
         for (i = 0; i < G_SHIPS_MAX; i++) {
@@ -417,11 +416,11 @@ static void initial_buildings(void)
 {
         int i;
 
-        for (i = 0; i < r_tiles; i++) {
-                if (R_terrain_base(r_tile_params[i].terrain) != R_T_GROUND)
+        for (i = 0; i < r_tiles_max; i++) {
+                if (R_terrain_base(r_tiles[i].terrain) != R_T_GROUND)
                         continue;
                 if (C_rand_real() < g_forest.value.f)
-                        G_tile_build(i, G_BT_TREE, G_NN_NONE, 1.f);
+                        G_tile_build(i, G_BT_TREE, G_NN_NONE);
         }
 }
 

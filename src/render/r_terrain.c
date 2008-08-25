@@ -18,10 +18,10 @@
 float r_globe_radius;
 
 /* Number of tiles on the globe */
-int r_tiles;
+int r_tiles_max;
 
-/* Tile normal vectors */
-r_tile_param_t r_tile_params[R_TILES_MAX];
+/* Tile vectors, terrain, height, etc */
+r_tile_t r_tiles[R_TILES_MAX];
 
 /* Globe tile vertices */
 r_globe_vertex_t r_globe_verts[R_TILES_MAX * 3];
@@ -42,7 +42,7 @@ static void sphericize(void)
         int i;
 
         origin = C_vec3(0.f, 0.f, 0.f);
-        for (i = 0; i < r_tiles * 3; i++) {
+        for (i = 0; i < r_tiles_max * 3; i++) {
                 co = r_globe_verts[i].v.co;
                 scale = r_globe_radius / C_vec3_len(co);
                 r_globe_verts[i].v.co = C_vec3_scalef(co, scale);
@@ -70,7 +70,7 @@ static void subdivide4(void)
         r_globe_vertex_t *verts;
         int i, i_flip, j, n[3], n_flip[3];
 
-        for (i = r_tiles - 1; i >= 0; i--) {
+        for (i = r_tiles_max - 1; i >= 0; i--) {
                 verts = r_globe_verts + 12 * i;
 
                 /* Determine which faces are flipped (over 0 vertex) */
@@ -124,7 +124,7 @@ static void subdivide4(void)
                 verts[2].next = 12 * i + 6;
         }
         flip_limit *= 4;
-        r_tiles *= 4;
+        r_tiles_max *= 4;
         r_globe_radius *= 2;
         sphericize();
 }
@@ -145,7 +145,7 @@ static void find_neighbors(void)
 {
         int i, i_next, j, j_next;
 
-        for (i = 0; i < r_tiles * 3; i++) {
+        for (i = 0; i < r_tiles_max * 3; i++) {
                 i_next = face_next(i, 1);
                 for (j = 0; ; j++) {
                         if (j == i)
@@ -159,7 +159,7 @@ static void find_neighbors(void)
                                         break;
                                 }
                         }
-                        if (j >= r_tiles * 3)
+                        if (j >= r_tiles_max * 3)
                                 C_error("Failed to find next vertex for "
                                         "vertex %d", i);
                 }
@@ -193,7 +193,7 @@ static void generate_icosahedron(void)
         };
 
         flip_limit = 4;
-        r_tiles = 20;
+        r_tiles_max = 20;
         r_globe_radius = sqrtf(C_TAU + 2);
 
         /* Flipped (over 0 vertex) face vertices */
@@ -211,7 +211,7 @@ static void generate_icosahedron(void)
         r_globe_verts[11].v.co = C_vec3(-1, 0, -C_TAU);
 
         /* Regular face vertices */
-        for (i = 12; i < r_tiles * 3; i++) {
+        for (i = 12; i < r_tiles_max * 3; i++) {
                 int index;
 
                 index = regular_faces[i - 12];
@@ -254,7 +254,7 @@ void R_generate_globe(int subdiv4)
 /******************************************************************************\
  Returns the vertices associated with a specific tile via [verts].
 \******************************************************************************/
-void R_get_tile_coords(int tile, c_vec3_t verts[3])
+void R_tile_coords(int tile, c_vec3_t verts[3])
 {
         verts[0] = r_globe_verts[3 * tile].v.co;
         verts[1] = r_globe_verts[3 * tile + 1].v.co;
@@ -264,7 +264,7 @@ void R_get_tile_coords(int tile, c_vec3_t verts[3])
 /******************************************************************************\
  Returns the tiles this tile shares a face with via [neighbors].
 \******************************************************************************/
-void R_get_tile_neighbors(int tile, int neighbors[3])
+void R_tile_neighbors(int tile, int neighbors[3])
 {
         neighbors[0] = r_globe_verts[3 * tile].next / 3;
         neighbors[1] = r_globe_verts[3 * tile + 1].next / 3;
@@ -275,7 +275,7 @@ void R_get_tile_neighbors(int tile, int neighbors[3])
  Returns the tiles this tile shares a vertex with via [neighbors]. Returns the
  number of entries used in the array.
 \******************************************************************************/
-int R_get_tile_region(int tile, int neighbors[12])
+int R_tile_region(int tile, int neighbors[12])
 {
         int i, j, n, next_tile;
 
@@ -292,7 +292,7 @@ int R_get_tile_region(int tile, int neighbors[12])
  Returns the "geocentric" latitude (in radians) of the tile:
  http://en.wikipedia.org/wiki/Latitude
 \******************************************************************************/
-float R_get_tile_latitude(int tile)
+float R_tile_latitude(int tile)
 {
         float center_y;
 
@@ -356,7 +356,7 @@ static void smooth_normals(void)
                 return;
         if (r_globe_smooth.value.f > 1.f)
                 r_globe_smooth.value.f = 1.f;
-        for (i = 0; i < r_tiles * 3; i++) {
+        for (i = 0; i < r_tiles_max * 3; i++) {
 
                 /* Compute the average normal for this point */
                 normal = C_vec3(0.f, 0.f, 0.f);
@@ -372,7 +372,7 @@ static void smooth_normals(void)
                 /* Set the normal for all vertices in the ring */
                 j = r_globe_verts[i].next;
                 while (j != i) {
-                        vert_no = C_vec3_scalef(r_tile_params[j / 3].normal,
+                        vert_no = C_vec3_scalef(r_tiles[j / 3].normal,
                                                 1.f - r_globe_smooth.value.f);
                         vert_no = C_vec3_add(vert_no, normal);
                         r_globe_verts[j].v.no = vert_no;
@@ -392,8 +392,8 @@ static int globe_smooth_update(c_var_t *var, c_var_value_t value)
                 r_globe_smooth.value.f = value.f;
                 smooth_normals();
         } else
-                for (i = 0; i < r_tiles * 3; i++)
-                        r_globe_verts[i].v.no = r_tile_params[i / 3].normal;
+                for (i = 0; i < r_tiles_max * 3; i++)
+                        r_globe_verts[i].v.no = r_tiles[i / 3].normal;
         R_vbo_update(&r_globe_vbo);
         return TRUE;
 }
@@ -441,13 +441,13 @@ const char *R_terrain_to_string(r_terrain_t terrain)
 /******************************************************************************\
  Selects a terrain index for a tile depending on its region.
 \******************************************************************************/
-static int get_tile_terrain(int tile)
+static int tile_terrain(int tile)
 {
         int i, j, base, base_num, trans, terrain, vert_terrain[3], offset;
 
-        base = R_terrain_base(r_tile_params[tile].terrain);
+        base = R_terrain_base(r_tiles[tile].terrain);
         if (base >= R_T_BASES - 1)
-                return r_tile_params[tile].terrain;
+                return r_tiles[tile].terrain;
 
         /* If we are not using transition tiles, just return the base */
         if (!r_globe_transitions.value.n)
@@ -460,7 +460,7 @@ static int get_tile_terrain(int tile)
                 j = r_globe_verts[3 * tile + i].next;
                 vert_terrain[i] = base;
                 while (j != 3 * tile + i) {
-                        terrain = R_terrain_base(r_tile_params[j / 3].terrain);
+                        terrain = R_terrain_base(r_tiles[j / 3].terrain);
                         if (terrain > vert_terrain[i])
                                 trans = vert_terrain[i] = terrain;
                         j = r_globe_verts[j].next;
@@ -469,7 +469,7 @@ static int get_tile_terrain(int tile)
                         base_num++;
         }
         if (base_num > 2)
-                return r_tile_params[tile].terrain;
+                return r_tiles[tile].terrain;
 
         /* Swap the base and single terrain if the base only appears once */
         offset = 2 * base;
@@ -495,12 +495,41 @@ static int get_tile_terrain(int tile)
 }
 
 /******************************************************************************\
+ Computes tile vectors for the parameter array.
+\******************************************************************************/
+static void compute_tile_vectors(int i)
+{
+        c_vec3_t ab, ac;
+
+        /* Set tile normal vector */
+        ab = C_vec3_sub(r_globe_verts[3 * i].v.co,
+                        r_globe_verts[3 * i + 1].v.co);
+        ac = C_vec3_sub(r_globe_verts[3 * i].v.co,
+                        r_globe_verts[3 * i + 2].v.co);
+        r_tiles[i].normal = C_vec3_norm(C_vec3_cross(ab, ac));
+        r_globe_verts[3 * i].v.no = r_tiles[i].normal;
+        r_globe_verts[3 * i + 1].v.no = r_tiles[i].normal;
+        r_globe_verts[3 * i + 2].v.no = r_tiles[i].normal;
+
+        /* Centroid */
+        r_tiles[i].origin = C_vec3_add(r_globe_verts[3 * i].v.co,
+                                       r_globe_verts[3 * i + 1].v.co);
+        r_tiles[i].origin = C_vec3_add(r_tiles[i].origin,
+                                       r_globe_verts[3 * i + 2].v.co);
+        r_tiles[i].origin = C_vec3_divf(r_tiles[i].origin, 3.f);
+
+        /* Forward vector */
+        r_tiles[i].forward = C_vec3_sub(r_globe_verts[3 * i].v.co,
+                                        r_tiles[i].origin);
+        r_tiles[i].forward = C_vec3_norm(r_tiles[i].forward);
+}
+
+/******************************************************************************\
  Adjusts globe vertices to show the tile's height. Updates the globe with data
- from the [r_tile_params] array.
+ from the [r_tiles] array.
 \******************************************************************************/
 void R_configure_globe(void)
 {
-        c_vec3_t ab, ac;
         c_vec2_t tile;
         float left, right, top, bottom, tmp;
         int i, tx, ty, terrain;
@@ -514,11 +543,11 @@ void R_configure_globe(void)
         tile.y = 2.f * (int)(C_SIN_60 * r_terrain_tex->surface->h /
                              R_TILE_SHEET_H / 2) / r_terrain_tex->surface->h;
 
-        for (i = 0; i < r_tiles; i++) {
-                set_tile_height(i, r_tile_params[i].height);
+        for (i = 0; i < r_tiles_max; i++) {
+                set_tile_height(i, r_tiles[i].height);
 
                 /* Tile terrain texture */
-                terrain = get_tile_terrain(i);
+                terrain = tile_terrain(i);
                 ty = terrain / R_TILE_SHEET_W;
                 tx = terrain - ty * R_TILE_SHEET_W;
                 left = tx / 2 * tile.x + C_SIN_60 * R_TILE_BORDER;
@@ -543,16 +572,7 @@ void R_configure_globe(void)
                 r_globe_verts[3 * i].v.uv = C_vec2((left + right) / 2.f, top);
                 r_globe_verts[3 * i + 1].v.uv = C_vec2(left, bottom);
                 r_globe_verts[3 * i + 2].v.uv = C_vec2(right, bottom);
-
-                /* Set tile normal vector */
-                ab = C_vec3_sub(r_globe_verts[3 * i].v.co,
-                                r_globe_verts[3 * i + 1].v.co);
-                ac = C_vec3_sub(r_globe_verts[3 * i].v.co,
-                                r_globe_verts[3 * i + 2].v.co);
-                r_tile_params[i].normal = C_vec3_norm(C_vec3_cross(ab, ac));
-                r_globe_verts[3 * i].v.no = r_tile_params[i].normal;
-                r_globe_verts[3 * i + 1].v.no = r_tile_params[i].normal;
-                r_globe_verts[3 * i + 2].v.no = r_tile_params[i].normal;
+                compute_tile_vectors(i);
         }
         smooth_normals();
 
@@ -563,7 +583,7 @@ void R_configure_globe(void)
         /* If Vertex Buffer Objects are supported, upload the vertices now */
         R_vbo_cleanup(&r_globe_vbo);
         R_vbo_init(&r_globe_vbo, &r_globe_verts[0].v,
-                   3 * r_tiles, sizeof (*r_globe_verts),
+                   3 * r_tiles_max, sizeof (*r_globe_verts),
                    R_VERTEX3_FORMAT, NULL, 0);
 }
 
@@ -595,7 +615,7 @@ int R_land_bridge(int tile_a, int tile_b)
         vert = 3 * tile_a + dir;
         for (i = r_globe_verts[vert].next; i != vert;
              i = r_globe_verts[i].next)
-                if (!R_water_terrain(r_tile_params[i / 3].terrain))
+                if (!R_water_terrain(r_tiles[i / 3].terrain))
                         goto next;
         return FALSE;
 
@@ -603,7 +623,7 @@ next:   /* Check left vertex for land */
         vert = face_next(3 * tile_a + dir, 1);
         for (i = r_globe_verts[vert].next; i != vert;
              i = r_globe_verts[i].next)
-                if (!R_water_terrain(r_tile_params[i / 3].terrain))
+                if (!R_water_terrain(r_tiles[i / 3].terrain))
                         return TRUE;
         return FALSE;
 }
