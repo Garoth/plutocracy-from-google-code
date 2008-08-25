@@ -176,8 +176,8 @@ typedef struct g_ship {
         g_store_t store;
         c_vec3_t forward;
         float progress;
-        int client, focus_stamp, health, lunch_time, rear_tile, target,
-            tile, trade_tile;
+        int client, focus_stamp, health, lunch_time,
+            rear_tile, target, target_ship, tile, trade_tile;
         char path[R_PATH_MAX], name[G_NAME_MAX];
         bool in_use, modified;
 } g_ship_t;
