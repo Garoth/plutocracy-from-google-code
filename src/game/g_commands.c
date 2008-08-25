@@ -53,7 +53,8 @@ static void ship_ring(i_ring_icon_t icon)
 {
         if (g_selected_ship < 0 || ring_ship < 0)
                 return;
-        N_send(N_SERVER_ID, "111", G_CM_SHIP_RING, ring_ship, icon);
+        N_send(N_SERVER_ID, "1111", G_CM_SHIP_RING, g_selected_ship,
+               icon, ring_ship);
 }
 
 /******************************************************************************\
@@ -103,11 +104,12 @@ bool G_process_click(int button)
                         N_send(N_SERVER_ID, "112", G_CM_SHIP_MOVE,
                                g_selected_ship, g_hover_tile);
 
-                /* Right-clicked on a ship */
-                if (g_hover_ship >= 0) {
+                /* Right-clicked on another ship */
+                if (g_hover_ship >= 0 && g_hover_ship != g_selected_ship) {
                         ring_ship = g_hover_ship;
                         I_reset_ring();
                         I_add_to_ring(I_RI_BOARD, G_ship_hostile(g_hover_ship));
+                        I_add_to_ring(I_RI_FOLLOW, TRUE);
                         I_show_ring((i_ring_f)ship_ring);
                 }
 

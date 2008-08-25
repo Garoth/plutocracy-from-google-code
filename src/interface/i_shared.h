@@ -39,8 +39,11 @@ typedef enum {
         /* Buildings */
         I_RI_TOWN_HALL,
 
-        /* Tech preview */
+        /* Ship commands */
         I_RI_BOARD,
+        I_RI_FOLLOW,
+
+        /* Tech preview */
         I_RI_GALLEON,
         I_RI_SHIPYARD,
         I_RI_SLOOP,

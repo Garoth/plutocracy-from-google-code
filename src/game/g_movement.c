@@ -97,10 +97,11 @@ void G_ship_path(int ship, int target)
         static int search_stamp;
         search_node_t nodes[SEARCH_BREADTH];
         int i, nodes_len, closest, path_len, neighbors[3];
+        bool target_next;
 
+        /* New destination? */
         if (g_ships[ship].target != target)
                 g_ships[ship].modified = TRUE;
-        g_ships[ship].target = target;
 
         /* Silent fail */
         if (target < 0 || target >= r_tiles || g_ships[ship].tile == target) {
@@ -112,10 +113,12 @@ void G_ship_path(int ship, int target)
                 return;
         }
 
-        /* Set our target and see if its available */
+        /* Clear the target for now */
         g_ships[ship].target = g_ships[ship].tile;
-        if (!G_open_tile(target, ship))
-                goto failed;
+
+        /* If the target tile is not available, try to get next to it instead
+           of onto it */
+        target_next = !G_open_tile(target, ship);
 
         /* Start with just the initial tile open */
         search_stamp++;
@@ -147,11 +150,23 @@ void G_ship_path(int ship, int target)
                         int stamp;
                         bool open;
 
+                        /* Out of space? */
+                        if (nodes_len >= SEARCH_BREADTH) {
+                                C_warning("Out of search space");
+                                return;
+                        }
+
+                        /* Made it to an adjacent tile */
+                        if (target_next && neighbors[i] == target) {
+                                nodes[nodes_len] = node;
+                                goto rewind;
+                        }
+
                         /* Tile blocked? */
                         open = G_open_tile(neighbors[i], ship) ||
                                ship_leaving_tile(neighbors[i]);
 
-                        /* Already opened? */
+                        /* Can we open this node? */
                         stamp = g_tiles[neighbors[i]].search_stamp;
                         C_assert(stamp <= search_stamp);
                         if (stamp == search_stamp || !open ||
@@ -159,17 +174,11 @@ void G_ship_path(int ship, int target)
                                 continue;
                         g_tiles[neighbors[i]].search_stamp = search_stamp;
 
-                        /* Out of space? */
-                        if (nodes_len >= SEARCH_BREADTH) {
-                                C_warning("Out of search space");
-                                return;
-                        }
-
                         /* Add to array */
                         nodes[nodes_len].tile = neighbors[i];
                         g_tiles[neighbors[i]].search_parent = node.tile;
 
-                        /* Did we make it? */
+                        /* Did we make it onto the target? */
                         if (neighbors[i] == target)
                                 goto rewind;
 
@@ -227,6 +236,8 @@ failed: /* If we can't reach the target, and we have a valid path, try
         else
                 g_ships[ship].path[0] = 0;
 
+        /* Can't reach target ship */
+        g_ships[ship].target_ship = -1;
 
         if (g_ships[ship].client == n_client_id) {
                 const char *fmt;
@@ -369,6 +380,11 @@ static void ship_move(int i)
         int old_tile, new_tile, neighbors[3];
         bool arrived, open;
 
+        /* Stopped and target ship is moving */
+        if (g_ships[i].rear_tile < 0 && g_ships[i].target_ship >= 0 &&
+            g_ships[g_ships[i].target_ship].rear_tile >= 0)
+                G_ship_path(i, g_ships[g_ships[i].target_ship].tile);
+
         /* Is this ship moving? */
         if (g_ships[i].path[0] <= 0 && g_ships[i].rear_tile < 0)
                 return;
@@ -378,6 +394,13 @@ static void ship_move(int i)
         if (g_ships[i].progress < 1.f)
                 return;
         g_ships[i].progress = 1.f;
+
+        /* Keep track of the target ship */
+        if (g_ships[i].target_ship >= 0 &&
+            g_ships[g_ships[i].target_ship].tile != g_ships[i].target) {
+                g_ships[i].target = g_ships[g_ships[i].target_ship].tile;
+                g_ships[i].modified = TRUE;
+        }
 
         /* Update the path */
         G_ship_path(i, g_ships[i].target);

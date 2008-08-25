@@ -156,7 +156,7 @@ int I_button_event(i_button_t *button, i_event_t event)
                 R_sprite_cleanup(&button->text);
                 break;
         case I_EV_MOUSE_MOVE:
-                if (button->hover_activate && i_mouse == SDL_BUTTON_LEFT)
+                if (button->hover_activate)
                         button->widget.state = I_WS_ACTIVE;
                 break;
         case I_EV_MOUSE_DOWN:

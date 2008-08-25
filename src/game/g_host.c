@@ -44,6 +44,13 @@ static void cm_affiliate(int client)
                 G_store_add(&g_ships[ship].store, G_CT_GOLD, 500);
                 G_store_add(&g_ships[ship].store, G_CT_CREW, 25);
                 G_store_add(&g_ships[ship].store, G_CT_RATIONS, 25);
+
+                /* Spawn a second ship for testing */
+                if ((ship = G_ship_spawn(-1, client, tile, G_ST_SLOOP)) >= 0) {
+                        G_store_add(&g_ships[ship].store, G_CT_GOLD, 500);
+                        G_store_add(&g_ships[ship].store, G_CT_CREW, 25);
+                        G_store_add(&g_ships[ship].store, G_CT_RATIONS, 25);
+                }
         }
 
         N_broadcast("1112", G_SM_AFFILIATE, client, nation, tile);
@@ -60,6 +67,7 @@ static void cm_ship_move(int client)
             (tile = G_receive_tile(client)) < 0 ||
             !G_ship_controlled_by(ship, client))
                 return;
+        g_ships[ship].target_ship = -1;
         G_ship_path(ship, tile);
 }
 
@@ -257,6 +265,27 @@ static void cm_tile_ring(int client)
 }
 
 /******************************************************************************\
+ Client wants to do something with a ship using the ring.
+\******************************************************************************/
+static void cm_ship_ring(int client)
+{
+        i_ring_icon_t icon;
+        int ship;
+
+        if ((ship = G_receive_ship(client)) < 0)
+                return;
+        icon = (i_ring_icon_t)G_receive_range(client, 0, I_RING_ICONS);
+        if (icon == I_RI_FOLLOW) {
+                g_ships[ship].target_ship = G_receive_ship(client);
+                if (g_ships[ship].target_ship < 0)
+                        return;
+                G_ship_path(ship, g_ships[g_ships[ship].target_ship].tile);
+        } else if (icon == I_RI_BOARD) {
+                /* TODO */
+        }
+}
+
+/******************************************************************************\
  Initialize a new client.
 \******************************************************************************/
 static void init_client(int client)
@@ -369,6 +398,9 @@ static void server_callback(int client, n_event_t event)
                 break;
         case G_CM_SHIP_PRICES:
                 cm_ship_prices(client);
+                break;
+        case G_CM_SHIP_RING:
+                cm_ship_ring(client);
                 break;
         case G_CM_TILE_RING:
                 cm_tile_ring(client);
