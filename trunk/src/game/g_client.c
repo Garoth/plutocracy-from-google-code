@@ -27,11 +27,11 @@ static void sm_popup(void)
         char token[32], message[256];
 
         focus_tile = N_receive_short();
-        if (focus_tile >= r_tiles) {
+        if (focus_tile >= r_tiles_max) {
                 G_corrupt_disconnect();
                 return;
         }
-        goto_pos = focus_tile >= 0 ? &g_tiles[focus_tile].origin : NULL;
+        goto_pos = focus_tile >= 0 ? &r_tiles[focus_tile].origin : NULL;
         N_receive_string(token, sizeof (token));
         N_receive_string(message, sizeof (message));
         I_popup(goto_pos, C_str(token, message));
@@ -67,8 +67,8 @@ static void sm_affiliate(void)
 
         /* Affiliation message might have a goto tile attached */
         goto_pos = NULL;
-        if (tile >= 0 && tile < r_tiles)
-                goto_pos = &g_tiles[tile].origin;
+        if (tile >= 0 && tile < r_tiles_max)
+                goto_pos = &r_tiles[tile].origin;
 
         /* Special case for pirates */
         if (nation == G_NN_PIRATE) {
@@ -402,7 +402,7 @@ void G_client_callback(int client, n_event_t event)
                     (j = G_receive_range(-1, 0, G_BUILDING_TYPES)) < 0 ||
                     (k = G_receive_nation(-1)) < 0)
                         return;
-                G_tile_build(i, j, k, N_receive_float());
+                G_tile_build(i, j, k);
                 break;
 
         /* Somebody connected but we don't have their name yet */
@@ -467,6 +467,7 @@ void G_init(void)
 \******************************************************************************/
 void G_cleanup(void)
 {
-        G_cleanup_globe();
+        G_cleanup_ships();
+        G_cleanup_tiles();
 }
 

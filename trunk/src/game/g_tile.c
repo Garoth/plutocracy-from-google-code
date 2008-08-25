@@ -19,34 +19,27 @@ g_tile_t g_tiles[R_TILES_MAX];
 int g_hover_tile, g_selected_tile;
 
 /******************************************************************************\
- Initialize and position a tile's model. Returns FALSE if the model failed to
- load.
+ Cleanup a building structure.
 \******************************************************************************/
-bool G_tile_model(int tile, const char *filename)
+static void building_free(g_building_t *building)
 {
-        /* Fade out if clearing the tile */
-        if (!filename || !filename[0]) {
-                g_tiles[tile].model_shown = FALSE;
-                return TRUE;
+        if (!building)
+                return;
+        R_model_cleanup(&building->model);
+        C_free(building);
+}
+
+/******************************************************************************\
+ Cleanup a tile structures.
+\******************************************************************************/
+void G_cleanup_tiles(void)
+{
+        int i;
+
+        for (i = 0; i < r_tiles_max; i++) {
+                building_free(g_tiles[i].building);
+                C_zero(g_tiles + i);
         }
-
-        /* Try to load the new model */
-        R_model_cleanup(&g_tiles[tile].model);
-        if (!R_model_init(&g_tiles[tile].model, filename, TRUE))
-                return FALSE;
-
-        /* Fade the new model in */
-        g_tiles[tile].model.origin = g_tiles[tile].origin;
-        g_tiles[tile].model.normal = r_tile_params[tile].normal;
-        g_tiles[tile].model.forward = g_tiles[tile].forward;
-        g_tiles[tile].model_shown = TRUE;
-        g_tiles[tile].fade = 1.f;
-
-        /* Selected tile? */
-        if (g_selected_tile == tile)
-                g_tiles[tile].model.selected = R_MS_SELECTED;
-
-        return TRUE;
 }
 
 /******************************************************************************\
@@ -64,26 +57,47 @@ static void tile_quick_info(int index)
                 return;
         }
         tile = g_tiles + index;
-        building_class = g_building_classes + tile->building;
-        I_quick_info_show(building_class->name);
+        if (tile->building) {
+                building_class = g_building_classes + tile->building->type;
+                I_quick_info_show(building_class->name);
+        } else
+                I_quick_info_show(g_building_classes[G_BT_NONE].name);
 
         /* Terrain */
         I_quick_info_add("Terrain:",
-                         R_terrain_to_string(r_tile_params[index].terrain));
+                         R_terrain_to_string(r_tiles[index].terrain));
 
         /* No building */
-        if (tile->building == G_BT_NONE)
+        if (!tile->building)
                 return;
 
         /* Health */
         color = I_COLOR_ALT;
-        prop = (float)tile->health / building_class->health;
+        prop = (float)tile->building->health / building_class->health;
         if (prop >= 0.67)
                 color = I_COLOR_GOOD;
         if (prop <= 0.33)
                 color = I_COLOR_BAD;
-        I_quick_info_add_color("Health:", C_va("%d/%d", tile->health,
+        I_quick_info_add_color("Health:", C_va("%d/%d", tile->building->health,
                                                building_class->health), color);
+}
+
+/******************************************************************************\
+ Set the selection state of a tile's building. Will not change a selected
+ model's selection state if [protect_selection] is TRUE.
+\******************************************************************************/
+static void tile_building_select(int tile, r_model_select_t select,
+                                 bool protect_selection)
+{
+        g_building_t *building;
+
+        if (tile < 0 || tile >= r_tiles_max)
+                return;
+        building = g_tiles[tile].building;
+        if (!building || (protect_selection &&
+                          building->model.selected == R_MS_SELECTED))
+                return;
+        building->model.selected = select;
 }
 
 /******************************************************************************\
@@ -91,26 +105,27 @@ static void tile_quick_info(int index)
 \******************************************************************************/
 void G_tile_select(int tile)
 {
+        g_building_t *building;
         r_terrain_t terrain;
 
         if (g_selected_tile == tile)
                 return;
+        building = g_tiles[tile].building;
 
         /* Can't select water */
         if (tile >= 0) {
-                terrain = R_terrain_base(r_tile_params[tile].terrain);
+                terrain = R_terrain_base(r_tiles[tile].terrain);
                 if (terrain != R_T_SAND && terrain != R_T_GROUND)
                         return;
         }
 
         /* Deselect previous tile */
-        if (g_selected_tile >= 0)
-                g_tiles[g_selected_tile].model.selected = R_MS_NONE;
+        tile_building_select(g_selected_tile, R_MS_NONE, FALSE);
 
         /* Select the new tile */
         if ((g_selected_tile = tile) >= 0) {
-                g_tiles[tile].model.selected = R_MS_SELECTED;
                 R_hover_tile(-1, R_ST_NONE);
+                tile_building_select(tile, R_MS_SELECTED, FALSE);
         }
 
         R_select_tile(tile, R_ST_TILE);
@@ -126,13 +141,14 @@ void G_tile_hover(int tile)
         r_select_type_t new_select_type;
         r_terrain_t terrain;
 
-        C_assert(tile < r_tiles);
+        C_assert(tile < r_tiles_max);
         new_select_type = R_ST_NONE;
-        terrain = R_terrain_base(r_tile_params[tile].terrain);
+        if (tile >= 0)
+                terrain = R_terrain_base(r_tiles[tile].terrain);
 
         /* Selecting a tile to move the current ship to */
-        if (G_open_tile(tile, -1) &&
-            G_ship_controlled_by(g_selected_ship, n_client_id))
+        if (G_ship_controlled_by(g_selected_ship, n_client_id) &&
+            G_open_tile(tile, -1))
                 new_select_type = R_ST_GOTO;
 
         /* Selecting an island tile */
@@ -141,11 +157,8 @@ void G_tile_hover(int tile)
                         new_select_type = R_ST_TILE;
         }
 
-        /* Selecting a ship */
-        else if (g_tiles[tile].ship >= 0);
-
-        /* Can't select this tile */
-        else
+        /* If there is no ship, can't select this tile */
+        else if (g_tiles[tile].ship < 0)
                 tile = -1;
 
         /* Still hovering over the same tile */
@@ -153,20 +166,16 @@ void G_tile_hover(int tile)
                 G_ship_hover(tile >= 0 ? g_tiles[tile].ship : -1);
 
                 /* Tile can get deselected for whatever reason */
-                if (select_type != R_ST_NONE &&
-                    g_tiles[tile].model.selected == R_MS_NONE)
-                        g_tiles[tile].model.selected = R_MS_HOVER;
+                if (select_type == R_ST_TILE)
+                        tile_building_select(tile, R_MS_HOVER, TRUE);
                 return;
         }
 
         /* Deselect the old tile */
-        if (g_hover_tile >= 0 && g_tiles[g_hover_tile].ship < 0 &&
-            g_tiles[g_hover_tile].model.selected == R_MS_HOVER)
-                g_tiles[g_hover_tile].model.selected = R_MS_NONE;
+        tile_building_select(g_hover_tile, R_MS_NONE, TRUE);
 
         /* Apply new hover */
-        select_type = new_select_type;
-        R_hover_tile(tile, select_type);
+        R_hover_tile(tile, (select_type = new_select_type));
         if ((g_hover_tile = tile) < 0 || new_select_type == R_ST_NONE) {
                 G_ship_hover(-1);
                 return;
@@ -177,34 +186,51 @@ void G_tile_hover(int tile)
         }
 
         /* Select the tile building model if there is no ship there */
-        if (select_type != R_ST_NONE &&
-            g_tiles[tile].model.selected == R_MS_NONE)
-                g_tiles[tile].model.selected = R_MS_HOVER;
+        if (select_type != R_ST_NONE)
+                tile_building_select(tile, R_MS_HOVER, TRUE);
+}
+
+/******************************************************************************\
+ Position a model on this tile.
+\******************************************************************************/
+void G_tile_position_model(int tile, r_model_t *model)
+{
+        if (!model)
+                return;
+        model->forward = r_tiles[tile].forward;
+        model->origin = r_tiles[tile].origin;
+        model->normal = r_tiles[tile].normal;
 }
 
 /******************************************************************************\
  Start constructing a building on this tile.
 \******************************************************************************/
-void G_tile_build(int tile, g_building_type_t type, g_nation_name_t nation,
-                  float progress)
+void G_tile_build(int tile, g_building_type_t type, g_nation_name_t nation)
 {
+        g_building_t *building;
+
         /* Range checks */
-        if (tile < 0 || tile >= r_tiles || type < 0 || type >= G_BUILDING_TYPES)
+        if (tile < 0 || tile >= r_tiles_max ||
+            type < 0 || type >= G_BUILDING_TYPES)
                 return;
-        if (progress < 0.f)
-                progress = 0.f;
-        if (progress > 1.f)
-                progress = 1.f;
 
-        g_tiles[tile].building = type;
-        g_tiles[tile].progress = progress;
-        g_tiles[tile].health = g_building_classes[type].health;
-        g_tiles[tile].nation = nation;
-        G_tile_model(tile, g_building_classes[type].model_path);
+        building_free(g_tiles[tile].building);
 
-        /* Fade the model in if it is still building */
-        if (progress < 1.f)
-                g_tiles[tile].fade = 0.f;
+        /* "None" building type is special */
+        if (type == G_BT_NONE)
+                g_tiles[tile].building = NULL;
+
+        /* Allocate and initialize a building structure */
+        else {
+                building = C_malloc(sizeof (*g_tiles[tile].building));
+                building->type = type;
+                building->nation = nation;
+                building->health = g_building_classes[type].health;
+                R_model_init(&building->model,
+                             g_building_classes[type].model_path, TRUE);
+                G_tile_position_model(tile, &building->model);
+                g_tiles[tile].building = building;
+        }
 
         /* If we just built a new town hall, update the island */
         if (type == G_BT_TOWN_HALL)
@@ -213,7 +239,7 @@ void G_tile_build(int tile, g_building_type_t type, g_nation_name_t nation,
         /* Let all connected clients know about this */
         if (!g_host_inited)
                 return;
-        N_broadcast_except(N_HOST_CLIENT_ID, "1211f", G_SM_BUILDING,
-                           tile, type, nation, progress);
+        N_broadcast_except(N_HOST_CLIENT_ID, "1211", G_SM_BUILDING,
+                           tile, type, nation);
 }
 

@@ -94,7 +94,7 @@ int G_receive_tile_full(const char *file, int line, const char *func,
         int index;
 
         index = N_receive_short();
-        if (index < 0 || index >= r_tiles) {
+        if (index < 0 || index >= r_tiles_max) {
                 G_corrupt_drop_full(file, line, func, client);
                 return -1;
         }

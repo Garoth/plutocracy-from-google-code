@@ -29,6 +29,26 @@ int g_hover_ship, g_selected_ship;
 static int focus_stamp;
 
 /******************************************************************************\
+ Cleanup a ship.
+\******************************************************************************/
+static void ship_cleanup(int index)
+{
+        R_model_cleanup(&g_ships[index].model);
+        C_zero(g_ships + index);
+}
+
+/******************************************************************************\
+ Cleanup all ships.
+\******************************************************************************/
+void G_cleanup_ships(void)
+{
+        int i;
+
+        for (i = 0; i < G_SHIPS_MAX; i++)
+                ship_cleanup(i);
+}
+
+/******************************************************************************\
  Find an available tile around [tile] (including [tile]) and spawn a new ship
  of the given class there. If [tile] is negative, the ship will be placed on
  a random open tile. If [index] is negative, the first available slot will be
@@ -38,7 +58,7 @@ int G_ship_spawn(int index, n_client_id_t client, int tile, g_ship_type_t type)
 {
         g_ship_t *ship;
 
-        if (!N_client_valid(client) || tile >= r_tiles ||
+        if (!N_client_valid(client) || tile >= r_tiles_max ||
             type < 0 || type >= G_SHIP_TYPES) {
                 C_warning("Invalid parameters (%d, %d, %d, %d)",
                           index, client, tile, type);
@@ -63,8 +83,8 @@ int G_ship_spawn(int index, n_client_id_t client, int tile, g_ship_type_t type)
         if (tile < 0) {
                 int start;
 
-                start = C_rand() % r_tiles;
-                for (tile = start + 1; tile < r_tiles; tile++)
+                start = C_rand() % r_tiles_max;
+                for (tile = start + 1; tile < r_tiles_max; tile++)
                         if (G_open_tile(tile, -1))
                                 goto init;
                 for (tile = 0; tile <= start; tile++)
@@ -81,7 +101,7 @@ int G_ship_spawn(int index, n_client_id_t client, int tile, g_ship_type_t type)
 
                 /* Not being able to fit a ship in is common, so don't complain
                    if this happens */
-                len = R_get_tile_region(tile, neighbors);
+                len = R_tile_region(tile, neighbors);
                 for (i = 0; !G_open_tile(neighbors[i], -1); i++)
                         if (i >= len)
                                 return -1;
@@ -89,16 +109,17 @@ int G_ship_spawn(int index, n_client_id_t client, int tile, g_ship_type_t type)
         }
 
 init:   /* Initialize ship structure */
+        ship_cleanup(index);
         ship = g_ships + index;
-        C_zero(ship);
         ship->in_use = TRUE;
         ship->type = type;
         ship->tile = ship->target = tile;
+        ship->target_ship = -1;
         ship->rear_tile = -1;
         ship->progress = 1.f;
         ship->client = client;
         ship->health = g_ship_classes[type].health;
-        ship->forward = g_tiles[tile].forward;
+        ship->forward = r_tiles[tile].forward;
         ship->trade_tile = -1;
         ship->focus_stamp = -1;
 
@@ -106,9 +127,9 @@ init:   /* Initialize ship structure */
         C_strncpy_buf(ship->name, C_va("Unnamed #%d", index));
 
         /* Place the ship on the tile */
-        G_tile_model(tile, g_ship_classes[type].model_path);
+        R_model_init(&ship->model, g_ship_classes[type].model_path, TRUE);
+        G_tile_position_model(tile, &ship->model);
         g_tiles[tile].ship = index;
-        g_tiles[tile].fade = 0.f;
 
         /* Initialize store */
         G_store_init(&ship->store, g_ship_classes[ship->type].cargo);
@@ -145,18 +166,9 @@ void G_render_ships(void)
                 ship = g_ships + i;
                 if (!ship->in_use)
                         continue;
-                C_assert(ship->tile >= 0 && ship->tile < r_tiles);
+                C_assert(ship->tile >= 0 && ship->tile < r_tiles_max);
                 C_assert(g_tiles[ship->tile].ship == i);
                 tile = g_tiles + ship->tile;
-
-                /* If globe testing is on, draw a line from ship tile origins */
-                if (g_test_globe.value.n) {
-                        c_vec3_t b;
-
-                        b = C_vec3_add(tile->origin, C_vec3_norm(tile->origin));
-                        R_render_test_line(tile->origin, b,
-                                           C_color(0.f, 1.f, 1.f, 1.f));
-                }
 
                 /* Don't bother rendering if the ship isn't visible */
                 if (!tile->visible)
@@ -170,7 +182,7 @@ void G_render_ships(void)
                 health = (float)ship->health / HEALTH_MAX;
                 health_max = (float)ship_class->health / HEALTH_MAX;
                 color = g_nations[g_clients[ship->client].nation].color;
-                R_render_ship_status(&tile->model, health, health_max,
+                R_render_ship_status(&ship->model, health, health_max,
                                      crew, crew_max, color,
                                      g_selected_ship == i,
                                      ship->client == n_client_id);
@@ -267,7 +279,7 @@ bool G_ship_can_trade_with(int index, int tile)
 {
         int i, neighbors[3];
 
-        R_get_tile_neighbors(g_ships[index].tile, neighbors);
+        R_tile_neighbors(g_ships[index].tile, neighbors);
         for (i = 0; i < 3; i++)
                 if (neighbors[i] == tile)
                         return ship_can_trade(g_tiles[tile].ship);
@@ -290,7 +302,7 @@ static void ship_update_trade(int index)
         /* Find a trading partner */
         trade_tile = -1;
         if (ship->rear_tile < 0) {
-                R_get_tile_neighbors(ship->tile, neighbors);
+                R_tile_neighbors(ship->tile, neighbors);
                 for (i = 0; i < 3; i++) {
                         if (!ship_can_trade(g_tiles[neighbors[i]].ship))
                                 continue;
@@ -393,7 +405,7 @@ static void ship_update_visible(int ship)
                 g_ships[ship].store.visible[client] = TRUE;
 
         /* Neighboring ships' clients can see our store */
-        R_get_tile_neighbors(g_ships[ship].tile, neighbors);
+        R_tile_neighbors(g_ships[ship].tile, neighbors);
         for (i = 0; i < 3; i++) {
                 if (g_tiles[neighbors[i]].ship < 0)
                         continue;
@@ -498,7 +510,7 @@ void G_ship_hover(int index)
         r_model_t *model;
 
         if (g_hover_ship >= 0)
-                model = &g_tiles[g_ships[g_hover_ship].tile].model;
+                model = &g_ships[g_hover_ship].model;
         if (g_hover_ship == index) {
                 if (index < 0)
                         return;
@@ -517,7 +529,7 @@ void G_ship_hover(int index)
         /* Highlight the new ship */
         if ((g_hover_ship = index) < 0)
                 return;
-        model = &g_tiles[g_ships[index].tile].model;
+        model = &g_ships[index].model;
         if (!model->selected)
                 model->selected = R_MS_HOVER;
 }
@@ -602,13 +614,13 @@ void G_ship_select(int index)
 
         /* Deselect previous ship */
         if (g_selected_ship >= 0) {
-                model = &g_tiles[g_ships[g_selected_ship].tile].model;
+                model = &g_ships[g_selected_ship].model;
                 model->selected = R_MS_NONE;
         }
 
         /* Select the new ship */
         if (index >= 0) {
-                model = &g_tiles[g_ships[index].tile].model;
+                model = &g_ships[index].model;
                 model->selected = R_MS_SELECTED;
 
                 /* Only show the path of our own ships */
@@ -680,7 +692,7 @@ void G_focus_next_ship(void)
         /* If we have a ship selected, just center on that */
         if (g_selected_ship >= 0) {
                 tile = g_ships[g_selected_ship].tile;
-                R_rotate_cam_to(g_tiles[tile].model.origin);
+                R_rotate_cam_to(g_ships[g_selected_ship].model.origin);
                 return;
         }
 
@@ -696,7 +708,7 @@ void G_focus_next_ship(void)
                     g_ships[i].focus_stamp >= focus_stamp)
                         continue;
                 available++;
-                origin = g_tiles[g_ships[i].tile].model.origin;
+                origin = g_ships[i].model.origin;
                 dist = C_vec3_len(C_vec3_sub(r_cam_origin, origin));
                 if (dist < best_dist) {
                         best_dist = dist;
@@ -709,6 +721,6 @@ void G_focus_next_ship(void)
                 return;
         g_ships[best_i].focus_stamp = focus_stamp;
         tile = g_ships[best_i].tile;
-        R_rotate_cam_to(g_tiles[tile].model.origin);
+        R_rotate_cam_to(g_ships[best_i].model.origin);
 }
 

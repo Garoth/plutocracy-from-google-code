@@ -118,10 +118,13 @@ bool G_process_click(int button)
 
         /* Opening the selected tile's ring menu */
         if (g_selected_tile >= 0 && g_selected_tile == g_hover_tile) {
+                g_building_t *building;
                 bool can_pay;
 
+                building = g_tiles[g_selected_tile].building;
+
                 /* Build shipyard in tech preview */
-                if (g_tiles[g_selected_tile].building == G_BT_NONE) {
+                if (!building) {
                         g_building_class_t *bc;
 
                         bc = g_building_classes + G_BT_SHIPYARD;
@@ -133,9 +136,8 @@ bool G_process_click(int button)
                 }
 
                 /* Operate shipyard in tech preview */
-                else if (g_tiles[g_selected_tile].building == G_BT_SHIPYARD &&
-                         g_tiles[g_selected_tile].nation ==
-                         g_clients[n_client_id].nation) {
+                else if (building->type == G_BT_SHIPYARD &&
+                         building->nation == g_clients[n_client_id].nation) {
                         g_ship_class_t *sc;
 
                         I_reset_ring();
@@ -260,7 +262,7 @@ void G_process_key(int key, bool shift, bool ctrl, bool alt)
         /* Focus on selected tile or ship */
         if (key == SDLK_SPACE) {
                 if (g_selected_tile >= 0) {
-                        R_rotate_cam_to(g_tiles[g_selected_tile].origin);
+                        R_rotate_cam_to(r_tiles[g_selected_tile].origin);
                         return;
                 }
                 G_focus_next_ship();
