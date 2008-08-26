@@ -110,7 +110,7 @@ static void grab_globe(int x, int y)
         grab_times[0] = grab_times[1];
         grab_times[1] = c_time_msec;
         grab_coords[0] = grab_coords[1];
-        grab_coords[1] = C_vec2(x, y);
+        grab_coords[1] = C_vec2((float)x, (float)y);
 
         if (screen_to_normal(x, y, &grab_normal, &grab_angle)) {
                 grab_rolling = FALSE;
@@ -138,7 +138,8 @@ static void release_globe(void)
         if (i_mouse_focus != &i_root ||
             c_time_msec - grab_times[0] > DOUBLE_CLICK_MSEC ||
             C_vec2_len(C_vec2_sub(grab_coords[0],
-                       C_vec2(i_mouse_x, i_mouse_y))) > DOUBLE_CLICK_DIST ||
+                       C_vec2((float)i_mouse_x, (float)i_mouse_y))) > 
+            DOUBLE_CLICK_DIST ||
             !screen_to_normal(i_mouse_x, i_mouse_y, &normal, NULL))
                 return;
         grab_times[0] = 0;

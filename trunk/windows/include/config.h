@@ -32,7 +32,7 @@
 
 /* Constants normally defined via SCons */
 #define PACKAGE "plutocracy"
-#define PACKAGE_STRING "Plutocracy 0.0.3r427"
+#define PACKAGE_STRING "Plutocracy 0.0.3r432"
 
 /* Compatibility */
 #define inline __inline
@@ -41,7 +41,7 @@
 #define strcasecmp _stricmp
 #define strncasecmp _strnicmp
 
-/* For isnormal() */
+/* For isfinite() */
 #include <float.h>
-#define isnormal _isnormal
+#define isfinite _finite
 

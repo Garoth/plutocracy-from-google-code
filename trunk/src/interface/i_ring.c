@@ -115,7 +115,8 @@ static void detail_hover(void)
                 if (!button_widgets[i].widget.shown ||
                     !C_rect_contains(button_widgets[i].widget.origin,
                                      button_widgets[i].widget.size,
-                                     C_vec2(i_mouse_x, i_mouse_y)))
+                                     C_vec2((float)i_mouse_x, 
+                                            (float)i_mouse_y)))
                         continue;
 
                 /* Same button as before */
