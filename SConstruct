@@ -253,6 +253,7 @@ default_env.Install(install_data, ['AUTHORS', 'ChangeLog', 'CC', 'COPYING',
 InstallRecursive(os.path.join(install_data, 'gui'), 'gui')
 InstallRecursive(os.path.join(install_data, 'models'), 'models')
 InstallRecursive(os.path.join(install_data, 'configs'), 'configs')
+InstallRecursive(os.path.join(install_data, 'lang'), 'lang')
 
 ################################################################################
 #
@@ -318,13 +319,15 @@ default_env.AddPostAction(dist_tarball, Delete(dist_name))
 # Files that get distributed in a source package
 dist_dlls = glob.glob('*.dll')
 default_env.Install(dist_name, ['AUTHORS', 'ChangeLog', 'CC', 'COPYING',
-                                'README', 'SConstruct', 'todo.sh',
-                                'Makefile', 'genlang.py'] + dist_dlls)
+                                'README', 'SConstruct', 'Makefile',
+                                'todo.sh', 'genlang.py', 'find.sh',
+                                'export_plum.py', 'check.py'] + dist_dlls)
 InstallRecursive(os.path.join(dist_name, 'gendoc'), 'gendoc',
                  [path('gendoc/gendoc')])
 InstallRecursive(os.path.join(dist_name, 'gui'), 'gui')
 InstallRecursive(os.path.join(dist_name, 'models'), 'models')
 InstallRecursive(os.path.join(dist_name, 'configs'), 'configs')
+InstallRecursive(os.path.join(dist_name, 'lang'), 'lang')
 InstallRecursive(os.path.join(dist_name, 'src'), 'src')
 InstallRecursive(os.path.join(dist_name, 'windows'), 'windows',
                  ['windows/vc8/Debug', 'windows/vc8/Release'])
@@ -352,6 +355,7 @@ default_env.Install(release_name, ['AUTHORS', 'ChangeLog', 'CC', 'COPYING',
 InstallRecursive(os.path.join(release_name, 'gui'), 'gui')
 InstallRecursive(os.path.join(release_name, 'models'), 'models')
 InstallRecursive(os.path.join(release_name, 'configs'), 'configs')
+InstallRecursive(os.path.join(release_name, 'lang'), 'lang')
 if windows:
         default_env.Install(release_name, dist_dlls)
 

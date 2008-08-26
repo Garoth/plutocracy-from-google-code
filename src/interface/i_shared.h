@@ -92,7 +92,8 @@ void I_configure_player_num(int num);
 
 /* i_ring.c */
 void I_reset_ring(void);
-void I_add_to_ring(i_ring_icon_t, int enabled);
+void I_add_to_ring(i_ring_icon_t, int enabled, const char *label,
+                   const char *sub_label);
 void I_show_ring(i_ring_f callback);
 
 /* i_trade.c */

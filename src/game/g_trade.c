@@ -41,6 +41,14 @@ static float cargo_space(g_cargo_type_t cargo)
 }
 
 /******************************************************************************\
+ Returns a single-character suffix a cargo item.
+\******************************************************************************/
+static char cargo_suffix(g_cargo_type_t cargo)
+{
+        return tolower(g_cargo_names[cargo][0]);
+}
+
+/******************************************************************************\
  Returns the amount of space the given cargo manifest contains. Updates the
  store's cached space count.
 \******************************************************************************/
@@ -308,5 +316,34 @@ void G_store_receive(g_store_t *store, bool ignore_prices)
                 cargo->maximum = N_receive_short();
         }
         G_store_space(store);
+}
+
+/******************************************************************************\
+ Generate a string description of a cost structure.
+\******************************************************************************/
+const char *G_cost_to_string(const g_cost_t *cost)
+{
+        static char buf[128];
+        char *pos, *fmt;
+        int i, space;
+        bool first;
+
+        pos = buf;
+        first = TRUE;
+        for (i = 0; i < G_CARGO_TYPES; i++) {
+                if (cost->cargo[i] < 1)
+                        continue;
+                if (first) {
+                        fmt = "%d%c";
+                        first = FALSE;
+                } else
+                        fmt = ", %d%c";
+                space = (int)(buf + sizeof (buf) - pos);
+                if (space < 1)
+                        return buf;
+                pos += snprintf(pos, space, fmt,
+                                cost->cargo[i], cargo_suffix(i));
+        }
+        return buf;
 }
 

@@ -283,6 +283,7 @@ extern int g_hover_tile, g_selected_tile;
 /* g_trade.c */
 int G_build_time(const g_cost_t *);
 bool G_cargo_equal(const g_cargo_t *, const g_cargo_t *);
+const char *G_cost_to_string(const g_cost_t *);
 int G_limit_purchase(const g_store_t *buyer, const g_store_t *seller,
                      g_cargo_type_t, int amount);
 bool G_pay(n_client_id_t, int tile, const g_cost_t *, bool pay);

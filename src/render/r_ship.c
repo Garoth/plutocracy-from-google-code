@@ -96,16 +96,6 @@ static void render_bars(float left, float right)
 {
         const unsigned short indices[6] = {5, 4, 2, 6, 3, 4};
 
-        /* Check ranges */
-        if (left < 0.f)
-                left = 0.f;
-        if (left > 1.f)
-                left = 1.f;
-        if (right < 0.f)
-                right = 0.f;
-        if (right > 1.f)
-                right = 1.f;
-
         /* Dynamically position the top left and right vertices */
         left = cosf(left * C_PI / 2.f + C_PI / 4.f) / C_COS_45;
         right = cosf(right * C_PI / 2.f + C_PI / 4.f) / C_COS_45;
@@ -130,6 +120,12 @@ void R_render_ship_status(const r_model_t *model, float left, float left_max,
 {
         R_push_mode(R_MODE_3D);
         R_gl_disable(GL_LIGHTING);
+
+        /* Check ranges */
+        C_limit_float(&left_max, 0.f, 1.f);
+        C_limit_float(&left, 0.f, left_max);
+        C_limit_float(&right_max, 0.f, 1.f);
+        C_limit_float(&right, 0.f, right_max);
 
         /* Modulate and position with the ship model */
         modulate = C_color_scale(modulate, model->modulate);

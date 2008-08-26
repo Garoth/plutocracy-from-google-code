@@ -306,6 +306,8 @@ extern c_log_mode_t c_log_mode;
 
 /* c_math.c */
 #define C_is_pow2(n) !(n & (n - 1))
+void C_limit_float(float *value, float min, float max);
+void C_limit_int(int *value, int min, int max);
 int C_next_pow2(int);
 int C_rand(void);
 #define C_rand_real() ((float)(C_rand() & 0xffff) / 0xffff)
