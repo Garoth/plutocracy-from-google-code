@@ -44,13 +44,6 @@ static void cm_affiliate(int client)
                 G_store_add(&g_ships[ship].store, G_CT_GOLD, 500);
                 G_store_add(&g_ships[ship].store, G_CT_CREW, 25);
                 G_store_add(&g_ships[ship].store, G_CT_RATIONS, 25);
-
-                /* Spawn a second ship for testing */
-                if ((ship = G_ship_spawn(-1, client, tile, G_ST_SLOOP)) >= 0) {
-                        G_store_add(&g_ships[ship].store, G_CT_GOLD, 500);
-                        G_store_add(&g_ships[ship].store, G_CT_CREW, 25);
-                        G_store_add(&g_ships[ship].store, G_CT_RATIONS, 25);
-                }
         }
 
         N_broadcast("1112", G_SM_AFFILIATE, client, nation, tile);

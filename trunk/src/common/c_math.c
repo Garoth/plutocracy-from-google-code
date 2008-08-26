@@ -124,3 +124,26 @@ c_vec3_t C_vec3_rotate_to(c_vec3_t a, c_vec3_t n, float prop, c_vec3_t b)
                           C_vec3_scalef(y, sinf(angle) * a_mag));
 }
 
+/******************************************************************************\
+ Convenience function to ensure a value is within a range.
+\******************************************************************************/
+void C_limit_float(float *value, float min, float max)
+{
+        if (!value)
+                return;
+        if (*value < min)
+                *value = min;
+        if (*value > max)
+                *value = max;
+}
+
+void C_limit_int(int *value, int min, int max)
+{
+        if (!value)
+                return;
+        if (*value < min)
+                *value = min;
+        if (*value > max)
+                *value = max;
+}
+

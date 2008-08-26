@@ -108,8 +108,10 @@ bool G_process_click(int button)
                 if (g_hover_ship >= 0 && g_hover_ship != g_selected_ship) {
                         ring_ship = g_hover_ship;
                         I_reset_ring();
-                        I_add_to_ring(I_RI_BOARD, G_ship_hostile(g_hover_ship));
-                        I_add_to_ring(I_RI_FOLLOW, TRUE);
+                        I_add_to_ring(I_RI_BOARD, G_ship_hostile(g_hover_ship),
+                                      C_str("g-board", "Board"), NULL);
+                        I_add_to_ring(I_RI_FOLLOW, TRUE,
+                                      C_str("g-follow", "Follow"), NULL);
                         I_show_ring((i_ring_f)ship_ring);
                 }
 
@@ -131,7 +133,8 @@ bool G_process_click(int button)
                         can_pay = G_pay(n_client_id, g_selected_tile,
                                         &bc->cost, FALSE);
                         I_reset_ring();
-                        I_add_to_ring(I_RI_TOWN_HALL, can_pay);
+                        I_add_to_ring(I_RI_TOWN_HALL, can_pay,
+                                      bc->name, G_cost_to_string(&bc->cost));
                         I_show_ring((i_ring_f)tile_ring);
                 }
 
@@ -146,19 +149,22 @@ bool G_process_click(int button)
                         sc = g_ship_classes + G_ST_SLOOP;
                         can_pay = G_pay(n_client_id, g_selected_tile,
                                         &sc->cost, FALSE);
-                        I_add_to_ring(I_RI_SLOOP, can_pay);
+                        I_add_to_ring(I_RI_SLOOP, can_pay, sc->name,
+                                      G_cost_to_string(&sc->cost));
 
                         /* Spider */
                         sc = g_ship_classes + G_ST_SPIDER;
                         can_pay = G_pay(n_client_id, g_selected_tile,
                                         &sc->cost, FALSE);
-                        I_add_to_ring(I_RI_SPIDER, can_pay);
+                        I_add_to_ring(I_RI_SPIDER, can_pay, sc->name,
+                                      G_cost_to_string(&sc->cost));
 
                         /* Galleon */
                         sc = g_ship_classes + G_ST_GALLEON;
                         can_pay = G_pay(n_client_id, g_selected_tile,
                                         &sc->cost, FALSE);
-                        I_add_to_ring(I_RI_GALLEON, can_pay);
+                        I_add_to_ring(I_RI_GALLEON, can_pay, sc->name,
+                                      G_cost_to_string(&sc->cost));
 
                         I_show_ring((i_ring_f)tile_ring);
                 }
