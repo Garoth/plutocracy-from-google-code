@@ -27,8 +27,9 @@ i_widget_t *i_child;
 i_widget_t *i_mouse_focus;
 
 /* Event parameters */
+c_vec2_t i_mouse;
 int i_key, i_key_shift, i_key_alt, i_key_ctrl, i_key_unicode,
-    i_mouse_x, i_mouse_y, i_mouse;
+    i_mouse_button;
 
 static i_widget_t *key_focus, *mouse_focus;
 static int widgets;
@@ -223,12 +224,9 @@ const char *I_event_to_string(i_event_t event)
 \******************************************************************************/
 static bool can_mouse_focus(i_widget_t *widget)
 {
-        c_vec2_t mouse_pos;
-
-        mouse_pos = C_vec2((float)i_mouse_x, (float)i_mouse_y);
         return widget->state != I_WS_NO_FOCUS &&
                widget->state != I_WS_DISABLED && widget->shown &&
-               C_rect_contains(widget->origin, widget->size, mouse_pos);
+               C_rect_contains(widget->origin, widget->size, i_mouse);
 }
 
 /******************************************************************************\
@@ -569,10 +567,8 @@ void I_dispatch(const SDL_Event *ev)
 
                 /* If the mouse focus was lost, reset the cursor position */
                 if (!ev->active.gain &&
-                    (ev->active.state & SDL_APPMOUSEFOCUS)) {
-                        i_mouse_x = -1;
-                        i_mouse_y = -1;
-                }
+                    (ev->active.state & SDL_APPMOUSEFOCUS))
+                        i_mouse = C_vec2(-1.f, -1.f);
 
                 return;
         case SDL_KEYDOWN:
@@ -598,22 +594,22 @@ void I_dispatch(const SDL_Event *ev)
                 break;
         case SDL_MOUSEMOTION:
                 event = I_EV_MOUSE_MOVE;
-                i_mouse_x = (int)(ev->motion.x / r_scale_2d + 0.5f);
-                i_mouse_y = (int)(ev->motion.y / r_scale_2d + 0.5f);
+                i_mouse.x = ev->motion.x / r_scale_2d;
+                i_mouse.y = ev->motion.y / r_scale_2d;
                 find_focus();
                 break;
         case SDL_MOUSEBUTTONDOWN:
                 event = I_EV_MOUSE_DOWN;
-                i_mouse = ev->button.button;
+                i_mouse_button = ev->button.button;
                 if (i_debug.value.n > 0)
-                        C_trace("SDL_MOUSEBUTTONDOWN (%d)", i_mouse);
+                        C_trace("SDL_MOUSEBUTTONDOWN (%d)", i_mouse_button);
                 check_mouse_focus(mouse_focus);
                 break;
         case SDL_MOUSEBUTTONUP:
                 event = I_EV_MOUSE_UP;
-                i_mouse = ev->button.button;
+                i_mouse_button = ev->button.button;
                 if (i_debug.value.n > 0)
-                        C_trace("SDL_MOUSEBUTTONUP (%d)", i_mouse);
+                        C_trace("SDL_MOUSEBUTTONUP (%d)", i_mouse_button);
                 check_mouse_focus(mouse_focus);
                 break;
         default:
@@ -642,7 +638,7 @@ void I_dispatch(const SDL_Event *ev)
         /* After dispatch */
         switch (ev->type) {
         case SDL_MOUSEBUTTONUP:
-                i_mouse = 0;
+                i_mouse_button = 0;
                 break;
         case SDL_KEYUP:
                 i_key = 0;

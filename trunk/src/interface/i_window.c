@@ -88,7 +88,7 @@ int I_window_event(i_window_t *window, i_event_t event)
                                           window->widget.size.y;
                 break;
         case I_EV_MOUSE_DOWN:
-                if (i_mouse == SDL_BUTTON_RIGHT && window->auto_hide)
+                if (i_mouse_button == SDL_BUTTON_RIGHT && window->auto_hide)
                         I_widget_event(&window->widget, I_EV_HIDE);
                 break;
         case I_EV_CLEANUP:
@@ -170,7 +170,7 @@ int I_toolbar_event(i_toolbar_t *toolbar, i_event_t event)
                 return FALSE;
 
         case I_EV_MOUSE_DOWN:
-                if (i_mouse == SDL_BUTTON_RIGHT && toolbar->open_window)
+                if (i_mouse_button == SDL_BUTTON_RIGHT && toolbar->open_window)
                         I_widget_event(&toolbar->open_window->widget,
                                        I_EV_HIDE);
                 break;
@@ -367,7 +367,7 @@ static int popup_event(i_widget_t *widget, i_event_t event)
                 popup_wait = FALSE;
                 break;
         case I_EV_MOUSE_DOWN:
-                if (i_mouse == SDL_BUTTON_RIGHT)
+                if (i_mouse_button == SDL_BUTTON_RIGHT)
                         I_widget_event(&popup_widget, I_EV_HIDE);
                 break;
         case I_EV_KEY_DOWN:

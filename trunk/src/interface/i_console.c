@@ -104,9 +104,9 @@ int I_scrollback_event(i_scrollback_t *sb, i_event_t event)
                 scrollback_moved(sb);
                 return FALSE;
         case I_EV_MOUSE_DOWN:
-                if (i_mouse == SDL_BUTTON_WHEELUP)
+                if (i_mouse_button == SDL_BUTTON_WHEELUP)
                         I_scrollback_scroll(sb, TRUE);
-                else if (i_mouse == SDL_BUTTON_WHEELDOWN)
+                else if (i_mouse_button == SDL_BUTTON_WHEELDOWN)
                         I_scrollback_scroll(sb, FALSE);
                 break;
         case I_EV_MOVED:

@@ -160,7 +160,7 @@ int I_button_event(i_button_t *button, i_event_t event)
                         button->widget.state = I_WS_ACTIVE;
                 break;
         case I_EV_MOUSE_DOWN:
-                if (i_mouse == SDL_BUTTON_LEFT)
+                if (i_mouse_button == SDL_BUTTON_LEFT)
                         button->widget.state = I_WS_ACTIVE;
                 break;
         case I_EV_MOUSE_UP:

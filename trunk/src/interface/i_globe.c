@@ -54,9 +54,10 @@ static int intersect_ray_globe(c_vec3_t o, c_vec3_t d, c_vec3_t *point)
 /******************************************************************************\
  Returns an eye-space ray direction from the camera into the screen pixel.
 \******************************************************************************/
-static c_vec3_t screen_ray(int x, int y)
+static c_vec3_t screen_ray(c_vec2_t v)
 {
-        return C_vec3_norm(C_vec3(x - r_width_2d / 2.f, r_height_2d / 2.f - y,
+        return C_vec3_norm(C_vec3(v.x - r_width_2d / 2.f, 
+                                  r_height_2d / 2.f - v.y,
                                   -0.5f * r_height_2d / R_FOV_HALF_TAN));
 }
 
@@ -65,13 +66,13 @@ static c_vec3_t screen_ray(int x, int y)
  was clicked on and [normal] was set. Otherwise, returns FALSE and sets
  [angle] to the roll angle.
 \******************************************************************************/
-static int screen_to_normal(int x, int y, c_vec3_t *normal, float *angle)
+static int screen_to_normal(c_vec2_t coords, c_vec3_t *normal, float *angle)
 {
         c_vec3_t direction, forward, point;
 
         /* We need to create a vector that points out of the camera into the
            ray that is cast into the direction of the clicked pixel */
-        direction = screen_ray(x, y);
+        direction = screen_ray(coords);
         forward = R_rotate_to_cam(direction);
 
         /* Test the direction ray */
@@ -97,22 +98,22 @@ static int screen_to_normal(int x, int y, c_vec3_t *normal, float *angle)
 }
 
 /******************************************************************************\
- Grab and begin rotating the globe. [x] and [y] are in screen coordinates.
+ Grab screen coordinates [coords] and begin rotating the globe.
 \******************************************************************************/
-static void grab_globe(int x, int y)
+static void grab_globe(c_vec2_t coords)
 {
         if (grabbing)
                 return;
         grabbing = TRUE;
-        grab_button = i_mouse;
+        grab_button = i_mouse_button;
 
         /* Preserve grab timestamp and position for double-click detection */
         grab_times[0] = grab_times[1];
         grab_times[1] = c_time_msec;
         grab_coords[0] = grab_coords[1];
-        grab_coords[1] = C_vec2((float)x, (float)y);
+        grab_coords[1] = coords;
 
-        if (screen_to_normal(x, y, &grab_normal, &grab_angle)) {
+        if (screen_to_normal(coords, &grab_normal, &grab_angle)) {
                 grab_rolling = FALSE;
                 grab_normal = R_rotate_from_cam(grab_normal);
         } else
@@ -137,10 +138,9 @@ static void release_globe(void)
         /* Check if this is a double right click */
         if (i_mouse_focus != &i_root ||
             c_time_msec - grab_times[0] > DOUBLE_CLICK_MSEC ||
-            C_vec2_len(C_vec2_sub(grab_coords[0],
-                       C_vec2((float)i_mouse_x, (float)i_mouse_y))) > 
+            C_vec2_len(C_vec2_sub(grab_coords[0], i_mouse)) > 
             DOUBLE_CLICK_DIST ||
-            !screen_to_normal(i_mouse_x, i_mouse_y, &normal, NULL))
+            !screen_to_normal(i_mouse, &normal, NULL))
                 return;
         grab_times[0] = 0;
         grab_times[1] = 0;
@@ -148,16 +148,16 @@ static void release_globe(void)
 }
 
 /******************************************************************************\
- Rotate the globe during a grab or do nothing. [x] and [y] are in screen
+ Rotate the globe during a grab or do nothing. [coordsy] are in screen
  coordinates.
 \******************************************************************************/
-static void rotate_globe(int x, int y)
+static void rotate_globe(c_vec2_t coords)
 {
         c_vec3_t normal, angles;
         float angle;
 
         /* Rotation without roll */
-        if (screen_to_normal(x, y, &normal, &angle)) {
+        if (screen_to_normal(coords, &normal, &angle)) {
                 normal = R_rotate_from_cam(normal);
 
                 /* A transition loses the rotation for the frame */
@@ -201,7 +201,7 @@ static void test_globe(void)
         float angle;
 
         if (!i_test_globe.value.n ||
-            !screen_to_normal(i_mouse_x, i_mouse_y, &normal, &angle))
+            !screen_to_normal(i_mouse, &normal, &angle))
                 return;
         R_render_test_line(C_vec3_scalef(normal, r_globe_radius),
                            C_vec3_scalef(normal, r_globe_radius + 1.f),
@@ -221,23 +221,23 @@ static void mouse_scroll(void)
         best = 0.f;
 
         /* Scroll right */
-        amount = 1.f - i_mouse_x / i_edge_scroll.value.f;
+        amount = 1.f - i_mouse.x / i_edge_scroll.value.f;
         if (amount > best)
                 best = amount;
 
         /* Scroll left */
-        amount = 1.f - (r_width_2d - i_mouse_x) /
+        amount = 1.f - (r_width_2d - i_mouse.x) /
                        i_edge_scroll.value.f;
         if (amount > best)
                 best = amount;
 
         /* Scroll up */
-        amount = 1.f - i_mouse_y / i_edge_scroll.value.f;
+        amount = 1.f - i_mouse.y / i_edge_scroll.value.f;
         if (amount > best)
                 best = amount;
 
         /* Scroll down */
-        amount = 1.f - (r_height_2d - i_mouse_y) /
+        amount = 1.f - (r_height_2d - i_mouse.y) /
                        i_edge_scroll.value.f;
         if (amount > best)
                 best = amount;
@@ -247,8 +247,8 @@ static void mouse_scroll(void)
                 return;
 
         /* Determine direction */
-        scroll = C_vec2_norm(C_vec2(i_mouse_x - r_width_2d / 2.f,
-                                    i_mouse_y - r_height_2d / 2.f));
+        scroll = C_vec2_norm(C_vec2(i_mouse.x - r_width_2d / 2.f,
+                                    i_mouse.y - r_height_2d / 2.f));
 
         /* Apply scroll for this frame */
         best *= -c_frame_sec * i_scroll_speed.value.f;
@@ -294,17 +294,17 @@ void I_globe_event(i_event_t event)
         case I_EV_MOUSE_DOWN:
                 if (i_mouse_focus != &i_root)
                         break;
-                if (i_mouse == SDL_BUTTON_WHEELDOWN)
+                if (i_mouse_button == SDL_BUTTON_WHEELDOWN)
                         R_zoom_cam_by(i_zoom_speed.value.f);
-                else if (i_mouse == SDL_BUTTON_WHEELUP)
+                else if (i_mouse_button == SDL_BUTTON_WHEELUP)
                         R_zoom_cam_by(-i_zoom_speed.value.f);
-                else if (i_mouse == SDL_BUTTON_MIDDLE)
-                        grab_globe(i_mouse_x, i_mouse_y);
+                else if (i_mouse_button == SDL_BUTTON_MIDDLE)
+                        grab_globe(i_mouse);
                 else
-                        G_process_click(i_mouse);
+                        G_process_click(i_mouse_button);
                 break;
         case I_EV_MOUSE_UP:
-                if (i_mouse == grab_button)
+                if (i_mouse_button == grab_button)
                         release_globe();
                 break;
         case I_EV_MOUSE_MOVE:
@@ -313,7 +313,7 @@ void I_globe_event(i_event_t event)
                 if (i_mouse_focus != &i_root)
                         G_mouse_ray_miss();
                 else if (grabbing)
-                        rotate_globe(i_mouse_x, i_mouse_y);
+                        rotate_globe(i_mouse);
                 break;
         case I_EV_RENDER:
                 test_globe();
@@ -325,7 +325,7 @@ void I_globe_event(i_event_t event)
                 if (!I_ring_shown() && i_mouse_focus == &i_root && !grabbing) {
                         c_vec3_t direction;
 
-                        direction = screen_ray(i_mouse_x, i_mouse_y);
+                        direction = screen_ray(i_mouse);
                         direction = R_rotate_to_cam(direction);
                         G_mouse_ray(r_cam_origin, direction);
                 }
