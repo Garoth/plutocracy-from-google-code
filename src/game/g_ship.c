@@ -570,7 +570,7 @@ static void ship_quick_info(int index)
         /* Crew */
         color = I_COLOR_ALT;
         i = ship->store.cargo[G_CT_CREW].amount;
-        total = ship->store.capacity * G_SHIP_OPTIMAL_CREW;
+        total = (int)(ship->store.capacity * G_SHIP_OPTIMAL_CREW);
         prop = (float)i / total;
         if (prop >= 0.67)
                 color = I_COLOR_GOOD;

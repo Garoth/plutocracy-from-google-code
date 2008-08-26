@@ -115,8 +115,7 @@ static void detail_hover(void)
                 if (!button_widgets[i].widget.shown ||
                     !C_rect_contains(button_widgets[i].widget.origin,
                                      button_widgets[i].widget.size,
-                                     C_vec2((float)i_mouse_x, 
-                                            (float)i_mouse_y)))
+                                     i_mouse))
                         continue;
 
                 /* Same button as before */
@@ -145,9 +144,7 @@ static int ring_event(i_widget_t *widget, i_event_t event)
 
         /* Calculate mouse radius for mouse events */
         if (event == I_EV_MOUSE_MOVE || event == I_EV_MOUSE_DOWN)
-                radius = C_vec2_len(C_vec2_sub(C_vec2((float)i_mouse_x,
-                                                      (float)i_mouse_y),
-                                               screen_origin));
+                radius = C_vec2_len(C_vec2_sub(i_mouse, screen_origin));
 
         switch (event) {
         case I_EV_CONFIGURE:
@@ -170,7 +167,7 @@ static int ring_event(i_widget_t *widget, i_event_t event)
                         detail_hover();
                 break;
         case I_EV_MOUSE_DOWN:
-                if (i_mouse != SDL_BUTTON_LEFT)
+                if (i_mouse_button != SDL_BUTTON_LEFT)
                         I_close_ring();
                 if (radius <= RING_INNER_RADIUS) {
                         I_close_ring();
@@ -273,7 +270,7 @@ void I_show_ring(i_ring_f _callback)
 {
         int i;
 
-        screen_origin = C_vec2((float)i_mouse_x, (float)i_mouse_y);
+        screen_origin = i_mouse;
         position_and_pack();
         I_widget_event(&ring_widget, I_EV_SHOW);
         callback = _callback;
