@@ -298,5 +298,5 @@ int G_store_space(g_store_t *);
 extern c_var_t g_forest, g_globe_seed, g_globe_subdiv4, g_island_num,
                g_island_size, g_island_variance, g_name,
                g_nation_colors[G_NATION_NAMES], g_players,
-               g_test_globe, g_test_tile;
+               g_test_globe;
 
