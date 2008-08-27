@@ -205,12 +205,14 @@ bool I_chat_event(i_event_t event)
 \******************************************************************************/
 static int entry_event(i_entry_t *entry, i_event_t event)
 {
-        if (i_key == SDLK_PAGEUP) {
-                show_scrollback(TRUE);
-                I_scrollback_scroll(&scrollback, TRUE);
-        } else if (i_key == SDLK_PAGEDOWN) {
-                show_scrollback(TRUE);
-                I_scrollback_scroll(&scrollback, FALSE);
+        if (event == I_EV_KEY_DOWN) {
+                if (i_key == SDLK_PAGEUP) {
+                        show_scrollback(TRUE);
+                        I_scrollback_scroll(&scrollback, TRUE);
+                } else if (i_key == SDLK_PAGEDOWN) {
+                        show_scrollback(TRUE);
+                        I_scrollback_scroll(&scrollback, FALSE);
+                }
         }
         return I_entry_event(entry, event);
 }
