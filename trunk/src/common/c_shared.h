@@ -28,9 +28,15 @@
 #include <errno.h>
 
 /* OpenGL */
+#ifdef DARWIN
+#include <gl.h>
+#include <glu.h>
+#include <glext.h>
+#else
 #include <GL/gl.h>
 #include <GL/glu.h>
 #include "GL/glext.h"
+#endif
 
 /* SDL */
 #include "SDL.h"
