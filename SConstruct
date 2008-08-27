@@ -142,9 +142,19 @@ else:
         plutocracy_env.Append(CPPPATH = '.')
         plutocracy_env.Append(LIBS = ['SDL_ttf', 'GL', 'GLU', 'z', 'png'])
         plutocracy_env.ParseConfig('sdl-config --cflags --libs')
+        
+        # Manually add the framework paths for MacOSX, is there a better way?
         if darwin:
-                plutocracy_env.Append(LIBPATH = '/System/Library/Frameworks/' +
-                                                'OpenGL.framework/Libraries')
+                def DarwinFramework(name, prefix = ''):
+                        plutocracy_env.Append(CPPPATH = prefix + '/Library/Frameworks/' +
+                                                        name + '.framework/Headers')
+                        plutocracy_env.Append(LIBPATH = prefix + '/Library/Frameworks/' +
+                                                        name + '.framework/Libraries')
+                DarwinFramework('libpng')
+                DarwinFramework('SDL')
+                DarwinFramework('SDL_ttf')
+                DarwinFramework('OpenGL', '/System')
+                                                
 plutocracy_obj = plutocracy_env.Object(plutocracy_src)
 plutocracy = plutocracy_env.Program(package, plutocracy_obj +
                                              plutocracy_objlibs)
