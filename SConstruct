@@ -221,6 +221,11 @@ else:
                         config.write('\n/* Plutocracy */\n' +
                                      '#define PLUTOCRACY_LIBC_ERRORS\n')
 
+                # Darwin special define
+                if darwin:
+                        config.write('\n/* Platform */\n' +
+                                     '#ifndef DARWIN\n#define DARWIN\n#endif')
+
                 config.close()
 
         plutocracy_config = plutocracy_env.Command('config.h', '', WriteConfigH)
