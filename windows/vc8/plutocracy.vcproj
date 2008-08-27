@@ -42,9 +42,9 @@
 				Optimization="0"
 				AdditionalIncludeDirectories="..\include;..\include\SDL"
 				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE"
-				MinimalRebuild="true"
+				MinimalRebuild="false"
 				BasicRuntimeChecks="3"
-				RuntimeLibrary="3"
+				RuntimeLibrary="2"
 				UsePrecompiledHeader="0"
 				PrecompiledHeaderThrough=""
 				WarningLevel="3"
@@ -143,7 +143,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="SDL.lib SDLmain.lib SDL_ttf.lib OpenGL32.lib GlU32.lib user32.lib shell32.lib zdll.lib libpng.lib"
+				AdditionalDependencies="SDL.lib SDLmain.lib SDL_ttf.lib OpenGL32.lib GlU32.lib user32.lib shell32.lib zdll.lib libpng.lib Ws2_32.lib"
 				OutputFile="..\..\plutocracy.exe"
 				LinkIncremental="1"
 				AdditionalLibraryDirectories="..\lib"
