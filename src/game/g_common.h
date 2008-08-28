@@ -24,13 +24,10 @@
 #define G_ISLAND_INVALID 255
 
 /* Maximum number of islands. Do not set this value above G_ISLAND_INVALID. */
-#define G_ISLAND_NUM 254
-
-/* Delay in milliseconds before the hover window is displayed */
-#define G_HOVER_DELAY 750
+#define G_ISLAND_NUM 128
 
 /* Maximum number of ships in a game */
-#define G_SHIPS_MAX 256
+#define G_SHIPS_MAX 128
 
 /* Length of a name */
 #define G_NAME_MAX 16

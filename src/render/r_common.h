@@ -20,7 +20,7 @@
 /* Proportion of a tile that is used as a buffer against its neighbors */
 #define R_TILE_BORDER (6.f / 256)
 
-/* Don't have APIENTRYP on Darwin and their glext.h does not define it, but 
+/* Don't have APIENTRYP on Darwin and their glext.h does not define it, but
    this is needed because on Windows it is defined to be something strange */
 #ifndef APIENTRYP
 #define APIENTRYP *

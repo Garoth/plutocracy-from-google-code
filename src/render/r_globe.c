@@ -55,9 +55,12 @@ void R_init_globe(void)
         select_tex[R_ST_GOTO] = R_texture_load("models/globe/select_goto.png",
                                                TRUE);
         select_tex[R_ST_GOTO]->additive = TRUE;
-        select_tex[R_ST_PATH] = R_texture_load("models/globe/select_path.png",
-                                               TRUE);
-        select_tex[R_ST_PATH]->additive = TRUE;
+        select_tex[R_ST_DOT] = R_texture_load("models/globe/select_dot.png",
+                                              TRUE);
+        select_tex[R_ST_DOT]->additive = TRUE;
+        select_tex[R_ST_ARROW] = R_texture_load("models/globe/select_arrow.png",
+                                                TRUE);
+        select_tex[R_ST_ARROW]->additive = TRUE;
         select_type = R_ST_NONE;
 
         /* Setup globe material properties */
@@ -79,6 +82,19 @@ void R_cleanup_globe(void)
         for (i = 0; i < R_SELECT_TYPES; i++)
                 R_texture_free(select_tex[i]);
         R_vbo_cleanup(&r_globe_vbo);
+}
+
+/******************************************************************************\
+ Render overlay vertices.
+\******************************************************************************/
+static void render_overlay(const r_vertex3_t *verts, int verts_len,
+                           int tex_index, c_color_t color)
+{
+        R_texture_select(select_tex[tex_index]);
+        glColor4f(color.r, color.g, color.b, color.a);
+        glInterleavedArrays(R_VERTEX3_FORMAT, 0, verts);
+        glDrawArrays(GL_TRIANGLES, 0, verts_len);
+        C_count_add(&r_count_faces, verts_len / 3);
 }
 
 /******************************************************************************\
@@ -112,6 +128,7 @@ void R_start_globe(void)
 
         /* Render the globe through a vertex buffer object */
         R_vbo_render(&r_globe_vbo);
+        C_count_add(&r_count_faces, r_tiles_max);
 
         /* Base selection color on the fog color */
         r_select_color = r_fog_color;
@@ -123,53 +140,25 @@ void R_start_globe(void)
         r_hover_color.a *= HOVER_OPACITY * (1.f - HOVER_AMP *
                            (1.f - sinf(HOVER_FREQ * c_time_msec)));
 
-        /* Render hover triangle */
-        if (hover_tile >= 0 && hover_type != R_ST_NONE) {
-                R_gl_disable(GL_LIGHTING);
-                R_texture_select(select_tex[hover_type]);
-                glColor4f(r_hover_color.r, r_hover_color.g,
-                          r_hover_color.b, r_hover_color.a);
-                glInterleavedArrays(R_VERTEX3_FORMAT, sizeof (*hover_verts),
-                                    hover_verts);
-                glDrawArrays(GL_TRIANGLES, 0, 3);
-                glColor4f(1.f, 1.f, 1.f, 1.f);
-                C_count_add(&r_count_faces, 1);
-                R_gl_restore();
-        }
+        /* Render globe overlays */
+        R_gl_disable(GL_LIGHTING);
+        if (hover_tile >= 0 && hover_type != R_ST_NONE)
+                render_overlay(hover_verts, 3, hover_type, r_hover_color);
+        if (selected_tile >= 0 && select_type != R_ST_NONE)
+                render_overlay(select_verts, 3, select_type, r_select_color);
+        if (path_len > 1)
+                render_overlay(path_verts, 3 * path_len - 3,
+                               R_ST_ARROW, r_select_color);
+        if (path_len > 0)
+                render_overlay(path_verts + path_len * 3 - 3, 3,
+                               R_ST_DOT, r_select_color);
 
-        /* Render selection triangle */
-        if (selected_tile >= 0 && select_type != R_ST_NONE) {
-                R_gl_disable(GL_LIGHTING);
-                R_texture_select(select_tex[select_type]);
-                glColor4f(r_select_color.r, r_select_color.g,
-                          r_select_color.b, r_select_color.a);
-                glInterleavedArrays(R_VERTEX3_FORMAT, sizeof (*select_verts),
-                                    select_verts);
-                glDrawArrays(GL_TRIANGLES, 0, 3);
-                glColor4f(1.f, 1.f, 1.f, 1.f);
-                C_count_add(&r_count_faces, 1);
-                R_gl_restore();
-        }
-
-        /* If there is a path overlay, render it */
-        if (path_len > 0) {
-                R_gl_disable(GL_LIGHTING);
-                R_texture_select(select_tex[R_ST_PATH]);
-                glColor4f(r_fog_color.r, r_fog_color.g,
-                          r_fog_color.b, r_fog_color.a);
-                glInterleavedArrays(R_VERTEX3_FORMAT, sizeof (*path_verts),
-                                    path_verts);
-                glDrawArrays(GL_TRIANGLES, 0, path_len * 3);
-                glColor4f(1.f, 1.f, 1.f, 1.f);
-                C_count_add(&r_count_faces, path_len);
-                R_gl_restore();
-        }
-
+        glColor4f(1.f, 1.f, 1.f, 1.f);
         glDisableClientState(GL_TEXTURE_COORD_ARRAY);
         glDisableClientState(GL_VERTEX_ARRAY);
         glDisableClientState(GL_NORMAL_ARRAY);
+        R_gl_restore();
         R_check_errors();
-        C_count_add(&r_count_faces, r_tiles_max);
 
         /* Render the globe's normals for testing */
         R_render_normals(3 * r_tiles_max, &r_globe_verts[0].v.co,
@@ -188,9 +177,10 @@ void R_finish_globe(void)
 }
 
 /******************************************************************************\
- Copies a globe tile's vertex data to a 3D vertex array.
+ Copies a globe tile's vertex data to a 3D vertex array. [orientation] is
+ the neighbor index that the bottom of the texture should be oriented to.
 \******************************************************************************/
-static void copy_tile_vertices(int tile, r_vertex3_t *verts)
+static void copy_tile_vertices(int tile, r_vertex3_t *verts, int orientation)
 {
         int i;
 
@@ -200,9 +190,25 @@ static void copy_tile_vertices(int tile, r_vertex3_t *verts)
         }
 
         /* Set single-texture UV */
-        verts[0].uv = C_vec2(0.5f, 0.0f);
-        verts[1].uv = C_vec2(0.0f, 1.0f);
-        verts[2].uv = C_vec2(1.0f, 1.0f);
+        switch (orientation) {
+        case 0:
+                verts[0].uv = C_vec2(1.0f, 1.0f);
+                verts[1].uv = C_vec2(0.0f, 1.0f);
+                verts[2].uv = C_vec2(0.5f, 0.0f);
+                break;
+        case 1:
+                verts[0].uv = C_vec2(0.5f, 0.0f);
+                verts[1].uv = C_vec2(0.0f, 1.0f);
+                verts[2].uv = C_vec2(1.0f, 1.0f);
+                break;
+        case 2:
+                verts[0].uv = C_vec2(1.0f, 1.0f);
+                verts[1].uv = C_vec2(0.5f, 0.0f);
+                verts[2].uv = C_vec2(0.0f, 1.0f);
+                break;
+        default:
+                C_error("Invalid orientation index %d", orientation);
+        }
 }
 
 /******************************************************************************\
@@ -220,7 +226,7 @@ void R_hover_tile(int tile, r_select_type_t type)
         }
         hover_type = type;
         hover_tile = tile;
-        copy_tile_vertices(tile, hover_verts);
+        copy_tile_vertices(tile, hover_verts, 0);
 }
 
 /******************************************************************************\
@@ -237,7 +243,7 @@ void R_select_tile(int tile, r_select_type_t type)
         }
         select_type = type;
         selected_tile = tile;
-        copy_tile_vertices(tile, select_verts);
+        copy_tile_vertices(tile, select_verts, 0);
 }
 
 /******************************************************************************\
@@ -245,17 +251,25 @@ void R_select_tile(int tile, r_select_type_t type)
 \******************************************************************************/
 void R_select_path(int tile, const char *path)
 {
-        int index;
+        int index, next_index;
 
         path_len = 0;
         if (!path || path[0] < 1 || tile < 0)
                 return;
-        for (; path_len < R_PATH_MAX; path_len++) {
-                index = path[path_len] - 1;
-                if (index < 0 || index > 2)
+
+        /* Setup arrows */
+        for (next_index = path[0] - 1; path_len < R_PATH_MAX - 1; path_len++) {
+                index = next_index;
+                next_index = path[path_len + 1] - 1;
+                if (next_index < 0 || next_index > 2)
                         break;
                 tile = r_globe_verts[3 * tile + index].next / 3;
-                copy_tile_vertices(tile, path_verts + path_len * 3);
+                copy_tile_vertices(tile, path_verts + path_len * 3, next_index);
         }
+
+        /* Setup last dot */
+        tile = r_globe_verts[3 * tile + index].next / 3;
+        copy_tile_vertices(tile, path_verts + path_len * 3, 0);
+        path_len++;
 }
 

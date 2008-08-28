@@ -150,7 +150,7 @@ static void pixel_scale_update(void)
                 min = (float)r_width.value.n;
                 if (r_height.value.n < min)
                         min = (float)r_height.value.n;
-                new_scale_2d = min < 256.f ? 1.f : 
+                new_scale_2d = min < 256.f ? 1.f :
                                (float)min / r_height.stock.n;
         }
 

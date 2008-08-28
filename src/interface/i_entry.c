@@ -275,7 +275,7 @@ int I_entry_event(i_entry_t *entry, i_event_t event)
                         entry_auto_complete(entry);
                         break;
                 } else if (!i_key_ctrl && i_key >= ' ' && i_key_unicode &&
-                           i_key != SDLK_PAGEDOWN && i_key != SDLK_PAGEUP)
+                           i_key < 256)
                         entry_insert(entry, i_key_unicode);
                 entry->just_tabbed = FALSE;
                 break;

@@ -71,9 +71,10 @@ typedef enum {
 
 /* Tile selection types */
 typedef enum {
-        R_ST_TILE,
+        R_ST_ARROW,
+        R_ST_DOT,
         R_ST_GOTO,
-        R_ST_PATH,
+        R_ST_TILE,
         R_SELECT_TYPES,
         R_ST_NONE,
 } r_select_type_t;
