@@ -56,7 +56,7 @@ static int intersect_ray_globe(c_vec3_t o, c_vec3_t d, c_vec3_t *point)
 \******************************************************************************/
 static c_vec3_t screen_ray(c_vec2_t v)
 {
-        return C_vec3_norm(C_vec3(v.x - r_width_2d / 2.f, 
+        return C_vec3_norm(C_vec3(v.x - r_width_2d / 2.f,
                                   r_height_2d / 2.f - v.y,
                                   -0.5f * r_height_2d / R_FOV_HALF_TAN));
 }
@@ -138,7 +138,7 @@ static void release_globe(void)
         /* Check if this is a double right click */
         if (i_mouse_focus != &i_root ||
             c_time_msec - grab_times[0] > DOUBLE_CLICK_MSEC ||
-            C_vec2_len(C_vec2_sub(grab_coords[0], i_mouse)) > 
+            C_vec2_len(C_vec2_sub(grab_coords[0], i_mouse)) >
             DOUBLE_CLICK_DIST ||
             !screen_to_normal(i_mouse, &normal, NULL))
                 return;
