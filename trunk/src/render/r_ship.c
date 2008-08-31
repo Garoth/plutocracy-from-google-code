@@ -23,6 +23,16 @@
 /* Modulation for background bars */
 #define BAR_BACKGROUND 0.33f
 
+/* Height of the board icon from globe surface */
+#define BOARD_ICON_HEIGHT 0.5f
+
+/* Board icon modulation wave parameters */
+#define BOARD_ICON_AMP 0.67f
+#define BOARD_ICON_FREQ 0.0075f
+
+/* Boarding status billboard */
+static r_billboard_t board_bb;
+
 static r_vertex3_t vertices[7];
 static r_texture_t *quad_tex, *quad_other_tex, *select_tex, *bars_tex;
 
@@ -66,6 +76,13 @@ void R_init_ships(void)
         /* Only the position and uv changes for the dynamic corners */
         vertices[5].no = up;
         vertices[6].no = up;
+
+        /* Initialize billboard */
+        R_billboard_load(&board_bb, "models/ship/board.png");
+        board_bb.z_scale = TRUE;
+        board_bb.size *= 10.f;
+        if (board_bb.sprite.texture)
+                board_bb.sprite.texture->additive = TRUE;
 }
 
 /******************************************************************************\
@@ -77,6 +94,7 @@ void R_cleanup_ships(void)
         R_texture_free(quad_other_tex);
         R_texture_free(select_tex);
         R_texture_free(bars_tex);
+        R_billboard_cleanup(&board_bb);
 }
 
 /******************************************************************************\
@@ -175,5 +193,22 @@ void R_render_ship_status(const r_model_t *model, float left, float left_max,
 
         R_gl_restore();
         R_pop_mode();
+}
+
+/******************************************************************************\
+ Render the boarding status display between two ships.
+\******************************************************************************/
+void R_render_ship_boarding(c_vec3_t origin_a, c_vec3_t origin_b,
+                            c_color_t color)
+{
+        c_vec3_t disp;
+
+        board_bb.world_origin = C_vec3_lerp(origin_a, 0.5f, origin_b);
+        disp = C_vec3_scalef(C_vec3_norm(board_bb.world_origin),
+                             BOARD_ICON_HEIGHT);
+        board_bb.world_origin = C_vec3_add(board_bb.world_origin, disp);
+        board_bb.sprite.modulate = color;
+        board_bb.sprite.modulate.a *= C_wave(BOARD_ICON_AMP, BOARD_ICON_FREQ);
+        R_billboard_render(&board_bb);
 }
 

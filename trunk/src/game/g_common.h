@@ -178,10 +178,10 @@ typedef struct g_ship {
         r_model_t model;
         c_vec3_t forward;
         float progress;
-        int client, focus_stamp, health, lunch_time,
-            rear_tile, target, target_ship, tile, trade_tile;
+        int boarding, boarding_ship, client, combat_time, focus_stamp, health,
+            lunch_time, rear_tile, target, target_ship, tile, trade_tile;
         char path[R_PATH_MAX], name[G_NAME_MAX];
-        bool in_use, modified;
+        bool in_use, modified, target_board;
 } g_ship_t;
 
 /* Island structure */
@@ -232,14 +232,16 @@ void G_cleanup_ships(void);
 void G_focus_next_ship(void);
 void G_render_ships(void);
 bool G_ship_can_trade_with(int ship, int tile);
+void G_ship_change_client(int ship, n_client_id_t);
 bool G_ship_controlled_by(int ship, n_client_id_t);
-bool G_ship_hostile(int ship);
+bool G_ship_hostile(int ship, n_client_id_t to);
 void G_ship_hover(int ship);
 void G_ship_reselect(int ship, n_client_id_t);
 void G_ship_select(int ship);
 void G_ship_send_cargo(int ship, n_client_id_t);
 void G_ship_send_state(int ship, n_client_id_t);
 int G_ship_spawn(int ship, n_client_id_t, int tile, g_ship_type_t);
+void G_ship_update_combat(int ship);
 void G_update_ships(void);
 
 extern g_ship_t g_ships[G_SHIPS_MAX];

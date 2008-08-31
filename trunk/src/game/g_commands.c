@@ -108,7 +108,8 @@ bool G_process_click(int button)
                 if (g_hover_ship >= 0 && g_hover_ship != g_selected_ship) {
                         ring_ship = g_hover_ship;
                         I_reset_ring();
-                        I_add_to_ring(I_RI_BOARD, G_ship_hostile(g_hover_ship),
+                        I_add_to_ring(I_RI_BOARD,
+                                      G_ship_hostile(g_hover_ship, n_client_id),
                                       C_str("g-board", "Board"), NULL);
                         I_add_to_ring(I_RI_FOLLOW, TRUE,
                                       C_str("g-follow", "Follow"), NULL);

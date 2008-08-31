@@ -382,6 +382,10 @@ static void ship_move(int i)
                 return;
         g_ships[i].progress = 1.f;
 
+        /* Can't move while boarding */
+        if (g_ships[i].boarding > 0)
+                return;
+
         /* Keep track of the target ship */
         if (g_ships[i].target_ship >= 0 &&
             g_ships[g_ships[i].target_ship].tile != g_ships[i].target) {

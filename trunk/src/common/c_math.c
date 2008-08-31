@@ -96,8 +96,9 @@ int C_next_pow2(int n)
 }
 
 /******************************************************************************\
- Rotate a vector [prop] proportion around normal [n] toward another vector. If
- [a] is not in-plane with the normal vector, it will be made so.
+ Rotate [a] vector [prop] proportion around normal [n] toward another vector.
+ If [a] is not in-plane with the normal vector, it will be made so. Only [n]
+ needs to be normalized before calling this function.
 \******************************************************************************/
 c_vec3_t C_vec3_rotate_to(c_vec3_t a, c_vec3_t n, float prop, c_vec3_t b)
 {
@@ -145,5 +146,17 @@ void C_limit_int(int *value, int min, int max)
                 *value = min;
         if (*value > max)
                 *value = max;
+}
+
+/******************************************************************************\
+ Dice function for DnD nerds.
+\******************************************************************************/
+int C_roll_dice(int num, int sides)
+{
+        int i, total;
+
+        for (total = 0, i = 0; i < num; i++)
+                total += 1 + rand() % sides;
+        return total;
 }
 
