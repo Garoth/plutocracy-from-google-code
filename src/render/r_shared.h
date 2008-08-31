@@ -115,6 +115,7 @@ typedef struct r_billboard {
         r_sprite_t sprite;
         c_vec3_t world_origin;
         float size;
+        bool z_scale;
 } r_billboard_t;
 
 /* Sometimes it is convenient to store the source text for a text sprite in a
@@ -209,6 +210,7 @@ void R_model_render(r_model_t *);
 void R_adjust_light_for(c_vec3_t origin);
 
 /* r_ship.c */
+void R_render_ship_boarding(c_vec3_t origin_a, c_vec3_t origin_b, c_color_t);
 void R_render_ship_status(const r_model_t *, float left, float left_max,
                           float right, float right_max, c_color_t modulate,
                           bool selected, bool own);

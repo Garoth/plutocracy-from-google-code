@@ -511,17 +511,35 @@ void R_billboard_load(r_billboard_t *bb, const char *filename)
 void R_billboard_render(r_billboard_t *bb)
 {
         c_vec3_t co;
+        float size;
+
+        if (!bb)
+                return;
+
+        /* Scale the size by how far away it is from the camera */
+        size = bb->size;
+        if (bb->z_scale)
+                size /= C_vec3_len(C_vec3_sub(r_cam_origin, bb->world_origin));
 
         /* If the point sprite extension is available we can use it instead
            of doing all of the math on the CPU */
         if (r_ext.point_sprites) {
                 R_push_mode(R_MODE_3D);
                 R_texture_select(bb->sprite.texture);
-                glPointSize(bb->size);
+
+                /* Modulate color */
+                glColor4f(bb->sprite.modulate.r, bb->sprite.modulate.g,
+                          bb->sprite.modulate.b, bb->sprite.modulate.a);
+                if (bb->sprite.modulate.a < 1.f)
+                        glEnable(GL_BLEND);
+
+                /* Render point sprite */
+                glPointSize(size);
                 glBegin(GL_POINTS);
                 glVertex3f(bb->world_origin.x, bb->world_origin.y,
                            bb->world_origin.z);
                 glEnd();
+
                 R_pop_mode();
                 return;
         }
@@ -535,8 +553,7 @@ void R_billboard_render(r_billboard_t *bb)
            direction and with depth testing */
         bb->sprite.origin.x = co.x - bb->sprite.size.x * 0.5f;
         bb->sprite.origin.y = co.y - bb->sprite.size.y * 0.5f;
-        bb->sprite.size.x = bb->size / r_scale_2d;
-        bb->sprite.size.y = bb->sprite.size.x;
+        bb->sprite.size.y = bb->sprite.size.x = size / r_scale_2d;
         bb->sprite.z = co.z;
         R_sprite_render(&bb->sprite);
 }

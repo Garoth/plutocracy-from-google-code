@@ -122,6 +122,7 @@ init:   /* Initialize ship structure */
         ship->forward = r_tiles[tile].forward;
         ship->trade_tile = -1;
         ship->focus_stamp = -1;
+        ship->boarding_ship = -1;
 
         /* Start out unnamed */
         C_strncpy_buf(ship->name, C_va("Unnamed #%d", index));
@@ -186,6 +187,15 @@ void G_render_ships(void)
                                      crew, crew_max, color,
                                      g_selected_ship == i,
                                      ship->client == n_client_id);
+
+                /* Draw boarding status indicator */
+                if (ship->boarding_ship >= 0) {
+                        c_vec3_t origin_b;
+
+                        origin_b = g_ships[ship->boarding_ship].model.origin;
+                        R_render_ship_boarding(ship->model.origin, origin_b,
+                                               color);
+                }
         }
 }
 
@@ -381,10 +391,11 @@ void G_ship_send_state(int ship, n_client_id_t client)
 {
         if (n_client_id != N_HOST_CLIENT_ID)
                 return;
-        N_broadcast_except(N_HOST_CLIENT_ID, "112222", G_SM_SHIP_STATE,
+        N_broadcast_except(N_HOST_CLIENT_ID, "11222211", G_SM_SHIP_STATE,
                            ship, g_ships[ship].tile, g_ships[ship].target,
                            g_ships[ship].health,
-                           g_ships[ship].store.cargo[G_CT_CREW].amount);
+                           g_ships[ship].store.cargo[G_CT_CREW].amount,
+                           g_ships[ship].boarding, g_ships[ship].boarding_ship);
 }
 
 /******************************************************************************\
@@ -473,7 +484,7 @@ static void ship_update_food(int ship)
 
         /* Did the crew just starve to death? */
         if (g_ships[ship].store.cargo[G_CT_CREW].amount <= 0)
-                N_broadcast("111", G_SM_SHIP_OWNER, ship, N_SERVER_ID);
+                G_ship_change_client(ship, N_SERVER_ID);
 }
 
 /******************************************************************************\
@@ -487,6 +498,7 @@ void G_update_ships(void)
                 if (!g_ships[i].in_use)
                         continue;
                 G_ship_update_move(i);
+                G_ship_update_combat(i);
                 ship_update_trade(i);
                 ship_update_visible(i);
                 ship_update_food(i);
@@ -671,14 +683,14 @@ bool G_ship_controlled_by(int index, n_client_id_t client)
 /******************************************************************************\
  Returns TRUE if the ship is owned by a hostile player.
 \******************************************************************************/
-bool G_ship_hostile(int index)
+bool G_ship_hostile(int index, n_client_id_t to_client)
 {
         if (index < 0 || index >= G_SHIPS_MAX || !g_ships[index].in_use)
                 return FALSE;
 
         /* For the tech preview, all nations are permanently at war */
         return g_clients[g_ships[index].client].nation !=
-               g_clients[n_client_id].nation;
+               g_clients[to_client].nation;
 }
 
 /******************************************************************************\
@@ -722,5 +734,13 @@ void G_focus_next_ship(void)
         g_ships[best_i].focus_stamp = focus_stamp;
         tile = g_ships[best_i].tile;
         R_rotate_cam_to(g_ships[best_i].model.origin);
+}
+
+/******************************************************************************\
+ Change a ship's owner.
+\******************************************************************************/
+void G_ship_change_client(int ship, n_client_id_t client)
+{
+        N_broadcast("111", G_SM_SHIP_OWNER, ship, client);
 }
 

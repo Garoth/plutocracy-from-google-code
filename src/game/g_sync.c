@@ -78,8 +78,7 @@ int G_receive_ship_full(const char *file, int line, const char *func,
         int index;
 
         index = G_receive_range_full(file, line, func, client, 0, G_SHIPS_MAX);
-        if (index < 0 || !g_ships[index].in_use ||
-            (client >= 0 && g_ships[index].client != client))
+        if (index < 0 || !g_ships[index].in_use)
                 return -1;
         return index;
 }

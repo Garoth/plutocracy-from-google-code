@@ -10,9 +10,8 @@
  FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
 \******************************************************************************/
 
-/* Initializes the game structures. Primarily handles client messages for the
-   server. Remember that the client is not trusted and all input must be
-   checked for validity! */
+/* Primarily handles client messages for the server. Remember that the client
+   is not trusted and all input must be checked for validity! */
 
 #include "g_common.h"
 
@@ -262,19 +261,30 @@ static void cm_tile_ring(int client)
 static void cm_ship_ring(int client)
 {
         i_ring_icon_t icon;
-        int ship;
+        int ship, target_ship;
 
         if ((ship = G_receive_ship(client)) < 0)
                 return;
         icon = (i_ring_icon_t)G_receive_range(client, 0, I_RING_ICONS);
-        if (icon == I_RI_FOLLOW) {
-                g_ships[ship].target_ship = G_receive_ship(client);
-                if (g_ships[ship].target_ship < 0)
+        if ((target_ship = G_receive_ship(client)) < 0)
+                return;
+
+        /* Follow the target */
+        if (icon == I_RI_FOLLOW)
+                g_ships[ship].target_board = FALSE;
+
+        /* Board the target */
+        else if (icon == I_RI_BOARD) {
+
+                /* Don't attack friendlies! */
+                if (!G_ship_hostile(ship, g_ships[target_ship].client))
                         return;
-                G_ship_path(ship, g_ships[g_ships[ship].target_ship].tile);
-        } else if (icon == I_RI_BOARD) {
-                /* TODO */
+
+                g_ships[ship].target_board = TRUE;
         }
+
+        g_ships[ship].target_ship = target_ship;
+        G_ship_path(ship, g_ships[target_ship].tile);
 }
 
 /******************************************************************************\
@@ -344,7 +354,7 @@ static void client_disconnected(int client)
         /* Disown their ships */
         for (i = 0; i < G_SHIPS_MAX; i++)
                 if (g_ships[i].client == client)
-                        N_broadcast("111", G_SM_SHIP_OWNER, i, N_SERVER_ID);
+                        G_ship_change_client(i, N_SERVER_ID);
 }
 
 /******************************************************************************\

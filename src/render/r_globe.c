@@ -137,8 +137,7 @@ void R_start_globe(void)
         /* Sine-wave modulate the hover highlight. Even though no tile may
            be selected, this color could be used elsewhere. */
         r_hover_color = r_fog_color;
-        r_hover_color.a *= HOVER_OPACITY * (1.f - HOVER_AMP *
-                           (1.f - sinf(HOVER_FREQ * c_time_msec)));
+        r_hover_color.a *= HOVER_OPACITY * C_wave(HOVER_AMP, HOVER_FREQ);
 
         /* Render globe overlays */
         R_gl_disable(GL_LIGHTING);

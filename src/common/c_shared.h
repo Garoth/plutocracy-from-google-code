@@ -318,8 +318,11 @@ int C_next_pow2(int);
 int C_rand(void);
 #define C_rand_real() ((float)(C_rand() & 0xffff) / 0xffff)
 void C_rand_seed(unsigned int);
+int C_roll_dice(int num, int sides);
 c_vec3_t C_vec3_rotate_to(c_vec3_t from, c_vec3_t normal,
                           float proportion, c_vec3_t to);
+#define C_wave(amp, freq) \
+        (1.f - 0.5f * (amp) * (1.f + sinf((freq) * c_time_msec)))
 
 /* c_memory.c */
 void C_array_append(c_array_t *, void *item);

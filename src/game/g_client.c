@@ -247,7 +247,7 @@ static void sm_ship_spawn(void)
 \******************************************************************************/
 static void sm_ship_state(void)
 {
-        int index, tile, target;
+        int index, tile, target, boarding, boarding_ship;
 
         if ((index = G_receive_ship(-1)) < 0)
                 return;
@@ -255,6 +255,28 @@ static void sm_ship_state(void)
         target = N_receive_short();
         g_ships[index].health = N_receive_short();
         g_ships[index].store.cargo[G_CT_CREW].amount = N_receive_short();
+
+        /* Remote client boarding announcements */
+        boarding = N_receive_char();
+        boarding_ship = N_receive_char();
+        if (boarding_ship >= G_SHIPS_MAX) {
+                G_corrupt_disconnect();
+                return;
+        }
+        if (boarding_ship >= 0 && g_ships[index].boarding_ship < 0 &&
+            G_ship_controlled_by(index, n_client_id))
+                I_popup(&g_ships[index].model.origin,
+                        C_va(C_str("g-boarding", "%s boarding the %s!"),
+                             g_ships[index].name, g_ships[boarding_ship].name));
+        else if (boarding && !g_ships[index].boarding &&
+                 G_ship_controlled_by(index, n_client_id))
+                I_popup(&g_ships[index].model.origin,
+                        C_va(C_str("g-boarded", "%s is being boarded!"),
+                             g_ships[index].name));
+        g_ships[index].boarding = boarding;
+        g_ships[index].boarding_ship = boarding_ship;
+
+        /* Update destination */
         if (target != g_ships[index].target)
                 G_ship_path(index, target);
         G_ship_move_to(index, tile);
@@ -392,6 +414,17 @@ void G_client_callback(int client, n_event_t event)
                 if ((i = G_receive_ship(-1)) < 0 ||
                     (j = G_receive_client(-1)) < 0)
                         return;
+                if (g_ships[i].client == j)
+                        return;
+                if (g_ships[i].client == n_client_id)
+                        I_popup(&g_ships[i].model.origin,
+                                C_va(C_str("g-ship-lost", "Lost the %s"),
+                                     g_ships[i].name));
+                else if (j == n_client_id)
+                        I_popup(&g_ships[i].model.origin,
+                                C_va(C_str("g-ship-captured",
+                                           "Captured the %s"),
+                                     g_ships[i].name));
                 g_ships[i].client = j;
                 G_ship_reselect(i, -1);
                 break;
