@@ -18,6 +18,9 @@ g_tile_t g_tiles[R_TILES_MAX];
 /* The tile the mouse is hovering over and the currently selected tile */
 int g_hover_tile, g_selected_tile;
 
+/* Number of gibs on the globe */
+int g_gibs;
+
 /******************************************************************************\
  Cleanup a building structure.
 \******************************************************************************/
@@ -38,6 +41,7 @@ static void gib_free(g_gib_t *gib)
                 return;
         R_model_cleanup(&gib->model);
         C_free(gib);
+        g_gibs--;
 }
 
 /******************************************************************************\
@@ -300,6 +304,7 @@ int G_tile_gib(int tile, g_gib_type_t type)
 
         gib_free(g_tiles[tile].gib);
         if (type != G_GT_NONE) {
+                g_gibs++;
                 g_tiles[tile].gib = (g_gib_t *)C_calloc(sizeof (g_gib_t));
 
                 /* Initialize the model */

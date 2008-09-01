@@ -48,6 +48,7 @@ typedef enum {
 
         /* Commands */
         G_CM_SHIP_BUY,
+        G_CM_SHIP_DROP,
         G_CM_SHIP_MOVE,
         G_CM_SHIP_NAME,
         G_CM_SHIP_PRICES,
@@ -227,8 +228,6 @@ extern g_island_t g_islands[G_ISLAND_NUM];
 extern int g_islands_len;
 
 /* g_host.c */
-void G_ship_collect_gib(int ship);
-
 extern bool g_host_inited;
 
 /* g_movement.c */
@@ -249,7 +248,9 @@ void G_focus_next_ship(void);
 void G_render_ships(void);
 bool G_ship_can_trade_with(int ship, int tile);
 void G_ship_change_client(int ship, n_client_id_t);
+void G_ship_collect_gib(int ship);
 bool G_ship_controlled_by(int ship, n_client_id_t);
+void G_ship_drop_cargo(int ship, g_cargo_type_t, int amount);
 bool G_ship_hostile(int ship, n_client_id_t to);
 void G_ship_hover(int ship);
 void G_ship_reselect(int ship, n_client_id_t);
@@ -296,7 +297,7 @@ void G_tile_position_model(int tile, r_model_t *);
 int G_random_open_tile(void);
 
 extern g_tile_t g_tiles[R_TILES_MAX];
-extern int g_hover_tile, g_selected_tile;
+extern int g_gibs, g_hover_tile, g_selected_tile;
 
 /* g_trade.c */
 int G_build_time(const g_cost_t *);

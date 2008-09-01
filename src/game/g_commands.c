@@ -262,6 +262,22 @@ void G_buy_cargo(g_cargo_type_t cargo, int amount)
 }
 
 /******************************************************************************\
+ Transmit drop cargo request for the currently selected ship from the
+ interface to the server.
+\******************************************************************************/
+void G_drop_cargo(g_cargo_type_t cargo, int amount)
+{
+        g_ship_t *ship;
+
+        C_assert(cargo >= 0 && cargo < G_CARGO_TYPES);
+        ship = g_ships + g_selected_ship;
+        if (g_selected_ship < 0)
+                return;
+        N_send(N_SERVER_ID, "1112", G_CM_SHIP_DROP, g_selected_ship,
+               cargo, amount);
+}
+
+/******************************************************************************\
  A keypress event was forwarded from the interface.
 \******************************************************************************/
 void G_process_key(int key, bool shift, bool ctrl, bool alt)

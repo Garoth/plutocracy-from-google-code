@@ -119,13 +119,13 @@ void G_init_elements(void)
         bc->model_path = "models/tree/deciduous.plum";
         bc->health = 100;
 
-        /* Tech preview shipyard */
+        /* Shipyard */
         bc = g_building_classes + G_BT_SHIPYARD;
         bc->name = "Shipyard";
         bc->health = 250;
         bc->model_path = "models/water/dock.plum";
-        bc->cost.cargo[G_CT_GOLD] = 1000;
-        bc->cost.cargo[G_CT_WOOD] = 200;
+        bc->cost.cargo[G_CT_GOLD] = 2000;
+        bc->cost.cargo[G_CT_WOOD] = 100;
 
         /* Sloop */
         sc = g_ship_classes + G_ST_SLOOP;
@@ -134,7 +134,7 @@ void G_init_elements(void)
         sc->speed = 1.f;
         sc->health = 50;
         sc->cargo = 100;
-        sc->cost.cargo[G_CT_GOLD] = 300;
+        sc->cost.cargo[G_CT_GOLD] = 800;
         sc->cost.cargo[G_CT_WOOD] = 50;
         sc->cost.cargo[G_CT_IRON] = 50;
 
@@ -145,7 +145,7 @@ void G_init_elements(void)
         sc->speed = 0.75f;
         sc->health = 75;
         sc->cargo = 250;
-        sc->cost.cargo[G_CT_GOLD] = 400;
+        sc->cost.cargo[G_CT_GOLD] = 1000;
         sc->cost.cargo[G_CT_WOOD] = 75;
         sc->cost.cargo[G_CT_IRON] = 25;
 
@@ -156,9 +156,9 @@ void G_init_elements(void)
         sc->speed = 0.5f;
         sc->health = 100;
         sc->cargo = 400;
-        sc->cost.cargo[G_CT_GOLD] = 600;
-        sc->cost.cargo[G_CT_WOOD] = 100;
-        sc->cost.cargo[G_CT_IRON] = 100;
+        sc->cost.cargo[G_CT_GOLD] = 1600;
+        sc->cost.cargo[G_CT_WOOD] = 75;
+        sc->cost.cargo[G_CT_IRON] = 125;
 }
 
 /******************************************************************************\
