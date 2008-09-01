@@ -46,6 +46,7 @@ void G_update_client(void);
 
 /* g_commands.c */
 void G_buy_cargo(g_cargo_type_t, int amount);
+void G_drop_cargo(g_cargo_type_t, int amount);
 void G_input_chat(char *message);
 void G_join_game(const char *address);
 void G_leave_game(void);

@@ -734,3 +734,60 @@ void G_ship_change_client(int ship, n_client_id_t client)
         N_broadcast("111", G_SM_SHIP_OWNER, ship, client);
 }
 
+/******************************************************************************\
+ Check if the ship's tile has a crate gib and give its contents to the ship.
+\******************************************************************************/
+void G_ship_collect_gib(int ship)
+{
+        int i, tile;
+
+        tile = g_ships[ship].tile;
+        if (n_client_id != N_HOST_CLIENT_ID || !g_tiles[tile].gib)
+                return;
+        for (i = 0; i < G_CARGO_TYPES; i++)
+                if (g_tiles[tile].gib->loot.cargo[i] > 0)
+                        G_store_add(&g_ships[ship].store, i,
+                                    g_tiles[tile].gib->loot.cargo[i]);
+        G_tile_gib(tile, G_GT_NONE);
+}
+
+/******************************************************************************\
+ Create a crate gib around the ship with the dropped cargo.
+\******************************************************************************/
+void G_ship_drop_cargo(int ship, g_cargo_type_t type, int amount)
+{
+        g_gib_t *gib;
+        int i, neighbors[3], tile;
+
+        /* Limit amount */
+        if (g_ships[ship].store.cargo[type].amount < amount)
+                amount = g_ships[ship].store.cargo[type].amount;
+        if (amount < 1)
+                return;
+
+        /* Don't let them drop the last crew member */
+        if (type == G_CT_CREW &&
+            g_ships[ship].store.cargo[type].amount - amount < 1)
+                amount = g_ships[ship].store.cargo[type].amount - 1;
+
+        /* Find an existing crate or an open tile */
+        R_tile_neighbors(g_ships[ship].tile, neighbors);
+        for (tile = -1, i = 0; i < 3; i++) {
+                if (G_tile_open(neighbors[i], -1))
+                        tile = neighbors[i];
+                if ((gib = g_tiles[neighbors[i]].gib))
+                        break;
+        }
+
+        /* Spawn a new gib */
+        if (!gib) {
+                if (tile < 0)
+                        return;
+                G_tile_gib(tile, G_GT_CRATES);
+                gib = g_tiles[tile].gib;
+        }
+
+        gib->loot.cargo[type] += amount;
+        G_store_add(&g_ships[ship].store, type, -amount);
+}
+

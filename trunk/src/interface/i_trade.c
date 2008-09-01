@@ -16,6 +16,7 @@
 enum {
         MODE_BUY,
         MODE_SELL,
+        MODE_DROP,
 };
 
 /* Cargo widget */
@@ -48,14 +49,26 @@ static void configure_buttons(cargo_line_t *cargo)
         /* If there is no price, change to give/take or buy/sell otherwise */
         if (mode.index == MODE_BUY)
                 button_label = cargo->info.p_buy_price ? "Buy" : "Take";
-        else
+        else if (mode.index == MODE_SELL)
                 button_label = cargo->info.p_sell_price ? "Sell" : "Give";
+        else if (mode.index == MODE_DROP)
+                button_label = "Drop";
         I_button_configure(&transfer_button, NULL, button_label,
                            I_BT_DECORATED);
 
         /* Disabled buttons if we can't transfer that many */
-        limit = mode.index == MODE_BUY ? cargo->info.p_buy_limit :
-                                         cargo->info.p_sell_limit;
+        if (mode.index == MODE_BUY)
+                limit = cargo->info.p_buy_limit;
+        else if (mode.index == MODE_SELL)
+                limit = cargo->info.p_sell_limit;
+        else if (mode.index == MODE_DROP) {
+                limit = cargo->info.amount;
+
+                /* Don't allow dropping the last crew member */
+                if ((g_cargo_type_t)(cargo - cargo_lines) == G_CT_CREW)
+                        limit--;
+        }
+
         fifty_button.widget.state = limit < 50 ? I_WS_DISABLED : I_WS_READY;
         ten_button.widget.state = limit < 10 ? I_WS_DISABLED : I_WS_READY;
         transfer_button.widget.state = limit < 1 ? I_WS_DISABLED : I_WS_READY;
@@ -70,7 +83,8 @@ static void configure_controls(cargo_line_t *cargo)
         bool enable;
 
         /* Whether to enable the control widgets */
-        enable = cargo && left_own && !cargo->no_auto;
+        enable = cargo && left_own && !cargo->no_auto &&
+                 mode.index != MODE_DROP;
 
         /* Enable/disable control widgets */
         state = enable ? I_WS_READY : I_WS_DISABLED;
@@ -87,7 +101,7 @@ static void configure_controls(cargo_line_t *cargo)
         active.item.widget.shown = enable;
 
         /* Cannot be bought or sold automatically */
-        if (cargo->no_auto) {
+        if (cargo->no_auto || mode.index == MODE_DROP) {
                 configure_buttons(cargo);
                 return;
         }
@@ -120,7 +134,7 @@ static void configure_controls(cargo_line_t *cargo)
 
                 I_select_nearest(&quantity, (float)cargo->info.maximum);
                 I_select_nearest(&price, (float)cargo->info.buy_price);
-        } else {
+        } else if (mode.index == MODE_SELL) {
                 I_select_change(&active, cargo->info.auto_sell);
 
                 /* Force sane values relative to buy controls */
@@ -208,8 +222,12 @@ static void cargo_line_configure(cargo_line_t *cargo)
                 cargo->selling_icon.widget.state = I_WS_READY;
 
         /* In-line price */
-        value = mode.index == MODE_BUY ? cargo->info.p_buy_price :
-                                         cargo->info.p_sell_price;
+        if (mode.index == MODE_BUY)
+                value = cargo->info.p_buy_price;
+        else if (mode.index == MODE_SELL)
+                value = cargo->info.p_sell_price;
+        else
+                value = -1;
         if ((cargo->price.widget.shown = value >= 0))
                 I_label_configure(&cargo->price, C_va("%dg", value));
 }
@@ -347,7 +365,10 @@ static void transfer_cargo(const i_button_t *button)
                 return;
         amount = (int)(size_t)button->data;
         cargo = (g_cargo_type_t)((cargo_line_t *)cargo_group - cargo_lines);
-        G_buy_cargo(cargo, mode.index == MODE_BUY ? amount : -amount);
+        if (mode.index == MODE_DROP)
+                G_drop_cargo(cargo, amount);
+        else
+                G_buy_cargo(cargo, mode.index == MODE_BUY ? amount : -amount);
 }
 
 /******************************************************************************\
@@ -368,6 +389,7 @@ void I_init_trade(i_window_t *window)
 
         /* Trade mode */
         I_select_init(&mode, C_str("i-cargo-mode", "Window mode:"), NULL);
+        I_select_add_string(&mode, C_str("i-drop", "Drop"));
         I_select_add_string(&mode, C_str("i-sell", "Sell"));
         I_select_add_string(&mode, C_str("i-buy", "Buy"));
         I_select_change(&mode, 0);

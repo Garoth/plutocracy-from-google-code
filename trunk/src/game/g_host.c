@@ -24,8 +24,6 @@ int g_clients_max;
 /* TRUE if the server has finished initializing */
 bool g_host_inited;
 
-static int crate_gibs;
-
 /******************************************************************************\
  Handles clients changing nations.
 \******************************************************************************/
@@ -217,6 +215,21 @@ static void cm_ship_buy(int client)
 }
 
 /******************************************************************************\
+ Client wants to drop some cargo.
+\******************************************************************************/
+static void cm_ship_drop(int client)
+{
+        int ship, cargo, amount;
+
+        if ((ship = G_receive_ship(client)) < 0 ||
+            (cargo = G_receive_cargo(client)) < 0 ||
+            !G_ship_controlled_by(ship, client) ||
+            (amount = N_receive_short()) < 0)
+                return;
+        G_ship_drop_cargo(ship, cargo, amount);
+}
+
+/******************************************************************************\
  Client typed something into chat.
 \******************************************************************************/
 static void cm_chat(int client)
@@ -397,6 +410,9 @@ static void server_callback(int client, n_event_t event)
         case G_CM_SHIP_BUY:
                 cm_ship_buy(client);
                 break;
+        case G_CM_SHIP_DROP:
+                cm_ship_drop(client);
+                break;
         case G_CM_SHIP_NAME:
                 cm_ship_name(client);
                 break;
@@ -452,7 +468,6 @@ void G_host_game(void)
         if (n_client_id != N_HOST_CLIENT_ID)
                 G_leave_game();
         G_reset_elements();
-        crate_gibs = 0;
 
         /* Start off nation-less */
         I_select_nation(G_NN_NONE);
@@ -518,24 +533,6 @@ void G_host_game(void)
 }
 
 /******************************************************************************\
- Check if the ship's tile has a crate gib and give its contents to the ship.
-\******************************************************************************/
-void G_ship_collect_gib(int ship)
-{
-        int i, tile;
-
-        tile = g_ships[ship].tile;
-        if (n_client_id != N_HOST_CLIENT_ID || !g_tiles[tile].gib)
-                return;
-        for (i = 0; i < G_CARGO_TYPES; i++)
-                if (g_tiles[tile].gib->loot.cargo[i] > 0)
-                        G_store_add(&g_ships[ship].store, i,
-                                    g_tiles[tile].gib->loot.cargo[i]);
-        G_tile_gib(tile, G_GT_NONE);
-        crate_gibs--;
-}
-
-/******************************************************************************\
  Called to update server-side structures. Does nothing if not hosting.
 \******************************************************************************/
 void G_update_host(void)
@@ -545,21 +542,20 @@ void G_update_host(void)
         N_poll_server();
 
         /* Spawn crates for the players */
-        while (crate_gibs < CRATES_MAX) {
+        while (g_gibs < CRATES_MAX) {
                 g_cost_t *loot;
                 int tile;
 
                 tile = G_tile_gib(-1, G_GT_CRATES);
                 if (tile < 0)
                         break;
-                crate_gibs++;
 
                 /* Put some loot in the crate */
                 loot = &g_tiles[tile].gib->loot;
                 loot->cargo[G_CT_GOLD] = 10 * C_roll_dice(5, 15) - 250;
                 loot->cargo[G_CT_CREW] = C_roll_dice(3, 3) - 3;
                 loot->cargo[G_CT_RATIONS] = C_roll_dice(4, 4) - 4;
-                loot->cargo[G_CT_WOOD] = C_roll_dice(5, 10) - 25;
+                loot->cargo[G_CT_WOOD] = C_roll_dice(5, 10) - 15;
                 loot->cargo[G_CT_IRON] = C_roll_dice(5, 10) - 25;
         }
 }
