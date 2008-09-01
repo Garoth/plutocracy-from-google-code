@@ -86,7 +86,7 @@ int G_ship_spawn(int index, n_client_id_t client, int tile, g_ship_type_t type)
                 return -1;
 
         /* Find an available tile to start the ship on */
-        else if (!G_tile_open(tile, -1)) {
+        if (!G_tile_open(tile, -1)) {
                 int i, neighbors[12], len;
 
                 /* Not being able to fit a ship in is common, so don't complain
@@ -135,6 +135,9 @@ int G_ship_spawn(int index, n_client_id_t client, int tile, g_ship_type_t type)
                 G_get_name_buf(G_NT_SHIP, ship->name);
                 N_send(N_SERVER_ID, "11s", G_CM_SHIP_NAME, index, ship->name);
         }
+
+        /* If we spawned on a gib, collect it */
+        G_ship_collect_gib(index);
 
         return index;
 }

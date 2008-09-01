@@ -246,6 +246,10 @@ void G_tile_build(int tile, g_building_type_t type, g_nation_name_t nation)
                              g_building_classes[type].model_path, TRUE);
                 G_tile_position_model(tile, &building->model);
                 g_tiles[tile].building = building;
+
+                /* Start out selected */
+                if (g_selected_tile == tile)
+                        building->model.selected = R_MS_SELECTED;
         }
 
         /* If we just built a new town hall, update the island */
