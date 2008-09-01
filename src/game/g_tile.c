@@ -310,6 +310,7 @@ int G_tile_gib(int tile, g_gib_type_t type)
         if (type != G_GT_NONE) {
                 g_gibs++;
                 g_tiles[tile].gib = (g_gib_t *)C_calloc(sizeof (g_gib_t));
+                g_tiles[tile].gib->type = type;
 
                 /* Initialize the model */
                 R_model_init(&g_tiles[tile].gib->model,

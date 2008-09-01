@@ -29,8 +29,17 @@ static void start_boarding(int ship)
 
         if (!g_ships[ship].target_board)
                 return;
-        R_tile_neighbors(g_ships[ship].tile, neighbors);
         target_ship = g_ships[ship].target_ship;
+
+        /* The target may have turned friendly in the mean time */
+        if (!G_ship_hostile(ship, g_ships[target_ship].client)) {
+                g_ships[ship].target_board = FALSE;
+                g_ships[ship].target_ship = -1;
+                return;
+        }
+
+        /* The ship must be adjacent to begin boarding */
+        R_tile_neighbors(g_ships[ship].tile, neighbors);
         for (i = 0; g_tiles[neighbors[i]].ship != target_ship; i++)
                 if (i >= 2)
                         return;

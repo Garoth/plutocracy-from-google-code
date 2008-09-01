@@ -33,6 +33,7 @@ static int focus_stamp;
 \******************************************************************************/
 static void ship_cleanup(int index)
 {
+        g_clients[g_ships[index].client].ships--;
         R_model_cleanup(&g_ships[index].model);
         C_zero(g_ships + index);
 }
@@ -113,6 +114,9 @@ int G_ship_spawn(int index, n_client_id_t client, int tile, g_ship_type_t type)
         ship->trade_tile = -1;
         ship->focus_stamp = -1;
         ship->boarding_ship = -1;
+
+        /* Count the ship toward its client's total */
+        g_clients[client].ships++;
 
         /* Start out unnamed */
         C_strncpy_buf(ship->name, C_va("Unnamed #%d", index));
@@ -356,7 +360,8 @@ void G_ship_send_cargo(int index, n_client_id_t client)
         N_send_start();
         N_send_char(G_SM_SHIP_CARGO);
         N_send_char(index);
-        G_store_send(&g_ships[index].store, !broadcast);
+        G_store_send(&g_ships[index].store,
+                     !broadcast || client == N_SELECTED_ID);
 
         /* Already selected the target clients */
         if (client == N_SELECTED_ID) {
@@ -384,9 +389,8 @@ void G_ship_send_state(int ship, n_client_id_t client)
 {
         if (n_client_id != N_HOST_CLIENT_ID)
                 return;
-        N_broadcast_except(N_HOST_CLIENT_ID, "11222211", G_SM_SHIP_STATE,
-                           ship, g_ships[ship].tile, g_ships[ship].target,
-                           g_ships[ship].health,
+        N_broadcast_except(N_HOST_CLIENT_ID, "111211", G_SM_SHIP_STATE,
+                           ship, g_ships[ship].health,
                            g_ships[ship].store.cargo[G_CT_CREW].amount,
                            g_ships[ship].boarding, g_ships[ship].boarding_ship);
 }
