@@ -321,10 +321,8 @@ void I_global_key(void)
         /* Toggle fullscreen */
         else if (i_key == SDLK_F11 || (i_key == SDLK_RETURN && i_key_alt)) {
                 C_debug("Fullscreen toggled");
-                r_windowed.latched.n = !r_windowed.value.n;
-                r_windowed.has_latched = TRUE;
+                C_var_set(&r_windowed, r_windowed.value.n ? "0" : "1");
                 r_restart = TRUE;
-                I_update_video();
         }
 
         /* Toggle a toolbar window */
@@ -427,7 +425,12 @@ void I_render(void)
             r_width.changed > layout_frame ||
             r_height.changed > layout_frame) {
                 theme_configure();
+                I_update_video();
                 I_widget_event(&i_root, I_EV_CONFIGURE);
+                layout_frame = c_frame;
+        }
+        if (r_windowed.changed > layout_frame) {
+                I_update_video();
                 layout_frame = c_frame;
         }
 

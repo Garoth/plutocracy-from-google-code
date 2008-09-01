@@ -369,11 +369,15 @@ static void init_client(int client)
                         N_send(client, "111s", G_SM_CLIENT, i,
                                g_clients[i].nation, g_clients[i].name);
 
-        /* Tell them about the buildings on them globe */
-        for (i = 0; i < r_tiles_max; i++)
+        /* Tell them about the buildings and gibs on them globe */
+        for (i = 0; i < r_tiles_max; i++) {
                 if (g_tiles[i].building)
                         N_send(client, "121", G_SM_BUILDING, i,
                                g_tiles[i].building->type);
+                if (g_tiles[i].gib)
+                        N_send(client, "121", G_SM_GIB, i,
+                               g_tiles[i].gib->type);
+        }
 
         /* Tell them about all the ships on the globe */
         for (i = 0; i < G_SHIPS_MAX; i++) {
@@ -480,11 +484,25 @@ static void initial_buildings(void)
 /******************************************************************************\
  Kick a client via the interface.
 \******************************************************************************/
-void G_kick_client(int client)
+void G_kick_client(n_client_id_t client)
 {
         N_send(client, "12ss", G_SM_POPUP, -1,
                "g-host-kicked", "Kicked by host.");
         N_drop_client(client);
+}
+
+/******************************************************************************\
+ Check to see if a client has lost the game.
+\******************************************************************************/
+void G_check_loss(n_client_id_t client)
+{
+        if (n_client_id != N_HOST_CLIENT_ID ||
+            !N_client_valid(client) ||
+            g_clients[client].nation == G_NN_NONE ||
+            g_clients[client].ships > 0)
+                return;
+        g_clients[client].nation = G_NN_NONE;
+        N_broadcast("111", G_SM_AFFILIATE, client, G_NN_NONE);
 }
 
 /******************************************************************************\

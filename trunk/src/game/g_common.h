@@ -80,6 +80,7 @@ typedef enum {
         G_SM_SHIP_CARGO,
         G_SM_SHIP_NAME,
         G_SM_SHIP_OWNER,
+        G_SM_SHIP_PATH,
         G_SM_SHIP_PRICES,
         G_SM_SHIP_SPAWN,
         G_SM_SHIP_STATE,
@@ -161,6 +162,7 @@ typedef struct g_building {
 
 /* Structure for the remains of ships */
 typedef struct g_gib {
+        g_gib_type_t type;
         g_cost_t loot;
         r_model_t model;
 } g_gib_t;
@@ -175,7 +177,7 @@ typedef struct g_tile {
 
 /* Structure for each player */
 typedef struct g_client {
-        int nation;
+        int nation, ships;
         char name[G_NAME_MAX];
 } g_client_t;
 
@@ -228,6 +230,8 @@ extern g_island_t g_islands[G_ISLAND_NUM];
 extern int g_islands_len;
 
 /* g_host.c */
+void G_check_loss(n_client_id_t);
+
 extern bool g_host_inited;
 
 /* g_movement.c */

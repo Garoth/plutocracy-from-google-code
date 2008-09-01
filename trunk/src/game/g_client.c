@@ -70,6 +70,18 @@ static void sm_affiliate(void)
         if (tile >= 0 && tile < r_tiles_max)
                 goto_pos = &r_tiles[tile].origin;
 
+        /* Joining the "none" nation means defeat */
+        if (nation == G_NN_NONE) {
+                if (client == n_client_id) {
+                        I_popup(NULL, C_str("g-defeated-you",
+                                            "You were defeated!"));
+                        return;
+                }
+                I_popup(NULL, C_va(C_str("g-defeated-you", "%s was defeated!"),
+                                   g_clients[client].name));
+                return;
+        }
+
         /* Special case for pirates */
         if (nation == G_NN_PIRATE) {
                 if (client == n_client_id) {
@@ -247,13 +259,11 @@ static void sm_ship_spawn(void)
 \******************************************************************************/
 static void sm_ship_state(void)
 {
-        int index, tile, target, boarding, boarding_ship;
+        int index, boarding, boarding_ship;
 
         if ((index = G_receive_ship(-1)) < 0)
                 return;
-        tile = N_receive_short();
-        target = N_receive_short();
-        g_ships[index].health = N_receive_short();
+        g_ships[index].health = N_receive_char();
         g_ships[index].store.cargo[G_CT_CREW].amount = N_receive_short();
 
         /* Remote client boarding announcements */
@@ -275,11 +285,6 @@ static void sm_ship_state(void)
                              g_ships[index].name));
         g_ships[index].boarding = boarding;
         g_ships[index].boarding_ship = boarding_ship;
-
-        /* Update destination */
-        if (target != g_ships[index].target)
-                G_ship_path(index, target);
-        G_ship_move_to(index, tile);
 }
 
 /******************************************************************************\
@@ -407,6 +412,17 @@ void G_client_callback(int client, n_event_t event)
                 G_tile_gib(i, N_receive_char());
                 break;
 
+        /* Ship path changed */
+        case G_SM_SHIP_PATH:
+                if ((i = G_receive_ship(-1)) < 0)
+                        return;
+                G_ship_move_to(i, N_receive_short());
+                g_ships[i].progress = N_receive_float();
+                N_receive_string_buf(g_ships[i].path);
+                if (g_selected_ship == i && g_ships[i].client == n_client_id)
+                        R_select_path(g_ships[i].tile, g_ships[i].path);
+                break;
+
         /* Ship changed names */
         case G_SM_SHIP_NAME:
                 if ((i = G_receive_ship(-1)) < 0)
@@ -432,6 +448,10 @@ void G_client_callback(int client, n_event_t event)
                                 C_va(C_str("g-ship-captured",
                                            "Captured the %s."),
                                      g_ships[i].name));
+
+                g_clients[g_ships[i].client].ships--;
+                G_check_loss(g_ships[i].client);
+                g_clients[j].ships++;
                 g_ships[i].client = j;
                 G_ship_reselect(i, -1);
                 break;

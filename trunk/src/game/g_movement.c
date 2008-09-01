@@ -80,6 +80,16 @@ static bool ship_leaving_tile(int tile)
 }
 
 /******************************************************************************\
+ Send the ship's path if it changed.
+\******************************************************************************/
+static void ship_send_path(int ship)
+{
+        N_broadcast_except(N_HOST_CLIENT_ID, "112fs", G_SM_SHIP_PATH,
+                           ship, g_ships[ship].tile, g_ships[ship].progress,
+                           g_ships[ship].path);
+}
+
+/******************************************************************************\
  Find a path from where the [ship] is to the target [tile] and sets that as
  the ship's new path.
 \******************************************************************************/
@@ -88,20 +98,23 @@ void G_ship_path(int ship, int target)
         static int search_stamp;
         search_node_t nodes[SEARCH_BREADTH];
         int i, nodes_len, closest, path_len, neighbors[3];
-        bool target_next;
+        bool changed, target_next;
 
-        /* New destination? */
-        if (g_ships[ship].target != target)
-                g_ships[ship].modified = TRUE;
+        if (n_client_id != N_HOST_CLIENT_ID)
+                return;
+        changed = FALSE;
 
         /* Silent fail */
         if (target < 0 || target >= r_tiles_max ||
             g_ships[ship].tile == target) {
+                changed = g_ships[ship].path[0] != NUL;
                 g_ships[ship].path[0] = NUL;
                 g_ships[ship].target = g_ships[ship].tile;
                 if (g_ships[ship].client == n_client_id &&
                     g_selected_ship == ship)
                         R_select_path(-1, NULL);
+                if (changed)
+                        ship_send_path(ship);
                 return;
         }
 
@@ -209,7 +222,10 @@ rewind: /* Count length of the path */
                         break;
                 R_tile_neighbors(parent, neighbors);
                 for (j = 0; neighbors[j] != i; j++);
-                g_ships[ship].path[--path_len] = j + 1;
+                path_len--;
+                if (g_ships[ship].path[path_len] != j + 1)
+                        changed = TRUE;
+                g_ships[ship].path[path_len] = j + 1;
                 i = parent;
         }
 
@@ -218,6 +234,8 @@ rewind: /* Count length of the path */
                 R_select_path(g_ships[ship].tile, g_ships[ship].path);
 
         g_ships[ship].target = target;
+        if (changed)
+                ship_send_path(ship);
         return;
 
 failed: /* If we can't reach the target, and we have a valid path, try
@@ -318,18 +336,12 @@ static void ship_position_model(int ship)
 \******************************************************************************/
 bool G_ship_move_to(int i, int new_tile)
 {
-        int old_tile, neighbors[3];
+        int old_tile;
 
         old_tile = g_ships[i].tile;
 
         /* Don't bother if we are already there */
-        if (g_ships[i].rear_tile == new_tile || new_tile == old_tile ||
-            !G_tile_open(new_tile, i))
-                return FALSE;
-
-        /* Don't bother if we will be there on our next move */
-        R_tile_neighbors(g_ships[i].tile, neighbors);
-        if (g_ships[i].path[0] && neighbors[g_ships[i].path[0] - 1] == new_tile)
+        if (new_tile == old_tile || !G_tile_open(new_tile, i))
                 return FALSE;
 
         /* Remove this ship from the old tile */
@@ -378,13 +390,12 @@ static void ship_move(int i)
 
         /* Keep track of the target ship */
         if (g_ships[i].target_ship >= 0 &&
-            g_ships[g_ships[i].target_ship].tile != g_ships[i].target) {
-                g_ships[i].target = g_ships[g_ships[i].target_ship].tile;
-                g_ships[i].modified = TRUE;
-        }
+            g_ships[g_ships[i].target_ship].tile != g_ships[i].target)
+                G_ship_path(i, g_ships[g_ships[i].target_ship].tile);
 
         /* Update the path */
-        G_ship_path(i, g_ships[i].target);
+        else
+                G_ship_path(i, g_ships[i].target);
 
         /* Get new destination tile */
         if (!(arrived = g_ships[i].path[0] <= 0)) {
