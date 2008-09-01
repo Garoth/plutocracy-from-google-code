@@ -134,7 +134,7 @@ bool G_process_click(int button)
                         can_pay = G_pay(n_client_id, g_selected_tile,
                                         &bc->cost, FALSE);
                         I_reset_ring();
-                        I_add_to_ring(I_RI_TOWN_HALL, can_pay,
+                        I_add_to_ring(I_RI_SHIPYARD, can_pay,
                                       bc->name, G_cost_to_string(&bc->cost));
                         I_show_ring((i_ring_f)tile_ring);
                 }

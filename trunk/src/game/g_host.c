@@ -257,18 +257,47 @@ static void cm_tile_ring(int client)
         if (tile < 0 || icon < 0)
                 return;
 
-        /* Client wants to settle an island */
-        if (icon == I_RI_TOWN_HALL) {
-                bc = g_building_classes + G_BT_TOWN_HALL;
+        /* Client wants to build a shipyard (tech preview) */
+        if (icon == I_RI_SHIPYARD) {
+                bc = g_building_classes + G_BT_SHIPYARD;
 
                 /* Can you do it? */
-                if (g_islands[g_tiles[tile].island].town_tile >= 0 ||
-                    !G_pay(n_client_id, tile, &bc->cost, FALSE))
+                if (!G_pay(client, tile, &bc->cost, FALSE))
                         return;
 
                 /* Pay for and build the town hall */
-                G_pay(n_client_id, tile, &bc->cost, TRUE);
-                G_tile_build(tile, G_BT_TOWN_HALL, g_clients[client].nation);
+                G_pay(client, tile, &bc->cost, TRUE);
+                G_tile_build(tile, G_BT_SHIPYARD, g_clients[client].nation);
+                return;
+        }
+
+        /* Client wants to buy a ship from their shipyard */
+        if (g_tiles[tile].building &&
+            g_tiles[tile].building->type == G_BT_SHIPYARD) {
+                g_ship_type_t type;
+                int ship;
+
+                /* What ship do they want? */
+                if (icon == I_RI_SLOOP)
+                        type = G_ST_SLOOP;
+                else if (icon == I_RI_SPIDER)
+                        type = G_ST_SPIDER;
+                else if (icon == I_RI_GALLEON)
+                        type = G_ST_GALLEON;
+                else
+                        return;
+
+                /* Can they pay? */
+                if (!G_pay(client, tile, &g_ship_classes[type].cost, FALSE))
+                        return;
+
+                /* Pay for and spawn the ship. Don't pay if we couldn't spawn
+                   it for some reason! */
+                ship = G_ship_spawn(-1, client, tile, type);
+                if (ship < 0)
+                        return;
+                G_store_add(&g_ships[ship].store, G_CT_CREW, 1);
+                G_pay(client, tile, &g_ship_classes[type].cost, TRUE);
                 return;
         }
 }
