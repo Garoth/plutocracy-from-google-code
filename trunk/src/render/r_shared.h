@@ -75,6 +75,7 @@ typedef enum {
         R_ST_DOT,
         R_ST_GOTO,
         R_ST_TILE,
+        R_ST_BORDER,
         R_SELECT_TYPES,
         R_ST_NONE,
 } r_select_type_t;
@@ -171,6 +172,7 @@ void R_zoom_cam_by(float);
 /* r_globe.c */
 void R_finish_globe(void);
 void R_hover_tile(int tile, r_select_type_t);
+void R_render_border(int tile, c_color_t);
 void R_select_path(int tile, const char *path);
 void R_select_tile(int tile, r_select_type_t);
 void R_start_globe(void);
