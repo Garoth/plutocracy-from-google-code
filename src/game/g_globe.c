@@ -385,13 +385,19 @@ void G_render_globe(void)
         for (i = 0; i < r_tiles_max; i++) {
                 g_tiles[i].visible = is_visible(r_tiles[i].origin);
 
+                /* Render the tile's building */
+                if (g_tiles[i].building) {
+                        g_nation_name_t nation;
+
+                        nation = g_tiles[i].building->nation;
+                        if (nation != G_NN_NONE)
+                                R_render_border(i, g_nations[nation].color);
+                        render_globe_model(&g_tiles[i].building->model);
+                }
+
                 /* Render the tile's gib */
                 if (g_tiles[i].gib)
                         render_globe_model(&g_tiles[i].gib->model);
-
-                /* Render the tile's building */
-                if (g_tiles[i].building)
-                        render_globe_model(&g_tiles[i].building->model);
 
                 /* Render the tile's ship */
                 if (g_tiles[i].ship >= 0)

@@ -51,17 +51,20 @@ void R_init_globe(void)
         /* Load select triangle textures */
         select_tex[R_ST_TILE] = R_texture_load("models/globe/select_tile.png",
                                                TRUE);
-        select_tex[R_ST_TILE]->additive = TRUE;
         select_tex[R_ST_GOTO] = R_texture_load("models/globe/select_goto.png",
                                                TRUE);
-        select_tex[R_ST_GOTO]->additive = TRUE;
         select_tex[R_ST_DOT] = R_texture_load("models/globe/select_dot.png",
                                               TRUE);
-        select_tex[R_ST_DOT]->additive = TRUE;
         select_tex[R_ST_ARROW] = R_texture_load("models/globe/select_arrow.png",
                                                 TRUE);
-        select_tex[R_ST_ARROW]->additive = TRUE;
+        select_tex[R_ST_BORDER] = R_texture_load("models/globe/border.png",
+                                                 TRUE);
         select_type = R_ST_NONE;
+
+        /* Set overlay texture properties */
+        for (i = 0; i < R_SELECT_TYPES; i++)
+                if (select_tex[i])
+                        select_tex[i]->additive = TRUE;
 
         /* Setup globe material properties */
         for (i = 0; i < 3; i++)
@@ -270,5 +273,18 @@ void R_select_path(int tile, const char *path)
         tile = r_globe_verts[3 * tile + index].next / 3;
         copy_tile_vertices(tile, path_verts + path_len * 3, 0);
         path_len++;
+}
+
+/******************************************************************************\
+ Function to draw the border of an isolated tile.
+\******************************************************************************/
+void R_render_border(int tile, c_color_t color)
+{
+        r_vertex3_t verts[3];
+
+        R_gl_disable(GL_LIGHTING);
+        copy_tile_vertices(tile, verts, 0);
+        render_overlay(verts, 3, R_ST_BORDER, color);
+        R_gl_restore();
 }
 
