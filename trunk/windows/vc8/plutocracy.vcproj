@@ -712,6 +712,10 @@
 				</FileConfiguration>
 			</File>
 			<File
+				RelativePath="..\..\src\game\g_combat.c"
+				>
+			</File>
+			<File
 				RelativePath="..\..\src\game\g_commands.c"
 				>
 			</File>
