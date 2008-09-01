@@ -100,7 +100,7 @@ bool G_process_click(int button)
         if (G_ship_controlled_by(g_selected_ship, n_client_id)) {
 
                 /* Ordered an ocean move */
-                if (g_hover_tile >= 0 && G_open_tile(g_hover_tile, -1))
+                if (g_hover_tile >= 0 && G_tile_open(g_hover_tile, -1))
                         N_send(N_SERVER_ID, "112", G_CM_SHIP_MOVE,
                                g_selected_ship, g_hover_tile);
 

@@ -80,35 +80,25 @@ int G_ship_spawn(int index, n_client_id_t client, int tile, g_ship_type_t type)
                         }
 
         /* If we are to spawn the ship anywhere, pick a random tile */
-        if (tile < 0) {
-                int start;
-
-                start = C_rand() % r_tiles_max;
-                for (tile = start + 1; tile < r_tiles_max; tile++)
-                        if (G_open_tile(tile, -1))
-                                goto init;
-                for (tile = 0; tile <= start; tile++)
-                        if (G_open_tile(tile, -1))
-                                goto init;
-
-                /* If this happens, the globe is completely full! */
+        if (tile < 0)
+                tile = G_random_open_tile();
+        if (tile < 0)
                 return -1;
-        }
 
         /* Find an available tile to start the ship on */
-        else if (!G_open_tile(tile, -1)) {
+        else if (!G_tile_open(tile, -1)) {
                 int i, neighbors[12], len;
 
                 /* Not being able to fit a ship in is common, so don't complain
                    if this happens */
                 len = R_tile_region(tile, neighbors);
-                for (i = 0; !G_open_tile(neighbors[i], -1); i++)
+                for (i = 0; !G_tile_open(neighbors[i], -1); i++)
                         if (i >= len)
                                 return -1;
                 tile = neighbors[i];
         }
 
-init:   /* Initialize ship structure */
+        /* Initialize ship structure */
         ship_cleanup(index);
         ship = g_ships + index;
         ship->in_use = TRUE;

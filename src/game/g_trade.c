@@ -107,6 +107,17 @@ int G_store_add(g_store_t *store, g_cargo_type_t cargo, int amount)
 }
 
 /******************************************************************************\
+ Add the values of [cost] to the store.
+\******************************************************************************/
+void G_store_add_cost(g_store_t *store, const g_cost_t *cost)
+{
+        int i;
+
+        for (i = 0; i < G_CARGO_TYPES; i++)
+                G_store_add(store, i, cost->cargo[i]);
+}
+
+/******************************************************************************\
  Returns the amount of a cargo that a store can transfer from another store.
 \******************************************************************************/
 int G_limit_purchase(const g_store_t *buyer, const g_store_t *seller,

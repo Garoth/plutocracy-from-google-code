@@ -84,6 +84,7 @@ typedef enum {
         G_SM_SHIP_STATE,
         G_SM_SHIP_TRANSACT,
         G_SM_BUILDING,
+        G_SM_GIB,
 
         G_SERVER_MESSAGES
 } g_server_msg_t;
@@ -108,6 +109,13 @@ typedef enum {
 
         G_BUILDING_TYPES
 } g_building_type_t;
+
+/* Gib types */
+typedef enum {
+        G_GT_NONE,
+        G_GT_CRATES,
+        G_GIB_TYPES
+} g_gib_type_t;
 
 /* Name types */
 typedef enum {
@@ -150,9 +158,16 @@ typedef struct g_building {
         int health;
 } g_building_t;
 
+/* Structure for the remains of ships */
+typedef struct g_gib {
+        g_cost_t loot;
+        r_model_t model;
+} g_gib_t;
+
 /* A tile on the globe */
 typedef struct g_tile {
         g_building_t *building;
+        g_gib_t *gib;
         int island, ship, search_parent, search_stamp;
         bool visible;
 } g_tile_t;
@@ -212,10 +227,11 @@ extern g_island_t g_islands[G_ISLAND_NUM];
 extern int g_islands_len;
 
 /* g_host.c */
+void G_ship_collect_gib(int ship);
+
 extern bool g_host_inited;
 
 /* g_movement.c */
-bool G_open_tile(int tile, int exclude_ship);
 bool G_ship_move_to(int ship, int new_tile);
 void G_ship_path(int ship, int tile);
 void G_ship_update_move(int i);
@@ -272,9 +288,12 @@ int G_receive_tile_full(const char *file, int line, const char *func,
 /* g_tile.c */
 void G_cleanup_tiles(void);
 void G_tile_build(int tile, g_building_type_t, g_nation_name_t);
+int G_tile_gib(int tile, g_gib_type_t);
 void G_tile_hover(int tile);
 void G_tile_select(int tile);
+bool G_tile_open(int tile, int exclude_ship);
 void G_tile_position_model(int tile, r_model_t *);
+int G_random_open_tile(void);
 
 extern g_tile_t g_tiles[R_TILES_MAX];
 extern int g_hover_tile, g_selected_tile;
@@ -287,6 +306,7 @@ int G_limit_purchase(const g_store_t *buyer, const g_store_t *seller,
                      g_cargo_type_t, int amount);
 bool G_pay(n_client_id_t, int tile, const g_cost_t *, bool pay);
 int G_store_add(g_store_t *, g_cargo_type_t, int amount);
+void G_store_add_cost(g_store_t *, const g_cost_t *);
 int G_store_fits(const g_store_t *, g_cargo_type_t);
 void G_store_init(g_store_t *, int capacity);
 void G_store_receive(g_store_t *, bool ignore_prices);
