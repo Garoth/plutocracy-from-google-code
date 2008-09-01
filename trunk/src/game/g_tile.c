@@ -30,6 +30,17 @@ static void building_free(g_building_t *building)
 }
 
 /******************************************************************************\
+ Cleanup a gib structure.
+\******************************************************************************/
+static void gib_free(g_gib_t *gib)
+{
+        if (!gib)
+                return;
+        R_model_cleanup(&gib->model);
+        C_free(gib);
+}
+
+/******************************************************************************\
  Cleanup a tile structures.
 \******************************************************************************/
 void G_cleanup_tiles(void)
@@ -38,6 +49,7 @@ void G_cleanup_tiles(void)
 
         for (i = 0; i < r_tiles_max; i++) {
                 building_free(g_tiles[i].building);
+                gib_free(g_tiles[i].gib);
                 C_zero(g_tiles + i);
         }
 }
@@ -148,7 +160,7 @@ void G_tile_hover(int tile)
 
         /* Selecting a tile to move the current ship to */
         if (G_ship_controlled_by(g_selected_ship, n_client_id) &&
-            G_open_tile(tile, -1))
+            G_tile_open(tile, -1))
                 new_select_type = R_ST_GOTO;
 
         /* Selecting an island tile */
@@ -241,5 +253,62 @@ void G_tile_build(int tile, g_building_type_t type, g_nation_name_t nation)
                 return;
         N_broadcast_except(N_HOST_CLIENT_ID, "1211", G_SM_BUILDING,
                            tile, type, nation);
+}
+
+/******************************************************************************\
+ Returns TRUE if a ship can sail into the given tile. If [exclude_ship] is
+ non-negative then the tile is still considered open if [exclude_ship] is
+ in it.
+\******************************************************************************/
+bool G_tile_open(int tile, int exclude_ship)
+{
+        return (g_tiles[tile].ship < 0 ||
+                (exclude_ship >= 0 && g_tiles[tile].ship == exclude_ship)) &&
+               R_water_terrain(r_tiles[tile].terrain);
+}
+
+/******************************************************************************\
+ Pick a random open tile. Returns -1 if the globe is completely full.
+\******************************************************************************/
+int G_random_open_tile(void)
+{
+        int start, tile;
+
+        start = C_rand() % r_tiles_max;
+        for (tile = start + 1; tile < r_tiles_max; tile++)
+                if (G_tile_open(tile, -1))
+                        return tile;
+        for (tile = 0; tile <= start; tile++)
+                if (G_tile_open(tile, -1))
+                        return tile;
+
+        /* If this happens, the globe is completely full! */
+        C_warning("Globe is full");
+        return -1;
+}
+
+/******************************************************************************\
+ Spawn gibs on this tile. Returns the selected tile.
+\******************************************************************************/
+int G_tile_gib(int tile, g_gib_type_t type)
+{
+        /* Pick a random tile */
+        if (tile < 0)
+                tile = G_random_open_tile();
+        if (tile < 0)
+                return -1;
+
+        gib_free(g_tiles[tile].gib);
+        if (type != G_GT_NONE) {
+                g_tiles[tile].gib = (g_gib_t *)C_calloc(sizeof (g_gib_t));
+
+                /* Initialize the model */
+                R_model_init(&g_tiles[tile].gib->model,
+                             "models/gib/crates.plum", TRUE);
+                G_tile_position_model(tile, &g_tiles[tile].gib->model);
+        } else
+                g_tiles[tile].gib = NULL;
+        N_broadcast_except(N_HOST_CLIENT_ID, "121", G_SM_GIB, tile, type);
+        return tile;
 }
 

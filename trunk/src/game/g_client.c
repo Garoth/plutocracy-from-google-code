@@ -266,7 +266,7 @@ static void sm_ship_state(void)
         if (boarding_ship >= 0 && g_ships[index].boarding_ship < 0 &&
             G_ship_controlled_by(index, n_client_id))
                 I_popup(&g_ships[index].model.origin,
-                        C_va(C_str("g-boarding", "%s boarding the %s!"),
+                        C_va(C_str("g-boarding", "%s boarding the %s."),
                              g_ships[index].name, g_ships[boarding_ship].name));
         else if (boarding && !g_ships[index].boarding &&
                  G_ship_controlled_by(index, n_client_id))
@@ -400,6 +400,13 @@ void G_client_callback(int client, n_event_t event)
                 G_ship_reselect(i, -1);
                 break;
 
+        /* A gib spawned or vanished */
+        case G_SM_GIB:
+                if ((i = G_receive_tile(-1)) < 0)
+                        return;
+                G_tile_gib(i, N_receive_char());
+                break;
+
         /* Ship changed names */
         case G_SM_SHIP_NAME:
                 if ((i = G_receive_ship(-1)) < 0)
@@ -418,12 +425,12 @@ void G_client_callback(int client, n_event_t event)
                         return;
                 if (g_ships[i].client == n_client_id)
                         I_popup(&g_ships[i].model.origin,
-                                C_va(C_str("g-ship-lost", "Lost the %s"),
+                                C_va(C_str("g-ship-lost", "Lost the %s!"),
                                      g_ships[i].name));
                 else if (j == n_client_id)
                         I_popup(&g_ships[i].model.origin,
                                 C_va(C_str("g-ship-captured",
-                                           "Captured the %s"),
+                                           "Captured the %s."),
                                      g_ships[i].name));
                 g_ships[i].client = j;
                 G_ship_reselect(i, -1);

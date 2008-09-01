@@ -6,7 +6,7 @@
 # ought to be searched should be added to the FILES list below.
 
 FILES="README"
-SEARCH="`find src/ -not \( -wholename \*.svn\* \) -type f` $FILES"
+SEARCH="`find src/ -not \( -name \*.svn\* \) -type f` $FILES"
 for file in $SEARCH
 do
         COUNT=`grep -c -E "TODO|FIXME" $file`

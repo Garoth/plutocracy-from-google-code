@@ -32,16 +32,6 @@ typedef struct search_node {
 } search_node_t;
 
 /******************************************************************************\
- Returns TRUE if a ship can sail into the given tile.
-\******************************************************************************/
-bool G_open_tile(int tile, int ship)
-{
-        return (g_tiles[tile].ship < 0 ||
-                (ship >= 0 && g_tiles[tile].ship == ship)) &&
-               R_water_terrain(r_tiles[tile].terrain);
-}
-
-/******************************************************************************\
  Returns the linear distance from one tile to another. This is the search
  function heuristic.
 \******************************************************************************/
@@ -68,7 +58,7 @@ static int farthest_path_tile(int ship)
                         return tile;
                 R_tile_neighbors(tile, neighbors);
                 next = neighbors[next - 1];
-                if (!G_open_tile(next, ship) || R_land_bridge(tile, next))
+                if (!G_tile_open(next, ship) || R_land_bridge(tile, next))
                         return tile;
         }
 }
@@ -120,7 +110,7 @@ void G_ship_path(int ship, int target)
 
         /* If the target tile is not available, try to get next to it instead
            of onto it */
-        target_next = !G_open_tile(target, ship);
+        target_next = !G_tile_open(target, ship);
 
         /* Start with just the initial tile open */
         search_stamp++;
@@ -165,7 +155,7 @@ void G_ship_path(int ship, int target)
                         }
 
                         /* Tile blocked? */
-                        open = G_open_tile(neighbors[i], ship) ||
+                        open = G_tile_open(neighbors[i], ship) ||
                                ship_leaving_tile(neighbors[i]);
 
                         /* Can we open this node? */
@@ -334,7 +324,7 @@ bool G_ship_move_to(int i, int new_tile)
 
         /* Don't bother if we are already there */
         if (g_ships[i].rear_tile == new_tile || new_tile == old_tile ||
-            !G_open_tile(new_tile, i))
+            !G_tile_open(new_tile, i))
                 return FALSE;
 
         /* Don't bother if we will be there on our next move */
@@ -411,7 +401,7 @@ static void ship_move(int i)
 
         /* See if we hit an obstacle */
         if (!arrived) {
-                open = G_open_tile(new_tile, i);
+                open = G_tile_open(new_tile, i);
 
                 /* If there is a ship leaving the next tile,
                    wait for it to move out instead of pathing */
@@ -442,6 +432,9 @@ static void ship_move(int i)
         g_ships[i].tile = new_tile;
         g_ships[i].forward = forward;
         g_tiles[new_tile].ship = i;
+
+        /* Pick up crate gibs */
+        G_ship_collect_gib(i);
 }
 
 /******************************************************************************\
