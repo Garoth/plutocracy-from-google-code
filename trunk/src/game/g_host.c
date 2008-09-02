@@ -502,7 +502,7 @@ void G_check_loss(n_client_id_t client)
             g_clients[client].ships > 0)
                 return;
         g_clients[client].nation = G_NN_NONE;
-        N_broadcast("111", G_SM_AFFILIATE, client, G_NN_NONE);
+        N_broadcast("1112", G_SM_AFFILIATE, client, G_NN_NONE, -1);
 }
 
 /******************************************************************************\
