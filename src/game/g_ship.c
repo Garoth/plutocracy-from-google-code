@@ -428,21 +428,19 @@ static void ship_update_visible(int ship)
                                        g_ships[ship].store.visible[n_client_id])
                 ship_configure_trade(ship);
 
-        /* No need to send updates here if we aren't hosting or if the store is
-           modified */
-        if (n_client_id != N_HOST_CLIENT_ID || g_ships[ship].store.modified)
+        /* No need to send updates here if we aren't hosting */
+        if (n_client_id != N_HOST_CLIENT_ID)
                 return;
 
         /* Only send the update to clients that can see the store now but
            couldn't see it before */
         for (selected = FALSE, i = 0; i < N_CLIENTS_MAX; i++) {
                 n_clients[i].selected = FALSE;
-                if (i == N_HOST_CLIENT_ID)
+                if (i == N_HOST_CLIENT_ID || old_visible[i] ||
+                    !g_ships[ship].store.visible[i])
                         continue;
-                if (!old_visible[i] && g_ships[ship].store.visible[i]) {
-                        n_clients[i].selected = TRUE;
-                        selected = TRUE;
-                }
+                n_clients[i].selected = TRUE;
+                selected = TRUE;
         }
         if (selected)
                 G_ship_send_cargo(ship, N_SELECTED_ID);
@@ -739,6 +737,7 @@ void G_focus_next_ship(void)
 void G_ship_change_client(int ship, n_client_id_t client)
 {
         N_broadcast("111", G_SM_SHIP_OWNER, ship, client);
+        G_check_loss(g_ships[ship].client);
 }
 
 /******************************************************************************\

@@ -276,7 +276,7 @@ void G_store_send(g_store_t *store, bool force)
         int i;
 
         C_assert(N_CLIENTS_MAX <= 32);
-        N_send_int(store->modified);
+        N_send_int(force ? -1 : store->modified);
         for (i = 0; i < G_CARGO_TYPES; i++) {
                 g_cargo_t *cargo;
 

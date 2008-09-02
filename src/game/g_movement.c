@@ -108,13 +108,14 @@ void G_ship_path(int ship, int target)
         if (target < 0 || target >= r_tiles_max ||
             g_ships[ship].tile == target) {
                 changed = g_ships[ship].path[0] != NUL;
-                g_ships[ship].path[0] = NUL;
                 g_ships[ship].target = g_ships[ship].tile;
-                if (g_ships[ship].client == n_client_id &&
-                    g_selected_ship == ship)
-                        R_select_path(-1, NULL);
-                if (changed)
+                if (changed) {
+                        g_ships[ship].path[0] = NUL;
                         ship_send_path(ship);
+                        if (g_ships[ship].client == n_client_id &&
+                            g_selected_ship == ship)
+                                R_select_path(-1, NULL);
+                }
                 return;
         }
 
@@ -213,6 +214,8 @@ rewind: /* Count length of the path */
         }
 
         /* Write the path backwards */
+        if (g_ships[ship].path[path_len])
+                changed = TRUE;
         g_ships[ship].path[path_len] = 0;
         for (i = nodes[nodes_len].tile; i >= 0; ) {
                 int j, parent;
@@ -228,14 +231,16 @@ rewind: /* Count length of the path */
                 g_ships[ship].path[path_len] = j + 1;
                 i = parent;
         }
+        g_ships[ship].target = target;
 
         /* Update ship selection */
-        if (g_selected_ship == ship && g_ships[ship].client == n_client_id)
-                R_select_path(g_ships[ship].tile, g_ships[ship].path);
-
-        g_ships[ship].target = target;
-        if (changed)
+        if (changed) {
+                if (g_selected_ship == ship && 
+                    g_ships[ship].client == n_client_id)
+                        R_select_path(g_ships[ship].tile, g_ships[ship].path);
                 ship_send_path(ship);
+        }
+        
         return;
 
 failed: /* If we can't reach the target, and we have a valid path, try

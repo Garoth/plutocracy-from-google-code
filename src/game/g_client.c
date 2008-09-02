@@ -435,9 +435,8 @@ void G_client_callback(int client, n_event_t event)
         /* Ship changed owners */
         case G_SM_SHIP_OWNER:
                 if ((i = G_receive_ship(-1)) < 0 ||
-                    (j = G_receive_client(-1)) < 0)
-                        return;
-                if (g_ships[i].client == j)
+                    (j = G_receive_client(-1)) < 0 ||
+                    g_ships[i].client == j)
                         return;
                 if (g_ships[i].client == n_client_id)
                         I_popup(&g_ships[i].model.origin,
@@ -450,7 +449,6 @@ void G_client_callback(int client, n_event_t event)
                                      g_ships[i].name));
 
                 g_clients[g_ships[i].client].ships--;
-                G_check_loss(g_ships[i].client);
                 g_clients[j].ships++;
                 g_ships[i].client = j;
                 G_ship_reselect(i, -1);
