@@ -154,19 +154,13 @@ static void sm_init(void)
         }
 
         /* Get the client ID */
-        n_client_id = N_receive_char();
-        if (n_client_id < 0 || n_client_id >= N_CLIENTS_MAX) {
-                G_corrupt_disconnect();
+        if ((n_client_id = G_receive_range(-1, 0, N_CLIENTS_MAX)) < 0)
                 return;
-        }
         n_clients[n_client_id].connected = TRUE;
 
         /* Maximum number of clients */
-        g_clients_max = N_receive_char();
-        if (g_clients_max < 1 || g_clients_max > N_CLIENTS_MAX) {
-                G_corrupt_disconnect();
+        if ((g_clients_max = G_receive_range(-1, 1, N_CLIENTS_MAX)) < 0)
                 return;
-        }
         I_configure_player_num(g_clients_max);
         C_debug("Client ID %d of %d", n_client_id, g_clients_max);
 
@@ -180,6 +174,9 @@ static void sm_init(void)
 
         /* Get solar angle */
         r_solar_angle = N_receive_float();
+        
+        /* Get time limit */
+        g_time_limit_msec = c_time_msec + N_receive_int();
 
         I_leave_limbo();
 }

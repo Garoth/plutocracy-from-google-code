@@ -21,8 +21,7 @@
 #define FONT_SIZE_MIN 7
 
 /* Font configuration variables */
-extern c_var_t r_font_console, r_font_console_pt, r_font_gui, r_font_gui_pt,
-               r_font_title, r_font_title_pt;
+extern c_var_t r_font_paths[R_FONTS], r_font_sizes[R_FONTS];
 
 /* Terrain tile sheet */
 r_texture_t *r_terrain_tex;
@@ -524,12 +523,12 @@ static void load_font(r_font_t font, c_var_t *var, int size)
 \******************************************************************************/
 void R_stock_fonts(void)
 {
-        C_var_reset(&r_font_console);
-        C_var_reset(&r_font_console_pt);
-        C_var_reset(&r_font_gui);
-        C_var_reset(&r_font_gui_pt);
-        C_var_reset(&r_font_title);
-        C_var_reset(&r_font_title_pt);
+        int i;
+        
+        for (i = 0; i < R_FONTS; i++) {
+                C_var_reset(r_font_paths + i);
+                C_var_reset(r_font_sizes + i);
+        }
 }
 
 /******************************************************************************\
@@ -548,31 +547,16 @@ void R_load_fonts(void)
 
         /* Get the locale font override, if any */
         override = C_str("r-font-override", "");
-        if (override[0]) {
-                C_var_set(&r_font_console, override);
-                C_var_set(&r_font_gui, override);
-                C_var_set(&r_font_title, override);
+        if (override && override[0])
+                for (i = 0; i < R_FONTS; i++)
+                        C_var_set(r_font_paths + i, override);
+
+        /* Load fonts */
+        for (i = 0; i < R_FONTS; i++) {
+                C_var_unlatch(r_font_paths + i);
+                C_var_unlatch(r_font_sizes + i);
+                load_font(i, r_font_paths + i, r_font_sizes[i].value.n);
         }
-
-        /* Console font */
-        C_var_unlatch(&r_font_console);
-        C_var_unlatch(&r_font_console_pt);
-        load_font(R_FONT_CONSOLE, &r_font_console, r_font_console_pt.value.n);
-
-        /* GUI font */
-        C_var_unlatch(&r_font_gui);
-        C_var_unlatch(&r_font_gui_pt);
-        load_font(R_FONT_GUI, &r_font_gui, r_font_gui_pt.value.n);
-
-        /* Title font */
-        C_var_unlatch(&r_font_title);
-        C_var_unlatch(&r_font_title_pt);
-        load_font(R_FONT_TITLE, &r_font_title, r_font_title_pt.value.n);
-
-        /* You didn't forget a font, did you? */
-        for (i = 0; i < R_FONTS; i++)
-                if (!fonts[i].ttf_font)
-                        C_error("Forgot to load font %d", i + 1);
 
         /* We can print to the graphic console again */
         c_log_mode = C_LM_NORMAL;

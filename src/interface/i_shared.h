@@ -17,6 +17,7 @@
 typedef enum {
         I_COLOR,
         I_COLOR_ALT,
+        I_COLOR_GUI,
         I_COLOR_RED,
         I_COLOR_GREEN,
         I_COLOR_BLUE,

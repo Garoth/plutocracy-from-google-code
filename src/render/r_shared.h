@@ -54,6 +54,7 @@ typedef enum {
         R_FONT_CONSOLE,
         R_FONT_GUI,
         R_FONT_TITLE,
+        R_FONT_LCD,
         R_FONTS
 } r_font_t;
 

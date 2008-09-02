@@ -29,8 +29,7 @@ c_var_t r_globe_colors[3], r_globe_shininess, r_light, r_light_ambient,
         r_sun_diffuse, r_sun_specular;
 
 /* Fonts */
-c_var_t r_font_console, r_font_console_pt, r_font_gui, r_font_gui_pt,
-        r_font_title, r_font_title_pt;
+c_var_t r_font_paths[R_FONTS], r_font_sizes[R_FONTS];
 
 /* Extension overrides */
 c_var_t r_ext_point_sprites;
@@ -43,6 +42,8 @@ c_var_t r_screenshots_dir;
 \******************************************************************************/
 void R_register_variables(void)
 {
+        int i;
+
         /* Video parameters */
         C_register_integer(&r_width, "r_width", 800, "window width in pixels");
         r_width.unsafe = TRUE;
@@ -135,27 +136,31 @@ void R_register_variables(void)
                           "moon specular light color");
 
         /* Fonts */
-        C_register_string(&r_font_console, "r_font_console",
+        C_register_string(r_font_paths + R_FONT_CONSOLE, "r_font_console",
                           "gui/fonts/DejaVuSansMono-Bold.ttf",
                           "path to TTF console font file");
-        r_font_console.archive = FALSE;
-        C_register_integer(&r_font_console_pt, "r_font_console_pt", 12,
+        C_register_integer(r_font_sizes + R_FONT_CONSOLE, 
+                           "r_font_console_pt", 12,
                            "size of console font in points");
-        r_font_console_pt.archive = FALSE;
-        C_register_string(&r_font_gui, "r_font_gui",
+        C_register_string(r_font_paths + R_FONT_GUI, "r_font_gui",
                           "gui/fonts/DejaVuSans-Bold.ttf",
                           "path to GUI font TTF file");
-        r_font_gui.archive = FALSE;
-        C_register_integer(&r_font_gui_pt, "r_font_gui_pt", 12,
+        C_register_integer(r_font_sizes + R_FONT_GUI, "r_font_gui_pt", 12,
                            "size of GUI font in points");
-        r_font_gui_pt.archive = FALSE;
-        C_register_string(&r_font_title, "r_font_title",
+        C_register_string(r_font_paths + R_FONT_TITLE, "r_font_title",
                           "gui/fonts/BLKCHCRY.TTF",
                           "path to title font TTF file");
-        r_font_title.archive = FALSE;
-        C_register_integer(&r_font_title_pt, "r_font_title_pt", 18,
+        C_register_integer(r_font_sizes + R_FONT_TITLE, "r_font_title_pt", 18,
                            "size of title font in points");
-        r_font_title_pt.archive = FALSE;
+        C_register_string(r_font_paths + R_FONT_LCD, "r_font_lcd",
+                          "gui/fonts/LCD2U___.ttf",
+                          "path to LCD font TTF file");
+        C_register_integer(r_font_sizes + R_FONT_LCD, "r_font_lcd_pt", 24,
+                           "size of LCD font in points");
+        for (i = 0; i < R_FONTS; i++) {
+                r_font_paths[i].archive = FALSE;
+                r_font_sizes[i].archive = FALSE;
+        }
 
         /* Hardware point sprites are disabled by default because ATI drivers
            choke on them */

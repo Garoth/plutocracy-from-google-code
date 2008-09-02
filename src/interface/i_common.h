@@ -345,8 +345,8 @@ void I_init_trade(i_window_t *);
 
 /* i_variables.c */
 extern c_var_t i_border, i_color, i_color_alt, i_color_bad, i_color_good,
-               i_debug, i_edge_scroll, i_fade, i_ip, i_scroll_speed, i_shadow,
-               i_test_globe, i_theme, i_zoom_speed;
+               i_color_gui, i_debug, i_edge_scroll, i_fade, i_ip, 
+               i_scroll_speed, i_shadow, i_test_globe, i_theme, i_zoom_speed;
 
 /* i_video.c */
 void I_init_video(i_window_t *);

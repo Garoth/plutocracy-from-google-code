@@ -73,7 +73,7 @@ int I_label_event(i_label_t *label, i_event_t event)
                 break;
         case I_EV_RENDER:
                 label->text.sprite.modulate = i_colors[label->color];
-                label->text.sprite.modulate.a = label->widget.fade;
+                label->text.sprite.modulate.a *= label->widget.fade;
                 R_text_render(&label->text);
                 break;
         default:

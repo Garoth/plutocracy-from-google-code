@@ -37,6 +37,7 @@ int i_players_button, i_trade_button;
 /* Right toolbar */
 i_toolbar_t i_right_toolbar;
 
+static i_label_t clock_label, time_limit_label;
 static i_toolbar_t left_toolbar;
 static r_sprite_t limbo_logo;
 static float limbo_fade;
@@ -71,6 +72,7 @@ static int root_event(i_widget_t *root, i_event_t event)
                 i_colors[I_COLOR_ALT] = C_color_string(i_color_alt.value.s);
                 i_colors[I_COLOR_BAD] = C_color_string(i_color_bad.value.s);
                 i_colors[I_COLOR_GOOD] = C_color_string(i_color_good.value.s);
+                i_colors[I_COLOR_GUI] = C_color_string(i_color_gui.value.s);
                 I_update_colors();
 
                 /* Size and position limbo logo */
@@ -360,7 +362,18 @@ void I_init(void)
         I_init_ring();
         I_init_popup();
         I_init_chat();
+        
+        /* Initialize clock label */
+        I_label_init(&clock_label, NULL);
+        clock_label.font = R_FONT_LCD;
+        clock_label.color = I_COLOR_GUI;
+        I_widget_add(&i_root, &clock_label.widget);
 
+        /* Initialize time limit label */
+        I_label_init(&time_limit_label, NULL);
+        time_limit_label.font = R_FONT_LCD;
+        I_widget_add(&i_root, &time_limit_label.widget);
+        
         /* Left toolbar */
         I_toolbar_init(&left_toolbar, FALSE);
         I_toolbar_add_button(&left_toolbar, "gui/icons/game.png",
@@ -416,6 +429,74 @@ void I_cleanup(void)
 }
 
 /******************************************************************************\
+ Update the clock label.
+\******************************************************************************/
+static void update_clock(bool force)
+{
+        static int clock_time;
+        struct tm *tm;
+        time_t time_msec;
+        int hour, mins, sec, msec;
+        const char *suffix;
+        
+        if (c_time_msec < clock_time || force)
+                return;
+        clock_time = c_time_msec + 1000;
+        time(&time_msec);
+        tm = localtime(&time_msec);
+        
+        /* Convert to 12-hour clock */
+        hour = tm->tm_hour;
+        if (hour > 12)
+                hour -= 12;
+        if (hour < 1)
+                hour = 12;
+        suffix = tm->tm_hour >= 12 ? "pm" : "am";
+        
+        /* Configure and position clock */
+        clock_label.widget.size = C_vec2(0.f, 0.f);
+        I_label_configure(&clock_label, 
+                          C_va("%d:%02d %s", hour, tm->tm_min, suffix));
+        I_widget_move(&clock_label.widget, 
+                      C_vec2(r_width_2d - clock_label.widget.size.x -
+                             i_border.value.n, (float)i_border.value.n));
+
+        /* Compute time left */
+        msec = g_time_limit_msec - c_time_msec;
+        if (msec < 0 || i_limbo) {
+                I_widget_event(&time_limit_label.widget, I_EV_HIDE);
+                return;
+        }
+        I_widget_event(&time_limit_label.widget, I_EV_SHOW);
+        mins = msec / 60000;
+        msec -= mins * 60000;
+        sec = msec / 1000;
+        
+        /* Color/format varies with time */
+        time_limit_label.widget.size = C_vec2(0.f, 0.f);
+        if (mins >= 5) {
+                time_limit_label.color = I_COLOR_GOOD;
+                I_label_configure(&time_limit_label, C_va("%d min ", mins));
+        } else if (mins >= 1) {
+                time_limit_label.color = I_COLOR_ALT;
+                I_label_configure(&time_limit_label, 
+                                  C_va("%d:%02d ", mins, sec));
+        } else if (sec >= 1) {
+                time_limit_label.color = I_COLOR_BAD;
+                I_label_configure(&time_limit_label, C_va("%d sec ", sec));
+        } else {
+                time_limit_label.color = I_COLOR_BAD;
+                I_label_configure(&time_limit_label, "TIME");
+        }
+        
+        /* Configure and position time limit */
+        I_widget_move(&time_limit_label.widget, 
+                      C_vec2(clock_label.widget.origin.x -
+                             time_limit_label.widget.size.x, 
+                             (float)i_border.value.n));
+}
+
+/******************************************************************************\
  Render all visible windows.
 \******************************************************************************/
 void I_render(void)
@@ -425,6 +506,7 @@ void I_render(void)
             r_width.changed > layout_frame ||
             r_height.changed > layout_frame) {
                 theme_configure();
+                update_clock(TRUE);
                 I_update_video();
                 I_widget_event(&i_root, I_EV_CONFIGURE);
                 layout_frame = c_frame;
@@ -436,7 +518,8 @@ void I_render(void)
 
         /* Popup message might have changed */
         I_update_popup();
-
+        
+        update_clock(FALSE);
         I_widget_event(&i_root, I_EV_RENDER);
 }
 
