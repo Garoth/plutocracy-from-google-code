@@ -524,7 +524,7 @@ static void load_font(r_font_t font, c_var_t *var, int size)
 void R_stock_fonts(void)
 {
         int i;
-        
+
         for (i = 0; i < R_FONTS; i++) {
                 C_var_reset(r_font_paths + i);
                 C_var_reset(r_font_sizes + i);

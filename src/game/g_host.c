@@ -519,7 +519,7 @@ void G_host_game(void)
         if (n_client_id != N_HOST_CLIENT_ID)
                 G_leave_game();
         G_reset_elements();
-        
+
         /* Reset time limit */
         C_var_unlatch(&g_time_limit);
         g_time_limit_msec = c_time_msec + g_time_limit.value.n * 60000;

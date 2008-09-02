@@ -20,8 +20,6 @@ n_callback_f n_client_func, n_server_func;
 short n_sync_pos, n_sync_size;
 char n_sync_buffer[N_SYNC_MAX];
 
-static bool sending;
-
 /******************************************************************************\
  Call these functions to retrieve an argument from the current message from
  within the [n_receive] function when it is called.
@@ -237,7 +235,7 @@ void N_send_full(const char *file, int line, const char *func,
         static int stamp;
         va_list va;
         int sentinel;
-        
+
         /* We're not connected */
         if (n_client_id < 0)
                 return;

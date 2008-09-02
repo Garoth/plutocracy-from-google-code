@@ -139,7 +139,7 @@ void R_register_variables(void)
         C_register_string(r_font_paths + R_FONT_CONSOLE, "r_font_console",
                           "gui/fonts/DejaVuSansMono-Bold.ttf",
                           "path to TTF console font file");
-        C_register_integer(r_font_sizes + R_FONT_CONSOLE, 
+        C_register_integer(r_font_sizes + R_FONT_CONSOLE,
                            "r_font_console_pt", 12,
                            "size of console font in points");
         C_register_string(r_font_paths + R_FONT_GUI, "r_font_gui",

@@ -38,7 +38,7 @@ static bool quick_info_event(i_window_t *window, i_event_t event)
 void I_quick_info_show(const char *title)
 {
         float fade;
-        
+
         if (i_limbo)
                 return;
 

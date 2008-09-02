@@ -362,7 +362,7 @@ void I_init(void)
         I_init_ring();
         I_init_popup();
         I_init_chat();
-        
+
         /* Initialize clock label */
         I_label_init(&clock_label, NULL);
         clock_label.font = R_FONT_LCD;
@@ -373,7 +373,7 @@ void I_init(void)
         I_label_init(&time_limit_label, NULL);
         time_limit_label.font = R_FONT_LCD;
         I_widget_add(&i_root, &time_limit_label.widget);
-        
+
         /* Left toolbar */
         I_toolbar_init(&left_toolbar, FALSE);
         I_toolbar_add_button(&left_toolbar, "gui/icons/game.png",
@@ -438,13 +438,13 @@ static void update_clock(bool force)
         time_t time_msec;
         int hour, mins, sec, msec;
         const char *suffix;
-        
+
         if (c_time_msec < clock_time || force)
                 return;
         clock_time = c_time_msec + 1000;
         time(&time_msec);
         tm = localtime(&time_msec);
-        
+
         /* Convert to 12-hour clock */
         hour = tm->tm_hour;
         if (hour > 12)
@@ -452,12 +452,12 @@ static void update_clock(bool force)
         if (hour < 1)
                 hour = 12;
         suffix = tm->tm_hour >= 12 ? "pm" : "am";
-        
+
         /* Configure and position clock */
         clock_label.widget.size = C_vec2(0.f, 0.f);
-        I_label_configure(&clock_label, 
+        I_label_configure(&clock_label,
                           C_va("%d:%02d %s", hour, tm->tm_min, suffix));
-        I_widget_move(&clock_label.widget, 
+        I_widget_move(&clock_label.widget,
                       C_vec2(r_width_2d - clock_label.widget.size.x -
                              i_border.value.n, (float)i_border.value.n));
 
@@ -471,7 +471,7 @@ static void update_clock(bool force)
         mins = msec / 60000;
         msec -= mins * 60000;
         sec = msec / 1000;
-        
+
         /* Color/format varies with time */
         time_limit_label.widget.size = C_vec2(0.f, 0.f);
         if (mins >= 5) {
@@ -479,7 +479,7 @@ static void update_clock(bool force)
                 I_label_configure(&time_limit_label, C_va("%d min ", mins));
         } else if (mins >= 1) {
                 time_limit_label.color = I_COLOR_ALT;
-                I_label_configure(&time_limit_label, 
+                I_label_configure(&time_limit_label,
                                   C_va("%d:%02d ", mins, sec));
         } else if (sec >= 1) {
                 time_limit_label.color = I_COLOR_BAD;
@@ -488,11 +488,11 @@ static void update_clock(bool force)
                 time_limit_label.color = I_COLOR_BAD;
                 I_label_configure(&time_limit_label, "TIME");
         }
-        
+
         /* Configure and position time limit */
-        I_widget_move(&time_limit_label.widget, 
+        I_widget_move(&time_limit_label.widget,
                       C_vec2(clock_label.widget.origin.x -
-                             time_limit_label.widget.size.x, 
+                             time_limit_label.widget.size.x,
                              (float)i_border.value.n));
 }
 
@@ -518,7 +518,7 @@ void I_render(void)
 
         /* Popup message might have changed */
         I_update_popup();
-        
+
         update_clock(FALSE);
         I_widget_event(&i_root, I_EV_RENDER);
 }

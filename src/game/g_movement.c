@@ -235,12 +235,12 @@ rewind: /* Count length of the path */
 
         /* Update ship selection */
         if (changed) {
-                if (g_selected_ship == ship && 
+                if (g_selected_ship == ship &&
                     g_ships[ship].client == n_client_id)
                         R_select_path(g_ships[ship].tile, g_ships[ship].path);
                 ship_send_path(ship);
         }
-        
+
         return;
 
 failed: /* If we can't reach the target, and we have a valid path, try
