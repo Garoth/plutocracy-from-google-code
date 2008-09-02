@@ -70,7 +70,7 @@ void G_kick_client(int index);
 void G_host_game(void);
 void G_update_host(void);
 
-extern int g_clients_max;
+extern int g_clients_max, g_time_limit_msec;
 
 /* g_variables.c */
 void G_register_variables(void);

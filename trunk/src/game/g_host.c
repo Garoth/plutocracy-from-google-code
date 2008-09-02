@@ -24,6 +24,9 @@ int g_clients_max;
 /* TRUE if the server has finished initializing */
 bool g_host_inited;
 
+/* Time at which game ends */
+int g_time_limit_msec;
+
 /******************************************************************************\
  Handles clients changing nations.
 \******************************************************************************/
@@ -358,10 +361,11 @@ static void init_client(int client)
         g_clients[client].nation = G_NN_NONE;
 
         /* Communicate the globe info */
-        N_send(client, "12111422ff", G_SM_INIT, G_PROTOCOL, client,
+        N_send(client, "12111422ff4", G_SM_INIT, G_PROTOCOL, client,
                g_clients_max, g_globe_subdiv4.value.n, g_globe_seed.value.n,
                g_island_num.value.n, g_island_size.value.n,
-               g_island_variance.value.f, r_solar_angle);
+               g_island_variance.value.f, r_solar_angle,
+               g_time_limit_msec - c_time_msec);
 
         /* Tell them about everyone already here */
         for (i = 0; i < N_CLIENTS_MAX; i++)
@@ -515,6 +519,10 @@ void G_host_game(void)
         if (n_client_id != N_HOST_CLIENT_ID)
                 G_leave_game();
         G_reset_elements();
+        
+        /* Reset time limit */
+        C_var_unlatch(&g_time_limit);
+        g_time_limit_msec = c_time_msec + g_time_limit.value.n * 60000;
 
         /* Start off nation-less */
         I_select_nation(G_NN_NONE);
