@@ -174,7 +174,7 @@ static void sm_init(void)
 
         /* Get solar angle */
         r_solar_angle = N_receive_float();
-        
+
         /* Get time limit */
         g_time_limit_msec = c_time_msec + N_receive_int();
 
