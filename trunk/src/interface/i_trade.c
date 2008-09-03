@@ -57,7 +57,9 @@ static void configure_buttons(cargo_line_t *cargo)
                            I_BT_DECORATED);
 
         /* Disabled buttons if we can't transfer that many */
-        if (mode.index == MODE_BUY)
+        if (g_game_over)
+                limit = 0;
+        else if (mode.index == MODE_BUY)
                 limit = cargo->info.p_buy_limit;
         else if (mode.index == MODE_SELL)
                 limit = cargo->info.p_sell_limit;
@@ -84,7 +86,7 @@ static void configure_controls(cargo_line_t *cargo)
 
         /* Whether to enable the control widgets */
         enable = cargo && left_own && !cargo->no_auto &&
-                 mode.index != MODE_DROP;
+                 mode.index != MODE_DROP && !g_game_over;
 
         /* Enable/disable control widgets */
         state = enable ? I_WS_READY : I_WS_DISABLED;

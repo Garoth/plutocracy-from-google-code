@@ -37,6 +37,7 @@ typedef enum {
 typedef struct g_nation {
         c_color_t color;
         const char *short_name, *long_name;
+        int gold;
 } g_nation_t;
 
 /* g_client.c */
@@ -56,8 +57,9 @@ void G_trade_params(g_cargo_type_t, int buy_price, int sell_price,
                     int minimum, int maximum);
 
 /* g_elements.c */
-extern const char *g_cargo_names[G_CARGO_TYPES];
 extern g_nation_t g_nations[G_NATION_NAMES];
+extern const char *g_cargo_names[G_CARGO_TYPES];
+extern bool g_game_over;
 
 /* g_globe.c */
 void G_mouse_ray(c_vec3_t origin, c_vec3_t forward);

@@ -130,6 +130,30 @@ static void sm_client(void)
 }
 
 /******************************************************************************\
+ Message received when the game is over.
+\******************************************************************************/
+static void sm_game_over(void)
+{
+        g_nation_name_t nation;
+
+        if ((nation = G_receive_nation(-1)) < 0)
+                return;
+
+        /* Tie */
+        if (nation == G_NN_NONE)
+                I_popup(NULL, C_str("g-victory-tie", "Game tied!"));
+
+        /* Have a winner */
+        else
+                I_popup(NULL, C_va(C_str("g-victory", "%s team won the game!"),
+                                   g_nations[nation].long_name));
+
+        g_game_over = TRUE;
+        G_ship_reselect(-1, -1);
+        I_select_nation(-1);
+}
+
+/******************************************************************************\
  Client just connected to the server or the server has re-hosted.
 \******************************************************************************/
 static void sm_init(void)
@@ -379,6 +403,9 @@ void G_client_callback(int client, n_event_t event)
         case G_SM_CLIENT:
                 sm_client();
                 break;
+        case G_SM_GAME_OVER:
+                sm_game_over();
+                break;
         case G_SM_SHIP_SPAWN:
                 sm_ship_spawn();
                 break;
@@ -473,9 +500,11 @@ void G_client_callback(int client, n_event_t event)
                         G_corrupt_disconnect();
                         return;
                 }
+                k = N_receive_char();
                 n_clients[i].connected = FALSE;
-                I_print_chat(C_va("%s left the game.", g_clients[i].name),
-                             I_COLOR, NULL);
+                I_print_chat(C_va(k ? C_str("g-kicked", "%s was kicked.") :
+                                      C_str("g-left", "%s left the game."),
+                                  g_clients[i].name), I_COLOR, NULL);
                 I_configure_player(i, NULL, I_COLOR, FALSE);
                 C_debug("Client %d disconnected", i);
                 break;

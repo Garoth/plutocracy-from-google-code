@@ -26,14 +26,19 @@ static void nation_clicked(i_button_t *button)
 }
 
 /******************************************************************************\
- Disables one of the nation buttons. Pass an invalid nation index to enable
- all buttons.
+ Disables one of the nation buttons. Pass G_NN_NONE to enable all buttons or a
+ negative value to disable the nations button.
 \******************************************************************************/
 void I_select_nation(int nation)
 {
         if (nation_buttons[selected].widget.state == I_WS_DISABLED)
                 nation_buttons[selected].widget.state = I_WS_READY;
-        if (nation <= G_NN_NONE || nation >= G_NATION_NAMES)
+        if (nation < 0) {
+                I_toolbar_enable(&i_right_toolbar, i_nations_button, FALSE);
+                return;
+        } else
+                I_toolbar_enable(&i_right_toolbar, i_nations_button, TRUE);
+        if (nation == G_NN_NONE || nation >= G_NATION_NAMES)
                 return;
         nation_buttons[selected = nation].widget.state = I_WS_DISABLED;
 }

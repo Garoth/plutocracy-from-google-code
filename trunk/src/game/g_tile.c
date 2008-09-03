@@ -164,7 +164,7 @@ void G_tile_hover(int tile)
 
         /* Selecting a tile to move the current ship to */
         if (G_ship_controlled_by(g_selected_ship, n_client_id) &&
-            G_tile_open(tile, -1))
+            G_tile_open(tile, -1) && !g_game_over)
                 new_select_type = R_ST_GOTO;
 
         /* Selecting an island tile */
@@ -318,7 +318,12 @@ int G_tile_gib(int tile, g_gib_type_t type)
                 G_tile_position_model(tile, &g_tiles[tile].gib->model);
         } else
                 g_tiles[tile].gib = NULL;
-        N_broadcast_except(N_HOST_CLIENT_ID, "121", G_SM_GIB, tile, type);
+
+        /* Let all connected clients know about this gib */
+        if (g_host_inited)
+                N_broadcast_except(N_HOST_CLIENT_ID, "121",
+                                   G_SM_GIB, tile, type);
+
         return tile;
 }
 

@@ -71,6 +71,7 @@ typedef enum {
         G_SM_CONNECTED,
         G_SM_DISCONNECTED,
         G_SM_NAME,
+        G_SM_GAME_OVER,
 
         /* Communication */
         G_SM_CHAT,
@@ -157,7 +158,7 @@ typedef struct g_building {
         g_building_type_t type;
         g_nation_name_t nation;
         r_model_t model;
-        int health;
+        int gold, health;
 } g_building_t;
 
 /* Structure for the remains of ships */
@@ -177,8 +178,9 @@ typedef struct g_tile {
 
 /* Structure for each player */
 typedef struct g_client {
-        int nation, ships;
+        int gold, nation, ships;
         char name[G_NAME_MAX];
+        bool kicked;
 } g_client_t;
 
 /* Structure containing ship type parameters */
@@ -321,5 +323,5 @@ int G_store_space(g_store_t *);
 extern c_var_t g_forest, g_globe_seed, g_globe_subdiv4, g_island_num,
                g_island_size, g_island_variance, g_name,
                g_nation_colors[G_NATION_NAMES], g_players,
-               g_test_globe, g_time_limit;
+               g_test_globe, g_time_limit, g_victory_gold;
 

@@ -418,6 +418,10 @@ static void ship_update_visible(int ship)
                         g_ships[ship].store.visible[client] = TRUE;
         }
 
+        /* If the game is over, all ships are visible */
+        if (g_game_over)
+                C_one_buf(g_ships[ship].store.visible);
+
         /* Setup trade if our client's visibility toward this ship changed and
            we have it selected */
         if (g_selected_ship == ship && old_visible[n_client_id] !=
@@ -488,11 +492,13 @@ void G_update_ships(void)
         for (i = 0; i < G_SHIPS_MAX; i++) {
                 if (!g_ships[i].in_use)
                         continue;
-                G_ship_update_move(i);
-                G_ship_update_combat(i);
-                ship_update_trade(i);
+                if (!g_game_over) {
+                        G_ship_update_move(i);
+                        G_ship_update_combat(i);
+                        ship_update_trade(i);
+                        ship_update_food(i);
+                }
                 ship_update_visible(i);
-                ship_update_food(i);
 
                 /* If the cargo manfiest changed, send updates once per frame */
                 if (g_ships[i].store.modified)

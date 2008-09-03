@@ -26,6 +26,9 @@ g_building_class_t g_building_classes[G_BUILDING_TYPES];
 /* Array of cargo names */
 const char *g_cargo_names[G_CARGO_TYPES];
 
+/* TRUE if the game has ended */
+bool g_game_over;
+
 /******************************************************************************\
  Update function for a national color.
 \******************************************************************************/
@@ -186,6 +189,7 @@ void G_reset_elements(void)
         int i;
 
         g_host_inited = FALSE;
+        g_game_over = FALSE;
         G_cleanup_ships();
         G_cleanup_tiles();
 
