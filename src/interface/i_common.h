@@ -299,7 +299,7 @@ void I_theme_texture(r_texture_t **, const char *name);
 
 extern i_toolbar_t i_right_toolbar;
 extern i_widget_t i_root;
-extern int i_players_button, i_trade_button;
+extern int i_nations_button, i_players_button, i_trade_button;
 
 /* i_nations.c */
 void I_init_nations(i_window_t *);

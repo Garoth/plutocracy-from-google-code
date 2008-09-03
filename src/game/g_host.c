@@ -349,6 +349,9 @@ static void init_client(int client)
         if (client == N_HOST_CLIENT_ID)
                 return;
 
+        /* Reset kicked flag */
+        g_clients[client].kicked = FALSE;
+
         /* This client has already been counted toward the total, kick them
            if this is more players than we want */
         if (n_clients_len > g_clients_max) {
@@ -404,7 +407,8 @@ static void client_disconnected(int client)
         int i;
 
         if (g_clients[client].name[0])
-                N_broadcast("11", G_SM_DISCONNECTED, client);
+                N_broadcast("111", G_SM_DISCONNECTED, client,
+                            g_clients[client].kicked);
         C_debug("Client %d disconnected", client);
 
         /* Disown their ships */
@@ -435,6 +439,17 @@ static void server_callback(int client, n_event_t event)
         if (event != N_EV_MESSAGE)
                 return;
         token = (g_client_msg_t)N_receive_char();
+
+        /* Only certain messages allowed when the game is over */
+        if (g_game_over)
+                switch (token) {
+                case G_CM_CHAT:
+                case G_CM_NAME:
+                        break;
+                default:
+                        return;
+                }
+
         switch (token) {
         case G_CM_AFFILIATE:
                 cm_affiliate(client);
@@ -491,6 +506,10 @@ static void initial_buildings(void)
 \******************************************************************************/
 void G_kick_client(n_client_id_t client)
 {
+        /* Mark the client as kicked, this will be communicated via normal
+           client disconnection channels */
+        g_clients[client].kicked = TRUE;
+
         N_send(client, "12ss", G_SM_POPUP, -1,
                "g-host-kicked", "Kicked by host.");
         N_drop_client(client);
@@ -505,6 +524,7 @@ void G_host_game(void)
 
         if (n_client_id != N_HOST_CLIENT_ID)
                 G_leave_game();
+        C_var_unlatch(&g_victory_gold);
         G_reset_elements();
 
         /* Reset time limit */
@@ -575,13 +595,89 @@ void G_host_game(void)
 }
 
 /******************************************************************************\
+ Broadcast a game-over message.
+\******************************************************************************/
+static void game_over(int winner)
+{
+        N_send_start();
+        N_send_char(G_SM_GAME_OVER);
+        N_send_char(winner);
+
+        /* TODO: send scoreboard */
+
+        N_broadcast(NULL);
+}
+
+/******************************************************************************\
+ Periodically scan through clients and ships to check for winners and losers.
+\******************************************************************************/
+static void check_game_over(void)
+{
+        static int check_time;
+        g_nation_name_t best;
+        int i, best_gold;
+
+        /* Check clients periodically */
+        if (c_time_msec < check_time || g_game_over)
+                return;
+        best = G_NN_NONE;
+        best_gold = -1;
+        check_time = c_time_msec + 1000;
+
+        /* Reset counts */
+        for (i = 0; i < N_CLIENTS_MAX; i++) {
+                g_clients[i].ships = 0;
+                g_clients[i].gold = 0;
+        }
+        for (i = 0; i < G_NATION_NAMES; i++)
+                g_nations[i].gold = 0;
+
+        /* Count ships */
+        for (i = 0; i < G_SHIPS_MAX; i++) {
+                n_client_id_t client;
+
+                if (!g_ships[i].in_use || g_ships[i].health <= 0)
+                        continue;
+                client = g_ships[i].client;
+                g_clients[client].ships++;
+                g_clients[client].gold +=
+                        g_ships[i].store.cargo[G_CT_GOLD].amount;
+        }
+
+        /* Client pass */
+        for (i = 0; i < N_CLIENTS_MAX; i++) {
+                if (!N_client_valid(i) || g_clients[i].nation == G_NN_NONE)
+                        continue;
+
+                /* Count gold toward nation */
+                if ((g_nations[g_clients[i].nation].gold += g_clients[i].gold) >
+                    g_victory_gold.value.n) {
+                        game_over(g_clients[i].nation);
+                        return;
+                }
+                if (g_nations[g_clients[i].nation].gold > best_gold) {
+                        best = g_clients[i].nation;
+                        best_gold = g_nations[g_clients[i].nation].gold;
+                } else if (g_nations[g_clients[i].nation].gold == best_gold)
+                        best = G_NN_NONE;
+
+                /* Check for players that lost their ships */
+                if (g_clients[i].ships > 0)
+                        continue;
+                g_clients[i].nation = G_NN_NONE;
+                N_broadcast("1112", G_SM_AFFILIATE, i, G_NN_NONE, -1);
+        }
+
+        /* Timelimit ends the game */
+        if (g_time_limit.value.n > 0 && g_time_limit_msec <= c_time_msec)
+                game_over(best);
+}
+
+/******************************************************************************\
  Called to update server-side structures. Does nothing if not hosting.
 \******************************************************************************/
 void G_update_host(void)
 {
-        static int check_time;
-        int i;
-
         if (n_client_id != N_HOST_CLIENT_ID || i_limbo)
                 return;
         N_poll_server();
@@ -604,27 +700,6 @@ void G_update_host(void)
                 loot->cargo[G_CT_IRON] = C_roll_dice(5, 10) - 25;
         }
 
-        /* Check clients periodically */
-        if (c_time_msec < check_time)
-                return;
-        check_time = c_time_msec + 1000;
-
-        /* Reset counts */
-        for (i = 0; i < N_CLIENTS_MAX; i++)
-                g_clients[i].ships = 0;
-
-        /* Count ships */
-        for (i = 0; i < G_SHIPS_MAX; i++)
-                if (g_ships[i].in_use && g_ships[i].health > 0)
-                        g_clients[g_ships[i].client].ships++;
-
-        /* Check for players that lost their ships */
-        for (i = 0; i < N_CLIENTS_MAX; i++) {
-                if (n_client_id != N_HOST_CLIENT_ID || !N_client_valid(i) ||
-                    g_clients[i].nation == G_NN_NONE || g_clients[i].ships > 0)
-                        continue;
-                g_clients[i].nation = G_NN_NONE;
-                N_broadcast("1112", G_SM_AFFILIATE, i, G_NN_NONE, -1);
-        }
+        check_game_over();
 }
 

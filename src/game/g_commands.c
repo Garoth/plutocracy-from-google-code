@@ -33,6 +33,8 @@ void G_leave_game(void)
 \******************************************************************************/
 void G_change_nation(int index)
 {
+        if (g_game_over)
+                return;
         N_send(N_SERVER_ID, "11", G_CM_AFFILIATE, index);
 }
 
@@ -41,7 +43,7 @@ void G_change_nation(int index)
 \******************************************************************************/
 static void tile_ring(i_ring_icon_t icon)
 {
-        if (g_selected_tile < 0)
+        if (g_selected_tile < 0 || g_game_over)
                 return;
         N_send(N_SERVER_ID, "121", G_CM_TILE_RING, g_selected_tile, icon);
 }
@@ -51,7 +53,7 @@ static void tile_ring(i_ring_icon_t icon)
 \******************************************************************************/
 static void ship_ring(i_ring_icon_t icon)
 {
-        if (g_selected_ship < 0 || ring_ship < 0)
+        if (g_selected_ship < 0 || ring_ship < 0 || g_game_over)
                 return;
         N_send(N_SERVER_ID, "1111", G_CM_SHIP_RING, g_selected_ship,
                icon, ring_ship);
@@ -98,6 +100,8 @@ bool G_process_click(int button)
 
         /* Controlling a ship */
         if (G_ship_controlled_by(g_selected_ship, n_client_id)) {
+                if (g_game_over)
+                        return TRUE;
 
                 /* Ordered an ocean move */
                 if (g_hover_tile >= 0 && G_tile_open(g_hover_tile, -1))
@@ -124,6 +128,8 @@ bool G_process_click(int button)
                 g_building_t *building;
                 bool can_pay;
 
+                if (g_game_over)
+                        return TRUE;
                 building = g_tiles[g_selected_tile].building;
 
                 /* Build shipyard in tech preview */
@@ -214,7 +220,7 @@ void G_trade_params(g_cargo_type_t index, int buy_price, int sell_price,
 {
         g_cargo_t old_cargo, *cargo;
 
-        if (g_selected_ship < 0)
+        if (g_selected_ship < 0 || g_game_over)
                 return;
         C_assert(g_ships[g_selected_ship].client == n_client_id);
         cargo = g_ships[g_selected_ship].store.cargo + index;
@@ -245,6 +251,8 @@ void G_buy_cargo(g_cargo_type_t cargo, int amount)
 {
         g_ship_t *ship, *partner;
 
+        if (g_game_over)
+                return;
         C_assert(cargo >= 0 && cargo < G_CARGO_TYPES);
         ship = g_ships + g_selected_ship;
         if (g_selected_ship < 0 || ship->trade_tile < 0 ||
@@ -269,6 +277,8 @@ void G_drop_cargo(g_cargo_type_t cargo, int amount)
 {
         g_ship_t *ship;
 
+        if (g_game_over)
+                return;
         C_assert(cargo >= 0 && cargo < G_CARGO_TYPES);
         ship = g_ships + g_selected_ship;
         if (g_selected_ship < 0)

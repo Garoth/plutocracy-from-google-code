@@ -339,6 +339,8 @@ void C_endian_check(void);
 #define C_free(p) C_free_full(__FILE__, __LINE__, __func__, p)
 void C_free_full(const char *file, int line, const char *function, void *ptr);
 #define C_malloc(s) C_realloc(NULL, s)
+#define C_one(s) memset(s, -1, sizeof (*(s)))
+#define C_one_buf(s) memset(s, -1, sizeof (s))
 #define C_realloc(p, s) C_realloc_full(__FILE__, __LINE__, __func__, p, s)
 void *C_realloc_full(const char *file, int line, const char *function,
                      void *ptr, size_t size);

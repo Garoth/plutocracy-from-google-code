@@ -32,7 +32,7 @@ i_widget_t i_root;
 int i_limbo;
 
 /* Indices of buttons on the right toolbar */
-int i_players_button, i_trade_button;
+int i_nations_button, i_players_button, i_trade_button;
 
 /* Right toolbar */
 i_toolbar_t i_right_toolbar;
@@ -393,8 +393,9 @@ void I_init(void)
         i_trade_button = I_toolbar_add_button(&i_right_toolbar,
                                               "gui/icons/trade.png",
                                               (i_callback_f)I_init_trade);
-        I_toolbar_add_button(&i_right_toolbar, "gui/icons/nations.png",
-                             (i_callback_f)I_init_nations);
+        i_nations_button = I_toolbar_add_button(&i_right_toolbar,
+                                                "gui/icons/nations.png",
+                                                (i_callback_f)I_init_nations);
         i_players_button = I_toolbar_add_button(&i_right_toolbar,
                                                 "gui/icons/players.png",
                                                 (i_callback_f)I_init_players);
@@ -443,7 +444,7 @@ static void update_clock(bool force)
         int hour, mins, sec, msec;
         const char *suffix;
 
-        if (c_time_msec < clock_time || force)
+        if (c_time_msec + 1000 < clock_time || force || g_game_over)
                 return;
         clock_time = c_time_msec + 1000;
         time(&time_msec);

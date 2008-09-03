@@ -26,7 +26,7 @@ c_var_t g_nation_colors[G_NATION_NAMES];
 c_var_t g_draw_distance, g_name;
 
 /* Server settings */
-c_var_t g_players, g_time_limit;
+c_var_t g_players, g_time_limit, g_victory_gold;
 
 /******************************************************************************\
  Registers the game namespace variables.
@@ -74,5 +74,7 @@ void G_register_variables(void)
                            "maximum number of players");
         C_register_integer(&g_time_limit, "g_time_limit", 45,
                            "minutes after which game ends");
+        C_register_integer(&g_victory_gold, "g_victory_gold", 30000,
+                           "gold a team needs to win the game");
 }
 
