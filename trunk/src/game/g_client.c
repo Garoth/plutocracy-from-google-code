@@ -444,9 +444,6 @@ void G_client_callback(int client, n_event_t event)
                                 C_va(C_str("g-ship-captured",
                                            "Captured the %s."),
                                      g_ships[i].name));
-
-                g_clients[g_ships[i].client].ships--;
-                g_clients[j].ships++;
                 g_ships[i].client = j;
                 G_ship_reselect(i, -1);
                 break;

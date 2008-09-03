@@ -150,10 +150,10 @@ void R_register_variables(void)
         C_register_string(r_font_paths + R_FONT_TITLE, "r_font_title",
                           "gui/fonts/BLKCHCRY.TTF",
                           "path to title font TTF file");
-        C_register_integer(r_font_sizes + R_FONT_TITLE, "r_font_title_pt", 18,
+        C_register_integer(r_font_sizes + R_FONT_TITLE, "r_font_title_pt", 22,
                            "size of title font in points");
         C_register_string(r_font_paths + R_FONT_LCD, "r_font_lcd",
-                          "gui/fonts/LCD2U___.ttf",
+                          "gui/fonts/LCD2U___.TTF",
                           "path to LCD font TTF file");
         C_register_integer(r_font_sizes + R_FONT_LCD, "r_font_lcd_pt", 24,
                            "size of LCD font in points");

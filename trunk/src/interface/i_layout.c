@@ -227,6 +227,10 @@ static int theme_update(c_var_t *var, c_var_value_t value)
         C_var_reset(&i_border);
         C_var_reset(&i_color);
         C_var_reset(&i_color_alt);
+        C_var_reset(&i_color_bad);
+        C_var_reset(&i_color_good);
+        C_var_reset(&i_color_gui);
+        C_var_reset(&i_fade);
         C_var_reset(&i_shadow);
         R_stock_fonts();
 
@@ -486,7 +490,7 @@ static void update_clock(bool force)
                 I_label_configure(&time_limit_label, C_va("%d sec ", sec));
         } else {
                 time_limit_label.color = I_COLOR_BAD;
-                I_label_configure(&time_limit_label, "TIME");
+                I_label_configure(&time_limit_label, "TIME ");
         }
 
         /* Configure and position time limit */

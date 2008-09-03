@@ -299,7 +299,8 @@ static void cm_tile_ring(int client)
                 ship = G_ship_spawn(-1, client, tile, type);
                 if (ship < 0)
                         return;
-                G_store_add(&g_ships[ship].store, G_CT_CREW, 1);
+                G_store_add(&g_ships[ship].store, G_CT_CREW, 10);
+                G_store_add(&g_ships[ship].store, G_CT_RATIONS, 10);
                 G_pay(client, tile, &g_ship_classes[type].cost, TRUE);
                 return;
         }
@@ -496,20 +497,6 @@ void G_kick_client(n_client_id_t client)
 }
 
 /******************************************************************************\
- Check to see if a client has lost the game.
-\******************************************************************************/
-void G_check_loss(n_client_id_t client)
-{
-        if (n_client_id != N_HOST_CLIENT_ID ||
-            !N_client_valid(client) ||
-            g_clients[client].nation == G_NN_NONE ||
-            g_clients[client].ships > 0)
-                return;
-        g_clients[client].nation = G_NN_NONE;
-        N_broadcast("1112", G_SM_AFFILIATE, client, G_NN_NONE, -1);
-}
-
-/******************************************************************************\
  Host a new game.
 \******************************************************************************/
 void G_host_game(void)
@@ -592,6 +579,9 @@ void G_host_game(void)
 \******************************************************************************/
 void G_update_host(void)
 {
+        static int check_time;
+        int i;
+
         if (n_client_id != N_HOST_CLIENT_ID || i_limbo)
                 return;
         N_poll_server();
@@ -612,6 +602,29 @@ void G_update_host(void)
                 loot->cargo[G_CT_RATIONS] = C_roll_dice(4, 4) - 4;
                 loot->cargo[G_CT_WOOD] = C_roll_dice(5, 10) - 15;
                 loot->cargo[G_CT_IRON] = C_roll_dice(5, 10) - 25;
+        }
+
+        /* Check clients periodically */
+        if (c_time_msec < check_time)
+                return;
+        check_time = c_time_msec + 1000;
+
+        /* Reset counts */
+        for (i = 0; i < N_CLIENTS_MAX; i++)
+                g_clients[i].ships = 0;
+
+        /* Count ships */
+        for (i = 0; i < G_SHIPS_MAX; i++)
+                if (g_ships[i].in_use && g_ships[i].health > 0)
+                        g_clients[g_ships[i].client].ships++;
+
+        /* Check for players that lost their ships */
+        for (i = 0; i < N_CLIENTS_MAX; i++) {
+                if (n_client_id != N_HOST_CLIENT_ID || !N_client_valid(i) ||
+                    g_clients[i].nation == G_NN_NONE || g_clients[i].ships > 0)
+                        continue;
+                g_clients[i].nation = G_NN_NONE;
+                N_broadcast("1112", G_SM_AFFILIATE, i, G_NN_NONE, -1);
         }
 }
 
