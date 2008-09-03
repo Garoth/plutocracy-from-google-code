@@ -33,7 +33,6 @@ static int focus_stamp;
 \******************************************************************************/
 static void ship_cleanup(int index)
 {
-        g_clients[g_ships[index].client].ships--;
         R_model_cleanup(&g_ships[index].model);
         C_zero(g_ships + index);
 }
@@ -114,9 +113,6 @@ int G_ship_spawn(int index, n_client_id_t client, int tile, g_ship_type_t type)
         ship->trade_tile = -1;
         ship->focus_stamp = -1;
         ship->boarding_ship = -1;
-
-        /* Count the ship toward its client's total */
-        g_clients[client].ships++;
 
         /* Start out unnamed */
         C_strncpy_buf(ship->name, C_va("Unnamed #%d", index));
@@ -737,7 +733,6 @@ void G_focus_next_ship(void)
 void G_ship_change_client(int ship, n_client_id_t client)
 {
         N_broadcast("111", G_SM_SHIP_OWNER, ship, client);
-        G_check_loss(g_ships[ship].client);
 }
 
 /******************************************************************************\

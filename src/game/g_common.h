@@ -230,8 +230,6 @@ extern g_island_t g_islands[G_ISLAND_NUM];
 extern int g_islands_len;
 
 /* g_host.c */
-void G_check_loss(n_client_id_t);
-
 extern bool g_host_inited;
 
 /* g_movement.c */
