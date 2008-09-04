@@ -25,6 +25,9 @@
 #define KEY_REPEAT_TIMEOUT 300
 #define KEY_REPEAT_INTERVAL 30
 
+/* Opacity per-frame faded in from initial black fill */
+#define INIT_FADE_RATE 0.05f
+
 /* Root widget contains all other widgets */
 i_widget_t i_root;
 
@@ -40,7 +43,7 @@ i_toolbar_t i_right_toolbar;
 static i_label_t clock_label, time_limit_label;
 static i_toolbar_t left_toolbar;
 static r_sprite_t limbo_logo;
-static float limbo_fade;
+static float limbo_fade, init_fade;
 static int layout_frame, cleanup_theme;
 
 /******************************************************************************\
@@ -526,5 +529,11 @@ void I_render(void)
 
         update_clock(FALSE);
         I_widget_event(&i_root, I_EV_RENDER);
+
+        /* Render the initialization fade-in from black */
+        if (init_fade < 1.f) {
+                R_fill_screen(C_color(0.f, 0.f, 0.f, 1.f - init_fade));
+                init_fade += INIT_FADE_RATE;
+        }
 }
 

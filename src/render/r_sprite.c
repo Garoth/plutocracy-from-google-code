@@ -558,3 +558,19 @@ void R_billboard_render(r_billboard_t *bb)
         R_sprite_render(&bb->sprite);
 }
 
+/******************************************************************************\
+ Fill the screen with a color.
+\******************************************************************************/
+void R_fill_screen(c_color_t color)
+{
+        r_sprite_t sprite;
+
+        if (color.a < 0.f)
+                return;
+        R_sprite_init(&sprite, r_white_tex);
+        sprite.modulate = color;
+        sprite.size = C_vec2(r_width_2d, r_height_2d);
+        R_sprite_render(&sprite);
+        R_sprite_cleanup(&sprite);
+}
+

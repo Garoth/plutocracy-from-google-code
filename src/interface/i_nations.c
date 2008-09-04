@@ -14,7 +14,6 @@
 
 static i_label_t title;
 static i_button_t nation_buttons[G_NATION_NAMES];
-static int selected;
 
 /******************************************************************************\
  A nation button was clicked.
@@ -26,21 +25,37 @@ static void nation_clicked(i_button_t *button)
 }
 
 /******************************************************************************\
+ Set a nation button's enabled state.
+\******************************************************************************/
+void I_enable_nation(int nation, bool enable)
+{
+        if (enable) {
+                if (nation_buttons[nation].widget.state == I_WS_DISABLED)
+                        nation_buttons[nation].widget.state = I_WS_READY;
+                return;
+        }
+        nation_buttons[nation].widget.state = I_WS_DISABLED;
+}
+
+/******************************************************************************\
  Disables one of the nation buttons. Pass G_NN_NONE to enable all buttons or a
  negative value to disable the nations button.
 \******************************************************************************/
 void I_select_nation(int nation)
 {
-        if (nation_buttons[selected].widget.state == I_WS_DISABLED)
-                nation_buttons[selected].widget.state = I_WS_READY;
-        if (nation < 0) {
+        int i;
+
+        if (nation >= 0) {
+                for (i = 0; i < G_NATION_NAMES; i++)
+                        I_enable_nation(i, TRUE);
+                I_toolbar_enable(&i_right_toolbar, i_nations_button, TRUE);
+        } else {
                 I_toolbar_enable(&i_right_toolbar, i_nations_button, FALSE);
                 return;
-        } else
-                I_toolbar_enable(&i_right_toolbar, i_nations_button, TRUE);
+        }
         if (nation == G_NN_NONE || nation >= G_NATION_NAMES)
                 return;
-        nation_buttons[selected = nation].widget.state = I_WS_DISABLED;
+        I_enable_nation(nation, FALSE);
 }
 
 /******************************************************************************\

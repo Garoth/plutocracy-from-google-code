@@ -78,9 +78,7 @@ static bool ship_board_attack(int ship, int defender, int power)
         if (g_ships[defender].store.cargo[G_CT_CREW].amount >= 1)
                 return FALSE;
         g_ships[ship].boarding--;
-        g_ships[ship].modified = TRUE;
         g_ships[defender].boarding--;
-        g_ships[defender].modified = TRUE;
         C_assert(g_ships[ship].boarding >= 0);
         C_assert(g_ships[defender].boarding >= 0);
 
@@ -89,15 +87,20 @@ static bool ship_board_attack(int ship, int defender, int power)
         g_ships[defender].target = -1;
 
         /* Not enough crew to capture */
-        if (g_ships[ship].store.cargo[G_CT_CREW].amount < 2) {
+        if (g_ships[ship].store.cargo[G_CT_CREW].amount < 2)
                 G_ship_change_client(defender, N_SERVER_ID);
-                return TRUE;
-        }
 
         /* Capture the ship and transfer a crew unit */
-        G_ship_change_client(defender, g_ships[ship].client);
-        G_store_add(&g_ships[ship].store, G_CT_CREW, -1);
-        G_store_add(&g_ships[defender].store, G_CT_CREW, 1);
+        else {
+                G_store_add(&g_ships[ship].store, G_CT_CREW, -1);
+                G_store_add(&g_ships[defender].store, G_CT_CREW, 1);
+                G_ship_change_client(defender, g_ships[ship].client);
+        }
+
+        /* Send a full status update */
+        g_ships[ship].modified = TRUE;
+        g_ships[defender].modified = TRUE;
+
         return TRUE;
 }
 
