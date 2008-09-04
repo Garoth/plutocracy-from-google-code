@@ -145,7 +145,7 @@ void G_init_elements(void)
         sc = g_ship_classes + G_ST_SPIDER;
         sc->name = C_str("g-ship-spider", "Spider");
         sc->model_path = "models/ship/spider.plum";
-        sc->speed = 0.75f;
+        sc->speed = 5.75f;
         sc->health = 75;
         sc->cargo = 250;
         sc->cost.cargo[G_CT_GOLD] = 1000;
@@ -160,8 +160,8 @@ void G_init_elements(void)
         sc->health = 100;
         sc->cargo = 400;
         sc->cost.cargo[G_CT_GOLD] = 1600;
-        sc->cost.cargo[G_CT_WOOD] = 75;
-        sc->cost.cargo[G_CT_IRON] = 125;
+        sc->cost.cargo[G_CT_WOOD] = 125;
+        sc->cost.cargo[G_CT_IRON] = 75;
 }
 
 /******************************************************************************\

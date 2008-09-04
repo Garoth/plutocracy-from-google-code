@@ -224,8 +224,8 @@ void I_init_ring(void)
                       "gui/icons/ring/mill.png", NULL, I_BT_ROUND);
         I_button_init(button_widgets + I_RI_TREE,
                       "gui/icons/ring/tree.png", NULL, I_BT_ROUND);
-        I_button_init(button_widgets + I_RI_TOWN_HALL,
-                      "gui/icons/ring/unknown.png", NULL, I_BT_ROUND);
+        I_button_init(button_widgets + I_RI_SHIPYARD,
+                      "gui/icons/ring/dock.png", NULL, I_BT_ROUND);
 
         /* Ship interactions */
         I_button_init(button_widgets + I_RI_BOARD,
@@ -234,14 +234,12 @@ void I_init_ring(void)
                       "gui/icons/ring/follow.png", NULL, I_BT_ROUND);
 
         /* Tech preview buttons */
-        I_button_init(button_widgets + I_RI_SHIPYARD,
-                      "gui/icons/ring/unknown.png", NULL, I_BT_ROUND);
         I_button_init(button_widgets + I_RI_SLOOP,
                       "gui/icons/ring/ship.png", NULL, I_BT_ROUND);
         I_button_init(button_widgets + I_RI_SPIDER,
-                      "gui/icons/ring/ship.png", NULL, I_BT_ROUND);
+                      "gui/icons/ring/spider.png", NULL, I_BT_ROUND);
         I_button_init(button_widgets + I_RI_GALLEON,
-                      "gui/icons/ring/ship.png", NULL, I_BT_ROUND);
+                      "gui/icons/ring/galleon.png", NULL, I_BT_ROUND);
 
         /* Finish initializing the button widgets */
         for (i = 0; i < I_RING_ICONS; i++) {
