@@ -572,8 +572,9 @@ void R_configure_globe(void)
                 r_globe_verts[3 * i].v.uv = C_vec2((left + right) / 2.f, top);
                 r_globe_verts[3 * i + 1].v.uv = C_vec2(left, bottom);
                 r_globe_verts[3 * i + 2].v.uv = C_vec2(right, bottom);
-                compute_tile_vectors(i);
         }
+        for (i = 0; i < r_tiles_max; i++)
+                compute_tile_vectors(i);
         smooth_normals();
 
         /* We can update normals dynamically from now on */
