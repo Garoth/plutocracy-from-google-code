@@ -560,7 +560,7 @@ static void ship_quick_info(int index)
         }
         ship = g_ships + index;
         ship_class = g_ship_classes + ship->type;
-        I_quick_info_show(ship->name);
+        I_quick_info_show(ship->name, &ship->model.origin);
 
         /* Owner */
         color = G_nation_to_color(g_clients[ship->client].nation);

@@ -69,7 +69,7 @@ void I_print_chat(const char *name, i_color_t, const char *message);
 void I_quick_info_add(const char *label, const char *value);
 void I_quick_info_add_color(const char *label, const char *value, i_color_t);
 void I_quick_info_close(void);
-void I_quick_info_show(const char *title);
+void I_quick_info_show(const char *title, const c_vec3_t *goto_pos);
 
 /* i_layout.c */
 void I_cleanup(void);
