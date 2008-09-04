@@ -422,11 +422,11 @@ static void ship_update_visible(int ship)
         if (g_game_over)
                 C_one_buf(g_ships[ship].store.visible);
 
-        /* Setup trade if our client's visibility toward this ship changed and
+        /* Reselect if our client's visibility toward this ship changed and
            we have it selected */
-        if (g_selected_ship == ship && old_visible[n_client_id] !=
-                                       g_ships[ship].store.visible[n_client_id])
-                ship_configure_trade(ship);
+        if (old_visible[n_client_id] !=
+            g_ships[ship].store.visible[n_client_id])
+                G_ship_reselect(ship, -1);
 
         /* No need to send updates here if we aren't hosting */
         if (n_client_id != N_HOST_CLIENT_ID)
@@ -682,12 +682,15 @@ bool G_ship_controlled_by(int index, n_client_id_t client)
 \******************************************************************************/
 bool G_ship_hostile(int index, n_client_id_t to_client)
 {
+        n_client_id_t ship_client;
+
         if (index < 0 || index >= G_SHIPS_MAX || !g_ships[index].in_use)
                 return FALSE;
+        ship_client = g_ships[index].client;
 
         /* For the tech preview, all nations are permanently at war */
-        return g_clients[g_ships[index].client].nation !=
-               g_clients[to_client].nation;
+        return g_clients[ship_client].nation != g_clients[to_client].nation ||
+               g_clients[ship_client].nation == G_NN_PIRATE;
 }
 
 /******************************************************************************\

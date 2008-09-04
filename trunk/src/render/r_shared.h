@@ -219,6 +219,7 @@ void R_render_ship_status(const r_model_t *, float left, float left_max,
                           bool selected, bool own);
 
 /* r_solar.c */
+extern c_color_t r_fog_color;
 extern float r_solar_angle;
 
 /* r_sprite.c */
@@ -226,6 +227,7 @@ extern float r_solar_angle;
 void R_billboard_init(r_billboard_t *, r_texture_t *);
 void R_billboard_load(r_billboard_t *, const char *);
 void R_billboard_render(r_billboard_t *);
+void R_fill_screen(c_color_t);
 void R_sprite_cleanup(r_sprite_t *);
 void R_sprite_init(r_sprite_t *, r_texture_t *);
 void R_sprite_init_text(r_sprite_t *, r_font_t, float wrap, float shadow,

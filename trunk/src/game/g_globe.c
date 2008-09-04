@@ -371,6 +371,28 @@ static void render_globe_model(r_model_t *model)
 }
 
 /******************************************************************************\
+ Renders the game-over overlay on the globe.
+\******************************************************************************/
+static void render_game_over(void)
+{
+        static float fade;
+        c_color_t color;
+
+        /* Smoothly transition fade */
+        if (g_game_over && !i_limbo) {
+                if ((fade += c_frame_sec) > 1.f)
+                        fade = 1.f;
+        } else if ((fade -= c_frame_sec) < 0.f) {
+                fade = 0.f;
+                return;
+        }
+
+        color = r_fog_color;
+        color.a *= 0.5f * fade;
+        R_fill_screen(color);
+}
+
+/******************************************************************************\
  Render the globe and updates tile visibility.
 \******************************************************************************/
 void G_render_globe(void)
@@ -416,6 +438,7 @@ void G_render_globe(void)
         }
 
         G_render_ships();
+        render_game_over();
 }
 
 /******************************************************************************\

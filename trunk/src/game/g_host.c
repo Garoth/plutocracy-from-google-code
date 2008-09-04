@@ -38,6 +38,12 @@ static void cm_affiliate(int client)
             nation == g_clients[client].nation)
                 return;
         old = g_clients[client].nation;
+
+        /* Nation changing rules */
+        if (old == G_NN_PIRATE ||
+            (old != G_NN_NONE && nation != G_NN_PIRATE))
+                return;
+
         g_clients[client].nation = nation;
 
         /* If this client just joined a nation for the first time,
@@ -597,15 +603,9 @@ void G_host_game(void)
 /******************************************************************************\
  Broadcast a game-over message.
 \******************************************************************************/
-static void game_over(int winner)
+static void game_over(g_nation_name_t nation, n_client_id_t client)
 {
-        N_send_start();
-        N_send_char(G_SM_GAME_OVER);
-        N_send_char(winner);
-
-        /* TODO: send scoreboard */
-
-        N_broadcast(NULL);
+        N_broadcast("111", G_SM_GAME_OVER, nation, client);
 }
 
 /******************************************************************************\
@@ -614,15 +614,24 @@ static void game_over(int winner)
 static void check_game_over(void)
 {
         static int check_time;
-        g_nation_name_t best;
+        g_nation_name_t best_nation, best_client, client_nation;
         int i, best_gold;
 
         /* Check clients periodically */
         if (c_time_msec < check_time || g_game_over)
                 return;
-        best = G_NN_NONE;
+        best_nation = G_NN_NONE;
         best_gold = -1;
         check_time = c_time_msec + 1000;
+
+        /* If there is no victory gold target, only time limit can end the game
+           and always in a tie */
+        if (g_victory_gold.value.n <= 0) {
+                if (g_time_limit.value.n > 0 &&
+                    g_time_limit_msec <= c_time_msec)
+                        game_over(G_NN_NONE, -1);
+                return;
+        }
 
         /* Reset counts */
         for (i = 0; i < N_CLIENTS_MAX; i++) {
@@ -650,16 +659,45 @@ static void check_game_over(void)
                         continue;
 
                 /* Count gold toward nation */
-                if ((g_nations[g_clients[i].nation].gold += g_clients[i].gold) >
-                    g_victory_gold.value.n) {
-                        game_over(g_clients[i].nation);
+                client_nation = g_clients[i].nation;
+                g_nations[client_nation].gold += g_clients[i].gold;
+                if (client_nation != G_NN_PIRATE) {
+
+                        /* Nation won */
+                        if (g_nations[client_nation].gold >=
+                             g_victory_gold.value.n) {
+                                game_over(client_nation, -1);
+                                return;
+                        }
+
+                        /* Nation in the lead */
+                        if (g_nations[client_nation].gold > best_gold) {
+                                best_nation = client_nation;
+                                best_gold = g_nations[client_nation].gold;
+                        }
+
+                        /* Nation tied for the lead */
+                        else if (g_nations[client_nation].gold == best_gold)
+                                best_nation = G_NN_NONE;
+                }
+
+                /* Pirates win individually */
+                else if (g_clients[i].gold >= g_victory_gold.value.n) {
+                        game_over(G_NN_PIRATE, i);
                         return;
                 }
-                if (g_nations[g_clients[i].nation].gold > best_gold) {
-                        best = g_clients[i].nation;
-                        best_gold = g_nations[g_clients[i].nation].gold;
-                } else if (g_nations[g_clients[i].nation].gold == best_gold)
-                        best = G_NN_NONE;
+
+                /* Pirate in the lead */
+                else if (g_clients[i].gold > best_gold) {
+                        best_nation = G_NN_PIRATE;
+                        best_client = i;
+                        best_gold = g_clients[i].gold;
+                }
+
+                /* Pirate tied for the lead */
+                else if (g_clients[i].gold == best_gold)
+                        best_nation = G_NN_NONE;
+
 
                 /* Check for players that lost their ships */
                 if (g_clients[i].ships > 0)
@@ -670,7 +708,7 @@ static void check_game_over(void)
 
         /* Timelimit ends the game */
         if (g_time_limit.value.n > 0 && g_time_limit_msec <= c_time_msec)
-                game_over(best);
+                game_over(best_nation, best_client);
 }
 
 /******************************************************************************\

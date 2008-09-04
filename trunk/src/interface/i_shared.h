@@ -85,6 +85,7 @@ void I_update_colors(void);
 extern int i_limbo;
 
 /* i_nations.c */
+void I_enable_nation(int nation, bool enable);
 void I_select_nation(int nation);
 
 /* i_players.c */

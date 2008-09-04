@@ -54,7 +54,7 @@ static void sm_affiliate(void)
                 return;
         }
         g_clients[client].nation = nation;
-        if (client == n_client_id)
+        if (client == n_client_id && nation != G_NN_PIRATE)
                 I_select_nation(nation);
 
         /* Reselect the ship if its client's nation changed */
@@ -87,6 +87,7 @@ static void sm_affiliate(void)
                 if (client == n_client_id) {
                         I_popup(goto_pos, C_str("g-join-pirate",
                                                 "You became a pirate."));
+                        I_select_nation(-1);
                         return;
                 }
                 fmt = C_str("g-join-pirate-client", "%s became a pirate.");
@@ -96,8 +97,15 @@ static void sm_affiliate(void)
 
         /* Message for nations */
         if (client == n_client_id) {
+                int i;
+
                 fmt = C_str("g-join-nation-you", "You joined the %s nation.");
                 I_popup(goto_pos, C_va(fmt, g_nations[nation].long_name));
+
+                /* You may only go pirate now */
+                for (i = 0; i < G_NATION_NAMES; i++)
+                        if (i != G_NN_PIRATE)
+                                I_enable_nation(i, FALSE);
         } else {
                 fmt = C_str("g-join-nation-client", "%s joined the %s nation.");
                 I_popup(goto_pos, C_va(fmt, g_clients[client].name,
@@ -135,6 +143,7 @@ static void sm_client(void)
 static void sm_game_over(void)
 {
         g_nation_name_t nation;
+        const char *fmt;
 
         if ((nation = G_receive_nation(-1)) < 0)
                 return;
@@ -143,10 +152,21 @@ static void sm_game_over(void)
         if (nation == G_NN_NONE)
                 I_popup(NULL, C_str("g-victory-tie", "Game tied!"));
 
-        /* Have a winner */
-        else
-                I_popup(NULL, C_va(C_str("g-victory", "%s team won the game!"),
-                                   g_nations[nation].long_name));
+        /* Pirate won */
+        else if (nation == G_NN_PIRATE) {
+                n_client_id_t client;
+
+                if ((client = G_receive_client(-1)) < 0)
+                        return;
+                fmt = C_str("g-victory-pirate", "%s won the game!");
+                I_popup(NULL, C_va(fmt, g_clients[client].name));
+        }
+
+        /* Nation won */
+        else {
+                fmt = C_str("g-victory-team", "%s team won the game!");
+                I_popup(NULL, C_va(fmt, g_nations[nation].long_name));
+        }
 
         g_game_over = TRUE;
         G_ship_reselect(-1, -1);

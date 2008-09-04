@@ -178,8 +178,6 @@ void R_init_solar(void);
 void R_render_solar(void);
 void R_start_atmosphere(void);
 
-extern c_color_t r_fog_color;
-
 /* r_surface.c */
 SDL_Surface *R_surface_alloc(int width, int height, int alpha);
 void R_surface_free(SDL_Surface *);
