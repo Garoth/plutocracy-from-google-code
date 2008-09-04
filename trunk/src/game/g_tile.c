@@ -75,9 +75,10 @@ static void tile_quick_info(int index)
         tile = g_tiles + index;
         if (tile->building) {
                 building_class = g_building_classes + tile->building->type;
-                I_quick_info_show(building_class->name);
+                I_quick_info_show(building_class->name, &r_tiles[index].origin);
         } else
-                I_quick_info_show(g_building_classes[G_BT_NONE].name);
+                I_quick_info_show(g_building_classes[G_BT_NONE].name,
+                                  &r_tiles[index].origin);
 
         /* Terrain */
         I_quick_info_add("Terrain:",
