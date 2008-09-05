@@ -570,3 +570,54 @@ int C_suffix(char *string, const char *suffix, int size)
         return string_len;
 }
 
+/******************************************************************************\
+ Returns the next line in [pstr]. [end] will be set to TRUE if this is the
+ last line. Note that [pstr] will be mangled. Windows-style carriage returns
+ are consumed transparently.
+\******************************************************************************/
+char *C_line(char **pstr, bool *end)
+{
+        char *start_pos;
+        bool last_cr;
+
+        if (end)
+                *end = FALSE;
+        start_pos = *pstr;
+        while (**pstr != '\n') {
+                if (!**pstr) {
+                        if (end)
+                                *end = TRUE;
+                        return start_pos;
+                }
+                last_cr = **pstr == '\r';
+                (*pstr)++;
+        }
+        if (last_cr)
+                *(*pstr - 1) = NUL;
+        *((*pstr)++) = NUL;
+        return start_pos;
+}
+
+/******************************************************************************\
+ Returns the next token in [pstr]. [end] will be set to TRUE if this is the
+ last token. Note that [pstr] will be mangled.
+\******************************************************************************/
+char *C_token(char **pstr, bool *end)
+{
+        char *start_pos, *end_pos;
+
+        if (end)
+                *end = FALSE;
+        *pstr = C_skip_spaces(*pstr);
+        start_pos = *pstr;
+        while (**pstr && !C_is_space(**pstr))
+                if (!(*pstr)++)
+                        break;
+        end_pos = *pstr;
+        *pstr = C_skip_spaces(*pstr);
+        if (!**pstr && end)
+                *end = TRUE;
+        *end_pos = NUL;
+        return start_pos;
+}
+

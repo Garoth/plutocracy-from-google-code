@@ -12,10 +12,22 @@
 
 #include "i_common.h"
 
+/* Server line widget */
+typedef struct server_line {
+        i_widget_t widget;
+        i_selectable_t sel;
+        i_label_t main, alt, address_label;
+        char address[32];
+} server_line_t;
+
+/* Server list */
+static i_selectable_t *server_group;
+static i_scrollback_t server_list;
+
 static i_label_t label;
 static i_entry_t ip_entry;
-static i_scrollback_t server_list;
-static i_button_t host_button, join_button, leave_button, quit_button;
+static i_button_t host_button, join_button, leave_button, refresh_button,
+                  quit_button;
 static i_box_t outer_box, left_box, right_box;
 
 /******************************************************************************\
@@ -60,6 +72,15 @@ static void join_button_clicked(i_button_t *button)
         C_debug("Join button clicked");
         G_join_game(ip_entry.buffer);
         I_widget_event(I_widget_top_level(&button->widget), I_EV_HIDE);
+}
+
+/******************************************************************************\
+ Refresh server list via interface.
+\******************************************************************************/
+static void refresh_button_clicked(i_button_t *button)
+{
+        C_debug("Refresh button clicked");
+        G_refresh_servers();
 }
 
 /******************************************************************************\
@@ -133,6 +154,13 @@ void I_init_game(i_window_t *window)
         host_button.widget.margin_rear = 1.f;
         I_widget_add(&left_box.widget, &host_button.widget);
 
+        /* Refresh button */
+        I_button_init(&refresh_button, NULL, C_str("i-refresh", "Refresh"),
+                      I_BT_DECORATED);
+        refresh_button.on_click = (i_callback_f)refresh_button_clicked;
+        refresh_button.widget.margin_rear = 1.f;
+        I_widget_add(&left_box.widget, &refresh_button.widget);
+
         /* Quit button */
         I_button_init(&quit_button, NULL, C_str("i-quit", "Quit"),
                       I_BT_DECORATED);
@@ -149,5 +177,79 @@ void I_init_game(i_window_t *window)
         /* Server list scrollback */
         I_scrollback_init(&server_list);
         I_widget_add(&right_box.widget, &server_list.widget);
+}
+
+/******************************************************************************\
+ Clear the game server list.
+\******************************************************************************/
+void I_reset_servers(void)
+{
+        I_widget_remove_children(&server_list.widget, TRUE);
+}
+
+/******************************************************************************\
+ A server was selected.
+\******************************************************************************/
+static void server_line_selected(i_selectable_t *sel)
+{
+        server_line_t *line;
+
+        line = (server_line_t *)sel->data;
+        I_entry_configure(&ip_entry, line->address);
+}
+
+/******************************************************************************\
+ Server line event function.
+\******************************************************************************/
+static bool server_line_event(server_line_t *line, i_event_t event)
+{
+        /* Slave to the selectable widget */
+        if (event == I_EV_CONFIGURE) {
+                line->sel.widget.size = line->widget.size;
+                line->sel.widget.origin = line->widget.origin;
+                I_widget_event(&line->sel.widget, I_EV_CONFIGURE);
+                line->widget.size = line->sel.widget.size;
+                line->widget.origin = line->sel.widget.origin;
+                return FALSE;
+        }
+        return line->sel.widget.event_func(&line->sel.widget, event);
+}
+
+/******************************************************************************\
+ Add a server to the game server list.
+\******************************************************************************/
+void I_add_server(const char *main, const char *alt, const char *address)
+{
+        server_line_t *line;
+
+        C_alloc(line);
+        I_widget_init(&line->widget, "Server Line");
+        line->widget.event_func = (i_event_f)server_line_event;
+        line->widget.state = I_WS_READY;
+        line->widget.heap = TRUE;
+
+        /* Selectable widget */
+        I_selectable_init(&line->sel, &server_group, 0.f);
+        line->sel.data = line;
+        line->sel.on_select = (i_callback_f)server_line_selected;
+        I_widget_add(&line->widget, &line->sel.widget);
+
+        /* Main label */
+        I_label_init(&line->main, main);
+        I_widget_add(&line->sel.widget, &line->main.widget);
+
+        /* Alt label */
+        I_label_init(&line->alt, alt);
+        line->alt.widget.expand = TRUE;
+        line->alt.color = I_COLOR_ALT;
+        I_widget_add(&line->sel.widget, &line->alt.widget);
+
+        /* Address label */
+        C_strncpy_buf(line->address, address);
+        I_label_init(&line->address_label, address);
+        I_widget_add(&line->sel.widget, &line->address_label.widget);
+
+        /* Add to the scrollback widget which will configure the line */
+        I_widget_add(&server_list.widget, &line->widget);
 }
 

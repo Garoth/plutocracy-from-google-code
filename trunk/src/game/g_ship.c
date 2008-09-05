@@ -161,7 +161,6 @@ void G_render_ships(void)
                 if (!ship->in_use)
                         continue;
                 C_assert(ship->tile >= 0 && ship->tile < r_tiles_max);
-                C_assert(g_tiles[ship->tile].ship == i);
                 tile = g_tiles + ship->tile;
 
                 /* Don't bother rendering if the ship isn't visible */

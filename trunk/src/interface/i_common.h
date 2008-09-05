@@ -183,6 +183,7 @@ typedef struct i_scrollback {
         r_window_t window;
         float scroll;
         int children, limit;
+        bool bottom_padding;
 } i_scrollback_t;
 
 /* Data type for a select widget option */

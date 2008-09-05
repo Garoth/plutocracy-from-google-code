@@ -540,6 +540,7 @@ void G_client_callback(int client, n_event_t event)
 void G_update_client(void)
 {
         N_poll_client();
+        N_poll_http();
         if (i_limbo)
                 return;
         G_update_ships();
@@ -570,5 +571,73 @@ void G_cleanup(void)
 {
         G_cleanup_ships();
         G_cleanup_tiles();
+}
+
+/******************************************************************************\
+ HTTP connection callback for retreiving a list of servers.
+\******************************************************************************/
+static void refresh_callback(n_event_t event, const char *text, int size)
+{
+        c_token_file_t tf;
+
+        if (event == N_EV_CONNECTED) {
+                C_debug("Connected to master server");
+                return;
+        }
+        if (event == N_EV_DISCONNECTED) {
+                C_debug("Disconnected from master server");
+                return;
+        }
+        if (event != N_EV_MESSAGE)
+                return;
+
+        /* Bad response */
+        if (!text) {
+                C_warning("Bad master server response");
+                N_disconnect_http();
+                return;
+        }
+
+        /* Parse the response */
+        C_debug("Parsing master server list");
+        C_token_file_init_string(&tf, text);
+        I_reset_servers();
+        for (;;) {
+                const char *token;
+                char name[G_NAME_MAX], alt[16], address[32];
+
+                token = C_token_file_read(&tf);
+                if (!*token)
+                        break;
+                C_strncpy_buf(address, token);
+                C_strncpy_buf(name, C_token_file_read(&tf));
+                C_strncpy_buf(alt, C_token_file_read(&tf));
+                I_add_server(name, alt, address);
+                C_debug("Parsed server '%s (%s) %s'", name, alt, address);
+        }
+
+        /* We don't need the HTTP connection anymore */
+        N_disconnect_http();
+}
+
+/******************************************************************************\
+ Connect to the master server and refresh game servers.
+\******************************************************************************/
+void G_refresh_servers(void)
+{
+        C_var_unlatch(&g_master);
+        if (!g_master.value.s[0])
+                return;
+
+        /* Connect to the master server */
+        if (!N_connect_http(g_master.value.s,
+                            (n_callback_http_f)refresh_callback)) {
+                I_popup(NULL, "Failed to connect to master server.");
+                return;
+        }
+
+        /* Request the master server script */
+        C_var_unlatch(&g_master_url);
+        N_send_get(g_master_url.value.s);
 }
 

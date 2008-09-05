@@ -351,7 +351,8 @@ bool G_ship_move_to(int i, int new_tile)
 
         /* Remove this ship from the old tile */
         C_assert(g_ships[i].rear_tile != g_ships[i].tile);
-        if (g_ships[i].rear_tile >= 0)
+        if (g_ships[i].rear_tile >= 0 &&
+            g_tiles[g_ships[i].rear_tile].ship == i)
                 g_tiles[g_ships[i].rear_tile].ship = -1;
 
         /* Move to the new tile */

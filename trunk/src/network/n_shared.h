@@ -41,8 +41,11 @@ typedef enum {
         N_EV_DISCONNECTED,
 } n_event_t;
 
-/* Callback function prototype */
+/* Client/server network callback function */
 typedef void (*n_callback_f)(n_client_id_t, n_event_t);
+
+/* HTTP network callback function */
+typedef void (*n_callback_http_f)(n_event_t, const char *text, int length);
 
 /* Structure for connected clients */
 typedef struct n_client {
@@ -60,6 +63,14 @@ void N_init(void);
 void N_poll_client(void);
 
 extern n_client_id_t n_client_id;
+
+/* n_http.c */
+bool N_connect_http(const char *address, n_callback_http_f);
+void N_disconnect_http(void);
+void N_poll_http(void);
+void N_send_get(const char *url);
+#define N_send_post(url, ...) N_send_post_full(url, ## __VA_ARGS__, NULL)
+void N_send_post_full(const char *url, ...);
 
 /* n_server.c */
 void N_drop_client(n_client_id_t);
@@ -100,4 +111,6 @@ bool N_send_string(const char *);
 
 /* n_variables.c */
 void N_register_variables(void);
+
+extern c_var_t n_port;
 

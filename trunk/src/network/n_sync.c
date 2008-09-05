@@ -89,7 +89,6 @@ void N_receive_string(char *buffer, int size)
 static void send_buffer(n_client_id_t client)
 {
         SOCKET socket;
-        int i, ret, bytes_sent;
 
         if (client >= 0 && client < N_CLIENTS_MAX &&
             !n_clients[client].connected) {
@@ -112,28 +111,10 @@ static void send_buffer(n_client_id_t client)
 
         /* Send TCP/IP message */
         socket = N_client_to_socket(client);
-        for (ret = bytes_sent = i = 0; bytes_sent < n_sync_size && i < 5; i++) {
-                const char *error;
-                int ret;
-
-                if (!N_socket_select(socket, TRUE))
-                        break;
-                ret = send(socket, n_sync_buffer, n_sync_size, 0);
-                if ((error = N_socket_error(ret))) {
-                        C_warning("Error sending to %s: %s",
-                                  N_client_to_string(client), error);
-                        break;
-                }
-                bytes_sent += ret;
-                if (bytes_sent >= n_sync_size)
-                        return;
-                SDL_Delay(10);
-        }
+        if (N_socket_send(socket, n_sync_buffer, n_sync_size))
+                return;
 
         /* Send failed */
-        C_warning("Send to %s failed, returned %d; %d tries, %d/%d bytes",
-                  N_client_to_string(client), ret, i, bytes_sent,
-                  n_sync_size);
         N_drop_client(client);
 }
 

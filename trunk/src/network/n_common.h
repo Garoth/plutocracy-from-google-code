@@ -39,10 +39,12 @@ typedef int socklen_t;
 extern SOCKET n_client_socket;
 
 /* n_socket.c */
+SOCKET N_connect_socket(const char *address, int port);
 SOCKET N_client_to_socket(n_client_id_t);
 const char *N_socket_error(int return_value);
 void N_socket_no_block(SOCKET);
 bool N_socket_select(SOCKET, bool write);
+bool N_socket_send(SOCKET, const char *data, int size);
 
 /* n_sync.c */
 bool N_receive(int client);

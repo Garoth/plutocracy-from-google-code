@@ -65,11 +65,9 @@ typedef struct i_cargo_info {
 /* i_chat.c */
 void I_print_chat(const char *name, i_color_t, const char *message);
 
-/* i_quick_info.c */
-void I_quick_info_add(const char *label, const char *value);
-void I_quick_info_add_color(const char *label, const char *value, i_color_t);
-void I_quick_info_close(void);
-void I_quick_info_show(const char *title, const c_vec3_t *goto_pos);
+/* i_game.c */
+void I_add_server(const char *main, const char *alt, const char *address);
+void I_reset_servers(void);
 
 /* i_layout.c */
 void I_cleanup(void);
@@ -90,6 +88,12 @@ void I_select_nation(int nation);
 /* i_players.c */
 void I_configure_player(int index, const char *name, i_color_t, bool host);
 void I_configure_player_num(int num);
+
+/* i_quick_info.c */
+void I_quick_info_add(const char *label, const char *value);
+void I_quick_info_add_color(const char *label, const char *value, i_color_t);
+void I_quick_info_close(void);
+void I_quick_info_show(const char *title, const c_vec3_t *goto_pos);
 
 /* i_ring.c */
 void I_reset_ring(void);

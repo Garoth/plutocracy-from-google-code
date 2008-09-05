@@ -271,9 +271,11 @@ static int is_comment_end(const char *str, int type)
 /******************************************************************************\
  Read a token out of a token file. A token is either a series of characters
  unbroken by spaces or comments or a single or double-quote enclosed string.
- The kind of encolosed string (or zero) is returned via [quoted]. Enclosed
+ The kind of enclosed string (or zero) is returned via [quoted]. Enclosed
  strings are parsed for backslash symbols. Token files support Bash, C, and
  C++ style comments.
+
+ Always returns a non-NULL string. A zero-length string indicates end of file.
 
  FIXME: Symbols in identifiers should be read as individual tokens.
 \******************************************************************************/
