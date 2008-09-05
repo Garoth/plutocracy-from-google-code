@@ -33,7 +33,7 @@ static void scrollback_moved(i_scrollback_t *sb)
 {
         i_widget_t *child;
         c_vec2_t origin;
-        float height;
+        float height, extra;
 
         /* Find the total height */
         child = sb->widget.child;
@@ -49,10 +49,19 @@ static void scrollback_moved(i_scrollback_t *sb)
         if (sb->scroll < 0.f)
                 sb->scroll = 0.f;
 
+        /* If the child widgets are smaller than the scrollback, pad the
+           bottom with empty space */
+        if (sb->bottom_padding) {
+                extra = sb->widget.size.y - height;
+                if (extra < 0)
+                        extra = 0;
+        } else
+                extra = 0;
+
         /* Re-align the widgets */
         child = sb->widget.child;
         origin = sb->widget.origin;
-        origin.y -= height - sb->scroll - sb->widget.size.y;
+        origin.y -= height - sb->scroll - sb->widget.size.y + extra;
         while (child) {
                 I_widget_move(child, origin);
                 origin.y += child->size.y;
@@ -142,6 +151,7 @@ void I_scrollback_init(i_scrollback_t *sb)
         sb->widget.expand = TRUE;
         sb->limit = 100;
         sb->scroll = 0.f;
+        sb->bottom_padding = TRUE;
 }
 
 /******************************************************************************\

@@ -227,6 +227,7 @@ int main(int argc, char *argv[])
         G_init();
         I_init();
         R_load_test_assets();
+        G_refresh_servers();
 
         /* Run the main loop */
         main_loop();

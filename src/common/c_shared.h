@@ -325,6 +325,7 @@ c_vec3_t C_vec3_rotate_to(c_vec3_t from, c_vec3_t normal,
         (1.f - 0.5f * (amp) * (1.f + sinf((freq) * c_time_msec)))
 
 /* c_memory.c */
+#define C_alloc(p) ((p) = C_calloc(sizeof (*(p))))
 void C_array_append(c_array_t *, void *item);
 void C_array_cleanup(c_array_t *);
 #define C_array_elem(ary, type, i) (((type*)(ary)->elems)[i])
@@ -380,6 +381,7 @@ void C_init_lang(void);
 int C_is_path(const char *);
 #define C_is_print(c) ((c) > 0 && (c) < 0x7f)
 #define C_is_space(c) ((c) > 0 && (c) <= ' ')
+char *C_line(char **pstr, bool *end);
 void C_sanitize(char *);
 char *C_skip_spaces(const char *str);
 #define C_strdup(s) C_strdup_full(__FILE__, __LINE__, __func__, s)
@@ -391,6 +393,7 @@ int C_strncpy_full(const char *file, int line, const char *func,
 #define C_strncpy_buf(d, s) C_strncpy(d, s, sizeof (d))
 int C_suffix(char *string, const char *suffix, int size);
 #define C_suffix_buf(str, suf) C_suffix(str, suf, sizeof (str))
+char *C_token(char **pstr, bool *end_of_string);
 int C_utf8_append(char *dest, int *dest_i, int dest_sz, const char *src);
 char *C_utf8_encode(unsigned int unicode, int *len);
 int C_utf8_index(char *str, int n);

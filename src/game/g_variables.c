@@ -28,6 +28,9 @@ c_var_t g_draw_distance, g_name;
 /* Server settings */
 c_var_t g_players, g_time_limit, g_victory_gold;
 
+/* Master server */
+c_var_t g_master, g_master_url;
+
 /******************************************************************************\
  Registers the game namespace variables.
 \******************************************************************************/
@@ -76,5 +79,11 @@ void G_register_variables(void)
                            "minutes after which game ends");
         C_register_integer(&g_victory_gold, "g_victory_gold", 30000,
                            "gold a team needs to win the game");
+
+        /* Master server */
+        C_register_string(&g_master, "g_master", "",
+                          "address of the master server");
+        C_register_string(&g_master_url, "g_master_url", "",
+                          "URL path to master server script");
 }
 

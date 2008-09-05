@@ -247,6 +247,7 @@ void I_init_chat(void)
         scrollback.widget.steal_keys = TRUE;
         scrollback.widget.size = C_vec2(512.f, 256.f);
         scrollback.widget.shown = FALSE;
+        scrollback.bottom_padding = FALSE;
         I_widget_add(&i_root, &scrollback.widget);
 
         /* Input window */

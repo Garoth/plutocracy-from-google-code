@@ -43,6 +43,7 @@ typedef struct g_nation {
 /* g_client.c */
 void G_cleanup(void);
 void G_init(void);
+void G_refresh_servers(void);
 void G_update_client(void);
 
 /* g_commands.c */

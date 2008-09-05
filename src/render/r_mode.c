@@ -279,7 +279,7 @@ static bool check_extension(const char *ext)
         len = C_strlen(ext);
         for (str = ext_str; ; ) {
                 str = strstr(str, ext);
-                if (!*str)
+                if (!str || !*str)
                         break;
                 if (str + len > ext_str + ext_str_len)
                         return FALSE;
