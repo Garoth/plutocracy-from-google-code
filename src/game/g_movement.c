@@ -413,7 +413,8 @@ static void ship_move(int i)
 
         /* Remove this ship from the old tile */
         C_assert(g_ships[i].rear_tile != g_ships[i].tile);
-        if (g_ships[i].rear_tile >= 0)
+        if (g_ships[i].rear_tile >= 0 &&
+            g_tiles[g_ships[i].rear_tile].ship == i)
                 g_tiles[g_ships[i].rear_tile].ship = -1;
 
         /* See if we hit an obstacle */
