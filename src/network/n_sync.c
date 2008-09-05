@@ -213,9 +213,14 @@ bool N_send_string(const char *string)
 void N_send_full(const char *file, int line, const char *func,
                  int client, const char *format, ...)
 {
-        static int stamp;
+        static bool broadcasting;
         va_list va;
         int sentinel;
+
+        /* Can't send during a broadcast */
+        if (broadcasting)
+                C_error_full(file, line, func,
+                             "Cannot send during a broadcast");
 
         /* We're not connected */
         if (n_client_id < 0)
@@ -268,24 +273,21 @@ void N_send_full(const char *file, int line, const char *func,
 
         /* Write the size of the message as the first 2-bytes */
 skip:   write_bytes(0, 2, &n_sync_size);
-        stamp++;
 
         /* Broadcast to every client */
         if (client == N_BROADCAST_ID || client == N_SELECTED_ID || client < 0) {
-                int i, except, broadcast_stamp;
+                int i, except;
 
                 C_assert(n_client_id == N_HOST_CLIENT_ID);
-                broadcast_stamp = stamp;
                 except = -client - 1;
+                broadcasting = TRUE;
                 for (i = 0; i < N_CLIENTS_MAX; i++) {
                         if (!n_clients[i].connected || i == except ||
                             (!n_clients[i].selected && client == N_SELECTED_ID))
                                 continue;
-                        if (stamp != broadcast_stamp)
-                                C_error_full(file, line, func,
-                                             "Broadcast buffer overwritten");
                         send_buffer(i);
                 }
+                broadcasting = FALSE;
                 return;
         }
 

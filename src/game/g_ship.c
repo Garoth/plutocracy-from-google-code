@@ -282,9 +282,13 @@ bool G_ship_can_trade_with(int index, int tile)
         int i, neighbors[3];
 
         R_tile_neighbors(g_ships[index].tile, neighbors);
-        for (i = 0; i < 3; i++)
-                if (neighbors[i] == tile)
-                        return ship_can_trade(g_tiles[tile].ship);
+        for (i = 0; i < 3; i++) {
+                if (neighbors[i] != tile)
+                        continue;
+                return ship_can_trade(g_tiles[tile].ship) &&
+                       g_ships[g_tiles[tile].ship].boarding_ship != index &&
+                       g_ships[index].boarding_ship != g_tiles[tile].ship;
+        }
         return FALSE;
 }
 
@@ -306,7 +310,12 @@ static void ship_update_trade(int index)
         if (ship->rear_tile < 0) {
                 R_tile_neighbors(ship->tile, neighbors);
                 for (i = 0; i < 3; i++) {
-                        if (!ship_can_trade(g_tiles[neighbors[i]].ship))
+                        int other_ship;
+
+                        other_ship = g_tiles[neighbors[i]].ship;
+                        if (!ship_can_trade(other_ship) ||
+                            g_ships[other_ship].boarding_ship == index ||
+                            g_ships[index].boarding_ship == other_ship)
                                 continue;
                         trade_tile = neighbors[i];
 
@@ -683,7 +692,8 @@ bool G_ship_hostile(int index, n_client_id_t to_client)
 {
         n_client_id_t ship_client;
 
-        if (index < 0 || index >= G_SHIPS_MAX || !g_ships[index].in_use)
+        if (index < 0 || index >= G_SHIPS_MAX || !g_ships[index].in_use ||
+            g_ships[index].client == to_client)
                 return FALSE;
         ship_client = g_ships[index].client;
 
