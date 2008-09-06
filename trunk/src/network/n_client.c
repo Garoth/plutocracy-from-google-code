@@ -30,6 +30,7 @@ void N_init(void)
                 C_error("Failed to initialize WinSock");
 #endif
         n_client_id = N_INVALID_ID;
+        N_init_sync();
 }
 
 /******************************************************************************\
@@ -41,6 +42,7 @@ void N_cleanup(void)
         WSACleanup();
 #endif
         N_stop_server();
+        N_cleanup_sync();
 }
 
 /******************************************************************************\
@@ -88,7 +90,7 @@ void N_disconnect(void)
 \******************************************************************************/
 void N_poll_client(void)
 {
-        if (n_client_id == N_INVALID_ID || n_client_id == N_HOST_CLIENT_ID)
+        if (n_client_id == N_INVALID_ID)
                 return;
         if (!N_receive(N_SERVER_ID))
                 N_disconnect();

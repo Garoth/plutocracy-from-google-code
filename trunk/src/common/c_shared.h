@@ -234,7 +234,7 @@ struct c_var {
 /* Resizing arrays */
 typedef struct c_array {
         int capacity, len, item_size;
-        void *elems;
+        void *data;
 } c_array_t;
 
 /* A structure to hold the data for a file that is being read in tokens */
@@ -326,11 +326,11 @@ c_vec3_t C_vec3_rotate_to(c_vec3_t from, c_vec3_t normal,
 
 /* c_memory.c */
 #define C_alloc(p) ((p) = C_calloc(sizeof (*(p))))
-void C_array_append(c_array_t *, void *item);
+int C_array_append(c_array_t *, void *item);
 void C_array_cleanup(c_array_t *);
-#define C_array_elem(ary, type, i) (((type*)(ary)->elems)[i])
-#define C_array_init(ary, type, cap) C_array_init_full(ary, \
-                                                       (int)sizeof (type), cap)
+#define C_array_get(ary, type, i) (((type*)(ary)->data) + i)
+#define C_array_init(ary, type, cap) \
+        C_array_init_full(ary, (int)sizeof (type), cap)
 void C_array_init_full(c_array_t *, int item_size, int cap);
 void C_array_reserve(c_array_t *, int n);
 void *C_array_steal(c_array_t *);

@@ -47,6 +47,8 @@ bool N_socket_select(SOCKET, bool write);
 bool N_socket_send(SOCKET, const char *data, int size);
 
 /* n_sync.c */
+void N_cleanup_sync(void);
+void N_init_sync(void);
 bool N_receive(int client);
 
 extern n_callback_f n_client_func, n_server_func;

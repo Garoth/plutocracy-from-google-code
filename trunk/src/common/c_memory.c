@@ -44,60 +44,64 @@ static int mem_calls;
 /******************************************************************************\
  Initialize an array.
 \******************************************************************************/
-void C_array_init_full(c_array_t *ary, int item_size, int cap)
+void C_array_init_full(c_array_t *array, int item_size, int cap)
 {
-        ary->item_size = item_size;
-        ary->len = 0;
-        ary->capacity = cap;
-        ary->elems = C_malloc(cap * item_size);
+        array->item_size = item_size;
+        array->len = 0;
+        if (cap < 0)
+                cap = 0;
+        array->capacity = cap;
+        array->data = cap > 0 ? C_malloc(cap * item_size) : 0;
 }
 
 /******************************************************************************\
- Ensure that enough space is allocated for n elems, but not necessarily more.
- Returns TRUE on success.
+ Ensure that enough space is allocated for [n] elements.
 \******************************************************************************/
-void C_array_reserve(c_array_t *ary, int n)
+void C_array_reserve(c_array_t *array, int n)
 {
-        ary->elems = C_realloc(ary->elems, ary->item_size * n);
-        ary->capacity = n;
+        array->data = C_realloc(array->data, array->item_size * n);
+        array->capacity = n;
 }
 
 /******************************************************************************\
- Append something to an array. item points to something of size item_size.
- Returns TRUE on success.
+ Append something to an array. [item] may be NULL or point to a structure of
+ size [item_size] to copy into the new location. Returns the new item's index.
 \******************************************************************************/
-void C_array_append(c_array_t *ary, void *item)
+int C_array_append(c_array_t *array, void *item)
 {
-        if (ary->len >= ary->capacity) {
-                if (ary->len > ary->capacity)
+        if (array->len >= array->capacity) {
+                if (array->len > array->capacity)
                         C_error("Invalid array");
-                C_array_reserve(ary, ary->capacity * 2);
+                if (array->capacity < 1)
+                        array->capacity = 1;
+                C_array_reserve(array, array->capacity * 2);
         }
-        memcpy((char *)ary->elems + ary->len * ary->item_size,
-               item, ary->item_size);
-        ary->len++;
+        if (item)
+                memcpy((char *)array->data + array->len * array->item_size,
+                       item, array->item_size);
+        return array->len++;
 }
 
 /******************************************************************************\
  Realloc so the array isn't overallocated, and return the pointer to the
  dynamic memory, otherwise cleaning up.
 \******************************************************************************/
-void *C_array_steal(c_array_t *ary)
+void *C_array_steal(c_array_t *array)
 {
         void *result;
 
-        result = C_realloc(ary->elems, ary->len * ary->item_size);
-        C_zero(ary);
+        result = C_realloc(array->data, array->len * array->item_size);
+        C_zero(array);
         return result;
 }
 
 /******************************************************************************\
  Clean up after the array.
 \******************************************************************************/
-void C_array_cleanup(c_array_t *ary)
+void C_array_cleanup(c_array_t *array)
 {
-        C_free(ary->elems);
-        memset(ary, 0, sizeof (*ary));
+        C_free(array->data);
+        memset(array, 0, sizeof (*array));
 }
 
 /******************************************************************************\

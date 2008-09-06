@@ -329,7 +329,7 @@ static model_data_t *model_data_load(const char *filename, bool cull)
                                 for (i = 0; i < 3; i++)
                                         face[i] = (unsigned short)
                                                   (verts.len - 3 + i);
-                                faces_culled += add_face(verts.elems, face,
+                                faces_culled += add_face(verts.data, face,
                                                          &indices, cull);
                                 verts_parsed = 0;
                         }
@@ -351,7 +351,7 @@ static model_data_t *model_data_load(const char *filename, bool cull)
                                         goto error;
                                 }
                         }
-                        faces_culled += add_face(verts.elems, face,
+                        faces_culled += add_face(verts.data, face,
                                                  &indices, cull);
                         verts_parsed = 0;
                         continue;

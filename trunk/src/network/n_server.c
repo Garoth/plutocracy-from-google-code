@@ -14,7 +14,7 @@
 
 /* Client slots array */
 n_client_t n_clients[N_CLIENTS_MAX];
-int n_clients_len;
+int n_clients_num;
 
 /* Server socket for listening for incoming connections */
 static SOCKET listen_socket;
@@ -69,7 +69,7 @@ int N_start_server(n_callback_f server_func, n_callback_f client_func)
 
         /* Setup the host's client */
         n_clients[N_HOST_CLIENT_ID].connected = TRUE;
-        n_clients_len = 1;
+        n_clients_num = 1;
         n_server_func(N_HOST_CLIENT_ID, N_EV_CONNECTED);
         n_client_func(N_SERVER_ID, N_EV_CONNECTED);
 
@@ -128,7 +128,7 @@ static void accept_connections(void)
         /* Initialize the client */
         n_clients[i].connected = TRUE;
         n_clients[i].socket = socket;
-        n_clients_len++;
+        n_clients_num++;
         n_server_func(i, N_EV_CONNECTED);
 }
 
@@ -149,9 +149,9 @@ void N_drop_client(int client)
                 C_warning("Tried to drop unconnected client %d", client);
                 return;
         }
-        n_server_func(client, N_EV_DISCONNECTED);
         n_clients[client].connected = FALSE;
-        n_clients_len--;
+        n_clients_num--;
+        n_server_func(client, N_EV_DISCONNECTED);
 
         /* The server kicked itself */
         if (client == n_client_id) {
