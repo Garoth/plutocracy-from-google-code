@@ -358,12 +358,9 @@ static void init_client(int client)
         if (client == N_HOST_CLIENT_ID)
                 return;
 
-        /* Reset kicked flag */
-        g_clients[client].kicked = FALSE;
-
         /* This client has already been counted toward the total, kick them
            if this is more players than we want */
-        if (n_clients_len > g_clients_max) {
+        if (n_clients_num > g_clients_max) {
                 N_send(client, "12ss", G_SM_POPUP,
                        "g-host-full", "Server is full.");
                 N_drop_client(client);
@@ -371,7 +368,7 @@ static void init_client(int client)
         }
 
         C_debug("Initializing client %d", client);
-        g_clients[client].nation = G_NN_NONE;
+        C_zero(g_clients + client);
 
         /* Communicate the globe info */
         N_send(client, "12111422ff4", G_SM_INIT, G_PROTOCOL, client,
@@ -436,7 +433,8 @@ static void server_callback(int client, n_event_t event)
 
         /* Special client events */
         if (event == N_EV_CONNECTED) {
-                N_broadcast("11", G_SM_CONNECTED, client);
+                N_broadcast_except(N_HOST_CLIENT_ID, "11",
+                                   G_SM_CONNECTED, client);
                 init_client(client);
                 return;
         } else if (event == N_EV_DISCONNECTED) {
@@ -531,7 +529,6 @@ void G_kick_client(n_client_id_t client)
 static void publish_game(bool force)
 {
         static int publish_time;
-        int i, clients;
 
         if ((c_time_msec < publish_time && !force) || g_game_over)
                 return;
@@ -543,17 +540,12 @@ static void publish_game(bool force)
                 return;
         C_var_unlatch(&g_master_url);
 
-        /* Do a reliable client count */
-        for (clients = i = 0; i < N_CLIENTS_MAX; i++)
-                if (n_clients[i].connected)
-                        clients++;
-
         /* Send game info key/value pairs, the server can figure out our
            ip adress on its own */
         N_connect_http(g_master.value.s, NULL);
         N_send_post(g_master_url.value.s,
                     "name", g_name.value.s,
-                    "info", C_va("%d/%d, %d min", clients, g_clients_max,
+                    "info", C_va("%d/%d, %d min", n_clients_num, g_clients_max,
                                  (g_time_limit_msec - c_time_msec) / 60000),
                     "port", C_va("%d", n_port.value.n));
         N_disconnect_http();

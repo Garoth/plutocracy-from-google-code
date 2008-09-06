@@ -16,21 +16,47 @@
 /* Receive function that arriving messages are routed to */
 n_callback_f n_client_func, n_server_func;
 
-/* Little-Endian message data buffer */
-short n_sync_pos, n_sync_size;
-char n_sync_buffer[N_SYNC_MAX];
+/* Structure for local message queue */
+typedef struct local_message {
+        int size;
+        char buffer[N_SYNC_MAX];
+} local_message_t;
+
+static c_array_t server_local, client_local;
+static int sync_pos, sync_size;
+static char sync_buffer[N_SYNC_MAX];
+
+/******************************************************************************\
+ Initialize synchronization structures.
+\******************************************************************************/
+void N_init_sync(void)
+{
+        C_array_init(&server_local, local_message_t, 0);
+        C_array_init(&client_local, local_message_t, 0);
+}
+
+/******************************************************************************\
+ Cleanup synchronization structures.
+\******************************************************************************/
+void N_cleanup_sync(void)
+{
+        C_debug("Local message queue capacity for server: %d, client: %d",
+                client_local.capacity, server_local.capacity);
+        C_array_cleanup(&client_local);
+        C_array_cleanup(&server_local);
+}
 
 /******************************************************************************\
  Call these functions to retrieve an argument from the current message from
- within the [n_receive] function when it is called.
+ within the [n_receive_f] function when it is called.
 \******************************************************************************/
 char N_receive_char(void)
 {
         char value;
 
-        if (n_sync_pos + 1 > n_sync_size)
+        if (!sync_buffer || sync_pos + 1 > sync_size)
                 return NUL;
-        value = n_sync_buffer[n_sync_pos++];
+        value = sync_buffer[sync_pos++];
         return value;
 }
 
@@ -38,10 +64,10 @@ int N_receive_int(void)
 {
         int value;
 
-        if (n_sync_pos + 4 > n_sync_size)
+        if (!sync_buffer || sync_pos + 4 > sync_size)
                 return 0;
-        value = (int)SDL_SwapLE32(*(Uint32 *)(n_sync_buffer + n_sync_pos));
-        n_sync_pos += 4;
+        value = (int)SDL_SwapLE32(*(Uint32 *)(sync_buffer + sync_pos));
+        sync_pos += 4;
         return value;
 }
 
@@ -60,10 +86,10 @@ short N_receive_short(void)
 {
         short value;
 
-        if (n_sync_pos + 2 > n_sync_size)
+        if (!sync_buffer || sync_pos + 2 > sync_size)
                 return 0;
-        value = (short)SDL_SwapLE16(*(Uint16 *)(n_sync_buffer + n_sync_pos));
-        n_sync_pos += 2;
+        value = (short)SDL_SwapLE16(*(Uint16 *)(sync_buffer + sync_pos));
+        sync_pos += 2;
         return value;
 }
 
@@ -71,16 +97,36 @@ void N_receive_string(char *buffer, int size)
 {
         int from, len;
 
-        C_assert(buffer && size > 0);
-        for (from = n_sync_pos; n_sync_buffer[n_sync_pos]; n_sync_pos++)
-                if (n_sync_pos > n_sync_size) {
+        if (!sync_buffer || !buffer || size < 1) {
+                *buffer = NUL;
+                return;
+        }
+        for (from = sync_pos; sync_buffer[sync_pos]; sync_pos++)
+                if (sync_pos > sync_size) {
                         *buffer = NUL;
                         return;
                 }
-        len = ++n_sync_pos - from;
+        len = ++sync_pos - from;
         if (len > size)
                 len = size;
-        memmove(buffer, n_sync_buffer + from, len);
+        memmove(buffer, sync_buffer + from, len);
+}
+
+/******************************************************************************\
+ Put the current message in a local queue.
+\******************************************************************************/
+static void queue_message(c_array_t *array)
+{
+        local_message_t *message;
+        int index;
+
+        if (sync_size <= 2)
+                return;
+        C_assert(sync_size <= N_SYNC_MAX);
+        index = C_array_append(array, NULL);
+        message = C_array_get(array, local_message_t, index);
+        message->size = sync_size - 2;
+        memcpy(message->buffer, sync_buffer + 2, message->size);
 }
 
 /******************************************************************************\
@@ -96,22 +142,20 @@ static void send_buffer(n_client_id_t client)
                 return;
         }
 
-        /* Deliver server messages to itself directly */
+        /* Put server messages to itself in the local queue */
         if (n_client_id == N_HOST_CLIENT_ID) {
                 if (client == N_SERVER_ID) {
-                        n_sync_pos = 2;
-                        n_server_func(N_HOST_CLIENT_ID, N_EV_MESSAGE);
+                        queue_message(&client_local);
                         return;
                 } else if (client == N_HOST_CLIENT_ID) {
-                        n_sync_pos = 2;
-                        n_client_func(N_SERVER_ID, N_EV_MESSAGE);
+                        queue_message(&server_local);
                         return;
                 }
         }
 
         /* Send TCP/IP message */
         socket = N_client_to_socket(client);
-        if (N_socket_send(socket, n_sync_buffer, n_sync_size))
+        if (N_socket_send(socket, sync_buffer, sync_size))
                 return;
 
         /* Send failed */
@@ -128,7 +172,7 @@ static bool write_bytes(int offset, int bytes, void *data)
 
         if (offset + bytes > N_SYNC_MAX)
                 return FALSE;
-        to = n_sync_buffer + offset;
+        to = sync_buffer + offset;
         switch (bytes) {
         case 1:
                 *(char *)to = *(char *)data;
@@ -141,8 +185,8 @@ static bool write_bytes(int offset, int bytes, void *data)
                 *(Uint32 *)to = SDL_SwapLE32(*(Uint32 *)data);
                 break;
         }
-        if (offset + bytes > n_sync_size)
-                n_sync_size = offset + bytes;
+        if (offset + bytes > sync_size)
+                sync_size = offset + bytes;
         return TRUE;
 }
 
@@ -151,7 +195,7 @@ static bool write_bytes(int offset, int bytes, void *data)
 \******************************************************************************/
 void N_send_start(void)
 {
-        n_sync_size = 2;
+        sync_size = 2;
 }
 
 /******************************************************************************\
@@ -160,22 +204,22 @@ void N_send_start(void)
 \******************************************************************************/
 bool N_send_char(char ch)
 {
-        return write_bytes(n_sync_size, 1, &ch);
+        return write_bytes(sync_size, 1, &ch);
 }
 
 bool N_send_short(short n)
 {
-        return write_bytes(n_sync_size, 2, &n);
+        return write_bytes(sync_size, 2, &n);
 }
 
 bool N_send_int(int n)
 {
-        return write_bytes(n_sync_size, 4, &n);
+        return write_bytes(sync_size, 4, &n);
 }
 
 bool N_send_float(float f)
 {
-        return write_bytes(n_sync_size, 4, &f);
+        return write_bytes(sync_size, 4, &f);
 }
 
 bool N_send_string(const char *string)
@@ -184,15 +228,15 @@ bool N_send_string(const char *string)
 
         string_len = C_strlen(string) + 1;
         if (string_len <= 1) {
-                if (n_sync_size > N_SYNC_MAX - 1)
+                if (sync_size > N_SYNC_MAX - 1)
                         return FALSE;
-                n_sync_buffer[n_sync_size++] = NUL;
+                sync_buffer[sync_size++] = NUL;
                 return TRUE;
         }
-        if (n_sync_size + string_len > N_SYNC_MAX)
+        if (sync_size + string_len > N_SYNC_MAX)
                return FALSE;
-        memcpy(n_sync_buffer + n_sync_size, string, string_len);
-        n_sync_size += string_len;
+        memcpy(sync_buffer + sync_size, string, string_len);
+        sync_size += string_len;
         return TRUE;
 }
 
@@ -213,14 +257,8 @@ bool N_send_string(const char *string)
 void N_send_full(const char *file, int line, const char *func,
                  int client, const char *format, ...)
 {
-        static bool broadcasting;
         va_list va;
         int sentinel;
-
-        /* Can't send during a broadcast */
-        if (broadcasting)
-                C_error_full(file, line, func,
-                             "Cannot send during a broadcast");
 
         /* We're not connected */
         if (n_client_id < 0)
@@ -234,7 +272,7 @@ void N_send_full(const char *file, int line, const char *func,
         if (!format || !format[0])
                 goto skip;
         va_start(va, format);
-        for (n_sync_size = 2; *format; format++)
+        for (sync_size = 2; *format; format++)
                 switch (*format) {
                 case '1':
                 case 'c':
@@ -272,7 +310,7 @@ void N_send_full(const char *file, int line, const char *func,
         va_end(va);
 
         /* Write the size of the message as the first 2-bytes */
-skip:   write_bytes(0, 2, &n_sync_size);
+skip:   write_bytes(0, 2, &sync_size);
 
         /* Broadcast to every client */
         if (client == N_BROADCAST_ID || client == N_SELECTED_ID || client < 0) {
@@ -280,14 +318,12 @@ skip:   write_bytes(0, 2, &n_sync_size);
 
                 C_assert(n_client_id == N_HOST_CLIENT_ID);
                 except = -client - 1;
-                broadcasting = TRUE;
                 for (i = 0; i < N_CLIENTS_MAX; i++) {
                         if (!n_clients[i].connected || i == except ||
                             (!n_clients[i].selected && client == N_SELECTED_ID))
                                 continue;
                         send_buffer(i);
                 }
-                broadcasting = FALSE;
                 return;
         }
 
@@ -301,6 +337,45 @@ overflow:
 }
 
 /******************************************************************************\
+ Receive messages in a local queue. Returns TRUE if [client] was local.
+\******************************************************************************/
+static bool receive_local(n_client_id_t client)
+{
+        c_array_t *array;
+        n_callback_f callback;
+        int i;
+
+        if (n_client_id != N_HOST_CLIENT_ID)
+                return FALSE;
+
+        /* Determine which event handler to use */
+        if (client == N_SERVER_ID) {
+                array = &server_local;
+                callback = n_client_func;
+        } else if (client == N_HOST_CLIENT_ID) {
+                array = &client_local;
+                callback = n_server_func;
+        } else
+                return FALSE;
+
+        /* Dispatch messages in order */
+        for (i = 0; i < array->len; i++) {
+                local_message_t *message;
+
+                message = C_array_get(array, local_message_t, i);
+                C_assert(message->size > 0);
+                C_assert(message->size < N_SYNC_MAX);
+                sync_size = message->size;
+                sync_pos = 0;
+                memcpy(sync_buffer, message->buffer, sync_size);
+                callback(client, N_EV_MESSAGE);
+        }
+        array->len = 0;
+
+        return TRUE;
+}
+
+/******************************************************************************\
  Receive data from a socket. Returns FALSE if an error occured and the
  connection should be dropped.
 \******************************************************************************/
@@ -309,13 +384,16 @@ bool N_receive(n_client_id_t client)
         SOCKET socket;
         int len, message_size;
 
-        if (client == n_client_id)
+        /* Receive from the local queue */
+        if (receive_local(client))
                 return TRUE;
+
+        /* Receive from a socket */
         for (socket = N_client_to_socket(client); ; ) {
                 const char *error;
 
                 /* Receive the message size */
-                len = (int)recv(socket, n_sync_buffer, N_SYNC_MAX, MSG_PEEK);
+                len = (int)recv(socket, sync_buffer, N_SYNC_MAX, MSG_PEEK);
 
                 /* Orderly shutdown */
                 if (!len)
@@ -333,8 +411,8 @@ bool N_receive(n_client_id_t client)
                         return TRUE;
 
                 /* Read the message length */
-                n_sync_pos = 0;
-                n_sync_size = 2;
+                sync_pos = 0;
+                sync_size = 2;
                 message_size = N_receive_short();
                 if (message_size < 1 || message_size > N_SYNC_MAX) {
                         C_warning("Invalid message size %d "
@@ -348,15 +426,22 @@ bool N_receive(n_client_id_t client)
                         return TRUE;
 
                 /* Read the entire message */
-                recv(socket, n_sync_buffer, message_size, 0);
+                recv(socket, sync_buffer, message_size, 0);
 
                 /* Dispatch the message */
-                n_sync_pos = 2;
-                n_sync_size = message_size;
+                sync_pos = 2;
+                sync_size = message_size;
                 if (n_client_id == N_HOST_CLIENT_ID)
                         n_server_func(client, N_EV_MESSAGE);
                 else
                         n_client_func(N_SERVER_ID, N_EV_MESSAGE);
         }
+}
+
+/******************************************************************************\
+ Receive data from the local message queue.
+\******************************************************************************/
+void N_receive_local(void)
+{
 }
 
