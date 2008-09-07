@@ -248,6 +248,9 @@ void I_add_server(const char *main, const char *alt, const char *address)
         line->alt.color = I_COLOR_ALT;
         I_widget_add(&line->sel.widget, &line->alt.widget);
 
+        /* Store the server's address */
+        C_strncpy_buf(line->address, address);
+
         /* Add to the scrollback widget which will configure the line */
         I_widget_add(&server_list.widget, &line->widget);
 }
