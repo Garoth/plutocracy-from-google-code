@@ -416,10 +416,11 @@ static void ship_update_visible(int ship)
         if (client >= 0 && client < N_CLIENTS_MAX)
                 g_ships[ship].store.visible[client] = TRUE;
 
-        /* Neighboring ships' clients can see our store */
+        /* Stopped neighboring ships' clients can see our store */
         R_tile_neighbors(g_ships[ship].tile, neighbors);
         for (i = 0; i < 3; i++) {
-                if (g_tiles[neighbors[i]].ship < 0)
+                if (g_tiles[neighbors[i]].ship < 0 ||
+                    g_ships[g_tiles[neighbors[i]].ship].rear_tile >= 0)
                         continue;
                 client = g_ships[g_tiles[neighbors[i]].ship].client;
                 if (client >= 0 && client < N_CLIENTS_MAX)

@@ -547,6 +547,20 @@ void I_widget_fade(i_widget_t *widget, float fade)
 }
 
 /******************************************************************************\
+ Convenience function that sets a widget's state to I_WS_READY only if it is
+ disabled (as opposed to hovering, active etc).
+\******************************************************************************/
+void I_widget_enable(i_widget_t *widget, bool enable)
+{
+        if (enable) {
+                if (widget->state == I_WS_DISABLED)
+                        widget->state = I_WS_READY;
+                return;
+        }
+        widget->state = I_WS_DISABLED;
+}
+
+/******************************************************************************\
  Handle an SDL event. Does not allow multiple keys or mouse buttons to be
  pressed at the same time.
 \******************************************************************************/
