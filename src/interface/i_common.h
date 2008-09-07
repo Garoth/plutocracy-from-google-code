@@ -315,12 +315,14 @@ int I_ring_shown(void);
 void I_theme_ring(void);
 
 /* i_select.c */
+int I_key_amount(void);
 void I_select_add_float(i_select_t *, float, const char *override);
 void I_select_add_int(i_select_t *, int, const char *override);
 void I_select_add_string(i_select_t *, const char *);
 void I_select_change(i_select_t *, int index);
 void I_select_init(i_select_t *, const char *label, const char *suffix);
 void I_select_nearest(i_select_t *, float value);
+void I_select_range(i_select_t *, float min, float inc, float max);
 void I_select_update(i_select_t *);
 float I_select_value(const i_select_t *);
 
@@ -333,7 +335,7 @@ void I_label_init(i_label_t *, const char *);
 void I_label_configure(i_label_t *, const char *);
 i_label_t *I_label_alloc(const char *);
 void I_image_init(i_image_t *, const char *icon);
-#define I_image_init_sep(i) I_image_init_themed(i, NULL)
+void I_image_init_sep(i_image_t *, bool vertical);
 void I_image_init_themed(i_image_t *, r_texture_t **);
 int I_selectable_event(i_selectable_t *, i_event_t);
 void I_selectable_init(i_selectable_t *, i_selectable_t **group, float height);

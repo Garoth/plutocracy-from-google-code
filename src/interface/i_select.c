@@ -158,9 +158,9 @@ void I_select_change(i_select_t *select, int index)
 }
 
 /******************************************************************************\
- Get the amount to change by and affect it by the keys held.
+ Get the amount to change an option by and affect it by the keys held.
 \******************************************************************************/
-static int change_amount(void)
+int I_key_amount(void)
 {
         int amount;
 
@@ -180,7 +180,7 @@ static void left_arrow_clicked(i_button_t *button)
         i_select_t *select;
 
         select = (i_select_t *)button->data;
-        I_select_change(select, select->index - change_amount());
+        I_select_change(select, select->index - I_key_amount());
 }
 
 /******************************************************************************\
@@ -191,7 +191,7 @@ static void right_arrow_clicked(i_button_t *button)
         i_select_t *select;
 
         select = (i_select_t *)button->data;
-        I_select_change(select, select->index + change_amount());
+        I_select_change(select, select->index + I_key_amount());
 }
 
 /******************************************************************************\
@@ -337,6 +337,24 @@ float I_select_value(const i_select_t *select)
                         return option->value;
 
         return 0.f;
+}
+
+/******************************************************************************\
+ Change the range/increment of the select widget after initialization.
+\******************************************************************************/
+void I_select_range(i_select_t *select, float min, float inc, float max)
+{
+        float value;
+
+        if (select->min == min && select->max == max &&
+            select->increment == inc)
+                return;
+        value = I_select_value(select);
+        select->min = min;
+        select->max = max;
+        select->increment = inc;
+        select->index = -1;
+        I_select_nearest(select, value);
 }
 
 /******************************************************************************\

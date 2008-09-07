@@ -80,13 +80,15 @@ static bool ship_leaving_tile(int tile)
 }
 
 /******************************************************************************\
- Send the ship's path if it changed.
+ Send the ship's path.
 \******************************************************************************/
-static void ship_send_path(int ship)
+void G_ship_send_path(int ship, n_client_id_t client)
 {
-        N_broadcast_except(N_HOST_CLIENT_ID, "112fs", G_SM_SHIP_PATH,
-                           ship, g_ships[ship].tile, g_ships[ship].progress,
-                           g_ships[ship].path);
+        if (!g_ships[ship].in_use)
+                return;
+        N_send(client, "112fs", G_SM_SHIP_PATH,
+               ship, g_ships[ship].tile, g_ships[ship].progress,
+               g_ships[ship].path);
 }
 
 /******************************************************************************\
@@ -111,7 +113,7 @@ void G_ship_path(int ship, int target)
                 g_ships[ship].target = g_ships[ship].tile;
                 if (changed) {
                         g_ships[ship].path[0] = NUL;
-                        ship_send_path(ship);
+                        G_ship_send_path(ship, N_BROADCAST_ID);
                         if (g_ships[ship].client == n_client_id &&
                             g_selected_ship == ship)
                                 R_select_path(-1, NULL);
@@ -238,7 +240,7 @@ rewind: /* Count length of the path */
                 if (g_selected_ship == ship &&
                     g_ships[ship].client == n_client_id)
                         R_select_path(g_ships[ship].tile, g_ships[ship].path);
-                ship_send_path(ship);
+                G_ship_send_path(ship, N_BROADCAST_ID);
         }
 
         return;

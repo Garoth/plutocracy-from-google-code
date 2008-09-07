@@ -49,6 +49,27 @@ void G_cleanup_ships(void)
 }
 
 /******************************************************************************\
+ Send a ship's spawn information.
+\******************************************************************************/
+void G_ship_send_spawn(int index, n_client_id_t client)
+{
+        if (!g_ships[index].in_use)
+                return;
+        N_send(client, "11121", G_SM_SHIP_SPAWN, index,
+               g_ships[index].client, g_ships[index].tile, g_ships[index].type);
+}
+
+/******************************************************************************\
+ Send a ship's name.
+\******************************************************************************/
+void G_ship_send_name(int index, n_client_id_t client)
+{
+        if (!g_ships[index].in_use)
+                return;
+        N_send(client, "11s", G_SM_SHIP_NAME, index, g_ships[index].name);
+}
+
+/******************************************************************************\
  Find an available tile around [tile] (including [tile]) and spawn a new ship
  of the given class there. If [tile] is negative, the ship will be placed on
  a random open tile. If [index] is negative, the first available slot will be
@@ -127,8 +148,7 @@ int G_ship_spawn(int index, n_client_id_t client, int tile, g_ship_type_t type)
 
         /* If we are the server, tell other clients */
         if (n_client_id == N_HOST_CLIENT_ID)
-                N_broadcast_except(N_HOST_CLIENT_ID, "11121", G_SM_SHIP_SPAWN,
-                                   index, client, tile, type);
+                G_ship_send_spawn(index, N_BROADCAST_ID);
 
         /* If this is one of ours, name it */
         if (client == n_client_id) {
@@ -235,9 +255,7 @@ static void ship_configure_trade(int index)
                 info.maximum = cargo->maximum;
 
                 /* No trade partner */
-                info.p_buy_limit = 0;
                 info.p_buy_price = -1;
-                info.p_sell_limit = 0;
                 info.p_sell_price = -1;
                 if (!partner) {
                         info.p_amount = -1;
@@ -247,19 +265,11 @@ static void ship_configure_trade(int index)
 
                 /* Trade partner's side */
                 cargo = partner->store.cargo + i;
+                if (cargo->auto_sell)
+                        info.p_buy_price = cargo->sell_price;
+                if (cargo->auto_buy)
+                        info.p_sell_price = cargo->buy_price;
                 info.p_amount = cargo->amount;
-                if (cargo->auto_sell) {
-                        info.p_buy_price = partner->store.cargo[i].sell_price;
-                        info.p_buy_limit = G_limit_purchase(&ship->store,
-                                                            &partner->store,
-                                                            i, 999);
-                }
-                if (cargo->auto_buy) {
-                        info.p_sell_price = partner->store.cargo[i].buy_price;
-                        info.p_sell_limit = -G_limit_purchase(&ship->store,
-                                                              &partner->store,
-                                                              i, -999);
-                }
                 I_configure_cargo(i, &info);
         }
 }

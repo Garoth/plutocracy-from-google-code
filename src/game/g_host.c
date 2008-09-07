@@ -148,7 +148,7 @@ static void cm_ship_name(int client)
 \******************************************************************************/
 static void cm_ship_prices(int client)
 {
-        int i, index, cargo, buy_price, sell_price, minimum, maximum;
+        int index, cargo, buy_price, sell_price, minimum, maximum;
 
         if ((index = G_receive_ship(client)) < 0 ||
             !G_ship_controlled_by(index, client))
@@ -172,9 +172,7 @@ static void cm_ship_prices(int client)
         maximum = N_receive_short();
 
         /* Select clients that can see this store */
-        for (i = 0; i < N_CLIENTS_MAX; i++)
-                if (g_ships[index].store.visible[i])
-                        n_clients[i].selected = TRUE;
+        G_store_select_clients(&g_ships[index].store);
 
         /* The host needs to see this message to process the update */
         n_clients[N_HOST_CLIENT_ID].selected = TRUE;
@@ -386,23 +384,20 @@ static void init_client(int client)
         /* Tell them about the buildings and gibs on them globe */
         for (i = 0; i < r_tiles_max; i++) {
                 if (g_tiles[i].building)
-                        N_send(client, "1211", G_SM_BUILDING, i,
-                               g_tiles[i].building->type,
-                               g_tiles[i].building->nation);
+                        G_tile_send_building(i, client);
                 if (g_tiles[i].gib)
-                        N_send(client, "121", G_SM_GIB, i,
-                               g_tiles[i].gib->type);
+                        G_tile_send_gib(i, client);
         }
 
         /* Tell them about all the ships on the globe */
         for (i = 0; i < G_SHIPS_MAX; i++) {
                 if (!g_ships[i].in_use)
                         continue;
-                N_send(client, "11121", G_SM_SHIP_SPAWN, i, g_ships[i].client,
-                       g_ships[i].tile, g_ships[i].type);
-                N_send(client, "11s", G_SM_SHIP_NAME, i, g_ships[i].name);
+                G_ship_send_spawn(i, client);
+                G_ship_send_name(i, client);
                 if (!g_ships[i].modified)
                         G_ship_send_state(i, client);
+                G_ship_send_path(i, client);
         }
 }
 

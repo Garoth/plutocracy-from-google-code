@@ -287,6 +287,8 @@ static void sm_ship_spawn(void)
         n_client_id_t client;
         int tile, index;
 
+        if (n_client_id == N_HOST_CLIENT_ID)
+                return;
         index = N_receive_char();
         client = N_receive_char();
         tile = N_receive_short();
@@ -459,14 +461,16 @@ void G_client_callback(int client, n_event_t event)
 
         /* A gib spawned or vanished */
         case G_SM_GIB:
-                if ((i = G_receive_tile(-1)) < 0)
+                if (n_client_id == N_HOST_CLIENT_ID ||
+                    (i = G_receive_tile(-1)) < 0)
                         return;
                 G_tile_gib(i, N_receive_char());
                 break;
 
         /* Ship path changed */
         case G_SM_SHIP_PATH:
-                if ((i = G_receive_ship(-1)) < 0)
+                if (n_client_id == N_HOST_CLIENT_ID ||
+                    (i = G_receive_ship(-1)) < 0)
                         return;
                 G_ship_move_to(i, N_receive_short());
                 g_ships[i].progress = N_receive_float();
@@ -505,7 +509,8 @@ void G_client_callback(int client, n_event_t event)
 
         /* Building changed */
         case G_SM_BUILDING:
-                if ((i = G_receive_tile(-1)) < 0 ||
+                if (n_client_id == N_HOST_CLIENT_ID ||
+                    (i = G_receive_tile(-1)) < 0 ||
                     (j = G_receive_range(-1, 0, G_BUILDING_TYPES)) < 0 ||
                     (k = G_receive_nation(-1)) < 0)
                         return;
