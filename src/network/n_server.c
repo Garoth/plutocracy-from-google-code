@@ -28,6 +28,7 @@ void N_stop_server(void)
 
         if (n_client_id != N_HOST_CLIENT_ID)
                 return;
+        n_server_func(N_HOST_CLIENT_ID, N_EV_DISCONNECTED);
         n_client_id = N_INVALID_ID;
 
         /* Close listen server socket */
@@ -151,7 +152,6 @@ void N_drop_client(int client)
         }
         n_clients[client].connected = FALSE;
         n_clients_num--;
-        n_server_func(client, N_EV_DISCONNECTED);
 
         /* The server kicked itself */
         if (client == n_client_id) {
@@ -160,6 +160,7 @@ void N_drop_client(int client)
                 return;
         }
 
+        n_server_func(client, N_EV_DISCONNECTED);
         closesocket(n_clients[client].socket);
         C_debug("Dropped client %d", client);
 }
