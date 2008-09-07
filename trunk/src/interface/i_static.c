@@ -14,14 +14,15 @@
 
 #include "i_common.h"
 
-static r_texture_t *separator_tex, *select_tex[3];
+static r_texture_t *separator_tex[2], *select_tex[3];
 
 /******************************************************************************\
  Theme images for static widgets.
 \******************************************************************************/
 void I_theme_statics(void)
 {
-        I_theme_texture(&separator_tex, "separator");
+        I_theme_texture(separator_tex, "sep_horizontal");
+        I_theme_texture(separator_tex + 1, "sep_vertical");
         I_theme_texture(select_tex, "select_on");
         I_theme_texture(select_tex + 1, "select_off");
         I_theme_texture(select_tex + 2, "select_hover");
@@ -143,10 +144,15 @@ int I_box_event(i_box_t *box, i_event_t event)
                 c_vec2_t bounds;
 
                 bounds = I_widget_child_bounds(&box->widget);
-                if (box->pack_children == I_PACK_H)
+                if (box->pack_children == I_PACK_H) {
                         box->widget.size.y = bounds.y;
-                else if (box->pack_children == I_PACK_H)
+                        if (!box->widget.size.x)
+                                box->widget.size.x = bounds.x;
+                } else if (box->pack_children == I_PACK_H) {
                         box->widget.size.x = bounds.x;
+                        if (!box->widget.size.y)
+                                box->widget.size.y = bounds.y;
+                }
         }
 
         return FALSE;
@@ -223,16 +229,26 @@ void I_image_init(i_image_t *image, const char *icon)
 
 /******************************************************************************\
  Initializes an image widget with a pointer to a theme-updated texture
- variable. Pass null for [pptex] to initialize a separator.
+ variable.
 \******************************************************************************/
 void I_image_init_themed(i_image_t *image, r_texture_t **pptex)
 {
         if (!image)
                 return;
         I_image_init(image, NULL);
-        if (!pptex)
-                pptex = &separator_tex;
         image->theme_texture = pptex;
+}
+
+/******************************************************************************\
+ Initializes an image widget with a pointer to a separator.
+\******************************************************************************/
+void I_image_init_sep(i_image_t *image, bool vertical)
+{
+        if (!image)
+                return;
+        I_image_init_themed(image, vertical ?
+                                   separator_tex + 1 : separator_tex);
+        image->resize = TRUE;
 }
 
 /******************************************************************************\

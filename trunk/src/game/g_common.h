@@ -237,6 +237,7 @@ extern bool g_host_inited;
 /* g_movement.c */
 bool G_ship_move_to(int ship, int new_tile);
 void G_ship_path(int ship, int tile);
+void G_ship_send_path(n_client_id_t, int ship);
 void G_ship_update_move(int i);
 
 /* g_names.c */
@@ -260,7 +261,9 @@ void G_ship_hover(int ship);
 void G_ship_reselect(int ship, n_client_id_t);
 void G_ship_select(int ship);
 void G_ship_send_cargo(int ship, n_client_id_t);
+void G_ship_send_name(int index, n_client_id_t);
 void G_ship_send_state(int ship, n_client_id_t);
+void G_ship_send_spawn(int index, n_client_id_t);
 int G_ship_spawn(int ship, n_client_id_t, int tile, g_ship_type_t);
 void G_ship_update_combat(int ship);
 void G_update_ships(void);
@@ -296,6 +299,8 @@ void G_tile_build(int tile, g_building_type_t, g_nation_name_t);
 int G_tile_gib(int tile, g_gib_type_t);
 void G_tile_hover(int tile);
 void G_tile_select(int tile);
+void G_tile_send_building(int tile, n_client_id_t);
+void G_tile_send_gib(int tile, n_client_id_t);
 bool G_tile_open(int tile, int exclude_ship);
 void G_tile_position_model(int tile, r_model_t *);
 int G_random_open_tile(void);

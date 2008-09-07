@@ -58,7 +58,7 @@ typedef void (*i_ring_f)(i_ring_icon_t);
 /* Structure for passing information to trade window */
 typedef struct i_cargo_info {
         int amount, buy_price, sell_price, maximum, minimum,
-            p_amount, p_buy_limit, p_sell_limit, p_buy_price, p_sell_price;
+            p_amount, p_buy_price, p_sell_price;
         bool auto_buy, auto_sell;
 } i_cargo_info_t;
 

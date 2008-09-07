@@ -220,6 +220,19 @@ void G_tile_position_model(int tile, r_model_t *model)
 }
 
 /******************************************************************************\
+ Send information about a tile's building.
+\******************************************************************************/
+void G_tile_send_building(int tile, n_client_id_t client)
+{
+        if (!g_tiles[tile].building) {
+                N_send(client, "121", G_SM_BUILDING, tile, G_BT_NONE);
+                return;
+        }
+        N_send(client, "1211", G_SM_BUILDING, tile,
+               g_tiles[tile].building->type, g_tiles[tile].building->nation);
+}
+
+/******************************************************************************\
  Start constructing a building on this tile.
 \******************************************************************************/
 void G_tile_build(int tile, g_building_type_t type, g_nation_name_t nation)
@@ -258,10 +271,8 @@ void G_tile_build(int tile, g_building_type_t type, g_nation_name_t nation)
                 g_islands[g_tiles[tile].island].town_tile = tile;
 
         /* Let all connected clients know about this */
-        if (!g_host_inited)
-                return;
-        N_broadcast_except(N_HOST_CLIENT_ID, "1211", G_SM_BUILDING,
-                           tile, type, nation);
+        if (g_host_inited)
+                G_tile_send_building(tile, N_BROADCAST_ID);
 }
 
 /******************************************************************************\
@@ -297,6 +308,17 @@ int G_random_open_tile(void)
 }
 
 /******************************************************************************\
+ Send information about a tile's gibs.
+\******************************************************************************/
+void G_tile_send_gib(int tile, n_client_id_t client)
+{
+        g_gib_type_t type;
+
+        type = !g_tiles[tile].gib ? G_GT_NONE : g_tiles[tile].gib->type;
+        N_send(client, "121", G_SM_GIB, tile, type);
+}
+
+/******************************************************************************\
  Spawn gibs on this tile. Returns the selected tile.
 \******************************************************************************/
 int G_tile_gib(int tile, g_gib_type_t type)
@@ -322,8 +344,7 @@ int G_tile_gib(int tile, g_gib_type_t type)
 
         /* Let all connected clients know about this gib */
         if (g_host_inited)
-                N_broadcast_except(N_HOST_CLIENT_ID, "121",
-                                   G_SM_GIB, tile, type);
+                G_tile_send_gib(tile, N_BROADCAST_ID);
 
         return tile;
 }

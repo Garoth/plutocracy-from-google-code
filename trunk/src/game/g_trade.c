@@ -20,14 +20,14 @@
 bool G_cargo_equal(const g_cargo_t *a, const g_cargo_t *b)
 {
         if (a->auto_buy != b->auto_buy || a->auto_sell != b->auto_sell)
-                return TRUE;
+                return FALSE;
         if (a->auto_buy &&
             (a->maximum != b->maximum || a->buy_price != b->buy_price))
-                return TRUE;
+                return FALSE;
         if (a->auto_sell &&
             (a->minimum != b->minimum || a->sell_price != b->sell_price))
-                return TRUE;
-        return FALSE;
+                return FALSE;
+        return TRUE;
 }
 
 /******************************************************************************\
