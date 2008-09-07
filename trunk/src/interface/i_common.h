@@ -108,8 +108,8 @@ typedef struct i_widget {
         i_event_f event_func;
         i_widget_state_t state;
         float expand, fade, margin_front, margin_rear, padding;
-        bool auto_configure, configured, entry, shown, heap, pack_skip,
-             steal_keys;
+        bool auto_configure, configured, entry, shrink_only, shown, heap,
+             pack_skip, steal_keys;
 } i_widget_t;
 
 /* Windows are decorated containers */

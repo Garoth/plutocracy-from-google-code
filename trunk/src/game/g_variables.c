@@ -81,9 +81,9 @@ void G_register_variables(void)
                            "gold a team needs to win the game");
 
         /* Master server */
-        C_register_string(&g_master, "g_master", "",
+        C_register_string(&g_master, "g_master", "master.plutocracy.ca",
                           "address of the master server");
-        C_register_string(&g_master_url, "g_master_url", "",
+        C_register_string(&g_master_url, "g_master_url", "/",
                           "URL path to master server script");
 }
 

@@ -73,15 +73,17 @@ static void expand_children(i_widget_t *widget, c_vec2_t size, float expand)
 {
         c_vec2_t offset, share;
         i_widget_t *child;
+        bool expand_up;
 
         if (!expand)
                 return;
         size = C_vec2_divf(size, expand);
         offset = C_vec2(0.f, 0.f);
+        expand_up = size.x > 0.f || size.y > 0.f;
         for (child = widget->child; child; child = child->next) {
                 if (child->pack_skip)
                         continue;
-                if (child->expand <= 0) {
+                if (!child->expand || (child->shrink_only && expand_up)) {
                         I_widget_move(child, C_vec2_add(child->origin, offset));
                         continue;
                 }

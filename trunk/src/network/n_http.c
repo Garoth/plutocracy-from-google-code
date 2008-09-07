@@ -16,6 +16,7 @@
 
 static n_callback_http_f http_func;
 static SOCKET http_socket;
+static char http_host[256];
 static bool http_connected;
 
 /******************************************************************************\
@@ -24,6 +25,7 @@ static bool http_connected;
 \******************************************************************************/
 bool N_connect_http(const char *address, n_callback_http_f callback)
 {
+        C_strncpy_buf(http_host, address);
         N_disconnect_http();
         http_func = callback;
         http_socket = N_connect_socket(address, 80);
@@ -59,6 +61,7 @@ void N_disconnect_http(void)
 
 /******************************************************************************\
  Check for data received from the HTTP connection or other events.
+ TODO: Support HTML/1.1 chunking
 \******************************************************************************/
 void N_poll_http(void)
 {
@@ -104,9 +107,13 @@ void N_poll_http(void)
                 C_warning("HTTP server sent invalid header: %s", token);
                 return;
         }
+        if (strcmp(token, "HTTP/1.1"))
+                C_warning("Server did not send a HTTP/1.1 response: %s", token);
 
         /* HTTP return code */
         token = C_token(&line, NULL);
+        if (!strcmp(token, "100"))
+                return;
         if (strcmp(token, "200")) {
                 C_warning("HTTP server code: %s", token);
                 http_func(N_EV_MESSAGE, NULL, -1);
@@ -123,6 +130,10 @@ void N_poll_http(void)
                         token = C_token(&line, NULL);
                         content_len = atoi(token);
                 }
+
+                /* Transfer-Encoding */
+                if (!strcasecmp(token, "Transfer-Encoding:"))
+                        C_warning("Transfer-Encoding not supported");
         }
 
         /* Make sure we don't overrun */
@@ -177,7 +188,10 @@ void N_send_get(const char *url)
         if (!http_connected)
                 return;
         buffer_len = snprintf(buffer, sizeof (buffer),
-                              "GET %s HTTP/1.0\n\n", url);
+                              "GET %s HTTP/1.1\n"
+                              "Host: %s\n"
+                              "Connection: close\n\n",
+                              url, http_host);
         N_socket_send(http_socket, buffer, buffer_len);
 }
 
@@ -236,9 +250,13 @@ void N_send_post_full(const char *url, ...)
 
         /* Send the message */
         buffer_len = snprintf(buffer, sizeof (buffer),
-                              "POST %s HTTP/1.0\nContent-Type: "
+                              "POST %s HTTP/1.1\n"
+                              "Host: %s\n"
+                              "Connection: close\n"
+                              "Content-Type: "
                               "application/x-www-form-urlencoded\n"
-                              "Content-Length: %d\n\n%s", url, text_len, text);
+                              "Content-Length: %d\n\n%s",
+                              url, http_host, text_len, text);
         N_socket_send(http_socket, buffer, buffer_len);
 }
 

@@ -16,7 +16,7 @@
 typedef struct server_line {
         i_widget_t widget;
         i_selectable_t sel;
-        i_label_t main, alt, address_label;
+        i_label_t main, alt;
         char address[32];
 } server_line_t;
 
@@ -80,6 +80,7 @@ static void join_button_clicked(i_button_t *button)
 static void refresh_button_clicked(i_button_t *button)
 {
         C_debug("Refresh button clicked");
+        refresh_button.widget.state = I_WS_DISABLED;
         G_refresh_servers();
 }
 
@@ -184,6 +185,8 @@ void I_init_game(i_window_t *window)
 \******************************************************************************/
 void I_reset_servers(void)
 {
+        if (refresh_button.widget.state == I_WS_DISABLED)
+                refresh_button.widget.state = I_WS_READY;
         I_widget_remove_children(&server_list.widget, TRUE);
 }
 
@@ -236,18 +239,14 @@ void I_add_server(const char *main, const char *alt, const char *address)
 
         /* Main label */
         I_label_init(&line->main, main);
+        line->main.widget.expand = 1.f;
+        line->main.widget.shrink_only = TRUE;
         I_widget_add(&line->sel.widget, &line->main.widget);
 
         /* Alt label */
         I_label_init(&line->alt, alt);
-        line->alt.widget.expand = TRUE;
         line->alt.color = I_COLOR_ALT;
         I_widget_add(&line->sel.widget, &line->alt.widget);
-
-        /* Address label */
-        C_strncpy_buf(line->address, address);
-        I_label_init(&line->address_label, address);
-        I_widget_add(&line->sel.widget, &line->address_label.widget);
 
         /* Add to the scrollback widget which will configure the line */
         I_widget_add(&server_list.widget, &line->widget);

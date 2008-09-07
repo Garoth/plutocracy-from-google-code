@@ -19,7 +19,7 @@
 #define CRATES_MAX 32
 
 /* Milliseconds between master server heartbeats */
-#define PUBLISH_INTERVAL 30000
+#define PUBLISH_INTERVAL 300000
 
 /* This game's client limit */
 int g_clients_max;
@@ -406,16 +406,64 @@ static void init_client(int client)
 }
 
 /******************************************************************************\
+ Inform the master server about our game. If [force] is not TRUE, this will
+ only be done periodically.
+\******************************************************************************/
+static void publish_game(bool force, bool alive)
+{
+        static int publish_time;
+
+        if ((c_time_msec < publish_time && !force) || g_game_over)
+                return;
+        publish_time = c_time_msec + PUBLISH_INTERVAL;
+
+        /* Disable if blank master server name */
+        C_var_unlatch(&g_master);
+        if (!*g_master.value.s)
+                return;
+        C_var_unlatch(&g_master_url);
+
+        /* If we are no longer alive, send invalid values */
+        if (!alive) {
+                N_connect_http(g_master.value.s, NULL);
+                N_send_post(g_master_url.value.s,
+                            "port", C_va("%d", n_port.value.n));
+                C_debug("Sent dead heartbeat to master server");
+                N_disconnect_http();
+                return;
+        }
+
+        /* Send game info key/value pairs, the server can figure out our
+           ip adress on its own */
+        N_connect_http(g_master.value.s, NULL);
+        N_send_post(g_master_url.value.s,
+                    "name", g_name.value.s,
+                    "info", C_va("%d/%d, %d min", n_clients_num, g_clients_max,
+                                 (g_time_limit_msec - c_time_msec) / 60000),
+                    "port", C_va("%d", n_port.value.n));
+        C_debug("Sent live heartbeat to master server");
+        N_disconnect_http();
+}
+
+/******************************************************************************\
  A client has left the game and we need to clean up.
 \******************************************************************************/
 static void client_disconnected(int client)
 {
         int i;
 
+        C_debug("Client %d disconnected", client);
+
+        /* If the host has quit, tell the master server we are done */
+        if (n_client_id == N_HOST_CLIENT_ID && client == N_HOST_CLIENT_ID) {
+                publish_game(TRUE, FALSE);
+                return;
+        }
+
+        /* Let everyone know about it */
         if (g_clients[client].name[0])
                 N_broadcast("111", G_SM_DISCONNECTED, client,
                             g_clients[client].kicked);
-        C_debug("Client %d disconnected", client);
 
         /* Disown their ships */
         for (i = 0; i < G_SHIPS_MAX; i++)
@@ -523,35 +571,6 @@ void G_kick_client(n_client_id_t client)
 }
 
 /******************************************************************************\
- Inform the master server about our game. If [force] is not TRUE, this will
- only be done periodically.
-\******************************************************************************/
-static void publish_game(bool force)
-{
-        static int publish_time;
-
-        if ((c_time_msec < publish_time && !force) || g_game_over)
-                return;
-        publish_time = c_time_msec + PUBLISH_INTERVAL;
-
-        /* Disable if blank master server name */
-        C_var_unlatch(&g_master);
-        if (!*g_master.value.s)
-                return;
-        C_var_unlatch(&g_master_url);
-
-        /* Send game info key/value pairs, the server can figure out our
-           ip adress on its own */
-        N_connect_http(g_master.value.s, NULL);
-        N_send_post(g_master_url.value.s,
-                    "name", g_name.value.s,
-                    "info", C_va("%d/%d, %d min", n_clients_num, g_clients_max,
-                                 (g_time_limit_msec - c_time_msec) / 60000),
-                    "port", C_va("%d", n_port.value.n));
-        N_disconnect_http();
-}
-
-/******************************************************************************\
  Host a new game.
 \******************************************************************************/
 void G_host_game(void)
@@ -628,7 +647,7 @@ void G_host_game(void)
 
         /* Finished initialization */
         g_host_inited = TRUE;
-        publish_game(TRUE);
+        publish_game(TRUE, TRUE);
 }
 
 /******************************************************************************\
@@ -770,6 +789,6 @@ void G_update_host(void)
         }
 
         check_game_over();
-        publish_game(FALSE);
+        publish_game(FALSE, TRUE);
 }
 
