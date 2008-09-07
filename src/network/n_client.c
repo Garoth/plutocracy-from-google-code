@@ -15,9 +15,6 @@
 /* ID of this client in the game */
 n_client_id_t n_client_id;
 
-/* Socket for the connection to the host */
-SOCKET n_client_socket;
-
 static int connect_time;
 
 /******************************************************************************\
@@ -32,7 +29,7 @@ void N_init(void)
                 C_error("Failed to initialize WinSock");
 #endif
         n_client_id = N_INVALID_ID;
-        n_client_socket = INVALID_SOCKET;
+        n_clients[N_SERVER_ID].socket = INVALID_SOCKET;
 }
 
 /******************************************************************************\
@@ -61,7 +58,7 @@ void N_connect(const char *address, n_callback_f client_func)
         port = n_port.value.n;
         N_resolve_buf(ip, &port, address);
 
-        n_client_socket = N_connect_socket(ip, port);
+        n_clients[N_SERVER_ID].socket = N_connect_socket(ip, port);
         connect_time = c_time_msec;
 }
 
@@ -78,9 +75,9 @@ void N_disconnect(void)
                                            N_EV_DISCONNECTED);
         if (n_client_id == N_HOST_CLIENT_ID)
                 N_stop_server();
-        if (n_client_socket != INVALID_SOCKET) {
-                closesocket(n_client_socket);
-                n_client_socket = INVALID_SOCKET;
+        if (n_clients[N_SERVER_ID].socket != INVALID_SOCKET) {
+                closesocket(n_clients[N_SERVER_ID].socket);
+                n_clients[N_SERVER_ID].socket = INVALID_SOCKET;
         }
         n_clients[N_SERVER_ID].connected = FALSE;
         n_client_id = N_INVALID_ID;
@@ -94,8 +91,8 @@ void N_poll_client(void)
 {
         /* See if we have connected yet */
         if (n_client_id == N_INVALID_ID) {
-                if (n_client_socket == INVALID_SOCKET ||
-                    !N_socket_select(n_client_socket, 0)) {
+                if (n_clients[N_SERVER_ID].socket == INVALID_SOCKET ||
+                    !N_socket_select(n_clients[N_SERVER_ID].socket, 0)) {
                         if (connect_time + CONNECT_TIMEOUT < c_time_msec)
                                 N_disconnect();
                         return;

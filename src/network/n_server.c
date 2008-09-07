@@ -13,7 +13,7 @@
 #include "n_common.h"
 
 /* Client slots array */
-n_client_t n_clients[N_CLIENTS_MAX];
+n_client_t n_clients[N_CLIENTS_MAX + 1];
 int n_clients_num;
 
 /* Server socket for listening for incoming connections */
