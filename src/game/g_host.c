@@ -406,6 +406,15 @@ static void init_client(int client)
 }
 
 /******************************************************************************\
+ Publish callback function.
+\******************************************************************************/
+static void publish_callback(n_event_t event, const char *text, int len)
+{
+        if (event == N_EV_SEND_COMPLETE)
+                N_disconnect_http();
+}
+
+/******************************************************************************\
  Inform the master server about our game. If [force] is not TRUE, this will
  only be done periodically.
 \******************************************************************************/
@@ -424,25 +433,22 @@ static void publish_game(bool force, bool alive)
         C_var_unlatch(&g_master_url);
 
         /* If we are no longer alive, send invalid values */
+        N_connect_http(g_master.value.s, (n_callback_http_f)publish_callback);
         if (!alive) {
-                N_connect_http(g_master.value.s, NULL);
                 N_send_post(g_master_url.value.s,
                             "port", C_va("%d", n_port.value.n));
                 C_debug("Sent dead heartbeat to master server");
-                N_disconnect_http();
                 return;
         }
 
         /* Send game info key/value pairs, the server can figure out our
            ip adress on its own */
-        N_connect_http(g_master.value.s, NULL);
         N_send_post(g_master_url.value.s,
                     "name", g_name.value.s,
                     "info", C_va("%d/%d, %d min", n_clients_num, g_clients_max,
                                  (g_time_limit_msec - c_time_msec) / 60000),
                     "port", C_va("%d", n_port.value.n));
         C_debug("Sent live heartbeat to master server");
-        N_disconnect_http();
 }
 
 /******************************************************************************\
