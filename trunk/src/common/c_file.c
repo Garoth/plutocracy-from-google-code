@@ -203,6 +203,7 @@ void C_token_file_init_string(c_token_file_t *tf, const char *string)
         tf->token = tf->pos = tf->buffer;
         tf->swap = tf->buffer[0];
         tf->filename[0] = NUL;
+        tf->file.stream = NULL;
         tf->file.type = C_FT_NONE;
         tf->eof = TRUE;
 }
@@ -212,7 +213,7 @@ void C_token_file_init_string(c_token_file_t *tf, const char *string)
 \******************************************************************************/
 void C_token_file_cleanup(c_token_file_t *tf)
 {
-        if (!tf || !tf->file.stream || !tf->file.type)
+        if (!tf || !tf->file.type || !tf->file.stream)
                 return;
         C_file_cleanup(&tf->file);
 }

@@ -116,9 +116,7 @@ int N_socket_send(SOCKET socket, const char *data, int size)
 \******************************************************************************/
 SOCKET N_client_to_socket(n_client_id_t client)
 {
-        if (client == N_SERVER_ID)
-                return n_client_socket;
-        else if (client >= 0 && client < N_CLIENTS_MAX)
+        if (client >= 0 && client <= N_CLIENTS_MAX)
                 return n_clients[client].socket;
         C_error("Invalid client ID %d", client);
         return INVALID_SOCKET;

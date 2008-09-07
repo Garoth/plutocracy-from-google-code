@@ -38,9 +38,6 @@ typedef int socklen_t;
 /* Connection timeout in milliseconds */
 #define CONNECT_TIMEOUT 5000
 
-/* n_client.c */
-extern SOCKET n_client_socket;
-
 /* n_socket.c */
 SOCKET N_connect_socket(const char *address, int port);
 SOCKET N_client_to_socket(n_client_id_t);

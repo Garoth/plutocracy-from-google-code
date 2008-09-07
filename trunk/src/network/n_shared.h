@@ -85,7 +85,7 @@ void N_poll_server(void);
 int N_start_server(n_callback_f server, n_callback_f client);
 void N_stop_server(void);
 
-extern n_client_t n_clients[N_CLIENTS_MAX];
+extern n_client_t n_clients[N_CLIENTS_MAX + 1];
 extern int n_clients_num;
 
 /* n_sync.c */
