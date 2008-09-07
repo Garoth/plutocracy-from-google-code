@@ -33,7 +33,6 @@ void N_init(void)
 #endif
         n_client_id = N_INVALID_ID;
         n_client_socket = INVALID_SOCKET;
-        N_init_sync();
 }
 
 /******************************************************************************\
@@ -45,7 +44,6 @@ void N_cleanup(void)
         WSACleanup();
 #endif
         N_stop_server();
-        N_cleanup_sync();
 }
 
 /******************************************************************************\
@@ -84,6 +82,7 @@ void N_disconnect(void)
                 closesocket(n_client_socket);
                 n_client_socket = INVALID_SOCKET;
         }
+        n_clients[N_SERVER_ID].connected = FALSE;
         n_client_id = N_INVALID_ID;
         C_debug("Disconnected from server");
 }
@@ -101,12 +100,15 @@ void N_poll_client(void)
                                 N_disconnect();
                         return;
                 }
+                n_clients[N_SERVER_ID].connected = TRUE;
+                n_clients[N_SERVER_ID].buffer_len = 0;
                 n_client_id = N_UNASSIGNED_ID;
                 n_client_func(N_SERVER_ID, N_EV_CONNECTED);
                 return;
         }
 
-        if (!N_receive(N_SERVER_ID))
+        /* Send and receive data */
+        if (!N_send_buffer(N_SERVER_ID) || !N_receive(N_SERVER_ID))
                 N_disconnect();
 }
 

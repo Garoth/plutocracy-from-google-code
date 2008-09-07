@@ -40,6 +40,17 @@ void N_connect_http(const char *address, n_callback_http_f callback)
 }
 
 /******************************************************************************\
+ Waits for an HTTP connection to complete.
+\******************************************************************************/
+bool N_connect_http_wait(const char *address, n_callback_http_f callback)
+{
+        N_connect_http(address, callback);
+        if (N_socket_select(http_socket, 1))
+                return TRUE;
+        return FALSE;
+}
+
+/******************************************************************************\
  Close the HTTP connection if it is still open.
 \******************************************************************************/
 void N_disconnect_http(void)
@@ -108,10 +119,9 @@ void N_poll_http(void)
                         http_func(N_EV_SEND_COMPLETE, NULL, -1);
                         if (http_socket == INVALID_SOCKET)
                                 return;
-                } else if (ret < 0) {
+                } else if (ret < 0)
                         N_disconnect_http();
                         return;
-                }
         }
 
         /* Receive the message size */

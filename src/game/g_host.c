@@ -386,8 +386,9 @@ static void init_client(int client)
         /* Tell them about the buildings and gibs on them globe */
         for (i = 0; i < r_tiles_max; i++) {
                 if (g_tiles[i].building)
-                        N_send(client, "121", G_SM_BUILDING, i,
-                               g_tiles[i].building->type);
+                        N_send(client, "1211", G_SM_BUILDING, i,
+                               g_tiles[i].building->type,
+                               g_tiles[i].building->nation);
                 if (g_tiles[i].gib)
                         N_send(client, "121", G_SM_GIB, i,
                                g_tiles[i].gib->type);
@@ -410,15 +411,42 @@ static void init_client(int client)
 \******************************************************************************/
 static void publish_callback(n_event_t event, const char *text, int len)
 {
-        if (event == N_EV_SEND_COMPLETE)
+        if (event == N_EV_SEND_COMPLETE) {
+                C_debug("Sent heartbeat to master server");
                 N_disconnect_http();
+        }
+}
+
+/******************************************************************************\
+ Inform the master server that our game is over.
+\******************************************************************************/
+static void publish_game_dead(void)
+{
+        /* Disable if blank master server name */
+        C_var_unlatch(&g_master);
+        if (!*g_master.value.s)
+                return;
+        C_var_unlatch(&g_master_url);
+
+        /* Wait on this connection so we make sure we get the dead hearbeat
+           out if the game quit */
+        if (!N_connect_http_wait(g_master.value.s,
+                                 (n_callback_http_f)publish_callback)) {
+                C_debug("Failed to connect to master server");
+                return;
+        }
+
+        /* Since we are no longer alive, send invalid values */
+        N_send_post(g_master_url.value.s,
+                    "port", C_va("%d", n_port.value.n));
+        N_poll_http();
 }
 
 /******************************************************************************\
  Inform the master server about our game. If [force] is not TRUE, this will
  only be done periodically.
 \******************************************************************************/
-static void publish_game(bool force, bool alive)
+static void publish_game_alive(bool force)
 {
         static int publish_time;
 
@@ -432,23 +460,14 @@ static void publish_game(bool force, bool alive)
                 return;
         C_var_unlatch(&g_master_url);
 
-        /* If we are no longer alive, send invalid values */
-        N_connect_http(g_master.value.s, (n_callback_http_f)publish_callback);
-        if (!alive) {
-                N_send_post(g_master_url.value.s,
-                            "port", C_va("%d", n_port.value.n));
-                C_debug("Sent dead heartbeat to master server");
-                return;
-        }
-
         /* Send game info key/value pairs, the server can figure out our
            ip adress on its own */
+        N_connect_http(g_master.value.s, (n_callback_http_f)publish_callback);
         N_send_post(g_master_url.value.s,
                     "name", g_name.value.s,
                     "info", C_va("%d/%d, %d min", n_clients_num, g_clients_max,
                                  (g_time_limit_msec - c_time_msec) / 60000),
                     "port", C_va("%d", n_port.value.n));
-        C_debug("Sent live heartbeat to master server");
 }
 
 /******************************************************************************\
@@ -462,7 +481,7 @@ static void client_disconnected(int client)
 
         /* If the host has quit, tell the master server we are done */
         if (n_client_id == N_HOST_CLIENT_ID && client == N_HOST_CLIENT_ID) {
-                publish_game(TRUE, FALSE);
+                publish_game_dead();
                 return;
         }
 
@@ -653,7 +672,7 @@ void G_host_game(void)
 
         /* Finished initialization */
         g_host_inited = TRUE;
-        publish_game(TRUE, TRUE);
+        publish_game_alive(TRUE);
 }
 
 /******************************************************************************\
@@ -789,12 +808,12 @@ void G_update_host(void)
                 loot = &g_tiles[tile].gib->loot;
                 loot->cargo[G_CT_GOLD] = 10 * C_roll_dice(5, 15) - 250;
                 loot->cargo[G_CT_CREW] = C_roll_dice(3, 3) - 3;
-                loot->cargo[G_CT_RATIONS] = C_roll_dice(4, 4) - 4;
+                loot->cargo[G_CT_RATIONS] = C_roll_dice(4, 5) - 4;
                 loot->cargo[G_CT_WOOD] = C_roll_dice(5, 10) - 15;
                 loot->cargo[G_CT_IRON] = C_roll_dice(5, 10) - 25;
         }
 
         check_game_over();
-        publish_game(FALSE, TRUE);
+        publish_game_alive(FALSE);
 }
 

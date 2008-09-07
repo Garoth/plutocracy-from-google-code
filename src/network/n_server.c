@@ -70,6 +70,9 @@ int N_start_server(n_callback_f server_func, n_callback_f client_func)
 
         /* Setup the host's client */
         n_clients[N_HOST_CLIENT_ID].connected = TRUE;
+        n_clients[N_HOST_CLIENT_ID].buffer_len = 0;
+        n_clients[N_SERVER_ID].connected = TRUE;
+        n_clients[N_SERVER_ID].buffer_len = 0;
         n_clients_num = 1;
         n_server_func(N_HOST_CLIENT_ID, N_EV_CONNECTED);
         n_client_func(N_SERVER_ID, N_EV_CONNECTED);
@@ -128,6 +131,7 @@ static void accept_connections(void)
 
         /* Initialize the client */
         n_clients[i].connected = TRUE;
+        n_clients[i].buffer_len = 0;
         n_clients[i].socket = socket;
         n_clients_num++;
         n_server_func(i, N_EV_CONNECTED);
@@ -151,6 +155,7 @@ void N_drop_client(int client)
                 return;
         }
         n_clients[client].connected = FALSE;
+        n_clients[client].buffer_len = 0;
         n_clients_num--;
 
         /* The server kicked itself */
@@ -176,9 +181,9 @@ void N_poll_server(void)
                 return;
         accept_connections();
 
-        /* Receive from clients */
+        /* Send to and receive from clients */
         for (i = 0; i < N_CLIENTS_MAX; i++)
-                if (n_clients[i].connected && !N_receive(i))
+                if (!N_send_buffer(i) || !N_receive(i))
                         N_drop_client(i);
 }
 

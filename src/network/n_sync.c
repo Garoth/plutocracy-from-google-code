@@ -16,35 +16,8 @@
 /* Receive function that arriving messages are routed to */
 n_callback_f n_client_func, n_server_func;
 
-/* Structure for local message queue */
-typedef struct local_message {
-        int size;
-        char buffer[N_SYNC_MAX];
-} local_message_t;
-
-static c_array_t server_local, client_local;
 static int sync_pos, sync_size;
 static char sync_buffer[N_SYNC_MAX];
-
-/******************************************************************************\
- Initialize synchronization structures.
-\******************************************************************************/
-void N_init_sync(void)
-{
-        C_array_init(&server_local, local_message_t, 0);
-        C_array_init(&client_local, local_message_t, 0);
-}
-
-/******************************************************************************\
- Cleanup synchronization structures.
-\******************************************************************************/
-void N_cleanup_sync(void)
-{
-        C_debug("Local message queue capacity for server: %d, client: %d",
-                client_local.capacity, server_local.capacity);
-        C_array_cleanup(&client_local);
-        C_array_cleanup(&server_local);
-}
 
 /******************************************************************************\
  Call these functions to retrieve an argument from the current message from
@@ -110,56 +83,6 @@ void N_receive_string(char *buffer, int size)
         if (len > size)
                 len = size;
         memmove(buffer, sync_buffer + from, len);
-}
-
-/******************************************************************************\
- Put the current message in a local queue.
-\******************************************************************************/
-static void queue_message(c_array_t *array)
-{
-        local_message_t *message;
-        int index;
-
-        if (sync_size <= 2)
-                return;
-        C_assert(sync_size <= N_SYNC_MAX);
-        index = C_array_append(array, NULL);
-        message = C_array_get(array, local_message_t, index);
-        message->size = sync_size - 2;
-        memcpy(message->buffer, sync_buffer + 2, message->size);
-}
-
-/******************************************************************************\
- Sends the current sync buffer out to the given client.
-\******************************************************************************/
-static void send_buffer(n_client_id_t client)
-{
-        SOCKET socket;
-
-        if (client >= 0 && client < N_CLIENTS_MAX &&
-            !n_clients[client].connected) {
-                C_warning("Tried to message unconnected client %d", client);
-                return;
-        }
-
-        /* Put server messages to itself in the local queue */
-        if (n_client_id == N_HOST_CLIENT_ID) {
-                if (client == N_SERVER_ID) {
-                        queue_message(&client_local);
-                        return;
-                } else if (client == N_HOST_CLIENT_ID) {
-                        queue_message(&server_local);
-                        return;
-                }
-        }
-
-        /* Send TCP/IP message */
-        socket = N_client_to_socket(client);
-        if (N_socket_send(socket, sync_buffer, sync_size))
-                return;
-
-        /* Send failed */
-        N_drop_client(client);
 }
 
 /******************************************************************************\
@@ -238,6 +161,25 @@ bool N_send_string(const char *string)
         memcpy(sync_buffer + sync_size, string, string_len);
         sync_size += string_len;
         return TRUE;
+}
+
+/******************************************************************************\
+ Pack the current message buffer into the send buffers of a client.
+\******************************************************************************/
+static void send_buffer(n_client_id_t client)
+{
+        /* Overflow */
+        if (n_clients[client].buffer_len + sync_size >=
+            sizeof (n_clients[client].buffer)) {
+                C_warning("%s buffer overflow", N_client_to_string(client));
+                N_drop_client(client);
+                return;
+        }
+
+        /* Pack message into the buffer */
+        memcpy(n_clients[client].buffer + n_clients[client].buffer_len,
+               sync_buffer, sync_size);
+        n_clients[client].buffer_len += sync_size;
 }
 
 /******************************************************************************\
@@ -328,6 +270,11 @@ skip:   write_bytes(0, 2, &sync_size);
         }
 
         /* Single-client message */
+        if (!n_clients[client].connected) {
+                C_warning("Tried to message unconnected %s",
+                          N_client_to_string(client));
+                return;
+        }
         send_buffer(client);
         return;
 
@@ -337,41 +284,71 @@ overflow:
 }
 
 /******************************************************************************\
- Receive messages in a local queue. Returns TRUE if [client] was local.
+ Try to send buffer.
+\******************************************************************************/
+bool N_send_buffer(n_client_id_t client)
+{
+        SOCKET socket;
+        int ret;
+
+        if (!n_clients[client].connected)
+                return TRUE;
+
+        /* Local messages don't need to be sent */
+        if (n_client_id == N_HOST_CLIENT_ID &&
+            (client == N_HOST_CLIENT_ID || client == N_SERVER_ID))
+                return TRUE;
+
+        /* Send TCP/IP message */
+        socket = N_client_to_socket(client);
+        ret = N_socket_send(socket, n_clients[client].buffer,
+                            n_clients[client].buffer_len);
+        if (ret > 0)
+                n_clients[client].buffer_len = 0;
+        else if (ret < 0)
+                return FALSE;
+        return TRUE;
+}
+
+/******************************************************************************\
+ Receive local messages directly from the send buffers. Returns TRUE if
+ [client] was local.
 \******************************************************************************/
 static bool receive_local(n_client_id_t client)
 {
-        c_array_t *array;
+        n_client_t *pclient;
         n_callback_f callback;
-        int i;
+        int pos;
 
         if (n_client_id != N_HOST_CLIENT_ID)
                 return FALSE;
 
         /* Determine which event handler to use */
         if (client == N_SERVER_ID) {
-                array = &server_local;
+                pclient = n_clients + N_HOST_CLIENT_ID;
                 callback = n_client_func;
         } else if (client == N_HOST_CLIENT_ID) {
-                array = &client_local;
+                pclient = n_clients + N_SERVER_ID;
                 callback = n_server_func;
         } else
                 return FALSE;
 
         /* Dispatch messages in order */
-        for (i = 0; i < array->len; i++) {
-                local_message_t *message;
-
-                message = C_array_get(array, local_message_t, i);
-                C_assert(message->size > 0);
-                C_assert(message->size < N_SYNC_MAX);
-                sync_size = message->size;
+        for (pos = 0; pos < pclient->buffer_len; ) {
                 sync_pos = 0;
-                memcpy(sync_buffer, message->buffer, sync_size);
+
+                /* Unpack the message size */
+                sync_buffer[0] = pclient->buffer[pos];
+                sync_buffer[1] = pclient->buffer[pos + 1];
+                sync_size = N_receive_short();
+                C_assert(sync_size <= pclient->buffer_len - pos);
+
+                /* Copy the entire message into the sync buffer */
+                memcpy(sync_buffer, pclient->buffer + pos, sync_size);
+                pos += sync_size;
                 callback(client, N_EV_MESSAGE);
         }
-        array->len = 0;
-
+        pclient->buffer_len = 0;
         return TRUE;
 }
 
@@ -385,7 +362,7 @@ bool N_receive(n_client_id_t client)
         int len, message_size;
 
         /* Receive from the local queue */
-        if (receive_local(client))
+        if (!n_clients[client].connected || receive_local(client))
                 return TRUE;
 
         /* Receive from a socket */
