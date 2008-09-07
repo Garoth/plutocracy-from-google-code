@@ -20,7 +20,7 @@ Khent suggested some similar games to play:
   * [http://www.mobygames.com/game/caesar-ii Ceaser II] is an war/economic strategy game.
   * [http://www.mobygames.com/game/dos/transport-tycoon Transport Tycoon] and [http://www.mobygames.com/game/pizza-tycoon Pizza Tycoon] are classic economy sims.
 
-= Library APIs =
+= Library APIs and Protocols =
   * [http://www.opengl.org/sdk/docs/man/ OpenGL manual]
   * [http://www.gamedev.net/reference/articles/article1929.asp OpenGL extensions in Windows]
   * [http://www.opengl.org/resources/features/KilgardTechniques/oglpitfall/ 16 OpenGL pitfalls]
@@ -33,6 +33,7 @@ Khent suggested some similar games to play:
   * [http://www.blender.org/documentation/242PythonDoc/index.html Blender API]
   * [http://www.scons.org/doc/0.98.5/HTML/scons-api/index.html SCons API]
   * [http://www.beej.us/guide/bgnet/output/html/multipage/index.html Socket networking]
+  * [http://www.jmarshall.com/easy/http/ HTTP protocol]
 
 = Tiling a Sphere =
   * Generate a sphere from any polygon: http://www.neubert.net/PLASpher.html
