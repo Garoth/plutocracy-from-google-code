@@ -16,30 +16,27 @@
 
 static n_callback_http_f http_func;
 static SOCKET http_socket;
-static char http_host[256];
+static int http_connect_time, http_buffer_len, http_port;
+static char http_address[32], http_buffer[4096], http_host[256];
 static bool http_connected;
 
 /******************************************************************************\
- Connect to the HTTP server. Returns TRUE on success. After this succeeds,
- you can send data to and receive from the N_HTTP_ID client ID.
+ Starts connecting to the HTTP server.
 \******************************************************************************/
-bool N_connect_http(const char *address, n_callback_http_f callback)
+void N_connect_http(const char *address, n_callback_http_f callback)
 {
-        C_strncpy_buf(http_host, address);
         N_disconnect_http();
-        http_func = callback;
-        http_socket = N_connect_socket(address, 80);
 
-        /* Connection failed */
-        if (http_socket == INVALID_SOCKET) {
-                http_connected = FALSE;
-                return FALSE;
+        /* Resolve the address only if it has changed */
+        http_port = 80;
+        if (strcmp(address, http_host)) {
+                C_strncpy_buf(http_host, address);
+                N_resolve_buf(http_address, &http_port, address);
         }
 
-        http_connected = TRUE;
-        if (http_func)
-                http_func(N_EV_CONNECTED, NULL, -1);
-        return TRUE;
+        http_func = callback;
+        http_socket = N_connect_socket(http_address, http_port);
+        http_connect_time = c_time_msec;
 }
 
 /******************************************************************************\
@@ -49,8 +46,10 @@ void N_disconnect_http(void)
 {
         if (!http_connected)
                 return;
-        if (http_func)
+        if (http_connected)
                 http_func(N_EV_DISCONNECTED, NULL, -1);
+        else
+                http_func(N_EV_CONNECT_FAILED, NULL, -1);
         http_connected = FALSE;
         if (http_socket != INVALID_SOCKET) {
                 closesocket(http_socket);
@@ -70,8 +69,50 @@ void N_poll_http(void)
         char buffer[4096], *pos, *line, *token;
         bool end;
 
-        if (!http_connected)
+        if (http_socket == INVALID_SOCKET)
                 return;
+
+        /* Still connecting */
+        if (!http_connected) {
+
+                /* Timed out */
+                if (c_time_msec > http_connect_time + CONNECT_TIMEOUT) {
+                        N_disconnect_http();
+                        return;
+                }
+
+                /* Connection ready? */
+                if (!N_socket_select(http_socket, 0))
+                        return;
+
+                /* Success! */
+                http_connected = TRUE;
+                http_func(N_EV_CONNECTED, NULL, -1);
+        }
+
+        /* Overflow */
+        if (http_buffer_len >= sizeof (http_buffer)) {
+                C_warning("HTTP buffer overflow");
+                http_buffer_len = 0;
+                N_disconnect_http();
+                return;
+        }
+
+        /* Try sending the buffer */
+        if (http_buffer_len > 0) {
+                int ret;
+
+                ret = N_socket_send(http_socket, http_buffer, http_buffer_len);
+                if (ret > 0) {
+                        http_buffer_len = 0;
+                        http_func(N_EV_SEND_COMPLETE, NULL, -1);
+                        if (http_socket == INVALID_SOCKET)
+                                return;
+                } else if (ret < 0) {
+                        N_disconnect_http();
+                        return;
+                }
+        }
 
         /* Receive the message size */
         len = (int)recv(http_socket, buffer, sizeof (buffer), 0);
@@ -89,12 +130,6 @@ void N_poll_http(void)
         }
         if (len < 0)
                 return;
-
-        /* Ignore input if we don't have a handler */
-        if (!http_func) {
-                C_debug("Ignoring HTTP input, no handler function");
-                return;
-        }
 
         /* Parse the first line */
         buffer[len] = NUL;
@@ -182,17 +217,12 @@ static bool url_encode(char **dest, int dest_size, const char *src)
 \******************************************************************************/
 void N_send_get(const char *url)
 {
-        int buffer_len;
-        char buffer[512];
-
-        if (!http_connected)
-                return;
-        buffer_len = snprintf(buffer, sizeof (buffer),
-                              "GET %s HTTP/1.1\n"
-                              "Host: %s\n"
-                              "Connection: close\n\n",
-                              url, http_host);
-        N_socket_send(http_socket, buffer, buffer_len);
+        http_buffer_len += snprintf(http_buffer + http_buffer_len,
+                                    sizeof (http_buffer) - http_buffer_len,
+                                    "GET %s HTTP/1.1\n"
+                                    "Host: %s:%d\n"
+                                    "Connection: close\n\n",
+                                    url, http_host, http_port);
 }
 
 /******************************************************************************\
@@ -202,15 +232,12 @@ void N_send_get(const char *url)
 void N_send_post_full(const char *url, ...)
 {
         va_list va;
-        int text_len, buffer_len;
-        char text[4096], buffer[4096], *pos;
+        int text_len;
+        char text[4096], *pos;
         bool first;
 
-        if (!http_connected)
-                return;
-        first = TRUE;
-
         /* Pack text buffer */
+        first = TRUE;
         va_start(va, url);
         for (pos = text; ; ) {
                 const char *key, *value;
@@ -249,14 +276,14 @@ void N_send_post_full(const char *url, ...)
         va_end(va);
 
         /* Send the message */
-        buffer_len = snprintf(buffer, sizeof (buffer),
-                              "POST %s HTTP/1.1\n"
-                              "Host: %s\n"
-                              "Connection: close\n"
-                              "Content-Type: "
-                              "application/x-www-form-urlencoded\n"
-                              "Content-Length: %d\n\n%s",
-                              url, http_host, text_len, text);
-        N_socket_send(http_socket, buffer, buffer_len);
+        http_buffer_len += snprintf(http_buffer + http_buffer_len,
+                                    sizeof (http_buffer) - http_buffer_len,
+                                    "POST %s HTTP/1.1\n"
+                                    "Host: %s:%d\n"
+                                    "Connection: close\n"
+                                    "Content-Type:"
+                                    " application/x-www-form-urlencoded\n"
+                                    "Content-Length: %d\n\n%s",
+                                    url, http_host, http_port, text_len, text);
 }
 

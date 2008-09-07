@@ -386,9 +386,17 @@ void G_client_callback(int client, n_event_t event)
         if (event == N_EV_CONNECTED) {
                 if (n_client_id == N_HOST_CLIENT_ID)
                         return;
+                I_popup(NULL, C_str("g-connect-ok", "Connected to server."));
 
                 /* Send out our name */
                 name_update(&g_name, g_name.value);
+                return;
+        }
+
+        /* Connection failed */
+        if (event == N_EV_CONNECT_FAILED) {
+                I_popup(NULL, C_str("g-connect-fail",
+                                    "Failed to connect to server."));
                 return;
         }
 
@@ -580,14 +588,12 @@ static void refresh_callback(n_event_t event, const char *text, int size)
 {
         c_token_file_t tf;
 
-        if (event == N_EV_CONNECTED) {
+        if (event == N_EV_CONNECTED)
                 C_debug("Connected to master server");
-                return;
-        }
-        if (event == N_EV_DISCONNECTED) {
+        else if (event == N_EV_CONNECT_FAILED)
+                C_debug("Failed to connect to master server");
+        else if (event == N_EV_DISCONNECTED)
                 C_debug("Disconnected from master server");
-                return;
-        }
         if (event != N_EV_MESSAGE)
                 return;
 
@@ -630,11 +636,8 @@ void G_refresh_servers(void)
                 return;
 
         /* Connect to the master server */
-        if (!N_connect_http(g_master.value.s,
-                            (n_callback_http_f)refresh_callback)) {
-                I_popup(NULL, "Failed to connect to master server.");
-                return;
-        }
+        N_connect_http(g_master.value.s,
+                       (n_callback_http_f)refresh_callback);
 
         /* Request the master server script */
         C_var_unlatch(&g_master_url);

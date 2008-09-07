@@ -14,11 +14,41 @@
 
 #include "n_common.h"
 
-/* The number of send() tries before failure */
-#define SEND_RETRY 5
+/******************************************************************************\
+ Resolve a hostname.
+\******************************************************************************/
+bool N_resolve(char *address, int size, int *port, const char *hostname)
+{
+        struct hostent *host;
+        int i, last_colon;
+        char buffer[64], *host_ip;
 
-/* Socket connection timeout in seconds */
-#define SOCKET_TIMEOUT 1
+        /* Parse the port out of the hostname string */
+        for (last_colon = -1, i = 0; hostname[i]; i++)
+                if (hostname[i] == ':')
+                        last_colon = i;
+        if (last_colon >= 0) {
+                int value;
+
+                if ((value = atoi(hostname + last_colon + 1)))
+                        *port = value;
+                memcpy(buffer, hostname, last_colon);
+                buffer[last_colon] = NUL;
+                hostname = buffer;
+        }
+
+        /* Resolve hostname */
+        host = gethostbyname(hostname);
+        if (!host) {
+                C_warning("Failed to resolve hostname '%s'", hostname);
+                *buffer = NUL;
+                return FALSE;
+        }
+        host_ip = inet_ntoa(*((struct in_addr *)host->h_addr));
+        C_strncpy(address, host_ip, size);
+        C_debug("Resolved '%s' to %s", hostname, host_ip);
+        return TRUE;
+}
 
 /******************************************************************************\
  Make a generic TCP/IP socket connection.
@@ -26,34 +56,13 @@
 SOCKET N_connect_socket(const char *address, int port)
 {
         struct sockaddr_in addr;
-        struct hostent *host;
         SOCKET sock;
-        int i, last_colon, ret;
+        int ret;
         const char *error;
-        char buffer[64], *host_ip;
 
-        /* Parse the port out of the address string */
-        for (last_colon = -1, i = 0; address[i]; i++)
-                if (address[i] == ':')
-                        last_colon = i;
-        if (last_colon >= 0) {
-                int value;
-
-                if ((value = atoi(address + last_colon + 1)))
-                        port = value;
-                memcpy(buffer, address, last_colon);
-                buffer[last_colon] = NUL;
-                address = buffer;
-        }
-
-        /* Resolve hostnames */
-        host = gethostbyname(address);
-        if (!host) {
-                C_warning("Failed to resolve hostname '%s'", address);
+        /* Bad address */
+        if (!address || !*address)
                 return INVALID_SOCKET;
-        }
-        host_ip = inet_ntoa(*((struct in_addr *)host->h_addr));
-        C_debug("Resolved '%s' to %s", address, host_ip);
 
         /* Connect to the server */
         sock = socket(PF_INET, SOCK_STREAM, 0);
@@ -61,7 +70,7 @@ SOCKET N_connect_socket(const char *address, int port)
         C_zero(&addr);
         addr.sin_family = AF_INET;
         addr.sin_port = htons(port);
-        addr.sin_addr.s_addr = inet_addr(host_ip);
+        addr.sin_addr.s_addr = inet_addr(address);
         ret = connect(sock, (struct sockaddr *)&addr, sizeof (addr));
 
         /* Error connecting */
@@ -70,45 +79,36 @@ SOCKET N_connect_socket(const char *address, int port)
                 return INVALID_SOCKET;
         }
 
-        /* Connection failed */
-        if (!N_socket_select(sock, TRUE)) {
-                closesocket(sock);
-                C_warning("Failed to connect to %s:%d", host_ip, port);
-                return INVALID_SOCKET;
-        }
-
-        /* Connected */
-        C_debug("Connected to %s:%d", host_ip, port);
+        /* Started to connect */
+        C_debug("Connecting to %s:%d", address, port);
         return sock;
 }
 
 /******************************************************************************\
  Send generic data over a socket. Returns FALSE if there was an error.
 \******************************************************************************/
-bool N_socket_send(SOCKET socket, const char *data, int size)
+int N_socket_send(SOCKET socket, const char *data, int size)
 {
-        int i, ret, bytes_sent;
+        int ret;
         const char *error;
 
-        for (ret = bytes_sent = i = 0;
-             bytes_sent < size && i < SEND_RETRY; i++) {
-                if (!N_socket_select(socket, TRUE))
-                        break;
-                ret = send(socket, data, size, 0);
-                if ((error = N_socket_error(ret))) {
-                        C_warning("Send error: %s", error);
-                        break;
-                }
-                bytes_sent += ret;
-                if (bytes_sent >= size)
-                        return TRUE;
-                SDL_Delay(10);
+        /* Ready to write? */
+        if (!N_socket_select(socket, 0))
+                return 0;
+
+        /* Try sending */
+        ret = send(socket, data, size, 0);
+        if ((error = N_socket_error(ret))) {
+                C_warning("Send error: %s", error);
+                return -1;
         }
 
-        /* Send failed */
-        C_warning("Send failed, returned %d; %d tries, %d/%d bytes",
-                  ret, i, bytes_sent, size);
-        return FALSE;
+        /* Did we send all of it? */
+        if (ret >= size)
+                return ret;
+
+        /* Didn't send it */
+        return 0;
 }
 
 /******************************************************************************\
@@ -162,14 +162,14 @@ void N_socket_no_block(SOCKET socket)
 /******************************************************************************\
  Waits for a socket to become readable. Returns TRUE on success.
 \******************************************************************************/
-bool N_socket_select(SOCKET sock, bool write)
+bool N_socket_select(SOCKET sock, int timeout)
 {
         struct timeval tv;
         fd_set fds;
         int nfds;
 
         /* Timeout */
-        tv.tv_sec = SOCKET_TIMEOUT;
+        tv.tv_sec = timeout;
         tv.tv_usec = 0;
 
         FD_ZERO(&fds);
@@ -179,10 +179,7 @@ bool N_socket_select(SOCKET sock, bool write)
 #else
         nfds = sock + 1;
 #endif
-        if (write)
-                select(nfds, NULL, &fds, NULL, &tv);
-        else
-                select(nfds, &fds, NULL, NULL, &tv);
+        select(nfds, NULL, &fds, NULL, &tv);
         return FD_ISSET(sock, &fds);
 }
 

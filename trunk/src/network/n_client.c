@@ -18,6 +18,8 @@ n_client_id_t n_client_id;
 /* Socket for the connection to the host */
 SOCKET n_client_socket;
 
+static int connect_time;
+
 /******************************************************************************\
  Initializes the network namespace.
 \******************************************************************************/
@@ -30,6 +32,7 @@ void N_init(void)
                 C_error("Failed to initialize WinSock");
 #endif
         n_client_id = N_INVALID_ID;
+        n_client_socket = INVALID_SOCKET;
         N_init_sync();
 }
 
@@ -48,22 +51,20 @@ void N_cleanup(void)
 /******************************************************************************\
  Connect the client to the given [address] (ip or hostname) and [port].
 \******************************************************************************/
-bool N_connect(const char *address, n_callback_f client_func)
+void N_connect(const char *address, n_callback_f client_func)
 {
-        C_var_unlatch(&n_port);
+        int port;
+        char ip[32];
+
         n_client_func = client_func;
-        n_client_socket = N_connect_socket(address, n_port.value.n);
 
-        /* Connection failed */
-        if (n_client_socket == INVALID_SOCKET) {
-                n_client_id = N_INVALID_ID;
-                return FALSE;
-        }
+        /* Resolve the hostname */
+        C_var_unlatch(&n_port);
+        port = n_port.value.n;
+        N_resolve_buf(ip, &port, address);
 
-        /* Connected */
-        n_client_id = N_UNASSIGNED_ID;
-        n_client_func(N_SERVER_ID, N_EV_CONNECTED);
-        return n_client_id != N_INVALID_ID;
+        n_client_socket = N_connect_socket(ip, port);
+        connect_time = c_time_msec;
 }
 
 /******************************************************************************\
@@ -74,10 +75,12 @@ void N_disconnect(void)
         if (n_client_id == N_INVALID_ID)
                 return;
         if (n_client_func)
-                n_client_func(N_SERVER_ID, N_EV_DISCONNECTED);
+                n_client_func(N_SERVER_ID, n_client_id == N_INVALID_ID ?
+                                           N_EV_CONNECT_FAILED :
+                                           N_EV_DISCONNECTED);
         if (n_client_id == N_HOST_CLIENT_ID)
                 N_stop_server();
-        else if (n_client_socket >= 0) {
+        if (n_client_socket != INVALID_SOCKET) {
                 closesocket(n_client_socket);
                 n_client_socket = INVALID_SOCKET;
         }
@@ -90,8 +93,19 @@ void N_disconnect(void)
 \******************************************************************************/
 void N_poll_client(void)
 {
-        if (n_client_id == N_INVALID_ID)
+        /* See if we have connected yet */
+        if (n_client_id == N_INVALID_ID) {
+                if (n_client_socket == INVALID_SOCKET ||
+                    !N_socket_select(n_client_socket, 0)) {
+                        if (connect_time + CONNECT_TIMEOUT < c_time_msec)
+                                N_disconnect();
+                        return;
+                }
+                n_client_id = N_UNASSIGNED_ID;
+                n_client_func(N_SERVER_ID, N_EV_CONNECTED);
                 return;
+        }
+
         if (!N_receive(N_SERVER_ID))
                 N_disconnect();
 }

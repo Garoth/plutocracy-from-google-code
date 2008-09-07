@@ -203,13 +203,7 @@ void G_input_chat(char *message)
 void G_join_game(const char *address)
 {
         G_leave_game();
-
-        /* Connect to server */
-        if (N_connect(address, (n_callback_f)G_client_callback)) {
-                I_popup(NULL, C_va("Connected to '%s'.", address));
-                return;
-        }
-        I_popup(NULL, C_va("Failed to connect to '%s'.", address));
+        N_connect(address, (n_callback_f)G_client_callback);
 }
 
 /******************************************************************************\

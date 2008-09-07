@@ -38,7 +38,9 @@ typedef enum {
 typedef enum {
         N_EV_MESSAGE,
         N_EV_CONNECTED,
+        N_EV_CONNECT_FAILED,
         N_EV_DISCONNECTED,
+        N_EV_SEND_COMPLETE,
 } n_event_t;
 
 /* Client/server network callback function */
@@ -57,7 +59,7 @@ typedef struct n_client {
 void N_cleanup(void);
 const char *N_client_to_string(n_client_id_t);
 bool N_client_valid(n_client_id_t);
-bool N_connect(const char *address, n_callback_f client);
+void N_connect(const char *address, n_callback_f client);
 void N_disconnect(void);
 void N_init(void);
 void N_poll_client(void);
@@ -65,9 +67,11 @@ void N_poll_client(void);
 extern n_client_id_t n_client_id;
 
 /* n_http.c */
-bool N_connect_http(const char *address, n_callback_http_f);
+void N_connect_http(const char *address, n_callback_http_f);
 void N_disconnect_http(void);
 void N_poll_http(void);
+bool N_resolve(char *address, int address_max, int *port, const char *hostname);
+#define N_resolve_buf(a, p, h) N_resolve((a), sizeof (a), (p), (h))
 void N_send_get(const char *url);
 #define N_send_post(url, ...) N_send_post_full(url, ## __VA_ARGS__, NULL)
 void N_send_post_full(const char *url, ...);
