@@ -23,7 +23,10 @@
 /* Factor in the speed modifier equation that determines how quickly adding
    crew increases ship speed. The larger the factor the faster speed will
    rise with crew. */
-#define CREW_SPEED_FACTOR 5.f
+#define CREW_SPEED_FACTOR 1.f
+
+/* This is the minimum speed a ship can have */
+#define MINIMUM_SPEED 0.25f
 
 /* Structure for searched tile nodes */
 typedef struct search_node {
@@ -289,6 +292,10 @@ static float ship_speed(int index)
                 crew = 1.f;
         speed *= (-1.f / (CREW_SPEED_FACTOR * crew + 1.f) + 1.f) *
                  (1.f + 1.f / CREW_SPEED_FACTOR);
+
+        /* Let them have a minimal speed */
+        if (speed < MINIMUM_SPEED)
+                speed = MINIMUM_SPEED;
 
         return speed;
 }

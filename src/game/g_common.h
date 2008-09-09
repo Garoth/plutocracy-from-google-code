@@ -312,7 +312,7 @@ extern int g_gibs, g_hover_tile, g_selected_tile;
 int G_build_time(const g_cost_t *);
 bool G_cargo_equal(const g_cargo_t *, const g_cargo_t *);
 const char *G_cost_to_string(const g_cost_t *);
-int G_limit_purchase(const g_store_t *buyer, const g_store_t *seller,
+int G_limit_purchase(g_store_t *buyer, g_store_t *seller,
                      g_cargo_type_t, int amount);
 bool G_pay(n_client_id_t, int tile, const g_cost_t *, bool pay);
 int G_store_add(g_store_t *, g_cargo_type_t, int amount);
@@ -325,8 +325,8 @@ void G_store_send(g_store_t *, bool force);
 int G_store_space(g_store_t *);
 
 /* g_variables.c */
-extern c_var_t g_forest, g_globe_seed, g_globe_subdiv4, g_island_num,
-               g_island_size, g_island_variance, g_master, g_master_url, g_name,
-               g_nation_colors[G_NATION_NAMES], g_players,
-               g_test_globe, g_time_limit, g_victory_gold;
+extern c_var_t g_forest, g_debug_net, g_globe_seed, g_globe_subdiv4,
+               g_island_num, g_island_size, g_island_variance,
+               g_master, g_master_url, g_name, g_nation_colors[G_NATION_NAMES],
+               g_players, g_test_globe, g_time_limit, g_victory_gold;
 

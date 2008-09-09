@@ -221,7 +221,8 @@ static bool server_line_event(server_line_t *line, i_event_t event)
 /******************************************************************************\
  Add a server to the game server list.
 \******************************************************************************/
-void I_add_server(const char *main, const char *alt, const char *address)
+void I_add_server(const char *main, const char *alt, const char *address,
+                  bool compatible)
 {
         server_line_t *line;
 
@@ -250,6 +251,10 @@ void I_add_server(const char *main, const char *alt, const char *address)
 
         /* Store the server's address */
         C_strncpy_buf(line->address, address);
+
+        /* If we are not compatible, don't let the user click this one */
+        if (!compatible)
+                line->widget.state = I_WS_DISABLED;
 
         /* Add to the scrollback widget which will configure the line */
         I_widget_add(&server_list.widget, &line->widget);

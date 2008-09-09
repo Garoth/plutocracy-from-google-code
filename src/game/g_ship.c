@@ -265,10 +265,14 @@ static void ship_configure_trade(int index)
 
                 /* Trade partner's side */
                 cargo = partner->store.cargo + i;
-                if (cargo->auto_sell)
+                if (cargo->auto_sell) {
                         info.p_buy_price = cargo->sell_price;
-                if (cargo->auto_buy)
+                        info.p_maximum = cargo->maximum;
+                }
+                if (cargo->auto_buy) {
                         info.p_sell_price = cargo->buy_price;
+                        info.p_minimum = cargo->minimum;
+                }
                 info.p_amount = cargo->amount;
                 I_configure_cargo(i, &info);
         }

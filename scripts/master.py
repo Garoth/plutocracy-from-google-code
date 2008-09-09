@@ -18,6 +18,7 @@ import time
 import cgi
 import cgitb
 import ConfigParser
+import re
 
 # Seconds after which a server entry expires
 SERVER_TTL = 360.0
@@ -39,9 +40,17 @@ time = time.time()
 
 # See if there is input to the script
 try:
+        # Invalid input string regex
+        invalid_re = re.compile('[=\[\];]')
+
         # Function to properly escape a string
         def escape(s):
+                s = s.replace("'", "\\'")
                 return s.replace('"', '\\"')
+
+        # Function to test for invalid input
+        def invalid(s, l):
+                return invalid_re.match(s) != None or len(s) > l
 
         form = cgi.FieldStorage()
         address = (cgi.os.environ['REMOTE_ADDR'] + ':' +
@@ -52,6 +61,13 @@ try:
                 config.remove_section(address)
                 raise 'Removed'
 
+        # Make sure this input is not retarded
+        if (invalid(form['name'].value, 16) or
+            invalid(form['info'].value, 16) or
+            form['port'].value.isdigit() == False or
+            form['protocol'].value.isdigit() == False):
+                raise 'Invalid'
+
         # Add the section if it is not already there
         if (not config.has_section(address)):
                 config.add_section(address)
@@ -59,8 +75,12 @@ try:
         config.set(address, 'time', str(time))
         config.set(address, 'name', escape(form['name'].value))
         config.set(address, 'info', escape(form['info'].value))
+        config.set(address, 'protocol', escape(form['protocol'].value))
 except:
         pass
+
+# Start off with a preamble token
+print 'plutocracy_master'
 
 # List the servers we already have
 servers = config.sections()
@@ -68,7 +88,8 @@ for s in servers:
         try:
                 if (float(config.get(s, 'time')) + SERVER_TTL < time):
                         raise 'Expired'
-                print ('"' + s + '" "' + config.get(s, 'name') + '" "' +
+                print ('server ' + config.get(s, 'protocol') + ' "' +
+                       s + '" "' + config.get(s, 'name') + '" "' +
                        config.get(s, 'info') + '"')
         except:
                 config.remove_section(s)

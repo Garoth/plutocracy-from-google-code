@@ -592,6 +592,7 @@ void G_cleanup(void)
 static void refresh_callback(n_event_t event, const char *text, int size)
 {
         c_token_file_t tf;
+        const char *token;
 
         if (event == N_EV_CONNECTED)
                 C_debug("Connected to master server");
@@ -612,19 +613,39 @@ static void refresh_callback(n_event_t event, const char *text, int size)
         /* Parse the response */
         C_debug("Parsing master server list");
         C_token_file_init_string(&tf, text);
+
+        /* Check header token */
+        token = C_token_file_read(&tf);
+        if (strcasecmp(token, "plutocracy_master")) {
+                C_warning("Invalid response from master server: %s", token);
+                N_disconnect_http();
+                return;
+        }
+
+        /* Parse the server list */
         I_reset_servers();
         for (;;) {
                 const char *token;
+                int quoted;
                 char name[G_NAME_MAX], alt[16], address[32];
+                bool compatible;
 
-                token = C_token_file_read(&tf);
-                if (!*token)
+                token = C_token_file_read_full(&tf, &quoted);
+                if (!*token && !quoted)
                         break;
-                C_strncpy_buf(address, token);
+
+                /* If this is not a server line, skip it */
+                if (strcasecmp(token, "server"))
+                        continue;
+
+                /* Check protocol */
+                compatible = G_PROTOCOL == atoi(C_token_file_read(&tf));
+
+                C_strncpy_buf(address, C_token_file_read(&tf));
                 C_strncpy_buf(name, C_token_file_read(&tf));
                 C_strncpy_buf(alt, C_token_file_read(&tf));
-                I_add_server(name, alt, address);
-                C_debug("Parsed server '%s (%s) %s'", name, alt, address);
+                I_add_server(name, alt, address, compatible);
+                C_debug("Parsed server '%s (%s) %s'", address, name, alt);
         }
 
         /* We don't need the HTTP connection anymore */
