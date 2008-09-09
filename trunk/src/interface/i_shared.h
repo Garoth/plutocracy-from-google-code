@@ -58,7 +58,7 @@ typedef void (*i_ring_f)(i_ring_icon_t);
 /* Structure for passing information to trade window */
 typedef struct i_cargo_info {
         int amount, buy_price, sell_price, maximum, minimum,
-            p_amount, p_buy_price, p_sell_price;
+            p_amount, p_buy_price, p_sell_price, p_minimum, p_maximum;
         bool auto_buy, auto_sell;
 } i_cargo_info_t;
 
@@ -66,7 +66,8 @@ typedef struct i_cargo_info {
 void I_print_chat(const char *name, i_color_t, const char *message);
 
 /* i_game.c */
-void I_add_server(const char *main, const char *alt, const char *address);
+void I_add_server(const char *main, const char *alt, const char *address,
+                  bool compatible);
 void I_reset_servers(void);
 
 /* i_layout.c */

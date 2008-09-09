@@ -66,18 +66,6 @@ int G_store_space(g_store_t *store)
 }
 
 /******************************************************************************\
- Returns the amount of a cargo that will fit in a given store.
-\******************************************************************************/
-int G_store_fits(const g_store_t *store, g_cargo_type_t cargo)
-{
-        int space_left;
-
-        if ((space_left = store->capacity - store->space_used) <= 0)
-                return 0;
-        return (int)floorf(space_left / cargo_space(cargo));
-}
-
-/******************************************************************************\
  Add or subtract cargo from a store. Returns the amount actually added or
  subtracted.
 \******************************************************************************/
@@ -120,7 +108,7 @@ void G_store_add_cost(g_store_t *store, const g_cost_t *cost)
 /******************************************************************************\
  Returns the amount of a cargo that a store can transfer from another store.
 \******************************************************************************/
-int G_limit_purchase(const g_store_t *buyer, const g_store_t *seller,
+int G_limit_purchase(g_store_t *buyer, g_store_t *seller,
                      g_cargo_type_t cargo, int amount)
 {
         int limit, price;
@@ -128,47 +116,57 @@ int G_limit_purchase(const g_store_t *buyer, const g_store_t *seller,
 
         price = seller->cargo[cargo].sell_price;
 
+        /* Make sure we have updated store space */
+        G_store_space(buyer);
+        G_store_space(seller);
+
         /* Negative amount is a sale */
         if ((reversed = amount < 0)) {
-                const g_store_t *temp;
+                g_store_t *temp;
 
                 price = seller->cargo[cargo].buy_price;
                 temp = buyer;
                 buyer = seller;
                 seller = temp;
                 amount = -amount;
+
+                /* Buying too much */
+                limit = buyer->cargo[cargo].maximum -
+                        buyer->cargo[cargo].amount;
+                if (amount > limit)
+                        amount = limit;
         }
 
-        /* Buying too much */
-        limit = buyer->cargo[cargo].maximum - buyer->cargo[cargo].amount;
-        if (amount > limit)
-                amount = limit;
-
-        /* Selling too much */
-        limit = seller->cargo[cargo].amount - seller->cargo[cargo].minimum;
-        if (amount > limit)
-                amount = limit;
-
-        /* How much can you fit? */
-        if (amount > (limit = G_store_fits(buyer, cargo)))
-                amount = limit;
+        /* Purchase */
+        else {
+                /* Selling too much */
+                limit = seller->cargo[cargo].amount -
+                        seller->cargo[cargo].minimum;
+                if (amount > limit)
+                        amount = limit;
+        }
 
         /* How much does the seller have? */
         if (amount > (limit = seller->cargo[cargo].amount))
                 amount = limit;
 
-        if (price > 0) {
+        /* How much can buyer afford? */
+        if (price > 0 &&
+            amount > (limit = buyer->cargo[G_CT_GOLD].amount / price))
+                amount = limit;
 
-                /* How much can you afford? */
-                if (amount > (limit = buyer->cargo[G_CT_GOLD].amount / price))
-                        amount = limit;
+        /* How much can buyer fit (accounting for price)? */
+        limit = buyer->capacity - buyer->space_used +
+                (cargo_space(cargo) - cargo_space(G_CT_GOLD)) * amount * price;
+        if (amount > limit)
+                amount = limit;
 
-                /* How much of the gold can the seller hold? */
-                limit = (int)((seller->capacity - seller->space_used) /
-                              (cargo_space(G_CT_GOLD) * amount * price));
-                if (amount > limit)
-                        amount = limit;
-        }
+        /* How much can seller fit (accounting for price)? */
+        limit = seller->capacity - seller->space_used +
+                (cargo_space(G_CT_GOLD) - cargo_space(cargo)) * amount * price;
+        if (amount > limit)
+                amount = limit;
+
         if (amount < 0)
                 return 0;
         return reversed ? -amount : amount;
@@ -241,9 +239,7 @@ bool G_pay(n_client_id_t client, int tile, const g_cost_t *cost, bool pay)
                 for (modified = FALSE, j = 0; j < G_CARGO_TYPES; j++) {
                         int available;
 
-                        available = store->cargo[j].amount -
-                                    store->cargo[j].minimum;
-                        if (available <= 0)
+                        if ((available = store->cargo[j].amount) <= 0)
                                 continue;
                         if (available > unpaid.cargo[j])
                                 available = unpaid.cargo[j];

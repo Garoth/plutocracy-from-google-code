@@ -13,7 +13,7 @@
 #include "g_common.h"
 
 /* Game testing */
-c_var_t g_test_globe;
+c_var_t g_debug_net, g_test_globe;
 
 /* Globe variables */
 c_var_t g_forest, g_globe_seed, g_globe_subdiv4, g_island_num, g_island_size,
@@ -40,6 +40,9 @@ void G_register_variables(void)
         C_register_integer(&g_test_globe, "g_test_globe", FALSE,
                            "test globe tile click detection");
         g_test_globe.edit = C_VE_ANYTIME;
+        C_register_integer(&g_debug_net, "g_debug_net", FALSE,
+                           "log network messages");
+        g_debug_net.edit = C_VE_ANYTIME;
 
         /* Globe variables */
         C_register_integer(&g_globe_seed, "g_globe_seed", C_rand(),

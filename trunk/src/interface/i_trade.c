@@ -175,6 +175,7 @@ void I_enable_trade(bool left, const char *right_name, int used, int capacity)
 static void cargo_line_configure(cargo_line_t *cargo)
 {
         int value;
+        bool valid;
 
         /* Left amount */
         if ((cargo->left.widget.shown = cargo->info.amount >= 0))
@@ -202,10 +203,14 @@ static void cargo_line_configure(cargo_line_t *cargo)
                         left_own && cargo->info.auto_sell);
 
         /* In-line prices */
-        if ((cargo->buy_price.widget.shown = cargo->info.p_buy_price >= 0))
+        valid = cargo->info.p_buy_price >= 0 &&
+                cargo->info.p_amount < cargo->info.p_maximum;
+        if ((cargo->buy_price.widget.shown = valid))
                 I_label_configure(&cargo->buy_price,
                                   C_va("%dg", cargo->info.p_buy_price));
-        if ((cargo->sell_price.widget.shown = cargo->info.p_sell_price >= 0))
+        valid = cargo->info.p_sell_price >= 0 &&
+                cargo->info.p_amount > cargo->info.p_minimum;
+        if ((cargo->sell_price.widget.shown = valid))
                 I_label_configure(&cargo->sell_price,
                                   C_va("%dg", cargo->info.p_sell_price));
 }

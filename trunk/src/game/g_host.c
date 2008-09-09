@@ -459,6 +459,7 @@ static void publish_game_alive(bool force)
            ip adress on its own */
         N_connect_http(g_master.value.s, (n_callback_http_f)publish_callback);
         N_send_post(g_master_url.value.s,
+                    "protocol", C_va("%d", G_PROTOCOL),
                     "name", g_name.value.s,
                     "info", C_va("%d/%d, %d min", n_clients_num, g_clients_max,
                                  (g_time_limit_msec - c_time_msec) / 60000),
@@ -492,6 +493,39 @@ static void client_disconnected(int client)
 }
 
 /******************************************************************************\
+ Converts a client message to a string.
+\******************************************************************************/
+static const char *cm_to_string(g_client_msg_t msg)
+{
+        switch (msg) {
+        case G_CM_NONE:
+                return "G_CM_NONE";
+        case G_CM_AFFILIATE:
+                return "G_CM_AFFILIATE";
+        case G_CM_NAME:
+                return "G_CM_NAME";
+        case G_CM_CHAT:
+                return "G_CM_CHAT";
+        case G_CM_SHIP_BUY:
+                return "G_CM_SHIP_BUY";
+        case G_CM_SHIP_DROP:
+                return "G_CM_SHIP_DROP";
+        case G_CM_SHIP_MOVE:
+                return "G_CM_SHIP_MOVE";
+        case G_CM_SHIP_NAME:
+                return "G_CM_SHIP_NAME";
+        case G_CM_SHIP_PRICES:
+                return "G_CM_SHIP_PRICES";
+        case G_CM_SHIP_RING:
+                return "G_CM_SHIP_RING";
+        case G_CM_TILE_RING:
+                return "G_CM_TILE_RING";
+        default:
+                return C_va("%d", msg);
+        }
+}
+
+/******************************************************************************\
  Called from within the network namespace when a network event arrives for the
  server from one of the clients (including the server's client).
 \******************************************************************************/
@@ -514,6 +548,10 @@ static void server_callback(int client, n_event_t event)
         if (event != N_EV_MESSAGE)
                 return;
         token = (g_client_msg_t)N_receive_char();
+
+        /* Debug messages */
+        if (g_debug_net.value.n)
+                C_trace("%s from client %d", cm_to_string(token), client);
 
         /* Only certain messages allowed when the game is over */
         if (g_game_over)

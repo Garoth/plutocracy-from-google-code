@@ -11,7 +11,7 @@
 \******************************************************************************/
 
 /* Largest amount of data that can be sent via a message */
-#define N_SYNC_MAX 1024
+#define N_SYNC_MAX 32000
 
 /* Sentinel added to the end of N_send_full() calls */
 #define N_SENTINEL -1234567890
@@ -53,7 +53,7 @@ typedef void (*n_callback_http_f)(n_event_t, const char *text, int length);
 typedef struct n_client {
         SOCKET socket;
         int buffer_len;
-        char buffer[N_SYNC_MAX * 8];
+        char buffer[N_SYNC_MAX];
         bool connected, selected;
 } n_client_t;
 
