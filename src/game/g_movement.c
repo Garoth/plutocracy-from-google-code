@@ -23,7 +23,7 @@
 /* Factor in the speed modifier equation that determines how quickly adding
    crew increases ship speed. The larger the factor the faster speed will
    rise with crew. */
-#define CREW_SPEED_FACTOR 1.f
+#define CREW_SPEED_FACTOR 2.f
 
 /* This is the minimum speed a ship can have */
 #define MINIMUM_SPEED 0.25f

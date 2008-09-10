@@ -358,7 +358,8 @@ static void sm_ship_prices(void)
 
         /* Update trade window */
         G_ship_reselect(-1, ship_i);
-        if (g_tiles[g_ships[g_selected_ship].trade_tile].ship == ship_i)
+        if (g_selected_ship >= 0 &&
+            g_tiles[g_ships[g_selected_ship].trade_tile].ship == ship_i)
                 G_ship_reselect(-1, -1);
 }
 
