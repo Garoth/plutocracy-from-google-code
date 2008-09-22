@@ -1,0 +1,10 @@
+You can make an anonymous checkout via git:
+
+Use the git protocol for optimum efficiency and download speed:
+git clone git://git.mercenariesguild.net/plutocracy.git
+
+Use http if you you're behind a proxy and that's all you have:
+git clone http://git.mercenariesguild.net/plutocracy.git
+
+Also, you can see the git repository webpage:
+firefox http://git.mercenariesguild.net/
