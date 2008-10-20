@@ -80,18 +80,18 @@ your ship sail over to the other ship and opens up the trade controls.
 Some rules about ring menus -- right clicking an object will:
 
   * If a different object is selected than the one you're right-clicking,
-    the game will try to open a contextual ring menu between the two of them.
+the game will try to open a contextual ring menu between the two of them.
   * If no context exists, the game will select the right-clicked object
-    and open its "self" ring menu.
+and open its "self" ring menu.
   * If the object is selected and it is right clicked, the *self ring menu*
-    will open up for sure.
+will open up for sure.
   * If no self menu exists, nothing happens.
   * The *self ring menu* has an extra decorative ring around it to separate it
-    visually from the *context ring menu*.
+visually from the *context ring menu*.
   * Ring menus are always the same size, and always have the icons in the
-    same order and locations. This is done so that once you get comfortable
-    with the locations, you can blaze through ring menus kind of like
-    doing mouse gestures.
+same order and locations. This is done so that once you get comfortable
+with the locations, you can blaze through ring menus kind of like
+doing mouse gestures.
     
 == Control Windows == 
 
