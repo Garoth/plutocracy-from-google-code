@@ -53,6 +53,9 @@ Before I explain the different types of UI that exist in Plutocracy,
 I will set down some ground rules for most windows. It should be obvious
 when these apply.
 
+  * The programming and API style should be similar to that of GTK. GTK (GIMP Toolkit) is very logical and easy to use.
+  * Windows are fundamentally resizable, in the same way that GTK is. This is a necessity to be able to work with multiple resolution sizes.
+
 == Ring Menus == 
 
 *IMAGE OF RING MENU HERE*
@@ -83,6 +86,10 @@ Some rules about ring menus -- right clicking an object will:
   * If no self menu exists, nothing happens.
   * The *self ring menu* has an extra decorative ring around it to separate it visually from the *context ring menu*.
   * Ring menus are always the same size, and always have the icons in the same order and locations. This is done so that once you get comfortable with the locations, you can blaze through ring menus kind of like doing mouse gestures.
+
+TODO: Explain all of the contexts that can exist between all objects. It's
+mostly common sense, but this document attempts to formalize as much as
+possible.
     
 == Control Windows == 
 
@@ -113,18 +120,48 @@ Now I will describe the *control windows* that exist in Plutocracy.
 
 *IMAGE OF MANUAL TRADE CONTROL WINDOW*
 
-*Opens:* through ring menu, as a result of one object being selected and
-another right-clicked, followed by a click on the trade icon.
+*Opens:* through *contextual ring menu*, as a result of a click on the trade
+option.
+
+*Minimized Information:* When this window is minimized, the information it shows
+is:
+*IMAGE OF A MINIMIZED MANUAL TRADE CONTROL WINDOW*
+
+  * Two lines, each with <player> <object> <accepted?>. The first line is the person who initiated the trade. One of the players is, obviously, you.
 
 *Points About This Window:*
 
+  * If a ship's movement has to be stopped to start trade, the ship will stop
+    until the trade is resolved. Of course, the other person has the ability to
+    quickly cancel. If the ship was already going somewhere, it continues there
+    when the trade is resolved.
   * There is an icon for each resource type the object has. Hovering over one such icon _instantly_ opens a *tooltip pop-up control*, which simply says what the resource is.
   * Trade is done by dragging one of your resources onto your offering area. When you drag a resource in that area, an *amount selector pop-up control* spawns, to make it possible to select the amount.  The default is 1.
+  * Once you have offered something, the "Notify" button un-greys-out. Pressing this button notifies the player you're trading with of your intent and adds a trade window to their *minimized windows widget*
   * Once you're content with what the other person is offering, press the "Accept" button. After the person you're trading with has pressed Accept, you may no longer remove anything offered from your offering area. Of course, you may still add things, but chances are that this is not what you want to do (ie. they've already accepted less).
   * If you want to remove something before the other person has pressed accept, you just drag it from the offering area back onto your inventory area. Another *amount selector pop-up control* will spawn asking you how much to remove. The default is all.
+  * If one of the objects trading has automatic rules set up that could be fulfilled, the object automatically does so. However, since this is a manual trade setup, Accept still needs to be pressed by both parties. For example, if you try to buy wood, and the other object has an automatic rule to trade wood for x gold, it'll offer you the gold. Then you can notify the other player and sort out what to do with them.
   * Cancel button cancels the trade altogether.
 
 === Automatic Trade Control Window ===
+
+*IMAGE OF AUTOMATIC TRADE CONTROL WINDOW*
+
+*Opens:* through *self ring menu*, as a result of the trade option being selected
+
+*Minimized Information:* When this window is minimized, its label is "Automatic Trade Controls for <object>"
+
+*Points About This Window:*
+
+  * The trade option doesn't exist for a *self ring menu* of an object you don't own. (Ie. this window is not accesible)
+  * If a ship is moving when you open the *automatic trade control window* on it, it will halt moving. Once you close this window, it'll continue on its way.
+  * The purpose of this window is to configure the automatic trade options that a ship (or other trade-capable object) has. Again, this configures options _per object_.
+  * The top section is a collection of icons, one for each resource type. Hovering over one of the icons immediately spawns a *tooltip pop-up control* that says what the icon represents.
+  * Selecting an icon un-grays-out the bottom controls.
+  * The bottom section has Risujin-UI (old style) inspired controls for configuring automatic trade:
+    * The buy and sell checkboxes toggle automatically buying/selling the selected resource.
+    * Clicking on the for field will spawn an *amount selector pop-up-control* which lets you select how much you want the resource to be bought/sold for, at maximum or minimum respectively.
+    * The Max/Min Carried field designates how much of the resource the ship is willing to carry, space permitting. Clicking on these will, again, spawn an *amount selector pop-up control*
 
 === Configuration Window ===
 
@@ -132,6 +169,15 @@ another right-clicked, followed by a click on the trade icon.
 
   * Explain Titlebar -- area to grab, minimizes to titlebar, close button
   * Explain how they have designated space
+
+== Ship Information Widget ==
+
+  * Stuff like name, amount of crew, cargo carried
+
+== Ship Cargo Information Widget ==
+
+  * Information about what cargo is being carried by object.
+  * Should list which items are available for trade (buy/sell)
 
 === Manual Access Widget ===
 
@@ -142,6 +188,8 @@ another right-clicked, followed by a click on the trade icon.
 === Game Scoreboard Widget ===
 
 === Clock Widget ===
+
+=== Chat Widget ===
 
 == Pop-up Controls ==
 
