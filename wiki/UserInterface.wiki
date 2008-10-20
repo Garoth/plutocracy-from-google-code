@@ -15,9 +15,7 @@ Thirdly, the interface for a game like Plutocracy needs to be customizable
 for two reasons:
 
   1. A user's preferences
-  2. Plutocracy is meant to be able to support multiple game modes,
-     as well as plug-in game modes. The UI needs to flexibly bend to show
-     different information for different game styles.
+  2. Plutocracy is meant to be able to support multiple game modes, as well as plug-in game modes. The UI needs to flexibly bend to show different information for different game styles.
 
 Fourthly, as a user of a tiling window manager, I subscribe to the
 philosophy that no one really wants overlapping windows. If you watch the
@@ -79,19 +77,12 @@ your ship sail over to the other ship and opens up the trade controls.
 
 Some rules about ring menus -- right clicking an object will:
 
-  * If a different object is selected than the one you're right-clicking,
-the game will try to open a contextual ring menu between the two of them.
-  * If no context exists, the game will select the right-clicked object
-and open its "self" ring menu.
-  * If the object is selected and it is right clicked, the *self ring menu*
-will open up for sure.
+  * If a different object is selected than the one you're right-clicking, the game will try to open a contextual ring menu between the two of them.
+  * If no context exists, the game will select the right-clicked object and open its "self" ring menu.
+  * If the object is selected and it is right clicked, the *self ring menu* will open up for sure.
   * If no self menu exists, nothing happens.
-  * The *self ring menu* has an extra decorative ring around it to separate it
-visually from the *context ring menu*.
-  * Ring menus are always the same size, and always have the icons in the
-same order and locations. This is done so that once you get comfortable
-with the locations, you can blaze through ring menus kind of like
-doing mouse gestures.
+  * The *self ring menu* has an extra decorative ring around it to separate it visually from the *context ring menu*.
+  * Ring menus are always the same size, and always have the icons in the same order and locations. This is done so that once you get comfortable with the locations, you can blaze through ring menus kind of like doing mouse gestures.
     
 == Control Windows == 
 
@@ -126,22 +117,10 @@ Now I will describe the *control windows* that exist in Plutocracy.
 another right-clicked, followed by a click on the trade icon.
 
 *Points About This Window:*
-  * There is an icon for each resource type the object has. Hovering
-    over one such icon _instantly_ opens a *tooltip pop-up control*,
-    which simply says what the resource is.
-  * Trade is done by dragging one of your resources onto your offering
-    area. When you drag a resource in that area, an *amount selector
-    pop-up control* spawns, to make it possible to select the amount.
-    The default is 1.
-  * Once you're content with what the other person is offering, press
-    the "Accept" button. After the person you're trading with has pressed
-    Accept, you may no longer remove anything offered from your offering
-    area. Of course, you may still add things, but chances are that this
-    is not what you want to do (ie. they've already accepted less).
-  * If you want to remove something before the other person has pressed
-    accept, you just drag it from the offering area back onto your
-    inventory area. Another *amount selector pop-up control* will spawn
-    asking you how much to remove. The default is all.
+  * There is an icon for each resource type the object has. Hovering over one such icon _instantly_ opens a *tooltip pop-up control*, which simply says what the resource is.
+  * Trade is done by dragging one of your resources onto your offering area. When you drag a resource in that area, an *amount selector pop-up control* spawns, to make it possible to select the amount.  The default is 1.
+  * Once you're content with what the other person is offering, press the "Accept" button. After the person you're trading with has pressed Accept, you may no longer remove anything offered from your offering area. Of course, you may still add things, but chances are that this is not what you want to do (ie. they've already accepted less).
+  * If you want to remove something before the other person has pressed accept, you just drag it from the offering area back onto your inventory area. Another *amount selector pop-up control* will spawn asking you how much to remove. The default is all.
   * Cancel button cancels the trade altogether.
 
 === Automatic Trade Control Window ===
