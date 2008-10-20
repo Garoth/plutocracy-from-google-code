@@ -14,8 +14,8 @@ an object is to the mouse, the easier it is to use."
 Thirdly, the interface for a game like Plutocracy needs to be customizable
 for two reasons:
 
-  1. A user's preferences
-  2. Plutocracy is meant to be able to support multiple game modes, as well as plug-in game modes. The UI needs to flexibly bend to show different information for different game styles.
+  # A user's preferences
+  # Plutocracy is meant to be able to support multiple game modes, as well as plug-in game modes. The UI needs to flexibly bend to show different information for different game styles.
 
 Fourthly, as a user of a tiling window manager, I subscribe to the
 philosophy that no one really wants overlapping windows. If you watch the
@@ -117,6 +117,7 @@ Now I will describe the *control windows* that exist in Plutocracy.
 another right-clicked, followed by a click on the trade icon.
 
 *Points About This Window:*
+
   * There is an icon for each resource type the object has. Hovering over one such icon _instantly_ opens a *tooltip pop-up control*, which simply says what the resource is.
   * Trade is done by dragging one of your resources onto your offering area. When you drag a resource in that area, an *amount selector pop-up control* spawns, to make it possible to select the amount.  The default is 1.
   * Once you're content with what the other person is offering, press the "Accept" button. After the person you're trading with has pressed Accept, you may no longer remove anything offered from your offering area. Of course, you may still add things, but chances are that this is not what you want to do (ie. they've already accepted less).
@@ -136,8 +137,7 @@ another right-clicked, followed by a click on the trade icon.
 
 === Minimized Windows Widget ===
 
-  * Has windows that have spawned not by your request, and windows that
-    you've hidden away.
+  * Has windows that have spawned not by your request, and windows that you've hidden away.
 
 === Game Scoreboard Widget ===
 
