@@ -1,5 +1,7 @@
 ﻿#summary Detailing of the User Interface and User Interaction
 
+*NOTE:* At the moment, I am just putting up quick sketches of the UI.
+
 = Philosophy =
 A user interface for a real time strategy game should, in the philosophy of
 David Sev, be broken up into parts:
@@ -43,6 +45,7 @@ screen.
 
 = Overall Layout =
 
+http://plutocracy.googlecode.com/svn/wiki/ui/ui-overall.png
 *IMAGE OF THE OVERALL UI LAYOUT OF THE GAME*
 
 = Window Types =
@@ -58,6 +61,7 @@ when these apply.
 
 == Ring Menus == 
 
+http://plutocracy.googlecode.com/svn/wiki/ui/ui-ring-menu.png
 *IMAGE OF RING MENU HERE*
 
 So the first thing I want to define are the different kinds of UI elements
@@ -93,6 +97,7 @@ possible.
     
 == Control Windows == 
 
+http://plutocracy.googlecode.com/svn/wiki/ui/ui-control-window-placement.png
 *IMAGE OF WHERE THE CONTROL WINDOWS GO IN THE UI, WITH EXAMPLE WINDOW*
 
 I had briefly mentioned *control windows* above. Control windows are what
@@ -118,6 +123,7 @@ Now I will describe the *control windows* that exist in Plutocracy.
 
 === Manual Trade Control Window ===
 
+http://plutocracy.googlecode.com/svn/wiki/ui/ui-manual-trade.png
 *IMAGE OF MANUAL TRADE CONTROL WINDOW*
 
 *Opens:* through *contextual ring menu*, as a result of a click on the trade
@@ -125,6 +131,7 @@ option.
 
 *Minimized Information:* When this window is minimized, the information it shows
 is:
+http://plutocracy.googlecode.com/svn/wiki/ui/ui-minimized-manual-trade.png
 *IMAGE OF A MINIMIZED MANUAL TRADE CONTROL WINDOW*
 
   * Two lines, each with "player object accepted?". The first line is the person who initiated the trade. One of the players is, obviously, you.
@@ -145,6 +152,7 @@ is:
 
 === Automatic Trade Control Window ===
 
+http://plutocracy.googlecode.com/svn/wiki/ui/ui-automatic-trade.png
 *IMAGE OF AUTOMATIC TRADE CONTROL WINDOW*
 
 *Opens:* through *self ring menu*, as a result of the trade option being selected
