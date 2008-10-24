@@ -62,7 +62,7 @@ when these apply.
 == Ring Menus == 
 
 http://plutocracy.googlecode.com/svn/wiki/ui/ui-ring-menu.png
-*IMAGE OF RING MENU HERE*
+*IMAGE OF RING MENU*
 
 So the first thing I want to define are the different kinds of UI elements
 that are used in Plutocracy.
