@@ -1,4 +1,4 @@
-#summary Detailing of the User Interface and User Interaction
+﻿#summary Detailing of the User Interface and User Interaction
 
 = Philosophy =
 A user interface for a real time strategy game should, in the philosophy of
@@ -127,7 +127,7 @@ option.
 is:
 *IMAGE OF A MINIMIZED MANUAL TRADE CONTROL WINDOW*
 
-  * Two lines, each with <player> <object> <accepted?>. The first line is the person who initiated the trade. One of the players is, obviously, you.
+  * Two lines, each with "player object accepted?". The first line is the person who initiated the trade. One of the players is, obviously, you.
 
 *Points About This Window:*
 
@@ -149,7 +149,7 @@ is:
 
 *Opens:* through *self ring menu*, as a result of the trade option being selected
 
-*Minimized Information:* When this window is minimized, its label is "Automatic Trade Controls for <object>"
+*Minimized Information:* When this window is minimized, its label is "Automatic Trade Controls for -object-"
 
 *Points About This Window:*
 
