@@ -138,10 +138,7 @@ http://plutocracy.googlecode.com/svn/wiki/ui/ui-minimized-manual-trade.png
 
 *Points About This Window:*
 
-  * If a ship's movement has to be stopped to start trade, the ship will stop
-    until the trade is resolved. Of course, the other person has the ability to
-    quickly cancel. If the ship was already going somewhere, it continues there
-    when the trade is resolved.
+  * If a ship's movement has to be stopped to start trade, the ship will stop until the trade is resolved. Of course, the other person has the ability to quickly cancel. If the ship was already going somewhere, it continues there when the trade is resolved.
   * There is an icon for each resource type the object has. Hovering over one such icon _instantly_ opens a *tooltip pop-up control*, which simply says what the resource is.
   * Trade is done by dragging one of your resources onto your offering area. When you drag a resource in that area, an *amount selector pop-up control* spawns, to make it possible to select the amount.  The default is 1.
   * Once you have offered something, the "Notify" button un-greys-out. Pressing this button notifies the player you're trading with of your intent and adds a trade window to their *minimized windows widget*
@@ -173,16 +170,41 @@ http://plutocracy.googlecode.com/svn/wiki/ui/ui-automatic-trade.png
 
 === Configuration Window ===
 
+http://plutocracy.googlecode.com/svn/wiki/ui/ui-config.png
+*IMAGE OF CONFIGURATION WINDOW*
+
+*Opens:* manually, through the *window launcher*
+
+*Minimized Information:* When minimized, the label is "Configuration"
+
+*Points About This Window:*
+
+  * This has all the general game options that you may want to configure.
+  * This is really just a collection of tabs which have pages of configuration options with descriptions. This is really just a frontend to the console.
+  * The special one at the bottom is "Console". This page lets you run the textual commands rather than configuring options graphically.
+  * Note that options changed in console and on the graphical UI should by synchronized
+  * The pages are: Video, Sound, Server, Game, Windows, Console. Below is a listing of what should _at least_ be in each page.
+    * *Video:* Resolution, Color bits, Windowed, Multisampling, Gamma correction, Draw Distance
+    * *Sound:* Ambient volume, Effects volume, Sound quality
+	* *Server:* Port, Victory gold, Time limit
+	* *Game:* TODO
+	* *Windows:* Scale 2D, TODO
+
+*Implementation Priorities:*
+
+  * Really, as long as we have the console, that's good enough for version 0.1.
+  * This layout would be nice to have sooner rather than later though.
+
 == Widget Windows == 
 
   * Explain Titlebar -- area to grab, minimizes to titlebar, close button
   * Explain how they have designated space
 
-== Ship Information Widget ==
+=== Ship Information Widget ===
 
   * Stuff like name, amount of crew, cargo carried
 
-== Ship Cargo Information Widget ==
+=== Ship Cargo Information Widget ===
 
   * Information about what cargo is being carried by object.
   * Should list which items are available for trade (buy/sell)
@@ -204,5 +226,7 @@ http://plutocracy.googlecode.com/svn/wiki/ui/ui-automatic-trade.png
 === Amount Selector Pop-up Control ===
 
 === Tooltip Pop-up Control ===
+
+== Window Launcher == 
 
 = Mouse System =
