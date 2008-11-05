@@ -173,7 +173,7 @@ http://plutocracy.googlecode.com/svn/wiki/ui/ui-automatic-trade.png
 http://plutocracy.googlecode.com/svn/wiki/ui/ui-config.png
 *IMAGE OF CONFIGURATION WINDOW*
 
-*Opens:* manually, through the *window launcher*
+*Opens:* manually, through the *manual access widget*
 
 *Minimized Information:* When minimized, the label is "Configuration"
 
@@ -187,8 +187,8 @@ http://plutocracy.googlecode.com/svn/wiki/ui/ui-config.png
     * *Video:* Resolution, Color bits, Windowed, Multisampling, Gamma correction, Draw Distance
     * *Sound:* Ambient volume, Effects volume, Sound quality
 	* *Server:* Port, Victory gold, Time limit
-	* *Game:* TODO
-	* *Windows:* Scale 2D, TODO
+	* *Game:* Player Name
+	* *Windows:* Scale 2D, Which Widgets are Active
 
 *Implementation Priorities:*
 
@@ -197,19 +197,48 @@ http://plutocracy.googlecode.com/svn/wiki/ui/ui-config.png
 
 == Widget Windows == 
 
-  * Explain Titlebar -- area to grab, minimizes to titlebar, close button
-  * Explain how they have designated space
+*IMAGE OF A GENERIC WIDGET*
 
-=== Ship Information Widget ===
+So, Widget Windows. These are called different things by different people. On Linux, they've been called Desklets, Screenlets, and Widgets.
+On Mac, I think they call them just Widgets. In Windows Vista, they call them Gadgets. Plutocracy's Widgets are very much similar to these
+desktop ideas.
 
-  * Stuff like name, amount of crew, cargo carried
+Basically, Widget Windows are simple, easy to create, informative windows that exist on the screen on a relatively permanent basis. A Plutocracy
+Widget has a titlebar which has an area to grab to be able to move the widget around, a button to "scroll" the widget up into being just a
+titlebar, an area you can drag to resize the widget, and of course a close button.
 
-=== Ship Cargo Information Widget ===
+If you recall the philosophy section, Widgets are designed to fill the role of, "always visible information that you want to refer to very
+frequently". For example, a clock widget would show how far into the game you are, or how close to the time limit you are.
+
+A couple extra fine points about Plutocracy's Widget Windows:
+
+  * Plutocracy's Widgets actually have little windows. They're not quite as free-form as most implementations.
+  * Plutocracy's Widgets are free-form in terms of placement. This means that if a mod is made, it can safely just throw its widget at the screen, and the user would be able to position it where he or she feels is right.
+  * Plutocracy's Widgets may not be minimized into the Minimized Windows Widget, but may be "scrolled up" as described above.
+  * Which widgets are visible can be configured in the *Configuration Window*
+  * Plutocracy's Widgets interact: If you bring two similarly sized widgets close together, they join into a single widget with a divider. This is entirely cosmetic and is a low priority feature.
+
+*IMAGE OF HOW WIDGETS CAN JOIN TOGETHER*
+
+=== Object Information Widget ===
+
+*IMAGE OF OBJECT INFORMATION WIDGET*
+
+*Points About This Widget:*
+
+  * The information given is flexible.
+  * For ships: Name, Owner, Cargo out of Max Cargo, Health, Crew out of Optimum Crew, Time Till Food Runs Out
+  * For buildings: Name, Owner, Cargo out of Max Cargo (if applicable), Health
+  * TODO explain other contexts
+
+=== Object Cargo Information Widget ===
 
   * Information about what cargo is being carried by object.
   * Should list which items are available for trade (buy/sell)
 
 === Manual Access Widget ===
+
+  * Widget that must always be on and lets you manually start control windows
 
 === Minimized Windows Widget ===
 
@@ -217,16 +246,26 @@ http://plutocracy.googlecode.com/svn/wiki/ui/ui-config.png
 
 === Game Scoreboard Widget ===
 
+  * Shows who's winning. Usually this is measured in gold.
+
 === Clock Widget ===
 
+  * Current local time + time ticking up if no timelimit, or time ticking down if there is a timelimit
+
 === Chat Widget ===
+
+  * Text input widget with some history of what's been said recently, and a way to scroll back further.
 
 == Pop-up Controls ==
 
 === Amount Selector Pop-up Control ===
 
+  * A slider + text input to let you quickly or precisely enter how much of something you want to select
+
 === Tooltip Pop-up Control ===
 
-== Window Launcher == 
+  * A simple floating text label
 
 = Mouse System =
+
+  * Basically: left click to select something, right click to activate a ring on something, middle scroll/click to move the globe around.
