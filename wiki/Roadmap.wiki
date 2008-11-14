@@ -4,7 +4,7 @@
 
 Plutocracy releases roughly every half year. Once in January, once in July.
 
-= January 2009 =
+= 0.1: January 2009 =
 
 Note: This is going to be the first release :)
 
