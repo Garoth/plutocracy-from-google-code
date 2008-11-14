@@ -10,15 +10,14 @@ Note: This is going to be the first release :)
 
 *Features:*
 
-|| Feature || Status ||
-|| Basic Framework (Renderer, netcode, UI, globe)|| Done ||
-|| Basic Trade || Done ||
-|| Basic Nations (Joining, identification) || Done || 
-|| Ships with movement || Done ||
-|| Being able to build shipyards || Done ||
-|| Shipyards can build more ships, given resources || Done || 
-|| Possible to board others' ships || Done || 
-
+|| Feature || || Status ||
+|| Basic Framework (Renderer, netcode, UI, globe)|| || Done ||
+|| Basic Trade || || Done ||
+|| Basic Nations (Joining, identification) || || Done || 
+|| Ships with movement || || Done ||
+|| Being able to build shipyards || || Done ||
+|| Shipyards can build more ships, given resources || || Done || 
+|| Possible to board others' ships || || Done || 
 || Low frequency, collectable randomly spawning resource crates (mostly food + crew)|| || Not Done || 
 || Possible to fire cannons at other ships, buildings. || [http://code.google.com/p/plutocracy/issues/detail?id=239 Issue Link] || Not Done ||
 || Small sprite of cannon ball, for use with cannon battle.|| [http://code.google.com/p/plutocracy/issues/detail?id=240 Issue Link]|| Not Done ||
