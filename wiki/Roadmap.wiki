@@ -27,7 +27,7 @@ Note: This is going to be the first release :)
 || Models of mines (can be similar-ish).|| [http://code.google.com/p/plutocracy/issues/detail?id=243 Issue Link]|| Not Done ||
 || 1-2 more tree models to add variety|| [http://code.google.com/p/plutocracy/issues/detail?id=244 Issue Link]|| Not Done || 
 || A idle animations for a few current models|| [http://code.google.com/p/plutocracy/issues/detail?id=245 Issue Link]|| Not Done ||
-|| Select chat targets|| [http://code.google.com/p/plutocracy/issues/detail?id=247 Issue Link]|| Not Done ||
+|| Select chat targets|| [http://code.google.com/p/plutocracy/issues/detail?id=247 Issue Link]|| Done ||
 || Join-time pop-up explaining server rules|| [http://code.google.com/p/plutocracy/issues/detail?id=248 Issue Link]|| Not Done ||
 || Close all critical priority 0.1 bugs|| || Not Done ||
 || Advertisement Media|| [http://code.google.com/p/plutocracy/issues/detail?id=250 Issue Link]|| Not Done ||
